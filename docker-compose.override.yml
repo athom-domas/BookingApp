@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  app:
+    environment:
+      - XDEBUG_MODE=develop,debug
+      - XDEBUG_CONFIG=client_host=host.docker.internal
+    volumes:
+      - ./app:/app/app
+      - ./routes:/app/routes
+      - ./database:/app/database
+      - ./resources:/app/resources
+      - ./config:/app/config
+
+  postgres:
+    ports:
+      - "5432:5432"
