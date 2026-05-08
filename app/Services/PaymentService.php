@@ -49,6 +49,7 @@ class PaymentService
         match ($type) {
             'payment_intent.succeeded'      => $payment->update(['status' => 'completed']),
             'payment_intent.payment_failed' => $payment->update(['status' => 'failed']),
+            'payment_intent.canceled'       => $payment->update(['status' => 'cancelled']),
             default                         => null,
         };
     }

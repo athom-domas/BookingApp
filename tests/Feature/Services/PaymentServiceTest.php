@@ -62,6 +62,24 @@ it('handleStripeWebhook marks payment as failed on failed event', function () {
     expect($payment->fresh()->status)->toBe('failed');
 });
 
+it('marks payment as cancelled on payment_intent.canceled webhook', function () {
+    $appointment = Appointment::factory()->create();
+    $payment = Payment::factory()->create([
+        'appointment_id'         => $appointment->id,
+        'stripe_transaction_id'  => 'pi_test_canceled',
+        'status'                 => 'pending',
+        'amount'                 => 50.00,
+    ]);
+
+    $mockStripe = Mockery::mock(\Stripe\StripeClient::class);
+    makePaymentService($mockStripe)->handleStripeWebhook([
+        'type' => 'payment_intent.canceled',
+        'data' => ['object' => ['id' => 'pi_test_canceled']],
+    ]);
+
+    expect($payment->fresh()->status)->toBe('cancelled');
+});
+
 it('handleStripeWebhook ignores unknown transaction IDs without error', function () {
     $mockStripe = Mockery::mock(\Stripe\StripeClient::class);
 
