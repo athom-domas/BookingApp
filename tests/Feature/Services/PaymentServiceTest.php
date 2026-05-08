@@ -8,10 +8,11 @@ use Mockery\MockInterface;
 use Stripe\PaymentIntent;
 use Stripe\Refund;
 
-function makePaymentService(MockInterface $mockStripe): PaymentService
-{
-    return new PaymentService($mockStripe);
-}
+beforeEach(function () {
+    $this->makePaymentService = function (MockInterface $mockStripe): PaymentService {
+        return new PaymentService($mockStripe);
+    };
+});
 
 it('initiateStripePayment creates a pending payment record', function () {
     $appointment = Appointment::factory()->create();
@@ -30,7 +31,7 @@ it('initiateStripePayment creates a pending payment record', function () {
     $mockStripe = Mockery::mock(\Stripe\StripeClient::class);
     $mockStripe->shouldReceive('getService')->with('paymentIntents')->andReturn($mockPaymentIntents);
 
-    $payment = makePaymentService($mockStripe)->initiateStripePayment($appointment->id, 5000);
+    $payment = ($this->makePaymentService)($mockStripe)->initiateStripePayment($appointment->id, 5000);
 
     expect($payment->status)->toBe('pending');
     expect($payment->stripe_transaction_id)->toBe('pi_test_123');
@@ -42,7 +43,7 @@ it('handleStripeWebhook marks payment as completed on succeeded event', function
     $payment = Payment::factory()->create(['stripe_transaction_id' => 'pi_test_456', 'status' => 'pending']);
 
     $mockStripe = Mockery::mock(\Stripe\StripeClient::class);
-    makePaymentService($mockStripe)->handleStripeWebhook([
+    ($this->makePaymentService)($mockStripe)->handleStripeWebhook([
         'type' => 'payment_intent.succeeded',
         'data' => ['object' => ['id' => 'pi_test_456']],
     ]);
@@ -54,7 +55,7 @@ it('handleStripeWebhook marks payment as failed on failed event', function () {
     $payment = Payment::factory()->create(['stripe_transaction_id' => 'pi_test_789', 'status' => 'pending']);
 
     $mockStripe = Mockery::mock(\Stripe\StripeClient::class);
-    makePaymentService($mockStripe)->handleStripeWebhook([
+    ($this->makePaymentService)($mockStripe)->handleStripeWebhook([
         'type' => 'payment_intent.payment_failed',
         'data' => ['object' => ['id' => 'pi_test_789']],
     ]);
@@ -72,7 +73,7 @@ it('handleStripeWebhook marks payment as cancelled on canceled event', function 
     ]);
 
     $mockStripe = Mockery::mock(\Stripe\StripeClient::class);
-    makePaymentService($mockStripe)->handleStripeWebhook([
+    ($this->makePaymentService)($mockStripe)->handleStripeWebhook([
         'type' => 'payment_intent.canceled',
         'data' => ['object' => ['id' => 'pi_test_canceled']],
     ]);
@@ -83,7 +84,7 @@ it('handleStripeWebhook marks payment as cancelled on canceled event', function 
 it('handleStripeWebhook ignores unknown transaction IDs without error', function () {
     $mockStripe = Mockery::mock(\Stripe\StripeClient::class);
 
-    expect(fn () => makePaymentService($mockStripe)->handleStripeWebhook([
+    expect(fn () => ($this->makePaymentService)($mockStripe)->handleStripeWebhook([
         'type' => 'payment_intent.succeeded',
         'data' => ['object' => ['id' => 'pi_unknown']],
     ]))->not->toThrow(\Throwable::class);
@@ -107,7 +108,7 @@ it('refundPayment updates status to refunded', function () {
     $mockStripe = Mockery::mock(\Stripe\StripeClient::class);
     $mockStripe->shouldReceive('getService')->with('refunds')->andReturn($mockRefunds);
 
-    $result = makePaymentService($mockStripe)->refundPayment($payment->id);
+    $result = ($this->makePaymentService)($mockStripe)->refundPayment($payment->id);
 
     expect($result->status)->toBe('refunded');
 });
@@ -117,6 +118,6 @@ it('refundPayment throws BookingException if payment is not completed', function
 
     $mockStripe = Mockery::mock(\Stripe\StripeClient::class);
 
-    expect(fn () => makePaymentService($mockStripe)->refundPayment($payment->id))
+    expect(fn () => ($this->makePaymentService)($mockStripe)->refundPayment($payment->id))
         ->toThrow(BookingException::class);
 });

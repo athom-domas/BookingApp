@@ -9,8 +9,6 @@ use Carbon\Carbon;
 
 class SlotGeneratorService
 {
-    private const BUFFER_MINUTES = 15;
-
     public function generateWeeklySlots(int $staffId, Carbon $weekStart, int $slotMinutes = 30): int
     {
         $created = 0;
@@ -44,7 +42,7 @@ class SlotGeneratorService
             ->get()
             ->map(function (Appointment $appt): array {
                 $start = Carbon::parse($appt->scheduled_date);
-                $end   = $start->copy()->addMinutes($appt->service->duration_minutes + self::BUFFER_MINUTES);
+                $end   = $start->copy()->addMinutes($appt->service->duration_minutes + config('booking.buffer_minutes'));
                 return ['start' => $start, 'end' => $end];
             })
             ->all();

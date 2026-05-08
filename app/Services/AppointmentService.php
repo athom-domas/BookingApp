@@ -12,8 +12,6 @@ use Carbon\Carbon;
 
 class AppointmentService
 {
-    private const BUFFER_MINUTES = 15;
-
     public function validateAvailability(int $staffId, int $serviceId, Carbon $dateTime): bool
     {
         $rule = AvailabilityRule::where('user_id', $staffId)
@@ -33,7 +31,7 @@ class AppointmentService
         }
 
         $service    = Service::findOrFail($serviceId);
-        $newApptEnd = $dateTime->copy()->addMinutes($service->duration_minutes + self::BUFFER_MINUTES);
+        $newApptEnd = $dateTime->copy()->addMinutes($service->duration_minutes + config('booking.buffer_minutes'));
 
         $conflicts = Appointment::where('staff_id', $staffId)
             ->where('status', '!=', 'cancelled')
@@ -43,7 +41,7 @@ class AppointmentService
 
         foreach ($conflicts as $existing) {
             $existingStart = $existing->scheduled_date;
-            $existingEnd   = $existingStart->copy()->addMinutes($existing->service->duration_minutes + self::BUFFER_MINUTES);
+            $existingEnd   = $existingStart->copy()->addMinutes($existing->service->duration_minutes + config('booking.buffer_minutes'));
 
             if ($dateTime->lt($existingEnd) && $newApptEnd->gt($existingStart)) {
                 return false;
