@@ -2,6 +2,7 @@
 
 use App\Filament\Resources\AppointmentResource;
 use App\Filament\Resources\AvailabilityRuleResource;
+use App\Filament\Resources\PaymentResource;
 use App\Filament\Resources\ServiceResource;
 use App\Filament\Resources\TimeSlotResource;
 use App\Models\User;
@@ -44,5 +45,14 @@ it('time slot list page renders', function () {
 
     $this->actingAs($admin)
         ->get(TimeSlotResource::getUrl('index'))
+        ->assertSuccessful();
+});
+
+it('payment list page renders', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+
+    $this->actingAs($admin)
+        ->get(PaymentResource::getUrl('index'))
         ->assertSuccessful();
 });
