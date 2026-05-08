@@ -9,7 +9,6 @@ RUN apk add --no-cache \
     freetype-dev \
     jpeg-dev \
     libzip-dev \
-    postgresql-dev \
     icu-dev \
     nodejs \
     npm \
@@ -19,12 +18,12 @@ RUN apk add --no-cache \
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg && \
     docker-php-ext-install \
     pdo \
-    pdo_pgsql \
+    pdo_mysql \
     gd \
     zip \
     bcmath \
     intl \
-    && docker-php-ext-enable pdo pdo_pgsql gd zip bcmath intl
+    && docker-php-ext-enable pdo pdo_mysql gd zip bcmath intl
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 

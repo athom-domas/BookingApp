@@ -12,6 +12,6 @@ services:
       - ./resources:/app/resources
       - ./config:/app/config
 
-  postgres:
+  mysql:
     ports:
-      - "5432:5432"
+      - "3306:3306"
