@@ -46,8 +46,7 @@ class AppointmentResource extends Resource
 
             DateTimePicker::make('scheduled_date')
                 ->label('Data e ora')
-                ->required()
-                ->minDate(now()),
+                ->required(),
 
             Select::make('status')
                 ->label('Stato')
