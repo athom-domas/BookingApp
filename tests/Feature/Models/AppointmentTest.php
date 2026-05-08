@@ -32,14 +32,14 @@ it('has many reminders', function () {
     AppointmentReminder::factory()->count(2)->create(['appointment_id' => $appointment->id]);
 
     expect($appointment->reminders)->toHaveCount(2);
-})->skip('AppointmentReminder not yet implemented');
+})->skip('unskip in Task 4 when AppointmentReminder model is created');
 
 it('has one payment', function () {
     $appointment = Appointment::factory()->create();
     Payment::factory()->create(['appointment_id' => $appointment->id]);
 
     expect($appointment->payment)->toBeInstanceOf(Payment::class);
-})->skip('Payment not yet implemented');
+})->skip('unskip in Task 4 when Payment model is created');
 
 it('scope upcoming returns future appointments', function () {
     Appointment::factory()->create(['scheduled_date' => now()->addDays(5)]);
