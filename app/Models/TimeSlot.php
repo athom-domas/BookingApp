@@ -14,6 +14,14 @@ class TimeSlot extends Model
     /** @use HasFactory<\Database\Factories\TimeSlotFactory> */
     use HasFactory;
 
+    protected function casts(): array
+    {
+        return [
+            'is_available' => 'boolean',
+            'date'         => 'date',
+        ];
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
