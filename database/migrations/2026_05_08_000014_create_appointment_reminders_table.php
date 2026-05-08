@@ -17,6 +17,8 @@ return new class extends Migration
             $table->enum('status', ['pending', 'sent', 'failed'])->default('pending');
             $table->text('error_message')->nullable();
             $table->timestamps();
+
+            $table->index(['status', 'scheduled_for']);
         });
     }
 

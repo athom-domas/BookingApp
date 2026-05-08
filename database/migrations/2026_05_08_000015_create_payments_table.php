@@ -14,7 +14,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->decimal('amount', 10, 2);
             $table->enum('status', ['pending', 'completed', 'refunded', 'failed'])->default('pending');
-            $table->string('stripe_transaction_id')->nullable();
+            $table->string('stripe_transaction_id')->nullable()->unique();
             $table->json('stripe_response')->nullable();
             $table->timestamps();
         });

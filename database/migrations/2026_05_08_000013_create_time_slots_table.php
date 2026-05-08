@@ -17,6 +17,8 @@ return new class extends Migration
             $table->boolean('is_available')->default(true);
             $table->foreignId('appointment_id')->nullable()->constrained()->nullOnDelete();
             $table->timestamps();
+
+            $table->index(['user_id', 'date']);
         });
     }
 

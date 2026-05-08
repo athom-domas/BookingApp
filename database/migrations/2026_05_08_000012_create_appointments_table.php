@@ -13,12 +13,15 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('service_id')->constrained()->cascadeOnDelete();
             $table->foreignId('staff_id')->constrained('users')->cascadeOnDelete();
-            $table->dateTime('scheduled_date');
+            $table->timestamp('scheduled_date');
             $table->enum('status', ['pending', 'confirmed', 'cancelled', 'completed'])->default('pending');
             $table->decimal('final_price', 10, 2)->nullable();
             $table->text('notes')->nullable();
             $table->string('google_event_id')->nullable();
             $table->timestamps();
+
+            $table->index('status');
+            $table->index('scheduled_date');
         });
     }
 
