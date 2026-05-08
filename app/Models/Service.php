@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Fillable(['name', 'description', 'duration_minutes', 'price', 'active'])]
 class Service extends Model
 {
+    /** @use HasFactory<\Database\Factories\ServiceFactory> */
     use HasFactory;
 
     public function staff(): BelongsToMany
@@ -24,8 +25,8 @@ class Service extends Model
         return $this->hasMany(Appointment::class);
     }
 
-    public function scopeActive(Builder $query): void
+    public function scopeActive(Builder $query): Builder
     {
-        $query->where('active', true);
+        return $query->where('active', true);
     }
 }
