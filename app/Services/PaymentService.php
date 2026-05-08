@@ -56,6 +56,24 @@ class PaymentService
         };
     }
 
+    public function confirmPayment(int $appointmentId): Payment
+    {
+        $appointment = Appointment::findOrFail($appointmentId);
+        $payment     = $appointment->payment;
+
+        if (! $payment) {
+            throw new BookingException('Nessun pagamento trovato per questo appuntamento.');
+        }
+
+        $paymentIntent = $this->stripe->paymentIntents->retrieve($payment->stripe_transaction_id);
+
+        if ($paymentIntent->status === 'succeeded') {
+            $payment->update(['status' => 'completed']);
+        }
+
+        return $payment->fresh();
+    }
+
     public function refundPayment(int $paymentId): Payment
     {
         $payment = Payment::findOrFail($paymentId);
