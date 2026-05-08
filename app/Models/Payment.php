@@ -32,7 +32,7 @@ class Payment extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function scopePaid(Builder $query): Builder
+    public function scopeCompleted(Builder $query): Builder
     {
         return $query->where('status', 'completed');
     }

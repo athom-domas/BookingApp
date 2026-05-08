@@ -18,10 +18,10 @@ it('belongs to a user', function () {
     expect($payment->user->id)->toBe($user->id);
 });
 
-it('scope paid returns only completed payments', function () {
+it('scope completed returns only completed payments', function () {
     Payment::factory()->create(['status' => 'completed']);
     Payment::factory()->create(['status' => 'pending']);
     Payment::factory()->create(['status' => 'failed']);
 
-    expect(Payment::paid()->count())->toBe(1);
+    expect(Payment::completed()->count())->toBe(1);
 });
