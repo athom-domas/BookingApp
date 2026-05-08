@@ -233,3 +233,44 @@ it('DELETE /api/appointments/{id} returns 403 for another user appointment', fun
 
     $response->assertForbidden();
 });
+
+it('PUT /api/appointments/{id} returns 403 for another user appointment', function () {
+    $user  = User::factory()->create();
+    $user->assignRole('customer');
+    $other = User::factory()->create();
+    $appointment = Appointment::factory()->create([
+        'user_id' => $other->id,
+        'status'  => 'pending',
+    ]);
+
+    $response = $this->actingAs($user)->putJson("/api/appointments/{$appointment->id}", [
+        'notes' => 'changed',
+    ]);
+
+    $response->assertForbidden();
+});
+
+it('PUT /api/appointments/{id} updates scheduled_date when availability allows', function () {
+    $user    = User::factory()->create();
+    $user->assignRole('customer');
+    $staff   = User::factory()->create();
+    $service = Service::factory()->create(['duration_minutes' => 30]);
+    $appointment = Appointment::factory()->create([
+        'user_id'    => $user->id,
+        'staff_id'   => $staff->id,
+        'service_id' => $service->id,
+        'status'     => 'pending',
+    ]);
+    $newDate = now()->addDays(10)->toDateTimeString();
+
+    $this->mock(AppointmentService::class)
+        ->shouldReceive('validateAvailability')
+        ->andReturn(true);
+
+    $response = $this->actingAs($user)->putJson("/api/appointments/{$appointment->id}", [
+        'scheduled_date' => $newDate,
+    ]);
+
+    $response->assertOk()
+        ->assertJsonPath('data.id', $appointment->id);
+});

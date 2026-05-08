@@ -55,7 +55,7 @@ class AppointmentController extends Controller
             $appointment->update(['notes' => $request->string('notes')]);
         }
 
-        $amountCents = (int) round($appointment->final_price * 100);
+        $amountCents = (int) round((float) $appointment->final_price * 100);
         $payment = $this->paymentService->initiateStripePayment($appointment->id, $amountCents);
 
         return response()->json([
@@ -76,6 +76,8 @@ class AppointmentController extends Controller
             return response()->json(['message' => 'Solo appuntamenti pending possono essere modificati.'], 422);
         }
 
+        $changes = [];
+
         if ($request->has('scheduled_date')) {
             $newDate = Carbon::parse($request->string('scheduled_date'));
 
@@ -83,11 +85,15 @@ class AppointmentController extends Controller
                 return response()->json(['message' => 'Staff non disponibile per questa data e ora.'], 422);
             }
 
-            $appointment->update(['scheduled_date' => $newDate]);
+            $changes['scheduled_date'] = $newDate;
         }
 
         if ($request->has('notes')) {
-            $appointment->update(['notes' => $request->string('notes')]);
+            $changes['notes'] = $request->string('notes');
+        }
+
+        if (! empty($changes)) {
+            $appointment->update($changes);
         }
 
         return response()->json(['data' => $appointment->fresh()->load('service', 'staff')]);

@@ -67,9 +67,11 @@ class PaymentService
 
         $paymentIntent = $this->stripe->paymentIntents->retrieve($payment->stripe_transaction_id);
 
-        if ($paymentIntent->status === 'succeeded') {
-            $payment->update(['status' => 'completed']);
-        }
+        match ($paymentIntent->status) {
+            'succeeded' => $payment->update(['status' => 'completed']),
+            'canceled', 'requires_payment_method' => throw new BookingException('Il pagamento non è andato a buon fine.'),
+            default     => null,
+        };
 
         return $payment->fresh();
     }

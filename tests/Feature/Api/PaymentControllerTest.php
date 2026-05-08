@@ -50,3 +50,18 @@ it('POST /api/appointments/{id}/payment requires auth', function () {
 
     $this->postJson("/api/appointments/{$appointment->id}/payment")->assertUnauthorized();
 });
+
+it('POST /api/appointments/{id}/payment returns 422 on BookingException', function () {
+    $user        = User::factory()->create();
+    $user->assignRole('customer');
+    $appointment = Appointment::factory()->create(['user_id' => $user->id]);
+
+    $this->mock(PaymentService::class)
+        ->shouldReceive('confirmPayment')
+        ->andThrow(new \App\Exceptions\BookingException('Nessun pagamento trovato per questo appuntamento.'));
+
+    $response = $this->actingAs($user)->postJson("/api/appointments/{$appointment->id}/payment");
+
+    $response->assertUnprocessable()
+        ->assertJsonPath('message', 'Nessun pagamento trovato per questo appuntamento.');
+});
