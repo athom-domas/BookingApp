@@ -62,7 +62,7 @@ it('handleStripeWebhook marks payment as failed on failed event', function () {
     expect($payment->fresh()->status)->toBe('failed');
 });
 
-it('marks payment as cancelled on payment_intent.canceled webhook', function () {
+it('handleStripeWebhook marks payment as cancelled on canceled event', function () {
     $appointment = Appointment::factory()->create();
     $payment = Payment::factory()->create([
         'appointment_id'         => $appointment->id,

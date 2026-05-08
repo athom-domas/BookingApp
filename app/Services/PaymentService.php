@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Exceptions\BookingException;
 use App\Models\Appointment;
 use App\Models\Payment;
+use Illuminate\Support\Facades\Log;
 use Stripe\StripeClient;
 
 class PaymentService
@@ -37,6 +38,7 @@ class PaymentService
         $transactionId = $payload['data']['object']['id'] ?? null;
 
         if (! $transactionId) {
+            Log::warning('PaymentService: webhook payload missing transaction ID', ['type' => $payload['type'] ?? 'unknown']);
             return;
         }
 
