@@ -21,6 +21,18 @@ class AppServiceProvider extends ServiceProvider
             );
             return new \App\Services\NotificationService($client->messages);
         });
+
+        $this->app->singleton(\App\Services\GoogleCalendarService::class, function () {
+            $client = new \Google\Client();
+            $credPath = config('services.google.credentials');
+            if (file_exists($credPath)) {
+                $client->setAuthConfig($credPath);
+            }
+            $client->addScope(\Google\Service\Calendar::CALENDAR);
+            return new \App\Services\GoogleCalendarService(
+                new \Google\Service\Calendar($client)
+            );
+        });
     }
 
     public function boot(): void {}
