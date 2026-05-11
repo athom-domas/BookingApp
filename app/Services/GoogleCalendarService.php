@@ -21,7 +21,7 @@ class GoogleCalendarService
 
         $end = new EventDateTime();
         $end->setDateTime(
-            $appointment->scheduled_date->copy()
+            $appointment->scheduled_date->clone()
                 ->addMinutes($appointment->service->duration_minutes)
                 ->toRfc3339String()
         );

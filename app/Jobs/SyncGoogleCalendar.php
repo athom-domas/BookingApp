@@ -9,6 +9,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 
 class SyncGoogleCalendar implements ShouldQueue
 {
@@ -27,9 +28,23 @@ class SyncGoogleCalendar implements ShouldQueue
             return;
         }
 
-        if ($this->action === 'delete' && $this->appointment->google_event_id) {
-            $calendarService->deleteEvent($this->appointment->google_event_id);
-            $this->appointment->update(['google_event_id' => null]);
+        if ($this->action === 'delete') {
+            if ($this->appointment->google_event_id) {
+                $calendarService->deleteEvent($this->appointment->google_event_id);
+                $this->appointment->update(['google_event_id' => null]);
+            }
+            return;
         }
+
+        throw new \InvalidArgumentException("Unknown SyncGoogleCalendar action: {$this->action}");
+    }
+
+    public function failed(\Throwable $e): void
+    {
+        Log::error('SyncGoogleCalendar failed', [
+            'appointment_id' => $this->appointment->id,
+            'action'         => $this->action,
+            'error'          => $e->getMessage(),
+        ]);
     }
 }

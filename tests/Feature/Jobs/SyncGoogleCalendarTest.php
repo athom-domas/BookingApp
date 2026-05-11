@@ -38,3 +38,29 @@ it('SyncGoogleCalendar delete action is a no-op when google_event_id is null', f
 
     (new SyncGoogleCalendar($appointment, 'delete'))->handle($mockService);
 });
+
+it('SyncGoogleCalendar throws on unknown action', function () {
+    $appointment = Appointment::factory()->create(['google_event_id' => null]);
+
+    $mockService = $this->mock(GoogleCalendarService::class);
+    $mockService->shouldNotReceive('createEvent');
+    $mockService->shouldNotReceive('deleteEvent');
+
+    expect(fn () => (new SyncGoogleCalendar($appointment, 'update'))->handle($mockService))
+        ->toThrow(\InvalidArgumentException::class);
+});
+
+it('SyncGoogleCalendar failed hook logs the error', function () {
+    $appointment = Appointment::factory()->create(['google_event_id' => null]);
+
+    \Illuminate\Support\Facades\Log::shouldReceive('error')
+        ->once()
+        ->with('SyncGoogleCalendar failed', \Mockery::on(fn ($ctx) =>
+            $ctx['appointment_id'] === $appointment->id &&
+            $ctx['action'] === 'create' &&
+            isset($ctx['error'])
+        ));
+
+    $job = new SyncGoogleCalendar($appointment, 'create');
+    $job->failed(new \Exception('API error'));
+});
