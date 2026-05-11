@@ -22,16 +22,22 @@ class SendCancellationNotification implements ShouldQueue
     {
         $appointment = $this->appointment->load('user', 'service', 'staff.preferences');
 
-        Mail::to($appointment->user->email)
-            ->send(new AppointmentCancellationMail($appointment, $appointment->user));
+        Mail::send(new AppointmentCancellationMail($appointment, $appointment->user));
 
-        Mail::to($appointment->staff->email)
-            ->send(new AppointmentCancellationMail($appointment, $appointment->staff));
+        Mail::send(new AppointmentCancellationMail($appointment, $appointment->staff));
 
         $staffPrefs = $appointment->staff->preferences;
         if ($staffPrefs?->receive_sms_reminders && $staffPrefs->phone_number) {
             $message = "Cancelled: {$appointment->service->name} on {$appointment->scheduled_date->format('d/m/Y H:i')}";
             $notificationService->sendSms($staffPrefs->phone_number, $message);
         }
+    }
+
+    public function failed(\Throwable $e): void
+    {
+        \Illuminate\Support\Facades\Log::error('SendCancellationNotification failed', [
+            'appointment_id' => $this->appointment->id,
+            'error'          => $e->getMessage(),
+        ]);
     }
 }

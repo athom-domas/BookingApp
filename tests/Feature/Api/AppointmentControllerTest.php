@@ -8,10 +8,12 @@ use App\Models\User;
 use App\Services\AppointmentService;
 use App\Services\PaymentService;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Queue;
 use Mockery;
 use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
+    Queue::fake();
     Role::firstOrCreate(['name' => 'customer', 'guard_name' => 'web']);
     Role::firstOrCreate(['name' => 'staff', 'guard_name' => 'web']);
 });

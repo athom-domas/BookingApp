@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Exceptions\BookingException;
+use App\Jobs\SendCancellationNotification;
+use App\Jobs\SyncGoogleCalendar;
 use App\Models\Appointment;
 use App\Models\AppointmentReminder;
 use App\Models\AvailabilityRule;
@@ -93,6 +95,8 @@ class AppointmentService
             'status'         => 'pending',
         ]);
 
+        SyncGoogleCalendar::dispatch($appointment, 'create');
+
         return $appointment;
     }
 
@@ -116,12 +120,8 @@ class AppointmentService
         TimeSlot::where('appointment_id', $appointment->id)
             ->update(['is_available' => true, 'appointment_id' => null]);
 
-        AppointmentReminder::create([
-            'appointment_id' => $appointment->id,
-            'type'           => 'email',
-            'scheduled_for'  => now(),
-            'status'         => 'pending',
-        ]);
+        SendCancellationNotification::dispatch($appointment);
+        SyncGoogleCalendar::dispatch($appointment, 'delete');
     }
 
     public function getAvailableSlots(int $serviceId, int $staffId, string $date): array

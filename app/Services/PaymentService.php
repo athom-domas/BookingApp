@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Exceptions\BookingException;
+use App\Jobs\SendAppointmentConfirmation;
 use App\Models\Appointment;
 use App\Models\Payment;
 use Illuminate\Support\Facades\Log;
@@ -48,12 +49,18 @@ class PaymentService
             return;
         }
 
-        match ($type) {
-            'payment_intent.succeeded'      => $payment->update(['status' => 'completed']),
-            'payment_intent.payment_failed' => $payment->update(['status' => 'failed']),
-            'payment_intent.canceled'       => $payment->update(['status' => 'cancelled']),
-            default                         => null,
-        };
+        if ($type === 'payment_intent.succeeded') {
+            $payment->update(['status' => 'completed']);
+            $appointment = $payment->appointment;
+            if ($appointment) {
+                $appointment->update(['status' => 'confirmed']);
+                SendAppointmentConfirmation::dispatch($appointment);
+            }
+        } elseif ($type === 'payment_intent.payment_failed') {
+            $payment->update(['status' => 'failed']);
+        } elseif ($type === 'payment_intent.canceled') {
+            $payment->update(['status' => 'cancelled']);
+        }
     }
 
     public function confirmPayment(int $appointmentId): Payment

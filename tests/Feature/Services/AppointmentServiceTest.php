@@ -1,6 +1,8 @@
 <?php
 
 use App\Exceptions\BookingException;
+use App\Jobs\SendCancellationNotification;
+use App\Jobs\SyncGoogleCalendar;
 use App\Models\Appointment;
 use App\Models\AppointmentReminder;
 use App\Models\AvailabilityRule;
@@ -9,6 +11,11 @@ use App\Models\TimeSlot;
 use App\Models\User;
 use App\Services\AppointmentService;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Queue;
+
+beforeEach(function () {
+    Queue::fake();
+});
 
 // ── validateAvailability ──────────────────────────────────────────────────────
 
@@ -190,7 +197,7 @@ it('cancelAppointment frees the linked time slot', function () {
     expect($slot->appointment_id)->toBeNull();
 });
 
-it('cancelAppointment creates a cancellation reminder', function () {
+it('cancelAppointment dispatches cancellation notification and calendar sync', function () {
     $appointment = Appointment::factory()->create([
         'scheduled_date' => now()->addDays(3),
         'status'         => 'pending',
@@ -198,7 +205,8 @@ it('cancelAppointment creates a cancellation reminder', function () {
 
     app(AppointmentService::class)->cancelAppointment($appointment->id, 'Cliente assente');
 
-    expect(AppointmentReminder::where('appointment_id', $appointment->id)->exists())->toBeTrue();
+    Queue::assertPushed(SendCancellationNotification::class, fn ($job) => $job->appointment->id === $appointment->id);
+    Queue::assertPushed(SyncGoogleCalendar::class, fn ($job) => $job->action === 'delete');
 });
 
 it('cancelAppointment throws BookingException within 24h', function () {

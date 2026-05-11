@@ -1,14 +1,17 @@
 <?php
 
 use App\Exceptions\BookingException;
+use App\Jobs\SendAppointmentConfirmation;
 use App\Models\Appointment;
 use App\Models\Payment;
 use App\Services\PaymentService;
+use Illuminate\Support\Facades\Queue;
 use Mockery\MockInterface;
 use Stripe\PaymentIntent;
 use Stripe\Refund;
 
 beforeEach(function () {
+    Queue::fake();
     $this->makePaymentService = function (MockInterface $mockStripe): PaymentService {
         return new PaymentService($mockStripe);
     };
@@ -40,7 +43,12 @@ it('initiateStripePayment creates a pending payment record', function () {
 });
 
 it('handleStripeWebhook marks payment as completed on succeeded event', function () {
-    $payment = Payment::factory()->create(['stripe_transaction_id' => 'pi_test_456', 'status' => 'pending']);
+    $appointment = Appointment::factory()->create(['status' => 'pending']);
+    $payment = Payment::factory()->create([
+        'appointment_id'        => $appointment->id,
+        'stripe_transaction_id' => 'pi_test_456',
+        'status'                => 'pending',
+    ]);
 
     $mockStripe = Mockery::mock(\Stripe\StripeClient::class);
     ($this->makePaymentService)($mockStripe)->handleStripeWebhook([
@@ -49,6 +57,8 @@ it('handleStripeWebhook marks payment as completed on succeeded event', function
     ]);
 
     expect($payment->fresh()->status)->toBe('completed');
+    expect($appointment->fresh()->status)->toBe('confirmed');
+    Queue::assertPushed(SendAppointmentConfirmation::class, fn ($job) => $job->appointment->id === $appointment->id);
 });
 
 it('handleStripeWebhook marks payment as failed on failed event', function () {

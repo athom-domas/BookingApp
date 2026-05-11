@@ -29,7 +29,7 @@ class SendAppointmentReminder implements ShouldQueue
         $user        = $appointment->user;
         $prefs       = $user->preferences;
 
-        Mail::to($user->email)->send(new AppointmentReminderMail($appointment));
+        Mail::send(new AppointmentReminderMail($appointment));
 
         if ($prefs?->receive_sms_reminders && $prefs->phone_number) {
             $message = "Reminder: {$appointment->service->name} on {$appointment->scheduled_date->format('d/m/Y H:i')}";

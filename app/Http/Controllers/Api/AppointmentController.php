@@ -6,6 +6,7 @@ use App\Exceptions\BookingException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\BookAppointmentRequest;
 use App\Http\Requests\Api\UpdateAppointmentRequest;
+use App\Jobs\SyncGoogleCalendar;
 use App\Models\Appointment;
 use App\Services\AppointmentService;
 use App\Services\PaymentService;
@@ -94,6 +95,14 @@ class AppointmentController extends Controller
 
         if (! empty($changes)) {
             $appointment->update($changes);
+
+            if (isset($changes['scheduled_date'])) {
+                $fresh = $appointment->fresh();
+                if ($fresh->google_event_id) {
+                    SyncGoogleCalendar::dispatch($fresh, 'delete');
+                }
+                SyncGoogleCalendar::dispatch($fresh, 'create');
+            }
         }
 
         return response()->json(['data' => $appointment->fresh()->load('service', 'staff')]);
