@@ -10,6 +10,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 
 class GenerateWeeklySlots implements ShouldQueue
 {
@@ -17,9 +18,16 @@ class GenerateWeeklySlots implements ShouldQueue
 
     public function handle(SlotGeneratorService $generator): void
     {
-        $nextWeek = Carbon::now()->startOfWeek()->addWeek();
+        $nextWeek = Carbon::now()->startOfWeek(Carbon::MONDAY)->addWeek();
 
         User::whereHas('availabilityRules', fn ($q) => $q->where('is_available', true))
             ->each(fn (User $staff) => $generator->generateWeeklySlots($staff->id, $nextWeek));
+    }
+
+    public function failed(\Throwable $e): void
+    {
+        Log::error('GenerateWeeklySlots failed', [
+            'error' => $e->getMessage(),
+        ]);
     }
 }

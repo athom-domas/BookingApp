@@ -12,7 +12,6 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::job(GenerateWeeklySlots::class)
-    ->weekly()
     ->sundays()
     ->at('01:00')
     ->description('Generate time slots for all staff for the next week');

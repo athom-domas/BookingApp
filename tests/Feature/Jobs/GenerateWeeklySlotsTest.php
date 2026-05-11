@@ -28,15 +28,29 @@ it('GenerateWeeklySlots targets the next Monday week', function () {
     $staff = User::factory()->create();
     AvailabilityRule::factory()->create(['user_id' => $staff->id, 'is_available' => true]);
 
-    $expectedWeekStart = Carbon::now()->startOfWeek()->addWeek();
+    Carbon::setTestNow('2026-05-10 00:00:00'); // Sunday
+    $expected = '2026-05-11'; // the Monday immediately after
 
     $mockGenerator = $this->mock(SlotGeneratorService::class);
     $mockGenerator->shouldReceive('generateWeeklySlots')
         ->once()
         ->with($staff->id, Mockery::on(fn (Carbon $d) =>
-            $d->format('Y-m-d') === $expectedWeekStart->format('Y-m-d')
+            $d->format('Y-m-d') === $expected
         ))
         ->andReturn(5);
 
     (new GenerateWeeklySlots())->handle($mockGenerator);
+
+    Carbon::setTestNow(); // reset
+});
+
+it('GenerateWeeklySlots failed hook logs the error', function () {
+    \Illuminate\Support\Facades\Log::shouldReceive('error')
+        ->once()
+        ->with('GenerateWeeklySlots failed', \Mockery::on(fn ($ctx) =>
+            isset($ctx['error'])
+        ));
+
+    $job = new GenerateWeeklySlots();
+    $job->failed(new \Exception('DB error'));
 });
