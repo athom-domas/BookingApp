@@ -40,4 +40,15 @@ return [
         'public' => env('STRIPE_PUBLIC_KEY'),
     ],
 
+    'twilio' => [
+        'sid'   => env('TWILIO_SID'),
+        'token' => env('TWILIO_TOKEN'),
+        'from'  => env('TWILIO_FROM', '+1234567890'),
+    ],
+
+    'google' => [
+        'credentials' => env('GOOGLE_APPLICATION_CREDENTIALS', '/app/config/google-credentials.json'),
+        'calendar_id' => env('GOOGLE_CALENDAR_ID'),
+    ],
+
 ];

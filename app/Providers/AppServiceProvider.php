@@ -13,6 +13,14 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(PaymentService::class, function () {
             return new PaymentService(new StripeClient(config('services.stripe.secret')));
         });
+
+        $this->app->singleton(\App\Services\NotificationService::class, function () {
+            $client = new \Twilio\Rest\Client(
+                config('services.twilio.sid'),
+                config('services.twilio.token'),
+            );
+            return new \App\Services\NotificationService($client->messages);
+        });
     }
 
     public function boot(): void {}
