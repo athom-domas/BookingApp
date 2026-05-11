@@ -84,6 +84,36 @@ it('SendAppointmentReminder sends SMS exception propagates', function () {
         ->toThrow(\Exception::class);
 });
 
+it('SendAppointmentReminder is a no-op when already sent', function () {
+    $appointment = Appointment::factory()->create();
+    $reminder = AppointmentReminder::factory()->create([
+        'appointment_id' => $appointment->id,
+        'type'           => 'email',
+        'status'         => 'sent',
+    ]);
+
+    $mockNotification = $this->mock(NotificationService::class);
+    $mockNotification->shouldNotReceive('sendSms');
+
+    (new SendAppointmentReminder($reminder))->handle($mockNotification);
+
+    Mail::assertNothingSent();
+});
+
+it('SendAppointmentReminder failed hook marks reminder as failed', function () {
+    $appointment = Appointment::factory()->create();
+    $reminder = AppointmentReminder::factory()->create([
+        'appointment_id' => $appointment->id,
+        'status'         => 'pending',
+    ]);
+
+    $job = new SendAppointmentReminder($reminder);
+    $job->failed(new \Exception('Twilio down'));
+
+    expect($reminder->fresh()->status)->toBe('failed');
+    expect($reminder->fresh()->error_message)->toBe('Twilio down');
+});
+
 // --- SendAppointmentConfirmation ---
 
 it('SendAppointmentConfirmation sends confirmation email', function () {

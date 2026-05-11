@@ -20,6 +20,10 @@ class SendAppointmentReminder implements ShouldQueue
 
     public function handle(NotificationService $notificationService): void
     {
+        if ($this->reminder->status === 'sent') {
+            return;
+        }
+
         $reminder    = $this->reminder->load('appointment.user.preferences', 'appointment.service', 'appointment.staff');
         $appointment = $reminder->appointment;
         $user        = $appointment->user;
@@ -33,5 +37,13 @@ class SendAppointmentReminder implements ShouldQueue
         }
 
         $reminder->update(['status' => 'sent', 'sent_at' => now()]);
+    }
+
+    public function failed(\Throwable $e): void
+    {
+        $this->reminder->update([
+            'status'        => 'failed',
+            'error_message' => $e->getMessage(),
+        ]);
     }
 }
