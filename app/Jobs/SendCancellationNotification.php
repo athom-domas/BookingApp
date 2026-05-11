@@ -1,0 +1,37 @@
+<?php
+
+namespace App\Jobs;
+
+use App\Mail\AppointmentCancellationMail;
+use App\Models\Appointment;
+use App\Services\NotificationService;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Mail;
+
+class SendCancellationNotification implements ShouldQueue
+{
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
+    public function __construct(public readonly Appointment $appointment) {}
+
+    public function handle(NotificationService $notificationService): void
+    {
+        $appointment = $this->appointment->load('user', 'service', 'staff.preferences');
+
+        Mail::to($appointment->user->email)
+            ->send(new AppointmentCancellationMail($appointment, $appointment->user));
+
+        Mail::to($appointment->staff->email)
+            ->send(new AppointmentCancellationMail($appointment, $appointment->staff));
+
+        $staffPrefs = $appointment->staff->preferences;
+        if ($staffPrefs?->receive_sms_reminders && $staffPrefs->phone_number) {
+            $message = "Cancelled: {$appointment->service->name} on {$appointment->scheduled_date->format('d/m/Y H:i')}";
+            $notificationService->sendSms($staffPrefs->phone_number, $message);
+        }
+    }
+}
