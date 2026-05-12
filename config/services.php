@@ -38,12 +38,13 @@ return [
     'stripe' => [
         'secret' => env('STRIPE_SECRET_KEY'),
         'public' => env('STRIPE_PUBLIC_KEY'),
+        'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
     ],
 
     'twilio' => [
-        'sid'   => env('TWILIO_SID'),
+        'sid' => env('TWILIO_SID'),
         'token' => env('TWILIO_TOKEN'),
-        'from'  => env('TWILIO_FROM', '+1234567890'),
+        'from' => env('TWILIO_FROM', '+1234567890'),
     ],
 
     'google' => [

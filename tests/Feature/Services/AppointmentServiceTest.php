@@ -12,30 +12,52 @@ use App\Models\User;
 use App\Services\AppointmentService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Queue;
+use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
     Queue::fake();
+    Role::firstOrCreate(['name' => 'staff', 'guard_name' => 'web']);
 });
+
+function attachStaffToService(User $staff, Service $service): void
+{
+    $staff->assignRole('staff');
+    $service->staff()->syncWithoutDetaching($staff->id);
+}
+
+function createBookableSlot(User $staff, Carbon $date, int $durationMinutes = 60): TimeSlot
+{
+    return TimeSlot::factory()->create([
+        'user_id' => $staff->id,
+        'date' => $date->format('Y-m-d'),
+        'start_time' => $date->format('H:i:s'),
+        'end_time' => $date->copy()->addMinutes($durationMinutes)->format('H:i:s'),
+        'is_available' => true,
+        'appointment_id' => null,
+    ]);
+}
 
 // ── validateAvailability ──────────────────────────────────────────────────────
 
 it('validateAvailability returns false when no rule exists for that day', function () {
-    $staff   = User::factory()->create();
+    $staff = User::factory()->create();
     $service = Service::factory()->create(['duration_minutes' => 30]);
-    $monday  = Carbon::parse('next monday')->setTime(10, 0);
+    attachStaffToService($staff, $service);
+    $monday = Carbon::parse('next monday')->setTime(10, 0);
 
     expect(app(AppointmentService::class)->validateAvailability($staff->id, $service->id, $monday))->toBeFalse();
 });
 
 it('validateAvailability returns false when time is outside rule window', function () {
-    $staff   = User::factory()->create();
+    $staff = User::factory()->create();
     $service = Service::factory()->create(['duration_minutes' => 30]);
-    $monday  = Carbon::parse('next monday');
+    attachStaffToService($staff, $service);
+    $monday = Carbon::parse('next monday');
     AvailabilityRule::factory()->create([
-        'user_id'      => $staff->id,
-        'day_of_week'  => 1,
-        'start_time'   => '09:00:00',
-        'end_time'     => '17:00:00',
+        'user_id' => $staff->id,
+        'day_of_week' => 1,
+        'start_time' => '09:00:00',
+        'end_time' => '17:00:00',
         'is_available' => true,
     ]);
 
@@ -44,14 +66,15 @@ it('validateAvailability returns false when time is outside rule window', functi
 });
 
 it('validateAvailability returns true when slot is free', function () {
-    $staff   = User::factory()->create();
+    $staff = User::factory()->create();
     $service = Service::factory()->create(['duration_minutes' => 30]);
-    $monday  = Carbon::parse('next monday');
+    attachStaffToService($staff, $service);
+    $monday = Carbon::parse('next monday');
     AvailabilityRule::factory()->create([
-        'user_id'      => $staff->id,
-        'day_of_week'  => 1,
-        'start_time'   => '09:00:00',
-        'end_time'     => '17:00:00',
+        'user_id' => $staff->id,
+        'day_of_week' => 1,
+        'start_time' => '09:00:00',
+        'end_time' => '17:00:00',
         'is_available' => true,
     ]);
 
@@ -59,23 +82,25 @@ it('validateAvailability returns true when slot is free', function () {
 });
 
 it('validateAvailability returns false when appointment conflicts', function () {
-    $staff           = User::factory()->create();
+    $staff = User::factory()->create();
     $existingService = Service::factory()->create(['duration_minutes' => 60]);
-    $newService      = Service::factory()->create(['duration_minutes' => 30]);
-    $monday          = Carbon::parse('next monday');
+    $newService = Service::factory()->create(['duration_minutes' => 30]);
+    attachStaffToService($staff, $existingService);
+    attachStaffToService($staff, $newService);
+    $monday = Carbon::parse('next monday');
     AvailabilityRule::factory()->create([
-        'user_id'      => $staff->id,
-        'day_of_week'  => 1,
-        'start_time'   => '09:00:00',
-        'end_time'     => '17:00:00',
+        'user_id' => $staff->id,
+        'day_of_week' => 1,
+        'start_time' => '09:00:00',
+        'end_time' => '17:00:00',
         'is_available' => true,
     ]);
     // Existing appointment 10:00–11:00 + 15 buffer = blocks until 11:15
     Appointment::factory()->create([
-        'staff_id'       => $staff->id,
-        'service_id'     => $existingService->id,
+        'staff_id' => $staff->id,
+        'service_id' => $existingService->id,
         'scheduled_date' => $monday->copy()->setTime(10, 0),
-        'status'         => 'pending',
+        'status' => 'pending',
     ]);
 
     // New appointment at 10:30 (30 min) overlaps 10:00–11:15
@@ -85,17 +110,19 @@ it('validateAvailability returns false when appointment conflicts', function () 
 // ── bookAppointment ───────────────────────────────────────────────────────────
 
 it('bookAppointment creates appointment with correct attributes', function () {
-    $user    = User::factory()->create();
+    $user = User::factory()->create();
     $service = Service::factory()->create(['duration_minutes' => 60, 'price' => 50.00]);
-    $staff   = User::factory()->create();
-    $monday  = Carbon::parse('next monday')->setTime(10, 0);
+    $staff = User::factory()->create();
+    attachStaffToService($staff, $service);
+    $monday = Carbon::parse('next monday')->setTime(10, 0);
     AvailabilityRule::factory()->create([
-        'user_id'      => $staff->id,
-        'day_of_week'  => 1,
-        'start_time'   => '09:00:00',
-        'end_time'     => '17:00:00',
+        'user_id' => $staff->id,
+        'day_of_week' => 1,
+        'start_time' => '09:00:00',
+        'end_time' => '17:00:00',
         'is_available' => true,
     ]);
+    createBookableSlot($staff, $monday, 60);
 
     $appointment = app(AppointmentService::class)->bookAppointment($user->id, $service->id, $staff->id, $monday);
 
@@ -106,17 +133,19 @@ it('bookAppointment creates appointment with correct attributes', function () {
 });
 
 it('bookAppointment creates a 24h reminder', function () {
-    $user    = User::factory()->create();
+    $user = User::factory()->create();
     $service = Service::factory()->create(['duration_minutes' => 30, 'price' => 30.00]);
-    $staff   = User::factory()->create();
-    $monday  = Carbon::parse('next monday')->setTime(10, 0);
+    $staff = User::factory()->create();
+    attachStaffToService($staff, $service);
+    $monday = Carbon::parse('next monday')->setTime(10, 0);
     AvailabilityRule::factory()->create([
-        'user_id'      => $staff->id,
-        'day_of_week'  => 1,
-        'start_time'   => '09:00:00',
-        'end_time'     => '17:00:00',
+        'user_id' => $staff->id,
+        'day_of_week' => 1,
+        'start_time' => '09:00:00',
+        'end_time' => '17:00:00',
         'is_available' => true,
     ]);
+    createBookableSlot($staff, $monday, 30);
 
     $appointment = app(AppointmentService::class)->bookAppointment($user->id, $service->id, $staff->id, $monday);
 
@@ -128,22 +157,23 @@ it('bookAppointment creates a 24h reminder', function () {
 });
 
 it('bookAppointment marks existing time slot as unavailable', function () {
-    $user    = User::factory()->create();
+    $user = User::factory()->create();
     $service = Service::factory()->create(['duration_minutes' => 60, 'price' => 40.00]);
-    $staff   = User::factory()->create();
-    $monday  = Carbon::parse('next monday')->setTime(10, 0);
+    $staff = User::factory()->create();
+    attachStaffToService($staff, $service);
+    $monday = Carbon::parse('next monday')->setTime(10, 0);
     AvailabilityRule::factory()->create([
-        'user_id'      => $staff->id,
-        'day_of_week'  => 1,
-        'start_time'   => '09:00:00',
-        'end_time'     => '17:00:00',
+        'user_id' => $staff->id,
+        'day_of_week' => 1,
+        'start_time' => '09:00:00',
+        'end_time' => '17:00:00',
         'is_available' => true,
     ]);
     $slot = TimeSlot::factory()->create([
-        'user_id'      => $staff->id,
-        'date'         => Carbon::parse('next monday')->format('Y-m-d'),
-        'start_time'   => '10:00:00',
-        'end_time'     => '11:00:00',
+        'user_id' => $staff->id,
+        'date' => Carbon::parse('next monday')->format('Y-m-d'),
+        'start_time' => '10:00:00',
+        'end_time' => '11:00:00',
         'is_available' => true,
     ]);
 
@@ -155,10 +185,11 @@ it('bookAppointment marks existing time slot as unavailable', function () {
 });
 
 it('bookAppointment throws BookingException when staff is unavailable', function () {
-    $user    = User::factory()->create();
+    $user = User::factory()->create();
     $service = Service::factory()->create(['duration_minutes' => 30]);
-    $staff   = User::factory()->create();
-    $monday  = Carbon::parse('next monday')->setTime(10, 0);
+    $staff = User::factory()->create();
+    attachStaffToService($staff, $service);
+    $monday = Carbon::parse('next monday')->setTime(10, 0);
     // No AvailabilityRule
 
     expect(fn () => app(AppointmentService::class)->bookAppointment($user->id, $service->id, $staff->id, $monday))
@@ -170,7 +201,7 @@ it('bookAppointment throws BookingException when staff is unavailable', function
 it('cancelAppointment updates status to cancelled', function () {
     $appointment = Appointment::factory()->create([
         'scheduled_date' => now()->addDays(3),
-        'status'         => 'pending',
+        'status' => 'pending',
     ]);
 
     app(AppointmentService::class)->cancelAppointment($appointment->id);
@@ -181,12 +212,12 @@ it('cancelAppointment updates status to cancelled', function () {
 it('cancelAppointment frees the linked time slot', function () {
     $appointment = Appointment::factory()->create([
         'scheduled_date' => now()->addDays(3),
-        'status'         => 'pending',
+        'status' => 'pending',
     ]);
     $slot = TimeSlot::factory()->create([
-        'user_id'        => $appointment->staff_id,
-        'date'           => now()->addDays(3)->format('Y-m-d'),
-        'is_available'   => false,
+        'user_id' => $appointment->staff_id,
+        'date' => now()->addDays(3)->format('Y-m-d'),
+        'is_available' => false,
         'appointment_id' => $appointment->id,
     ]);
 
@@ -200,7 +231,7 @@ it('cancelAppointment frees the linked time slot', function () {
 it('cancelAppointment dispatches cancellation notification and calendar sync', function () {
     $appointment = Appointment::factory()->create([
         'scheduled_date' => now()->addDays(3),
-        'status'         => 'pending',
+        'status' => 'pending',
     ]);
 
     app(AppointmentService::class)->cancelAppointment($appointment->id, 'Cliente assente');
@@ -212,7 +243,7 @@ it('cancelAppointment dispatches cancellation notification and calendar sync', f
 it('cancelAppointment throws BookingException within 24h', function () {
     $appointment = Appointment::factory()->create([
         'scheduled_date' => now()->addHours(12),
-        'status'         => 'pending',
+        'status' => 'pending',
     ]);
 
     expect(fn () => app(AppointmentService::class)->cancelAppointment($appointment->id))
@@ -222,7 +253,7 @@ it('cancelAppointment throws BookingException within 24h', function () {
 it('cancelAppointment throws BookingException for completed appointments', function () {
     $appointment = Appointment::factory()->create([
         'scheduled_date' => now()->addDays(3),
-        'status'         => 'completed',
+        'status' => 'completed',
     ]);
 
     expect(fn () => app(AppointmentService::class)->cancelAppointment($appointment->id))
@@ -232,9 +263,10 @@ it('cancelAppointment throws BookingException for completed appointments', funct
 // ── getAvailableSlots ─────────────────────────────────────────────────────────
 
 it('getAvailableSlots returns only slots that fit the service duration', function () {
-    $staff   = User::factory()->create();
+    $staff = User::factory()->create();
     $service = Service::factory()->create(['duration_minutes' => 60]);
-    $date    = now()->addDays(10)->format('Y-m-d');
+    attachStaffToService($staff, $service);
+    $date = now()->addDays(10)->format('Y-m-d');
 
     // 60-min slot: fits
     TimeSlot::factory()->create(['user_id' => $staff->id, 'date' => $date, 'start_time' => '09:00:00', 'end_time' => '10:00:00', 'is_available' => true]);

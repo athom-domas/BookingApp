@@ -18,28 +18,30 @@ class PaymentService
         $appointment = Appointment::findOrFail($appointmentId);
 
         $paymentIntent = $this->stripe->paymentIntents->create([
-            'amount'   => $amountCents,
+            'amount' => $amountCents,
             'currency' => 'eur',
+            'automatic_payment_methods' => ['enabled' => true],
             'metadata' => ['appointment_id' => $appointmentId],
         ]);
 
         return Payment::create([
-            'appointment_id'        => $appointmentId,
-            'user_id'               => $appointment->user_id,
-            'amount'                => $amountCents / 100,
-            'status'                => 'pending',
+            'appointment_id' => $appointmentId,
+            'user_id' => $appointment->user_id,
+            'amount' => $amountCents / 100,
+            'status' => 'pending',
             'stripe_transaction_id' => $paymentIntent->id,
-            'stripe_response'       => $paymentIntent->toArray(),
+            'stripe_response' => $paymentIntent->toArray(),
         ]);
     }
 
     public function handleStripeWebhook(array $payload): void
     {
-        $type          = $payload['type'] ?? '';
+        $type = $payload['type'] ?? '';
         $transactionId = $payload['data']['object']['id'] ?? null;
 
         if (! $transactionId) {
             Log::warning('PaymentService: webhook payload missing transaction ID', ['type' => $payload['type'] ?? 'unknown']);
+
             return;
         }
 
@@ -50,12 +52,7 @@ class PaymentService
         }
 
         if ($type === 'payment_intent.succeeded') {
-            $payment->update(['status' => 'completed']);
-            $appointment = $payment->appointment;
-            if ($appointment) {
-                $appointment->update(['status' => 'confirmed']);
-                SendAppointmentConfirmation::dispatch($appointment);
-            }
+            $this->markPaymentCompleted($payment);
         } elseif ($type === 'payment_intent.payment_failed') {
             $payment->update(['status' => 'failed']);
         } elseif ($type === 'payment_intent.canceled') {
@@ -66,7 +63,7 @@ class PaymentService
     public function confirmPayment(int $appointmentId): Payment
     {
         $appointment = Appointment::findOrFail($appointmentId);
-        $payment     = $appointment->payment;
+        $payment = $appointment->payment;
 
         if (! $payment) {
             throw new BookingException('Nessun pagamento trovato per questo appuntamento.');
@@ -74,11 +71,11 @@ class PaymentService
 
         $paymentIntent = $this->stripe->paymentIntents->retrieve($payment->stripe_transaction_id);
 
-        match ($paymentIntent->status) {
-            'succeeded' => $payment->update(['status' => 'completed']),
-            'canceled', 'requires_payment_method' => throw new BookingException('Il pagamento non è andato a buon fine.'),
-            default     => null,
-        };
+        if ($paymentIntent->status === 'succeeded') {
+            $this->markPaymentCompleted($payment);
+        } elseif (in_array($paymentIntent->status, ['canceled', 'requires_payment_method'], true)) {
+            throw new BookingException('Il pagamento non è andato a buon fine.');
+        }
 
         return $payment->fresh();
     }
@@ -96,10 +93,31 @@ class PaymentService
         ]);
 
         $payment->update([
-            'status'          => 'refunded',
+            'status' => 'refunded',
             'stripe_response' => $refund->toArray(),
         ]);
 
         return $payment->fresh();
+    }
+
+    private function markPaymentCompleted(Payment $payment): void
+    {
+        $alreadyCompleted = $payment->status === 'completed';
+
+        $payment->update(['status' => 'completed']);
+
+        $appointment = $payment->appointment;
+
+        if (! $appointment) {
+            return;
+        }
+
+        if ($appointment->status !== 'confirmed') {
+            $appointment->update(['status' => 'confirmed']);
+        }
+
+        if (! $alreadyCompleted) {
+            SendAppointmentConfirmation::dispatch($appointment->fresh());
+        }
     }
 }

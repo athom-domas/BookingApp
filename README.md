@@ -1,58 +1,76 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Booking App
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Gestionale prenotazioni in Laravel con portale clienti, pannello admin Filament, pagamenti Stripe, notifiche e sincronizzazione calendario.
 
-## About Laravel
+## Stack
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- Laravel 13, PHP 8.4
+- Filament 4 per admin su `/admin`
+- MySQL 8, Redis 7, Mailhog
+- Stripe, Twilio, Google Calendar
+- Pest per test feature/unit
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Setup locale
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
-
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+Il progetto e pensato per girare in Docker.
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+cp .env.example .env
+docker-compose up -d
+docker-compose run --rm app php artisan key:generate
+docker-compose run --rm app php artisan migrate --seed
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Servizi principali:
 
-## Contributing
+- App: `http://localhost:8000`
+- Admin Filament: `http://localhost:8000/admin`
+- Mailhog: `http://localhost:8025`
+- phpMyAdmin: `http://localhost:8080`
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Utenti seed:
 
-## Code of Conduct
+- `admin@test.com` / `password`
+- `staff@test.com` / `password`
+- `customer@test.com` / `password`
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Variabili integrazioni
 
-## Security Vulnerabilities
+Impostare in `.env`:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```env
+STRIPE_PUBLIC_KEY=pk_test_...
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
 
-## License
+TWILIO_SID=
+TWILIO_TOKEN=
+TWILIO_FROM=
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+GOOGLE_APPLICATION_CREDENTIALS=/app/config/google-credentials.json
+GOOGLE_CALENDAR_ID=
+```
+
+Webhook Stripe locale:
+
+```bash
+stripe listen --forward-to localhost:8000/stripe/webhook
+```
+
+## Comandi utili
+
+```bash
+docker-compose run --rm app ./vendor/bin/pest
+docker-compose run --rm app php artisan migrate:fresh --seed
+docker-compose run --rm app php artisan schedule:run
+docker-compose run --rm app php artisan queue:listen --tries=1
+npm run build
+```
+
+## Funzionalita
+
+- Portale clienti Blade: registrazione, login, prenotazione, pagamento Stripe, storico appuntamenti.
+- API Sanctum per servizi, appuntamenti e pagamenti.
+- Admin Filament per servizi, disponibilita, slot, prenotazioni e pagamenti.
+- Job per reminder, conferme, cancellazioni, Google Calendar e generazione slot.
+- Test automatici su modelli, servizi, API, job, mail, admin e portale.

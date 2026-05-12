@@ -25,6 +25,11 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg && \
     intl \
     && docker-php-ext-enable pdo pdo_mysql gd zip bcmath intl
 
+RUN apk add --no-cache $PHPIZE_DEPS \
+    && pecl install redis \
+    && docker-php-ext-enable redis \
+    && apk del $PHPIZE_DEPS
+
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /app
