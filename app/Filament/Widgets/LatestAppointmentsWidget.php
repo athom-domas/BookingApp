@@ -23,7 +23,7 @@ class LatestAppointmentsWidget extends BaseWidget
             ->query(
                 Appointment::query()
                     ->with(['user', 'staff', 'service'])
-                    ->latest()
+                    ->latest('scheduled_date')
                     ->limit(5)
             )
             ->paginated(false)
