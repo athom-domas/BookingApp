@@ -61,3 +61,20 @@ it('stats widget sums completed payments for current month', function () {
         ->assertSuccessful()
         ->assertSee('200,00'); // 150 + 50 = 200
 });
+
+it('dashboard shows latest appointments widget', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+
+    $customer = User::factory()->create(['name' => 'Mario Rossi']);
+    $appointment = Appointment::factory()->create([
+        'user_id' => $customer->id,
+        'scheduled_date' => today(),
+    ]);
+
+    $this->actingAs($admin)
+        ->get('/admin')
+        ->assertSuccessful()
+        ->assertSee('Mario Rossi')
+        ->assertSee('Ultimi appuntamenti');
+});
