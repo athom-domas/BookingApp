@@ -31,7 +31,20 @@ it('stats widget counts today appointments correctly', function () {
     $this->actingAs($admin)
         ->get('/admin')
         ->assertSuccessful()
-        ->assertSee('3');
+        ->assertSeeInOrder(['Appuntamenti oggi', '3']);
+});
+
+it('stats widget counts this month appointments correctly', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+
+    Appointment::factory()->count(4)->create(['scheduled_date' => now()->startOfMonth()->addDays(2)]);
+    Appointment::factory()->create(['scheduled_date' => now()->subMonths(2)]);
+
+    $this->actingAs($admin)
+        ->get('/admin')
+        ->assertSuccessful()
+        ->assertSeeInOrder(['Appuntamenti questo mese', '4']);
 });
 
 it('stats widget sums completed payments for current month', function () {
