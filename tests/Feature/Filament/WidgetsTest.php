@@ -67,7 +67,7 @@ it('dashboard shows latest appointments widget', function () {
     $admin->assignRole('admin');
 
     $customer = User::factory()->create(['name' => 'Mario Rossi']);
-    $appointment = Appointment::factory()->create([
+    Appointment::factory()->create([
         'user_id' => $customer->id,
         'scheduled_date' => today(),
     ]);
@@ -76,5 +76,8 @@ it('dashboard shows latest appointments widget', function () {
         ->get('/admin')
         ->assertSuccessful()
         ->assertSee('Mario Rossi')
-        ->assertSee('Ultimi appuntamenti');
+        ->assertSee('Ultimi appuntamenti')
+        ->assertSee('Cliente')
+        ->assertSee('Staff')
+        ->assertSee('Servizio');
 });

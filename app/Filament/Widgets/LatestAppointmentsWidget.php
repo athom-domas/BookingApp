@@ -29,8 +29,7 @@ class LatestAppointmentsWidget extends BaseWidget
             ->paginated(false)
             ->columns([
                 TextColumn::make('user.name')
-                    ->label('Cliente')
-                    ->searchable(),
+                    ->label('Cliente'),
 
                 TextColumn::make('staff.name')
                     ->label('Staff'),
