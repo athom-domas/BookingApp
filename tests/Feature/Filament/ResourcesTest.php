@@ -4,12 +4,14 @@ use App\Filament\Resources\AppointmentResource;
 use App\Filament\Resources\AvailabilityRuleResource;
 use App\Filament\Resources\PaymentResource;
 use App\Filament\Resources\ServiceResource;
+use App\Filament\Resources\StaffResource;
 use App\Filament\Resources\TimeSlotResource;
 use App\Models\User;
 use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
     Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+    Role::firstOrCreate(['name' => 'staff', 'guard_name' => 'web']);
 });
 
 it('appointment list page renders', function () {
@@ -55,4 +57,23 @@ it('payment list page renders', function () {
     $this->actingAs($admin)
         ->get(PaymentResource::getUrl('index'))
         ->assertSuccessful();
+});
+
+it('staff list page renders for admins', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+
+    $this->actingAs($admin)
+        ->get(StaffResource::getUrl('index'))
+        ->assertSuccessful()
+        ->assertSee('Staff');
+});
+
+it('staff resource is forbidden for staff users', function () {
+    $staff = User::factory()->create();
+    $staff->assignRole('staff');
+
+    $this->actingAs($staff)
+        ->get(StaffResource::getUrl('index'))
+        ->assertForbidden();
 });
