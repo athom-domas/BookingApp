@@ -2,6 +2,7 @@
 
 use App\Filament\Resources\AppointmentResource;
 use App\Filament\Resources\AvailabilityRuleResource;
+use App\Filament\Resources\CustomerResource;
 use App\Filament\Resources\PaymentResource;
 use App\Filament\Resources\ServiceResource;
 use App\Filament\Resources\StaffResource;
@@ -11,6 +12,7 @@ use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
     Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+    Role::firstOrCreate(['name' => 'customer', 'guard_name' => 'web']);
     Role::firstOrCreate(['name' => 'staff', 'guard_name' => 'web']);
 });
 
@@ -75,5 +77,27 @@ it('staff resource is forbidden for staff users', function () {
 
     $this->actingAs($staff)
         ->get(StaffResource::getUrl('index'))
+        ->assertForbidden();
+});
+
+it('customer list page renders for admins', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+    $customer = User::factory()->create();
+    $customer->assignRole('customer');
+
+    $this->actingAs($admin)
+        ->get(CustomerResource::getUrl('index'))
+        ->assertSuccessful()
+        ->assertSee('Clienti')
+        ->assertSee($customer->email);
+});
+
+it('customer resource is forbidden for staff users', function () {
+    $staff = User::factory()->create();
+    $staff->assignRole('staff');
+
+    $this->actingAs($staff)
+        ->get(CustomerResource::getUrl('index'))
         ->assertForbidden();
 });
