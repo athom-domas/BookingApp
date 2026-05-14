@@ -29,6 +29,7 @@ class EditStaff extends EditRecord
     {
         $data['password'] = null;
         $data['password_confirmation'] = null;
+        $data['slot_duration_minutes'] = $this->getRecord()->preferences->slot_duration_minutes ?? 60;
 
         return $data;
     }
@@ -40,6 +41,11 @@ class EditStaff extends EditRecord
         }
 
         unset($data['password_confirmation']);
+
+        $slotDuration = $data['slot_duration_minutes'] ?? 60;
+        unset($data['slot_duration_minutes']);
+
+        $this->getRecord()->preferences()->updateOrCreate([], ['slot_duration_minutes' => $slotDuration]);
 
         return $data;
     }

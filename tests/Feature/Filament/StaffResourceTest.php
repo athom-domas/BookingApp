@@ -59,3 +59,49 @@ it('editing staff keeps the staff role and can update password', function () {
     expect($staff->hasRole('staff'))->toBeTrue();
     expect(Hash::check('new-password123', $staff->password))->toBeTrue();
 });
+
+it('creates staff with custom slot_duration_minutes', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+    $this->actingAs($admin);
+
+    Livewire::test(CreateStaff::class)
+        ->set('data.name', 'Staff Slot')
+        ->set('data.email', 'staff.slot@test.com')
+        ->set('data.password', 'password123')
+        ->set('data.password_confirmation', 'password123')
+        ->set('data.slot_duration_minutes', 15)
+        ->call('create')
+        ->assertHasNoFormErrors();
+
+    $staff = User::where('email', 'staff.slot@test.com')->first();
+    expect($staff->preferences->slot_duration_minutes)->toBe(15);
+});
+
+it('loads slot_duration_minutes from preferences in staff edit form', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+    $staff = User::factory()->create();
+    $staff->assignRole('staff');
+    $staff->preferences()->create(['slot_duration_minutes' => 30]);
+    $this->actingAs($admin);
+
+    Livewire::test(EditStaff::class, ['record' => $staff->id])
+        ->assertSet('data.slot_duration_minutes', 30);
+});
+
+it('saves slot_duration_minutes when editing staff', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+    $staff = User::factory()->create();
+    $staff->assignRole('staff');
+    $staff->preferences()->create(['slot_duration_minutes' => 60]);
+    $this->actingAs($admin);
+
+    Livewire::test(EditStaff::class, ['record' => $staff->id])
+        ->set('data.slot_duration_minutes', 15)
+        ->call('save')
+        ->assertHasNoFormErrors();
+
+    expect($staff->fresh()->preferences->slot_duration_minutes)->toBe(15);
+});

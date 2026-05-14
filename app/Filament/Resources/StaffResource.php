@@ -106,6 +106,14 @@ class StaffResource extends Resource
                 ->searchable()
                 ->helperText('Seleziona almeno un servizio per rendere lo staff prenotabile dal portale clienti.')
                 ->columnSpanFull(),
+
+            TextInput::make('slot_duration_minutes')
+                ->label('Durata slot (minuti)')
+                ->integer()
+                ->minValue(5)
+                ->maxValue(480)
+                ->default(60)
+                ->required(),
         ]);
     }
 
