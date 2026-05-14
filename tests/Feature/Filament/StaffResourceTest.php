@@ -105,3 +105,20 @@ it('saves slot_duration_minutes when editing staff', function () {
 
     expect($staff->fresh()->preferences->slot_duration_minutes)->toBe(15);
 });
+
+it('creates preferences when editing staff without existing preferences', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+    $staff = User::factory()->create();
+    $staff->assignRole('staff');
+    // no preferences row created
+    $this->actingAs($admin);
+
+    Livewire::test(EditStaff::class, ['record' => $staff->id])
+        ->assertSet('data.slot_duration_minutes', 60) // falls back to default
+        ->set('data.slot_duration_minutes', 30)
+        ->call('save')
+        ->assertHasNoFormErrors();
+
+    expect($staff->fresh()->preferences->slot_duration_minutes)->toBe(30);
+});

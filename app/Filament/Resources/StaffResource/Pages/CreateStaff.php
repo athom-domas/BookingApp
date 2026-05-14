@@ -19,7 +19,7 @@ class CreateStaff extends CreateRecord
         Role::firstOrCreate(['name' => 'staff', 'guard_name' => 'web']);
         $record = parent::handleRecordCreation($data);
         $record->syncRoles(['staff']);
-        $record->preferences()->create(['slot_duration_minutes' => $slotDuration]);
+        $record->preferences()->updateOrCreate([], ['slot_duration_minutes' => $slotDuration]);
 
         return $record;
     }
