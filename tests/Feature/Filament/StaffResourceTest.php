@@ -122,3 +122,22 @@ it('creates preferences when editing staff without existing preferences', functi
 
     expect($staff->fresh()->preferences->slot_duration_minutes)->toBe(30);
 });
+
+it('rejects slot_duration_minutes below 5 or above 480', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+    $staff = User::factory()->create();
+    $staff->assignRole('staff');
+    $staff->preferences()->create(['slot_duration_minutes' => 60]);
+    $this->actingAs($admin);
+
+    Livewire::test(EditStaff::class, ['record' => $staff->id])
+        ->set('data.slot_duration_minutes', 4)
+        ->call('save')
+        ->assertHasFormErrors(['slot_duration_minutes']);
+
+    Livewire::test(EditStaff::class, ['record' => $staff->id])
+        ->set('data.slot_duration_minutes', 481)
+        ->call('save')
+        ->assertHasFormErrors(['slot_duration_minutes']);
+});

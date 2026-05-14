@@ -113,7 +113,8 @@ class StaffResource extends Resource
                 ->minValue(5)
                 ->maxValue(480)
                 ->default(60)
-                ->required(),
+                ->required()
+                ->rules(['integer', 'min:5', 'max:480']),
         ]);
     }
 
