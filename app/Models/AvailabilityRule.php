@@ -13,6 +13,13 @@ class AvailabilityRule extends Model
     /** @use HasFactory<\Database\Factories\AvailabilityRuleFactory> */
     use HasFactory;
 
+    protected function casts(): array
+    {
+        return [
+            'is_available' => 'boolean',
+        ];
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
