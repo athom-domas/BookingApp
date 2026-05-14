@@ -30,25 +30,25 @@ it('denies access to non-admin users', function () {
         ->assertForbidden();
 });
 
-it('defaults to the current week start (Monday)', function () {
+it('defaults to the first day of the current month', function () {
     livewire(TimeSlotCalendar::class)
-        ->assertSet('weekStart', now()->startOfWeek(Carbon::MONDAY)->format('Y-m-d'));
+        ->assertSet('monthStart', now()->startOfMonth()->format('Y-m-d'));
 });
 
-it('navigates to the previous week', function () {
-    $expected = now()->startOfWeek(Carbon::MONDAY)->subWeek()->format('Y-m-d');
+it('navigates to the previous month', function () {
+    $expected = now()->startOfMonth()->subMonth()->startOfMonth()->format('Y-m-d');
 
     livewire(TimeSlotCalendar::class)
-        ->call('previousWeek')
-        ->assertSet('weekStart', $expected);
+        ->call('previousMonth')
+        ->assertSet('monthStart', $expected);
 });
 
-it('navigates to the next week', function () {
-    $expected = now()->startOfWeek(Carbon::MONDAY)->addWeek()->format('Y-m-d');
+it('navigates to the next month', function () {
+    $expected = now()->startOfMonth()->addMonth()->startOfMonth()->format('Y-m-d');
 
     livewire(TimeSlotCalendar::class)
-        ->call('nextWeek')
-        ->assertSet('weekStart', $expected);
+        ->call('nextMonth')
+        ->assertSet('monthStart', $expected);
 });
 
 it('shows prompt when no staff is selected', function () {
@@ -56,12 +56,10 @@ it('shows prompt when no staff is selected', function () {
         ->assertSeeHtml('Seleziona uno staff');
 });
 
-it('loads slots for the selected staff and current week', function () {
-    $monday = now()->startOfWeek(Carbon::MONDAY);
-
+it('loads slots for the selected staff in the current month', function () {
     TimeSlot::factory()->create([
         'user_id'        => $this->staff->id,
-        'date'           => $monday->format('Y-m-d'),
+        'date'           => now()->startOfMonth()->format('Y-m-d'),
         'start_time'     => '09:00:00',
         'end_time'       => '09:30:00',
         'is_available'   => true,
@@ -70,16 +68,13 @@ it('loads slots for the selected staff and current week', function () {
 
     livewire(TimeSlotCalendar::class)
         ->set('staffId', $this->staff->id)
-        ->assertSee('09:00')
-        ->assertSee('09:30');
+        ->assertSee('disp.');
 });
 
-it('marks available slots with green class', function () {
-    $monday = now()->startOfWeek(Carbon::MONDAY);
-
+it('marks available slots with green badge', function () {
     TimeSlot::factory()->create([
         'user_id'        => $this->staff->id,
-        'date'           => $monday->format('Y-m-d'),
+        'date'           => now()->startOfMonth()->format('Y-m-d'),
         'start_time'     => '09:00:00',
         'end_time'       => '09:30:00',
         'is_available'   => true,
@@ -88,15 +83,14 @@ it('marks available slots with green class', function () {
 
     livewire(TimeSlotCalendar::class)
         ->set('staffId', $this->staff->id)
-        ->assertSeeHtml('cal-slot-available');
+        ->assertSee('disp.')
+        ->assertDontSee('occ.');
 });
 
-it('marks occupied slots with red class', function () {
-    $monday = now()->startOfWeek(Carbon::MONDAY);
-
+it('marks occupied slots with red badge', function () {
     TimeSlot::factory()->create([
         'user_id'      => $this->staff->id,
-        'date'         => $monday->format('Y-m-d'),
+        'date'         => now()->startOfMonth()->format('Y-m-d'),
         'start_time'   => '10:00:00',
         'end_time'     => '10:30:00',
         'is_available' => false,
@@ -104,19 +98,17 @@ it('marks occupied slots with red class', function () {
 
     livewire(TimeSlotCalendar::class)
         ->set('staffId', $this->staff->id)
-        ->assertSeeHtml('cal-slot-occupied');
+        ->assertSee('occ.');
 });
 
-it('marks booked slots (appointment_id set) with red class', function () {
-    $monday = now()->startOfWeek(Carbon::MONDAY);
-
+it('marks booked slots (appointment_id set) with red badge', function () {
     $appointment = \App\Models\Appointment::factory()->create([
         'staff_id' => $this->staff->id,
     ]);
 
     TimeSlot::factory()->create([
         'user_id'        => $this->staff->id,
-        'date'           => $monday->format('Y-m-d'),
+        'date'           => now()->startOfMonth()->format('Y-m-d'),
         'start_time'     => '11:00:00',
         'end_time'       => '11:30:00',
         'is_available'   => true,
@@ -125,23 +117,22 @@ it('marks booked slots (appointment_id set) with red class', function () {
 
     livewire(TimeSlotCalendar::class)
         ->set('staffId', $this->staff->id)
-        ->assertSeeHtml('cal-slot-occupied');
+        ->assertSee('occ.');
 });
 
 it('does not load slots belonging to other staff', function () {
     $other = User::factory()->create();
     $other->assignRole('staff');
 
-    $monday = now()->startOfWeek(Carbon::MONDAY);
-
     TimeSlot::factory()->create([
         'user_id'    => $other->id,
-        'date'       => $monday->format('Y-m-d'),
+        'date'       => now()->startOfMonth()->format('Y-m-d'),
         'start_time' => '14:00:00',
         'end_time'   => '14:30:00',
     ]);
 
     livewire(TimeSlotCalendar::class)
         ->set('staffId', $this->staff->id)
-        ->assertDontSee('14:00');
+        ->assertDontSee('disp.')
+        ->assertDontSee('occ.');
 });

@@ -10,10 +10,7 @@
             border: 1px solid #e5e7eb;
             border-radius: 0.75rem;
         }
-        .dark .cal-controls {
-            background: #1f2937;
-            border-color: #374151;
-        }
+        .dark .cal-controls { background: #1f2937; border-color: #374151; }
 
         .cal-staff-group {
             display: flex;
@@ -46,11 +43,7 @@
             max-width: 260px;
         }
         .cal-staff-select:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,.1); }
-        .dark .cal-staff-select {
-            background: #374151;
-            border-color: #4b5563;
-            color: #f9fafb;
-        }
+        .dark .cal-staff-select { background: #374151; border-color: #4b5563; color: #f9fafb; }
 
         .cal-week-nav {
             display: flex;
@@ -75,15 +68,15 @@
         .dark .cal-nav-btn { background: #374151; border-color: #4b5563; color: #d1d5db; }
         .dark .cal-nav-btn:hover { background: #4b5563; }
 
-        .cal-week-label {
-            min-width: 160px;
+        .cal-month-label {
+            min-width: 170px;
             text-align: center;
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: #374151;
+            font-size: 0.9375rem;
+            font-weight: 700;
+            color: #111827;
             padding: 0 0.5rem;
         }
-        .dark .cal-week-label { color: #e5e7eb; }
+        .dark .cal-month-label { color: #f9fafb; }
 
         .cal-empty-state {
             display: flex;
@@ -94,104 +87,122 @@
             padding: 4rem 1rem;
             color: #9ca3af;
         }
-        .cal-empty-icon { font-size: 2rem; opacity: .5; }
 
         .cal-grid {
             display: grid;
             grid-template-columns: repeat(7, minmax(0, 1fr));
-            gap: 0.5rem;
+            gap: 0.35rem;
         }
 
-        .cal-day {
-            display: flex;
-            flex-direction: column;
-            gap: 0.25rem;
-            min-height: 200px;
-            border-radius: 0.75rem;
-            border: 1px solid #e5e7eb;
-            background: white;
-            overflow: hidden;
-        }
-        .dark .cal-day { background: #1f2937; border-color: #374151; }
-        .cal-day.cal-today { border-color: #6366f1; border-width: 2px; }
-
-        .cal-day-header {
-            padding: 0.5rem 0.5rem 0.375rem;
-            border-bottom: 1px solid #f3f4f6;
-            background: #f9fafb;
-        }
-        .dark .cal-day-header { background: #111827; border-color: #374151; }
-        .cal-today .cal-day-header { background: #eef2ff; }
-        .dark .cal-today .cal-day-header { background: #1e1b4b; }
-
-        .cal-day-name {
+        .cal-weekday-label {
+            text-align: center;
+            padding: 0.4rem 0.25rem;
             font-size: 0.65rem;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: .06em;
+            letter-spacing: .07em;
             color: #9ca3af;
         }
-        .cal-today .cal-day-name { color: #6366f1; }
+        .dark .cal-weekday-label { color: #6b7280; }
+
+        .cal-day {
+            min-height: 80px;
+            border-radius: 0.5rem;
+            border: 1px solid #e5e7eb;
+            background: white;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: border-color .15s;
+        }
+        .dark .cal-day { background: #1f2937; border-color: #374151; }
+        .cal-day.cal-out-month {
+            background: #fafafa;
+            border-color: #f3f4f6;
+            opacity: 0.45;
+        }
+        .dark .cal-day.cal-out-month { background: #111827; border-color: #1f2937; }
+        .cal-day.cal-today { border-color: #6366f1; border-width: 2px; }
+
+        .cal-day-header {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            padding: 0.3rem 0.4rem 0.25rem;
+            background: #f9fafb;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .dark .cal-day-header { background: #111827; border-color: #374151; }
+        .cal-today .cal-day-header { background: #eef2ff; border-bottom-color: #c7d2fe; }
+        .dark .cal-today .cal-day-header { background: #1e1b4b; border-bottom-color: #3730a3; }
 
         .cal-day-num {
-            font-size: 1.125rem;
+            font-size: 0.8125rem;
             font-weight: 700;
-            line-height: 1.2;
-            color: #111827;
+            color: #374151;
+            line-height: 1;
         }
-        .dark .cal-day-num { color: #f9fafb; }
+        .dark .cal-day-num { color: #e5e7eb; }
         .cal-today .cal-day-num { color: #6366f1; }
 
         .cal-day-body {
-            padding: 0.375rem 0.375rem;
+            padding: 0.3rem 0.35rem;
             display: flex;
             flex-direction: column;
-            gap: 0.2rem;
+            gap: 0.175rem;
             flex: 1;
         }
 
-        .cal-slot {
-            display: block;
-            padding: 0.2rem 0.4rem;
-            border-radius: 0.375rem;
-            font-size: 0.7rem;
-            font-family: ui-monospace, monospace;
-            font-weight: 500;
-            white-space: nowrap;
+        .cal-summary {
+            display: flex;
+            flex-direction: column;
+            gap: 0.175rem;
         }
-        .cal-slot-available {
+        .cal-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.68rem;
+            font-weight: 600;
+            padding: 0.15rem 0.35rem;
+            border-radius: 0.3rem;
+            line-height: 1.2;
+        }
+        .cal-badge-available {
             background: #dcfce7;
             color: #15803d;
-            border-left: 3px solid #22c55e;
         }
-        .dark .cal-slot-available { background: rgba(21,128,61,.2); color: #86efac; border-left-color: #4ade80; }
-        .cal-slot-occupied {
+        .dark .cal-badge-available { background: rgba(21,128,61,.2); color: #86efac; }
+        .cal-badge-occupied {
             background: #fee2e2;
             color: #b91c1c;
-            border-left: 3px solid #f87171;
         }
-        .dark .cal-slot-occupied { background: rgba(185,28,28,.2); color: #fca5a5; border-left-color: #f87171; }
+        .dark .cal-badge-occupied { background: rgba(185,28,28,.2); color: #fca5a5; }
+        .cal-badge-dot {
+            width: 0.4rem;
+            height: 0.4rem;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .cal-badge-available .cal-badge-dot { background: #22c55e; }
+        .cal-badge-occupied .cal-badge-dot { background: #f87171; }
 
         .cal-no-slots {
-            color: #d1d5db;
-            font-size: 0.75rem;
-            padding: 0.25rem 0.25rem;
+            color: #e5e7eb;
+            font-size: 0.7rem;
+            line-height: 1;
         }
-        .dark .cal-no-slots { color: #4b5563; }
+        .dark .cal-no-slots { color: #374151; }
 
         .cal-legend {
             display: flex;
             align-items: center;
-            gap: 1rem;
+            gap: 1.25rem;
             font-size: 0.75rem;
             color: #6b7280;
         }
         .cal-legend-item { display: flex; align-items: center; gap: 0.35rem; }
-        .cal-legend-dot {
-            width: 0.6rem;
-            height: 0.6rem;
-            border-radius: 50%;
-        }
+        .cal-legend-dot { width: 0.55rem; height: 0.55rem; border-radius: 50%; }
     </style>
 
     <div class="space-y-4">
@@ -209,11 +220,11 @@
             </div>
 
             <div class="cal-week-nav">
-                <button type="button" wire:click="previousWeek" class="cal-nav-btn" title="Settimana precedente">
+                <button type="button" wire:click="previousMonth" class="cal-nav-btn" title="Mese precedente">
                     <x-heroicon-o-chevron-left class="w-4 h-4" />
                 </button>
-                <span class="cal-week-label">{{ $this->weekLabel }}</span>
-                <button type="button" wire:click="nextWeek" class="cal-nav-btn" title="Settimana successiva">
+                <span class="cal-month-label">{{ $this->monthLabel }}</span>
+                <button type="button" wire:click="nextMonth" class="cal-nav-btn" title="Mese successivo">
                     <x-heroicon-o-chevron-right class="w-4 h-4" />
                 </button>
             </div>
@@ -225,29 +236,46 @@
                 <p class="text-sm">Seleziona uno staff per vedere il calendario.</p>
             </div>
         @else
-            {{-- Calendar grid --}}
             @php $today = now()->format('Y-m-d'); @endphp
             <div class="cal-grid">
-                @foreach ($this->weekDays as $day)
+                {{-- Day name headers --}}
+                @foreach (['Lun','Mar','Mer','Gio','Ven','Sab','Dom'] as $dayName)
+                    <div class="cal-weekday-label">{{ $dayName }}</div>
+                @endforeach
+
+                {{-- Calendar cells --}}
+                @foreach ($this->calendarCells as $cell)
                     @php
-                        $key      = $day->format('Y-m-d');
-                        $daySlots = $this->slots->get($key, collect());
-                        $isToday  = $key === $today;
+                        $key       = $cell['date']->format('Y-m-d');
+                        $inMonth   = $cell['inMonth'];
+                        $isToday   = $key === $today;
+                        $daySlots  = $this->slots->get($key, collect());
+                        $available = $daySlots->filter(fn ($s) => $s->is_available && is_null($s->appointment_id))->count();
+                        $occupied  = $daySlots->count() - $available;
                     @endphp
-                    <div class="cal-day {{ $isToday ? 'cal-today' : '' }}">
+                    <div class="cal-day {{ $inMonth ? '' : 'cal-out-month' }} {{ $isToday ? 'cal-today' : '' }}">
                         <div class="cal-day-header">
-                            <div class="cal-day-name">{{ $day->isoFormat('ddd') }}</div>
-                            <div class="cal-day-num">{{ $day->format('d') }}</div>
+                            <span class="cal-day-num">{{ $cell['date']->format('j') }}</span>
                         </div>
                         <div class="cal-day-body">
-                            @forelse ($daySlots as $slot)
-                                @php $available = $slot->is_available && is_null($slot->appointment_id); @endphp
-                                <span class="cal-slot {{ $available ? 'cal-slot-available' : 'cal-slot-occupied' }}">
-                                    {{ substr($slot->start_time, 0, 5) }}–{{ substr($slot->end_time, 0, 5) }}
-                                </span>
-                            @empty
+                            @if ($daySlots->isEmpty())
                                 <span class="cal-no-slots">—</span>
-                            @endforelse
+                            @else
+                                <div class="cal-summary">
+                                    @if ($available > 0)
+                                        <div class="cal-badge cal-badge-available">
+                                            <span class="cal-badge-dot"></span>
+                                            {{ $available }} disp.
+                                        </div>
+                                    @endif
+                                    @if ($occupied > 0)
+                                        <div class="cal-badge cal-badge-occupied">
+                                            <span class="cal-badge-dot"></span>
+                                            {{ $occupied }} occ.
+                                        </div>
+                                    @endif
+                                </div>
+                            @endif
                         </div>
                     </div>
                 @endforeach
@@ -257,11 +285,11 @@
             <div class="cal-legend">
                 <div class="cal-legend-item">
                     <span class="cal-legend-dot" style="background:#22c55e"></span>
-                    Disponibile
+                    Disponibili
                 </div>
                 <div class="cal-legend-item">
                     <span class="cal-legend-dot" style="background:#f87171"></span>
-                    Occupato
+                    Occupati
                 </div>
             </div>
         @endif

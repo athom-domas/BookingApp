@@ -23,29 +23,42 @@ class TimeSlotCalendar extends Page
 
     public ?int $staffId = null;
 
-    public string $weekStart;
+    public string $monthStart;
 
     public function mount(): void
     {
-        $this->weekStart = now()->startOfWeek(Carbon::MONDAY)->format('Y-m-d');
+        $this->monthStart = now()->startOfMonth()->format('Y-m-d');
     }
 
-    public function previousWeek(): void
+    public function previousMonth(): void
     {
-        $this->weekStart = Carbon::parse($this->weekStart)->subWeek()->format('Y-m-d');
+        $this->monthStart = Carbon::parse($this->monthStart)->subMonth()->startOfMonth()->format('Y-m-d');
     }
 
-    public function nextWeek(): void
+    public function nextMonth(): void
     {
-        $this->weekStart = Carbon::parse($this->weekStart)->addWeek()->format('Y-m-d');
+        $this->monthStart = Carbon::parse($this->monthStart)->addMonth()->startOfMonth()->format('Y-m-d');
     }
 
     #[Computed]
-    public function weekDays(): array
+    public function calendarCells(): array
     {
-        $start = Carbon::parse($this->weekStart);
+        $start     = Carbon::parse($this->monthStart);
+        $monthEnd  = $start->copy()->endOfMonth();
+        $gridStart = $start->copy()->startOfWeek(Carbon::MONDAY);
+        $gridEnd   = $monthEnd->copy()->endOfWeek(Carbon::SUNDAY);
 
-        return array_map(fn (int $i) => $start->copy()->addDays($i), range(0, 6));
+        $cells   = [];
+        $current = $gridStart->copy();
+        while ($current <= $gridEnd) {
+            $cells[] = [
+                'date'    => $current->copy(),
+                'inMonth' => $current->month === $start->month,
+            ];
+            $current->addDay();
+        }
+
+        return $cells;
     }
 
     #[Computed]
@@ -55,8 +68,8 @@ class TimeSlotCalendar extends Page
             return collect();
         }
 
-        $start = Carbon::parse($this->weekStart);
-        $end = $start->copy()->addDays(6);
+        $start = Carbon::parse($this->monthStart)->startOfMonth();
+        $end   = $start->copy()->endOfMonth();
 
         return TimeSlot::where('user_id', $this->staffId)
             ->whereHas('user', fn ($q) => $q->role('staff'))
@@ -73,12 +86,12 @@ class TimeSlotCalendar extends Page
     }
 
     #[Computed]
-    public function weekLabel(): string
+    public function monthLabel(): string
     {
-        $start = Carbon::parse($this->weekStart);
-        $end = $start->copy()->addDays(6);
+        $months = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+        $date   = Carbon::parse($this->monthStart);
 
-        return $start->format('d/m') . ' – ' . $end->format('d/m/Y');
+        return $months[$date->month - 1] . ' ' . $date->year;
     }
 
     public static function canAccess(): bool
