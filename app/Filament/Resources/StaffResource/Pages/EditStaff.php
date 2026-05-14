@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\StaffResource\Pages;
 
 use App\Filament\Resources\StaffResource;
+use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Database\Eloquent\Model;
@@ -14,7 +15,14 @@ class EditStaff extends EditRecord
 
     protected function getHeaderActions(): array
     {
-        return [DeleteAction::make()];
+        return [
+            Action::make('manageAvailability')
+                ->label('Gestisci Disponibilità')
+                ->icon('heroicon-o-clock')
+                ->url(fn () => StaffResource::getUrl('manage-availability', ['record' => $this->getRecord()])),
+
+            DeleteAction::make(),
+        ];
     }
 
     protected function mutateFormDataBeforeFill(array $data): array

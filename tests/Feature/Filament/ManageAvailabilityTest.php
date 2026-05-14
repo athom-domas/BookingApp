@@ -18,7 +18,7 @@ it('renders the manage availability page', function () {
     $this->actingAs($this->admin)
         ->get(route('filament.admin.resources.staff.manage-availability', ['record' => $this->staff]))
         ->assertSuccessful();
-})->skip('Route registered in Task 4');
+});
 
 it('pre-populates form with existing rules', function () {
     AvailabilityRule::factory()->create([

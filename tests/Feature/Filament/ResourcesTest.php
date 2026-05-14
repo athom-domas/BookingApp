@@ -101,3 +101,14 @@ it('customer resource is forbidden for staff users', function () {
         ->get(CustomerResource::getUrl('index'))
         ->assertForbidden();
 });
+
+it('manage availability page renders for a staff member', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+    $staff = User::factory()->create();
+    $staff->assignRole('staff');
+
+    $this->actingAs($admin)
+        ->get(StaffResource::getUrl('manage-availability', ['record' => $staff]))
+        ->assertSuccessful();
+});

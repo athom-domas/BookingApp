@@ -150,9 +150,10 @@ class StaffResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListStaff::route('/'),
-            'create' => Pages\CreateStaff::route('/create'),
-            'edit' => Pages\EditStaff::route('/{record}/edit'),
+            'index'               => Pages\ListStaff::route('/'),
+            'create'              => Pages\CreateStaff::route('/create'),
+            'edit'                => Pages\EditStaff::route('/{record}/edit'),
+            'manage-availability' => Pages\ManageAvailability::route('/{record}/availability'),
         ];
     }
 }
