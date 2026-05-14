@@ -13,10 +13,12 @@ class AvailabilityRuleFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id' => User::factory(),
-            'day_of_week' => fake()->numberBetween(0, 6),
-            'start_time' => '09:00:00',
-            'end_time' => '17:00:00',
+            'user_id'      => User::factory(),
+            'day_of_week'  => fake()->numberBetween(0, 6),
+            'start_time'   => '09:00:00',
+            'end_time'     => '17:00:00',
+            'start_time_2' => null,
+            'end_time_2'   => null,
             'is_available' => true,
         ];
     }
