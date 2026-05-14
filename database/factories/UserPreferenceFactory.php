@@ -19,6 +19,7 @@ class UserPreferenceFactory extends Factory
             'phone_number' => null,
             'timezone' => 'UTC',
             'preferred_staff' => null,
+            'slot_duration_minutes' => 60,
         ];
     }
 }
