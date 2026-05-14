@@ -1,4 +1,15 @@
 <x-filament-panels::page>
+    <style>
+        .slot-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 0.5rem; }
+        .slot-day { min-height: 120px; }
+        .slot-week-label { min-width: 150px; }
+        .slot-available { background-color: #dcfce7; color: #166534; }
+        .slot-occupied  { background-color: #fee2e2; color: #991b1b; }
+        @media (prefers-color-scheme: dark) {
+            .slot-available { background-color: rgba(20,83,45,.4); color: #86efac; }
+            .slot-occupied  { background-color: rgba(127,29,29,.4); color: #fca5a5; }
+        }
+    </style>
     <div class="space-y-4">
 
         {{-- Controls --}}
@@ -23,7 +34,7 @@
                     <x-heroicon-o-chevron-left class="w-5 h-5" />
                 </button>
 
-                <span class="text-sm font-medium min-w-[150px] text-center text-gray-700 dark:text-gray-300">
+                <span class="slot-week-label text-sm font-medium text-center text-gray-700 dark:text-gray-300">
                     {{ $this->weekLabel }}
                 </span>
 
@@ -44,13 +55,13 @@
             </div>
         @else
             {{-- Calendar grid --}}
-            <div class="grid grid-cols-7 gap-2">
+            <div class="slot-grid">
                 @foreach ($this->weekDays as $day)
                     @php
                         $key = $day->format('Y-m-d');
                         $daySlots = $this->slots->get($key, collect());
                     @endphp
-                    <div class="min-h-[120px] rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-2 space-y-1">
+                    <div class="slot-day rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-2 space-y-1">
                         <div class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2 capitalize">
                             {{ $day->isoFormat('ddd D MMM') }}
                         </div>
@@ -59,10 +70,7 @@
                             @php
                                 $available = $slot->is_available && is_null($slot->appointment_id);
                             @endphp
-                            <div class="rounded px-1.5 py-0.5 text-xs font-mono leading-tight
-                                {{ $available
-                                    ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300'
-                                    : 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300' }}">
+                            <div class="rounded px-1.5 py-0.5 text-xs font-mono leading-tight {{ $available ? 'slot-available' : 'slot-occupied' }}">
                                 {{ substr($slot->start_time, 0, 5) }}–{{ substr($slot->end_time, 0, 5) }}
                             </div>
                         @empty

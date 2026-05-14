@@ -88,7 +88,7 @@ it('marks available slots with green class', function () {
 
     livewire(TimeSlotCalendar::class)
         ->set('staffId', $this->staff->id)
-        ->assertSeeHtml('bg-green-100');
+        ->assertSeeHtml('slot-available');
 });
 
 it('marks occupied slots with red class', function () {
@@ -104,7 +104,7 @@ it('marks occupied slots with red class', function () {
 
     livewire(TimeSlotCalendar::class)
         ->set('staffId', $this->staff->id)
-        ->assertSeeHtml('bg-red-100');
+        ->assertSeeHtml('slot-occupied');
 });
 
 it('marks booked slots (appointment_id set) with red class', function () {
@@ -125,7 +125,7 @@ it('marks booked slots (appointment_id set) with red class', function () {
 
     livewire(TimeSlotCalendar::class)
         ->set('staffId', $this->staff->id)
-        ->assertSeeHtml('bg-red-100');
+        ->assertSeeHtml('slot-occupied');
 });
 
 it('does not load slots belonging to other staff', function () {
