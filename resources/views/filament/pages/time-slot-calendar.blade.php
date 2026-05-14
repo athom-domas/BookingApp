@@ -204,6 +204,11 @@
             white-space: nowrap;
         }
         .dark .cal-time { background: rgba(21,128,61,.15); color: #86efac; }
+        .cal-time-occupied {
+            color: #b91c1c;
+            background: #fef2f2;
+        }
+        .dark .cal-time-occupied { background: rgba(185,28,28,.15); color: #fca5a5; }
         .cal-time-more {
             font-size: 0.62rem;
             color: #9ca3af;
@@ -301,13 +306,14 @@
                                         </div>
                                     @endif
                                 </div>
-                                @if ($availCount > 0)
-                                    <div class="cal-times">
-                                        @foreach ($availSlots as $slot)
-                                            <span class="cal-time">{{ substr($slot->start_time, 0, 5) }}</span>
-                                        @endforeach
-                                    </div>
-                                @endif
+                                <div class="cal-times">
+                                    @foreach ($daySlots as $slot)
+                                        @php $free = $slot->is_available && is_null($slot->appointment_id); @endphp
+                                        <span class="cal-time {{ $free ? '' : 'cal-time-occupied' }}">
+                                            {{ substr($slot->start_time, 0, 5) }}
+                                        </span>
+                                    @endforeach
+                                </div>
                             @endif
                         </div>
                     </div>
