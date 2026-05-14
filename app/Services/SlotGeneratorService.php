@@ -9,7 +9,7 @@ use Carbon\Carbon;
 
 class SlotGeneratorService
 {
-    public function generateWeeklySlots(int $staffId, Carbon $weekStart, int $slotMinutes = 30): int
+    public function generateWeeklySlots(int $staffId, Carbon $weekStart, int $slotMinutes = 60): int
     {
         $created = 0;
 

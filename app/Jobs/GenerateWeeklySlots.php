@@ -21,7 +21,12 @@ class GenerateWeeklySlots implements ShouldQueue
         $nextWeek = Carbon::now()->startOfWeek(Carbon::MONDAY)->addWeek();
 
         User::whereHas('availabilityRules', fn ($q) => $q->where('is_available', true))
-            ->each(fn (User $staff) => $generator->generateWeeklySlots($staff->id, $nextWeek));
+            ->with('preferences')
+            ->each(fn (User $staff) => $generator->generateWeeklySlots(
+                $staff->id,
+                $nextWeek,
+                $staff->preferences->slot_duration_minutes ?? 60,
+            ));
     }
 
     public function failed(\Throwable $e): void
