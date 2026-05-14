@@ -13,6 +13,13 @@ class UserPreference extends Model
     /** @use HasFactory<\Database\Factories\UserPreferenceFactory> */
     use HasFactory;
 
+    protected function casts(): array
+    {
+        return [
+            'slot_duration_minutes' => 'integer',
+        ];
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
