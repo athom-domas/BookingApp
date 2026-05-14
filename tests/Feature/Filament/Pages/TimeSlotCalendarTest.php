@@ -85,6 +85,22 @@ it('marks available slots with green class', function () {
         ->assertSeeHtml('bg-green-100');
 });
 
+it('marks occupied slots with red class', function () {
+    $monday = now()->startOfWeek(Carbon::MONDAY);
+
+    TimeSlot::factory()->create([
+        'user_id'      => $this->staff->id,
+        'date'         => $monday->format('Y-m-d'),
+        'start_time'   => '10:00:00',
+        'end_time'     => '10:30:00',
+        'is_available' => false,
+    ]);
+
+    livewire(TimeSlotCalendar::class)
+        ->set('staffId', $this->staff->id)
+        ->assertSeeHtml('bg-red-100');
+});
+
 it('does not load slots belonging to other staff', function () {
     $other = User::factory()->create();
     $other->assignRole('staff');

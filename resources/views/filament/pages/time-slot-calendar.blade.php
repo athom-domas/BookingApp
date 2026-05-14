@@ -15,6 +15,7 @@
 
             <div class="flex items-center gap-1">
                 <button
+                    type="button"
                     wire:click="previousWeek"
                     class="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400"
                     title="Settimana precedente"
@@ -23,10 +24,11 @@
                 </button>
 
                 <span class="text-sm font-medium min-w-[150px] text-center text-gray-700 dark:text-gray-300">
-                    {{ $this->getWeekLabel() }}
+                    {{ $this->weekLabel }}
                 </span>
 
                 <button
+                    type="button"
                     wire:click="nextWeek"
                     class="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400"
                     title="Settimana successiva"

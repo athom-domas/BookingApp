@@ -62,7 +62,7 @@ class TimeSlotCalendar extends Page
             ->whereBetween('date', [$start->format('Y-m-d'), $end->format('Y-m-d')])
             ->orderBy('start_time')
             ->get()
-            ->groupBy(fn (TimeSlot $slot) => Carbon::parse($slot->date)->format('Y-m-d'));
+            ->groupBy(fn (TimeSlot $slot) => $slot->date->format('Y-m-d'));
     }
 
     #[Computed]
@@ -71,11 +71,17 @@ class TimeSlotCalendar extends Page
         return User::role('staff')->orderBy('name')->pluck('name', 'id')->toArray();
     }
 
-    public function getWeekLabel(): string
+    #[Computed]
+    public function weekLabel(): string
     {
         $start = Carbon::parse($this->weekStart);
         $end = $start->copy()->addDays(6);
 
         return $start->format('d/m') . ' – ' . $end->format('d/m/Y');
+    }
+
+    public static function canAccess(): bool
+    {
+        return auth()->user()?->isAdmin() ?? false;
     }
 }
