@@ -278,8 +278,6 @@
                         $availSlots  = $daySlots->filter(fn ($s) => $s->is_available && is_null($s->appointment_id));
                         $availCount  = $availSlots->count();
                         $occupied    = $daySlots->count() - $availCount;
-                        $showSlots   = $availSlots->take(5);
-                        $moreCount   = $availCount - $showSlots->count();
                     @endphp
                     <div class="cal-day {{ $inMonth ? '' : 'cal-out-month' }} {{ $isToday ? 'cal-today' : '' }}">
                         <div class="cal-day-header">
@@ -305,12 +303,9 @@
                                 </div>
                                 @if ($availCount > 0)
                                     <div class="cal-times">
-                                        @foreach ($showSlots as $slot)
+                                        @foreach ($availSlots as $slot)
                                             <span class="cal-time">{{ substr($slot->start_time, 0, 5) }}</span>
                                         @endforeach
-                                        @if ($moreCount > 0)
-                                            <span class="cal-time-more">+{{ $moreCount }}</span>
-                                        @endif
                                     </div>
                                 @endif
                             @endif
