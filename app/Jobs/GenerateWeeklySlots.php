@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Models\SystemSetting;
 use App\Models\User;
 use App\Services\SlotGeneratorService;
 use Carbon\Carbon;
@@ -18,15 +19,21 @@ class GenerateWeeklySlots implements ShouldQueue
 
     public function handle(SlotGeneratorService $generator): void
     {
+        $horizon = SystemSetting::current()->slot_generation_weeks;
         $nextWeek = Carbon::now()->startOfWeek(Carbon::MONDAY)->addWeek();
 
         User::whereHas('availabilityRules', fn ($q) => $q->where('is_available', true))
             ->with('preferences')
-            ->each(fn (User $staff) => $generator->generateWeeklySlots(
-                $staff->id,
-                $nextWeek,
-                $staff->preferences->slot_duration_minutes ?? 60,
-            ));
+            ->each(function (User $staff) use ($generator, $horizon, $nextWeek): void {
+                $slotMinutes = $staff->preferences->slot_duration_minutes ?? 60;
+                for ($i = 0; $i < $horizon; $i++) {
+                    $generator->generateWeeklySlots(
+                        $staff->id,
+                        $nextWeek->copy()->addWeeks($i),
+                        $slotMinutes,
+                    );
+                }
+            });
     }
 
     public function failed(\Throwable $e): void

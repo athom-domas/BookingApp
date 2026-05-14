@@ -2,11 +2,16 @@
 
 use App\Jobs\GenerateWeeklySlots;
 use App\Models\AvailabilityRule;
+use App\Models\SystemSetting;
 use App\Models\User;
 use App\Models\UserPreference;
 use App\Services\SlotGeneratorService;
 use Carbon\Carbon;
 use Mockery;
+
+beforeEach(function () {
+    SystemSetting::current()->update(['slot_generation_weeks' => 1]);
+});
 
 it('GenerateWeeklySlots calls generator for each staff with availability rules', function () {
     $staff1 = User::factory()->create();
@@ -42,7 +47,7 @@ it('GenerateWeeklySlots targets the next Monday week', function () {
 
     (new GenerateWeeklySlots())->handle($mockGenerator);
 
-    Carbon::setTestNow(); // reset
+    Carbon::setTestNow();
 });
 
 it('GenerateWeeklySlots passes slot_duration_minutes from staff preferences', function () {
@@ -70,6 +75,31 @@ it('GenerateWeeklySlots defaults to 60 minutes when no preferences exist', funct
         ->andReturn(8);
 
     (new GenerateWeeklySlots())->handle($mockGenerator);
+});
+
+it('GenerateWeeklySlots generates slots for each week up to the configured horizon', function () {
+    SystemSetting::current()->update(['slot_generation_weeks' => 3]);
+
+    $staff = User::factory()->create();
+    AvailabilityRule::factory()->create(['user_id' => $staff->id, 'is_available' => true]);
+
+    Carbon::setTestNow('2026-05-10 00:00:00'); // Sunday
+
+    $capturedWeeks = [];
+    $mockGenerator = $this->mock(SlotGeneratorService::class);
+    $mockGenerator->shouldReceive('generateWeeklySlots')
+        ->times(3)
+        ->with($staff->id, Mockery::on(function (Carbon $d) use (&$capturedWeeks) {
+            $capturedWeeks[] = $d->format('Y-m-d');
+            return true;
+        }), Mockery::type('int'))
+        ->andReturn(5);
+
+    (new GenerateWeeklySlots())->handle($mockGenerator);
+
+    expect($capturedWeeks)->toBe(['2026-05-11', '2026-05-18', '2026-05-25']);
+
+    Carbon::setTestNow();
 });
 
 it('GenerateWeeklySlots failed hook logs the error', function () {
