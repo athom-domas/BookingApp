@@ -187,6 +187,31 @@
         .cal-badge-available .cal-badge-dot { background: #22c55e; }
         .cal-badge-occupied .cal-badge-dot { background: #f87171; }
 
+        .cal-times {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.15rem;
+            margin-top: 0.25rem;
+        }
+        .cal-time {
+            font-size: 0.62rem;
+            font-family: ui-monospace, monospace;
+            font-weight: 500;
+            color: #15803d;
+            background: #f0fdf4;
+            padding: 0.1rem 0.25rem;
+            border-radius: 0.2rem;
+            white-space: nowrap;
+        }
+        .dark .cal-time { background: rgba(21,128,61,.15); color: #86efac; }
+        .cal-time-more {
+            font-size: 0.62rem;
+            color: #9ca3af;
+            padding: 0.1rem 0.15rem;
+            font-weight: 500;
+            align-self: center;
+        }
+
         .cal-no-slots {
             color: #e5e7eb;
             font-size: 0.7rem;
@@ -246,12 +271,15 @@
                 {{-- Calendar cells --}}
                 @foreach ($this->calendarCells as $cell)
                     @php
-                        $key       = $cell['date']->format('Y-m-d');
-                        $inMonth   = $cell['inMonth'];
-                        $isToday   = $key === $today;
-                        $daySlots  = $this->slots->get($key, collect());
-                        $available = $daySlots->filter(fn ($s) => $s->is_available && is_null($s->appointment_id))->count();
-                        $occupied  = $daySlots->count() - $available;
+                        $key         = $cell['date']->format('Y-m-d');
+                        $inMonth     = $cell['inMonth'];
+                        $isToday     = $key === $today;
+                        $daySlots    = $this->slots->get($key, collect());
+                        $availSlots  = $daySlots->filter(fn ($s) => $s->is_available && is_null($s->appointment_id));
+                        $availCount  = $availSlots->count();
+                        $occupied    = $daySlots->count() - $availCount;
+                        $showSlots   = $availSlots->take(5);
+                        $moreCount   = $availCount - $showSlots->count();
                     @endphp
                     <div class="cal-day {{ $inMonth ? '' : 'cal-out-month' }} {{ $isToday ? 'cal-today' : '' }}">
                         <div class="cal-day-header">
@@ -262,10 +290,10 @@
                                 <span class="cal-no-slots">—</span>
                             @else
                                 <div class="cal-summary">
-                                    @if ($available > 0)
+                                    @if ($availCount > 0)
                                         <div class="cal-badge cal-badge-available">
                                             <span class="cal-badge-dot"></span>
-                                            {{ $available }} disp.
+                                            {{ $availCount }} disp.
                                         </div>
                                     @endif
                                     @if ($occupied > 0)
@@ -275,6 +303,16 @@
                                         </div>
                                     @endif
                                 </div>
+                                @if ($availCount > 0)
+                                    <div class="cal-times">
+                                        @foreach ($showSlots as $slot)
+                                            <span class="cal-time">{{ substr($slot->start_time, 0, 5) }}</span>
+                                        @endforeach
+                                        @if ($moreCount > 0)
+                                            <span class="cal-time-more">+{{ $moreCount }}</span>
+                                        @endif
+                                    </div>
+                                @endif
                             @endif
                         </div>
                     </div>
