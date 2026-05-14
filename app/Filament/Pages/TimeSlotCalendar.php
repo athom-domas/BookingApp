@@ -59,6 +59,7 @@ class TimeSlotCalendar extends Page
         $end = $start->copy()->addDays(6);
 
         return TimeSlot::where('user_id', $this->staffId)
+            ->whereHas('user', fn ($q) => $q->role('staff'))
             ->whereBetween('date', [$start->format('Y-m-d'), $end->format('Y-m-d')])
             ->orderBy('start_time')
             ->get()

@@ -24,6 +24,12 @@ it('renders the calendar page', function () {
     $this->get('/admin/time-slot-calendar')->assertOk();
 });
 
+it('denies access to non-admin users', function () {
+    $this->actingAs($this->staff)
+        ->get('/admin/time-slot-calendar')
+        ->assertForbidden();
+});
+
 it('defaults to the current week start (Monday)', function () {
     livewire(TimeSlotCalendar::class)
         ->assertSet('weekStart', now()->startOfWeek(Carbon::MONDAY)->format('Y-m-d'));
@@ -94,6 +100,27 @@ it('marks occupied slots with red class', function () {
         'start_time'   => '10:00:00',
         'end_time'     => '10:30:00',
         'is_available' => false,
+    ]);
+
+    livewire(TimeSlotCalendar::class)
+        ->set('staffId', $this->staff->id)
+        ->assertSeeHtml('bg-red-100');
+});
+
+it('marks booked slots (appointment_id set) with red class', function () {
+    $monday = now()->startOfWeek(Carbon::MONDAY);
+
+    $appointment = \App\Models\Appointment::factory()->create([
+        'staff_id' => $this->staff->id,
+    ]);
+
+    TimeSlot::factory()->create([
+        'user_id'        => $this->staff->id,
+        'date'           => $monday->format('Y-m-d'),
+        'start_time'     => '11:00:00',
+        'end_time'       => '11:30:00',
+        'is_available'   => true,
+        'appointment_id' => $appointment->id,
     ]);
 
     livewire(TimeSlotCalendar::class)
