@@ -176,6 +176,9 @@ export function bookingWizard(allServices, allStaff) {
         nextMonth() {
             const [year, month] = this.calendarMonth.split('-').map(Number);
             const d = new Date(year, month, 1);
+            const limit = new Date();
+            limit.setFullYear(limit.getFullYear() + 1);
+            if (d > limit) return;
             this.calendarMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
             this.loadAvailableDates();
         },

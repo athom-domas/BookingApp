@@ -17,7 +17,7 @@ class GetAvailableDatesRequest extends FormRequest
             'serviceIds'   => 'required|array|min:1',
             'serviceIds.*' => 'integer|exists:services,id',
             'staffId'      => 'nullable|integer|exists:users,id',
-            'month'        => 'required|date_format:Y-m',
+            'month'        => ['required', 'date_format:Y-m', 'before_or_equal:' . now()->addWeeks(52)->format('Y-m')],
         ];
     }
 

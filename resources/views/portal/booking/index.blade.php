@@ -27,7 +27,7 @@
         </div>
 
         <div
-            x-data="bookingWizard({{ json_encode($servicesJson) }}, {{ json_encode($staffJson) }})"
+            x-data="bookingWizard({{ Illuminate\Support\Js::from($servicesJson) }}, {{ Illuminate\Support\Js::from($staffJson) }})"
             class="space-y-3"
         >
             {{-- CSRF + hidden inputs per il form submit --}}
