@@ -4,12 +4,25 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Portal\AppointmentController as PortalAppointmentController;
 use App\Http\Controllers\Portal\BookingController;
+use App\Http\Controllers\Public\AppointmentActionController;
 use App\Http\Controllers\StripeWebhookController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [BookingController::class, 'index'])->name('booking.index');
 Route::get('/prenota', [BookingController::class, 'create'])->name('booking.create');
 Route::post('/stripe/webhook', StripeWebhookController::class)->name('stripe.webhook');
+
+Route::get('/r/{appointment}/conferma', [AppointmentActionController::class, 'confirm'])
+    ->name('appointment.public.confirm')
+    ->middleware('signed');
+
+Route::get('/r/{appointment}/disdici', [AppointmentActionController::class, 'cancelForm'])
+    ->name('appointment.public.cancel')
+    ->middleware('signed');
+
+Route::post('/r/{appointment}/disdici', [AppointmentActionController::class, 'processCancellation'])
+    ->name('appointment.public.cancel.post')
+    ->middleware('signed');
 
 Route::middleware('guest')->group(function () {
     Route::get('/register', [RegisteredUserController::class, 'create'])->name('register');
