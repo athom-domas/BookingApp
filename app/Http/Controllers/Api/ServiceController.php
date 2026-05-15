@@ -23,8 +23,8 @@ class ServiceController extends Controller
     {
         $slots = $this->appointmentService->getAvailableSlots(
             serviceId: $service->id,
-            staffId:   $request->integer('staff_id'),
-            date:      $request->string('date'),
+            staffId: $request->integer('staff_id'),
+            date: $request->string('date'),
         );
 
         return response()->json(['data' => $slots]);

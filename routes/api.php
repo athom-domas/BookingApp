@@ -1,9 +1,22 @@
 <?php
 
 use App\Http\Controllers\Api\AppointmentController;
+use App\Http\Controllers\Api\BookingController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\ServiceController;
 use Illuminate\Support\Facades\Route;
+
+// ─── Dynamic booking (new slot system) ───────────────────────────────────────
+Route::prefix('booking')->group(function () {
+    Route::get('/slots', [BookingController::class, 'getAvailableSlots']);
+
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/hold', [BookingController::class, 'createHold']);
+        Route::get('/holds/{hold}', [BookingController::class, 'getHold']);
+        Route::put('/holds/{hold}/extend', [BookingController::class, 'extendHold']);
+        Route::post('/confirm', [BookingController::class, 'confirmBooking']);
+    });
+});
 
 Route::get('/services', [ServiceController::class, 'index']);
 Route::get('/services/{service}/slots', [ServiceController::class, 'slots']);

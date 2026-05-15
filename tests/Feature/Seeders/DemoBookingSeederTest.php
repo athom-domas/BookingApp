@@ -1,9 +1,10 @@
 <?php
 
+use App\Models\AppointmentHold;
 use App\Models\AvailabilityRule;
 use App\Models\Service;
-use App\Models\TimeSlot;
 use App\Models\User;
+use Carbon\Carbon;
 
 it('seeds booking data needed by the customer portal', function () {
     $this->seed();
@@ -13,20 +14,17 @@ it('seeds booking data needed by the customer portal', function () {
     expect(User::role('staff')->count())->toBeGreaterThanOrEqual(3);
     expect(Service::active()->whereHas('staff')->count())->toBeGreaterThanOrEqual(3);
     expect(AvailabilityRule::count())->toBeGreaterThanOrEqual(15);
-    expect(TimeSlot::available()->whereDate('date', '>=', today())->count())->toBeGreaterThan(0);
+    expect(AppointmentHold::count())->toBeGreaterThanOrEqual(3);
 
-    $slot = TimeSlot::available()
-        ->whereDate('date', '>=', today())
-        ->orderBy('date')
-        ->orderBy('start_time')
-        ->first();
+    // The API should return available slots for a staff member on a working day
+    $staff = User::role('staff')->whereHas('availabilityRules', fn ($q) => $q->where('is_available', true))->first();
+    $service = $staff->services()->active()->where('duration_minutes', '<=', 60)->first();
 
-    $service = $slot->user->services()
-        ->active()
-        ->where('duration_minutes', '<=', 60)
-        ->first();
+    // Find a future working day for this staff member
+    $rule = $staff->availabilityRules()->where('is_available', true)->first();
+    $date = Carbon::now()->next($rule->day_of_week)->toDateString();
 
-    $response = $this->getJson("/api/services/{$service->id}/slots?date={$slot->date->toDateString()}&staff_id={$slot->user_id}");
+    $response = $this->getJson("/api/services/{$service->id}/slots?date={$date}&staff_id={$staff->id}");
 
     $response->assertOk()
         ->assertJsonStructure(['data' => [['start_time', 'end_time']]]);

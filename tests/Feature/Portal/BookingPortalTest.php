@@ -4,7 +4,6 @@ use App\Models\Appointment;
 use App\Models\AvailabilityRule;
 use App\Models\Payment;
 use App\Models\Service;
-use App\Models\TimeSlot;
 use App\Models\User;
 use App\Services\PaymentService;
 use Carbon\Carbon;
@@ -47,15 +46,6 @@ function makePortalBookableSetup(array $serviceAttributes = []): array
         'start_time' => '09:00:00',
         'end_time' => '17:00:00',
         'is_available' => true,
-    ]);
-
-    TimeSlot::factory()->create([
-        'user_id' => $staff->id,
-        'date' => $date->toDateString(),
-        'start_time' => '10:00:00',
-        'end_time' => '11:00:00',
-        'is_available' => true,
-        'appointment_id' => null,
     ]);
 
     return [$service, $staff, $date];
@@ -103,7 +93,6 @@ it('creates a pending booking and payment intent for an authenticated customer',
     expect($appointment)->not->toBeNull();
     expect($appointment->status)->toBe('pending');
     expect($appointment->notes)->toBe('Prima visita');
-    expect(TimeSlot::where('appointment_id', $appointment->id)->exists())->toBeTrue();
 });
 
 it('rejects inactive services', function () {
@@ -145,10 +134,17 @@ it('rejects users without staff role even if attached to the service', function 
     ])->assertSessionHasErrors('scheduled_date');
 });
 
-it('rejects bookings when the slot is no longer available', function () {
+it('rejects bookings when the slot is already taken by another appointment', function () {
     $customer = makePortalCustomer();
     [$service, $staff, $date] = makePortalBookableSetup();
-    TimeSlot::where('user_id', $staff->id)->update(['is_available' => false]);
+
+    // Occupy the slot with an existing confirmed appointment
+    Appointment::factory()->create([
+        'staff_id'       => $staff->id,
+        'service_id'     => $service->id,
+        'scheduled_date' => $date,
+        'status'         => 'confirmed',
+    ]);
 
     $this->actingAs($customer)->post('/portal/bookings', [
         'service_id' => $service->id,

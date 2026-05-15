@@ -10,6 +10,10 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        $this->app->singleton(\App\Services\Booking\SlotCalculationService::class);
+        $this->app->singleton(\App\Services\Booking\OperatorScoringService::class);
+        $this->app->singleton(\App\Services\Booking\AppointmentService::class);
+
         $this->app->singleton(PaymentService::class, function () {
             return new PaymentService(new StripeClient(config('services.stripe.secret')));
         });

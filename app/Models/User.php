@@ -51,11 +51,6 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasMany(AvailabilityRule::class);
     }
 
-    public function timeSlots(): HasMany
-    {
-        return $this->hasMany(TimeSlot::class);
-    }
-
     public function preferences(): HasOne
     {
         return $this->hasOne(UserPreference::class);

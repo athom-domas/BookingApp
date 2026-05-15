@@ -9,13 +9,15 @@ use App\Models\Appointment;
 use App\Models\AppointmentReminder;
 use App\Models\AvailabilityRule;
 use App\Models\Service;
-use App\Models\TimeSlot;
 use App\Models\User;
+use App\Services\Booking\SlotCalculationService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class AppointmentService
 {
+    public function __construct(private readonly SlotCalculationService $slotService) {}
+
     public function validateAvailability(int $staffId, int $serviceId, Carbon $dateTime): bool
     {
         $service = Service::active()->find($serviceId);
@@ -33,16 +35,11 @@ class AppointmentService
             return false;
         }
 
-        $ruleStart = Carbon::parse($dateTime->format('Y-m-d').' '.$rule->start_time);
-        $ruleEnd = Carbon::parse($dateTime->format('Y-m-d').' '.$rule->end_time);
+        $ruleStart  = Carbon::parse($dateTime->format('Y-m-d') . ' ' . $rule->start_time);
+        $ruleEnd    = Carbon::parse($dateTime->format('Y-m-d') . ' ' . $rule->end_time);
+        $newApptEnd = $dateTime->copy()->addMinutes($service->duration_minutes + config('booking.buffer_minutes', 0));
 
-        if ($dateTime->lt($ruleStart) || $dateTime->gte($ruleEnd)) {
-            return false;
-        }
-
-        $newApptEnd = $dateTime->copy()->addMinutes($service->duration_minutes + config('booking.buffer_minutes'));
-
-        if ($newApptEnd->gt($ruleEnd)) {
+        if ($dateTime->lt($ruleStart) || $dateTime->gte($ruleEnd) || $newApptEnd->gt($ruleEnd)) {
             return false;
         }
 
@@ -54,7 +51,9 @@ class AppointmentService
 
         foreach ($conflicts as $existing) {
             $existingStart = $existing->scheduled_date;
-            $existingEnd = $existingStart->copy()->addMinutes($existing->service->duration_minutes + config('booking.buffer_minutes'));
+            $existingEnd   = $existingStart->copy()->addMinutes(
+                $existing->service->duration_minutes + config('booking.buffer_minutes', 0)
+            );
 
             if ($dateTime->lt($existingEnd) && $newApptEnd->gt($existingStart)) {
                 return false;
@@ -81,38 +80,25 @@ class AppointmentService
         }
 
         return DB::transaction(function () use ($userId, $serviceId, $staffId, $scheduledDate, $service): Appointment {
-            $slot = TimeSlot::where('user_id', $staffId)
-                ->where('date', $scheduledDate->format('Y-m-d'))
-                ->where('start_time', $scheduledDate->format('H:i:s'))
-                ->where('is_available', true)
-                ->whereNull('appointment_id')
-                ->lockForUpdate()
-                ->first();
-
-            if (! $slot || ! $this->slotFitsService($slot, $service)) {
+            // Re-check inside transaction to prevent double booking
+            if (! $this->validateAvailability($staffId, $serviceId, $scheduledDate)) {
                 throw new BookingException('Slot non più disponibile.');
             }
 
-            if (! $this->validateAvailability($staffId, $serviceId, $scheduledDate)) {
-                throw new BookingException('Staff non disponibile per questa data e ora.');
-            }
-
             $appointment = Appointment::create([
-                'user_id' => $userId,
-                'service_id' => $serviceId,
-                'staff_id' => $staffId,
+                'user_id'        => $userId,
+                'service_id'     => $serviceId,
+                'staff_id'       => $staffId,
                 'scheduled_date' => $scheduledDate,
-                'status' => 'pending',
-                'final_price' => $service->price,
+                'status'         => 'pending',
+                'final_price'    => $service->price,
             ]);
-
-            $slot->update(['is_available' => false, 'appointment_id' => $appointment->id]);
 
             AppointmentReminder::create([
                 'appointment_id' => $appointment->id,
-                'type' => 'email',
-                'scheduled_for' => $scheduledDate->copy()->subDay(),
-                'status' => 'pending',
+                'type'           => 'email',
+                'scheduled_for'  => $scheduledDate->copy()->subDay(),
+                'status'         => 'pending',
             ]);
 
             SyncGoogleCalendar::dispatch($appointment, 'create');
@@ -135,11 +121,8 @@ class AppointmentService
 
         $appointment->update([
             'status' => 'cancelled',
-            'notes' => $reason ?? $appointment->notes,
+            'notes'  => $reason ?? $appointment->notes,
         ]);
-
-        TimeSlot::where('appointment_id', $appointment->id)
-            ->update(['is_available' => true, 'appointment_id' => null]);
 
         SendCancellationNotification::dispatch($appointment);
         SyncGoogleCalendar::dispatch($appointment, 'delete');
@@ -153,18 +136,17 @@ class AppointmentService
             return [];
         }
 
-        return TimeSlot::where('user_id', $staffId)
-            ->where('date', $date)
-            ->where('is_available', true)
-            ->whereNull('appointment_id')
-            ->get()
-            ->filter(fn (TimeSlot $slot): bool => $this->slotFitsService($slot, $service))
-            ->values()
-            ->map(fn (TimeSlot $slot): array => [
-                'start_time' => $slot->start_time,
-                'end_time' => $slot->end_time,
-            ])
-            ->all();
+        $slots = $this->slotService->getAvailableSlots([
+            'date'            => $date,
+            'serviceIds'      => [$serviceId],
+            'staffId'         => $staffId,
+            'staffPreference' => 'specific',
+        ]);
+
+        return array_map(fn($slot) => [
+            'start_time' => $slot['start'],
+            'end_time'   => $slot['end'],
+        ], $slots);
     }
 
     private function staffCanProvideService(Service $service, int $staffId): bool
@@ -174,13 +156,5 @@ class AppointmentService
         return $staff !== null
             && $staff->roles()->where('name', 'staff')->where('guard_name', 'web')->exists()
             && $service->staff()->whereKey($staffId)->exists();
-    }
-
-    private function slotFitsService(TimeSlot $slot, Service $service): bool
-    {
-        $start = Carbon::parse($slot->date->format('Y-m-d').' '.$slot->start_time);
-        $end = Carbon::parse($slot->date->format('Y-m-d').' '.$slot->end_time);
-
-        return $start->diffInMinutes($end) >= $service->duration_minutes;
     }
 }

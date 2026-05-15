@@ -24,4 +24,15 @@ class AvailabilityRule extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function getWorkRanges(): array
+    {
+        $ranges = [['start' => $this->start_time, 'end' => $this->end_time]];
+
+        if ($this->start_time_2 && $this->end_time_2) {
+            $ranges[] = ['start' => $this->start_time_2, 'end' => $this->end_time_2];
+        }
+
+        return $ranges;
+    }
 }

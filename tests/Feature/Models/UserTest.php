@@ -4,7 +4,6 @@ use App\Models\Appointment;
 use App\Models\AvailabilityRule;
 use App\Models\Payment;
 use App\Models\Service;
-use App\Models\TimeSlot;
 use App\Models\User;
 use App\Models\UserPreference;
 use Spatie\Permission\Models\Role;
@@ -43,13 +42,6 @@ it('has many availability rules', function () {
     AvailabilityRule::factory()->count(3)->create(['user_id' => $user->id]);
 
     expect($user->availabilityRules)->toHaveCount(3);
-});
-
-it('has many time slots', function () {
-    $user = User::factory()->create();
-    TimeSlot::factory()->count(2)->create(['user_id' => $user->id]);
-
-    expect($user->timeSlots)->toHaveCount(2);
 });
 
 it('has one preference', function () {
