@@ -101,6 +101,13 @@ class AppointmentService
                 'status'         => 'pending',
             ]);
 
+            AppointmentReminder::create([
+                'appointment_id' => $appointment->id,
+                'type'           => 'email',
+                'scheduled_for'  => $scheduledDate->copy()->subHours(2),
+                'status'         => 'pending',
+            ]);
+
             SyncGoogleCalendar::dispatch($appointment, 'create');
 
             return $appointment;
