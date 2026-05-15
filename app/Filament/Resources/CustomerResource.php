@@ -6,8 +6,11 @@ use App\Filament\Resources\CustomerResource\Pages;
 use App\Filament\Resources\CustomerResource\RelationManagers;
 use App\Models\User;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Get;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
@@ -87,6 +90,33 @@ class CustomerResource extends Resource
                 ->rows(8)
                 ->columnSpanFull()
                 ->helperText("Visibili solo nell'area admin. Non vengono mostrate al cliente."),
+
+            Section::make('Preferenze notifiche')
+                ->schema([
+                    \Filament\Forms\Components\Group::make()
+                        ->relationship('preferences')
+                        ->schema([
+                            Select::make('notification_channel')
+                                ->label('Canale notifiche')
+                                ->options([
+                                    'email'    => 'Email',
+                                    'sms'      => 'SMS',
+                                    'whatsapp' => 'WhatsApp',
+                                ])
+                                ->default('email')
+                                ->required()
+                                ->live(),
+
+                            TextInput::make('phone_number')
+                                ->label('Numero di telefono')
+                                ->tel()
+                                ->placeholder('+39 333 123 4567')
+                                ->visible(fn (Get $get): bool =>
+                                    in_array($get('notification_channel'), ['sms', 'whatsapp'])
+                                ),
+                        ]),
+                ])
+                ->columnSpanFull(),
         ]);
     }
 
