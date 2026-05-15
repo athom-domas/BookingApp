@@ -2,9 +2,11 @@
 
 use App\Models\Appointment;
 use App\Models\AppointmentHold;
+use App\Models\AvailabilityRule;
 use App\Models\Service;
 use App\Models\User;
 use App\Services\Booking\AppointmentService;
+use Carbon\Carbon;
 use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
@@ -250,4 +252,50 @@ it('POST /api/booking/confirm returns 422 when holdId is missing', function () {
 
     $this->actingAs($user)->postJson('/api/booking/confirm', [])
         ->assertUnprocessable();
+});
+
+// ─── GET /api/booking/available-dates ────────────────────────────────────────
+
+it('returns available dates in a month for given services and staff', function () {
+    Role::firstOrCreate(['name' => 'staff', 'guard_name' => 'web']);
+
+    $service = Service::factory()->create(['active' => true, 'duration_minutes' => 60]);
+    $staff = User::factory()->create();
+    $staff->assignRole('staff');
+    $service->staff()->attach($staff->id);
+
+    // Staff disponibile il lunedì
+    $monday = Carbon::parse('next monday');
+    AvailabilityRule::factory()->create([
+        'user_id'      => $staff->id,
+        'day_of_week'  => 1,
+        'start_time'   => '09:00:00',
+        'end_time'     => '17:00:00',
+        'is_available' => true,
+    ]);
+
+    $month = $monday->format('Y-m');
+
+    $response = $this->getJson("/api/booking/available-dates?serviceIds[]={$service->id}&staffId={$staff->id}&month={$month}");
+
+    $response->assertOk()
+        ->assertJsonPath('success', true)
+        ->assertJsonStructure(['success', 'data'])
+        ->assertJsonPath('data.0', $monday->toDateString());
+});
+
+it('returns empty array when no staff is available in the month', function () {
+    $service = Service::factory()->create(['active' => true]);
+
+    $response = $this->getJson("/api/booking/available-dates?serviceIds[]={$service->id}&month=2026-01");
+
+    $response->assertOk()
+        ->assertJsonPath('success', true)
+        ->assertJsonPath('data', []);
+});
+
+it('validates required params for available-dates endpoint', function () {
+    $this->getJson('/api/booking/available-dates')
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['serviceIds', 'month']);
 });

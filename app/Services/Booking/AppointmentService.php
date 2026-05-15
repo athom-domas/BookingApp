@@ -24,6 +24,39 @@ class AppointmentService
         return $this->slotService->getAvailableSlots($params);
     }
 
+    public function getAvailableDates(array $params): array
+    {
+        $month      = $params['month'];
+        $serviceIds = $params['serviceIds'];
+        $staffId    = $params['staffId'] ?? null;
+        $preference = $staffId ? 'specific' : 'any';
+
+        $start = Carbon::createFromFormat('Y-m', $month)->startOfMonth();
+        $end   = $start->copy()->endOfMonth();
+        $today = Carbon::today();
+
+        $available = [];
+
+        for ($day = $start->copy(); $day->lte($end); $day->addDay()) {
+            if ($day->lt($today)) {
+                continue;
+            }
+
+            $slots = $this->slotService->getAvailableSlots([
+                'date'            => $day->toDateString(),
+                'serviceIds'      => $serviceIds,
+                'staffId'         => $staffId,
+                'staffPreference' => $preference,
+            ]);
+
+            if (! empty($slots)) {
+                $available[] = $day->toDateString();
+            }
+        }
+
+        return $available;
+    }
+
     /**
      * Creates a temporary hold after re-validating slot availability.
      *

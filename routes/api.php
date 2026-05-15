@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Route;
 // ─── Dynamic booking (new slot system) ───────────────────────────────────────
 Route::prefix('booking')->group(function () {
     Route::get('/slots', [BookingController::class, 'getAvailableSlots']);
+    Route::get('/available-dates', [BookingController::class, 'getAvailableDates']);
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/hold', [BookingController::class, 'createHold']);
