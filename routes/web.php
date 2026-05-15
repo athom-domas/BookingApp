@@ -8,6 +8,7 @@ use App\Http\Controllers\StripeWebhookController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [BookingController::class, 'index'])->name('booking.index');
+Route::get('/prenota', [BookingController::class, 'create'])->name('booking.create');
 Route::post('/stripe/webhook', StripeWebhookController::class)->name('stripe.webhook');
 
 Route::middleware('guest')->group(function () {

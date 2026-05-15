@@ -51,16 +51,24 @@ function makePortalBookableSetup(array $serviceAttributes = []): array
     return [$service, $staff, $date];
 }
 
-it('shows the public booking page with active services', function () {
+it('shows the booking wizard page with active services', function () {
     Service::factory()->create(['name' => 'Taglio', 'active' => true]);
     Service::factory()->create(['name' => 'Servizio nascosto', 'active' => false]);
 
-    $response = $this->get('/');
+    $response = $this->get('/prenota');
 
     $response->assertOk()
-        ->assertSee('Prenota il tuo appuntamento')
         ->assertSee('Taglio')
         ->assertDontSee('Servizio nascosto');
+});
+
+it('shows the landing page at /', function () {
+    Service::factory()->create(['name' => 'Taglio', 'active' => true]);
+
+    $this->get('/')
+        ->assertOk()
+        ->assertSee('Taglio')
+        ->assertSee('Prenota ora');
 });
 
 it('creates a pending booking and payment intent for an authenticated customer', function () {
