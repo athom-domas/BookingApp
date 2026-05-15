@@ -2,12 +2,11 @@
 
 namespace App\Http\Controllers\Portal;
 
-use App\Exceptions\BookingException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Portal\StoreBookingRequest;
 use App\Models\Service;
 use App\Models\User;
-use App\Services\AppointmentService;
+use App\Services\Booking\AppointmentService;
 use App\Services\PaymentService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
@@ -22,50 +21,55 @@ class BookingController extends Controller
 
     public function index(): View
     {
+        $services = Service::active()->orderBy('name')->get();
+
+        return view('welcome', ['services' => $services]);
+    }
+
+    public function create(): View
+    {
         $services = Service::active()
-            ->with(['staff' => fn ($query) => $query
-                ->whereHas('roles', fn ($roleQuery) => $roleQuery
-                    ->where('name', 'staff')
-                    ->where('guard_name', 'web'))
+            ->with(['staff' => fn ($q) => $q
+                ->whereHas('roles', fn ($r) => $r->where('name', 'staff')->where('guard_name', 'web'))
                 ->orderBy('name')])
             ->orderBy('name')
             ->get();
 
-        $staff = User::whereHas('roles', fn ($roleQuery) => $roleQuery
-            ->where('name', 'staff')
-            ->where('guard_name', 'web'))
-            ->whereHas('services', fn ($query) => $query->active())
-            ->with(['services' => fn ($query) => $query->active()->select('services.id', 'services.name')])
+        $staff = User::whereHas('roles', fn ($q) => $q->where('name', 'staff')->where('guard_name', 'web'))
+            ->whereHas('services', fn ($q) => $q->active())
+            ->with(['services' => fn ($q) => $q->active()->select('services.id', 'services.name')])
             ->orderBy('name')
             ->get();
 
-        return view('welcome', [
+        return view('portal.booking.index', [
             'services' => $services,
-            'staff' => $staff,
+            'staff'    => $staff,
         ]);
     }
 
     public function store(StoreBookingRequest $request): RedirectResponse
     {
         try {
-            $appointment = $this->appointmentService->bookAppointment(
-                userId: $request->user()->id,
-                serviceId: $request->integer('service_id'),
-                staffId: $request->integer('staff_id'),
-                scheduledDate: Carbon::parse($request->string('scheduled_date')),
-            );
-
-            if ($request->filled('notes')) {
-                $appointment->update(['notes' => $request->string('notes')]);
-            }
-
-            $amountCents = (int) round((float) $appointment->final_price * 100);
-            $this->paymentService->initiateStripePayment($appointment->id, $amountCents);
-        } catch (BookingException $e) {
-            return back()
-                ->withInput()
-                ->withErrors(['scheduled_date' => $e->getMessage()]);
+            $appointment = $this->appointmentService->bookDirect([
+                'userId'             => $request->user()->id,
+                'serviceIds'         => $request->input('service_ids'),
+                'staffId'            => $request->filled('staff_id') ? $request->integer('staff_id') : null,
+                'scheduledDate'      => Carbon::parse($request->string('scheduled_date')),
+                'confirmImmediately' => $request->input('payment_method') === 'in_salon',
+                'notes'              => $request->input('notes'),
+            ]);
+        } catch (\RuntimeException $e) {
+            return back()->withInput()->withErrors(['scheduled_date' => $e->getMessage()]);
         }
+
+        if ($request->input('payment_method') === 'in_salon') {
+            return redirect()
+                ->route('portal.appointments.show', $appointment)
+                ->with('status', 'Prenotazione confermata. Ci vediamo in salone!');
+        }
+
+        $amountCents = (int) round((float) $appointment->final_price * 100);
+        $this->paymentService->initiateStripePayment($appointment->id, $amountCents);
 
         return redirect()
             ->route('portal.appointments.payment', $appointment)

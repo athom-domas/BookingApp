@@ -14,10 +14,12 @@ class StoreBookingRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'service_id' => ['required', 'integer', 'exists:services,id'],
-            'staff_id' => ['required', 'integer', 'exists:users,id'],
+            'service_ids'    => ['required', 'array', 'min:1'],
+            'service_ids.*'  => ['integer', 'exists:services,id'],
+            'staff_id'       => ['nullable', 'integer', 'exists:users,id'],
             'scheduled_date' => ['required', 'date', 'after:now'],
-            'notes' => ['nullable', 'string', 'max:1000'],
+            'payment_method' => ['required', 'in:online,in_salon'],
+            'notes'          => ['nullable', 'string', 'max:1000'],
         ];
     }
 }

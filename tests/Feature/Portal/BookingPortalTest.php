@@ -72,19 +72,20 @@ it('creates a pending booking and payment intent for an authenticated customer',
         ->once()
         ->with(Mockery::type('int'), 7500)
         ->andReturnUsing(fn (int $appointmentId) => Payment::factory()->create([
-            'appointment_id' => $appointmentId,
-            'user_id' => $customer->id,
-            'amount' => 75.00,
-            'status' => 'pending',
+            'appointment_id'        => $appointmentId,
+            'user_id'               => $customer->id,
+            'amount'                => 75.00,
+            'status'                => 'pending',
             'stripe_transaction_id' => 'pi_portal_123',
-            'stripe_response' => ['client_secret' => 'pi_portal_123_secret_test'],
+            'stripe_response'       => ['client_secret' => 'pi_portal_123_secret_test'],
         ]));
 
     $response = $this->actingAs($customer)->post('/portal/bookings', [
-        'service_id' => $service->id,
-        'staff_id' => $staff->id,
+        'service_ids'    => [$service->id],
+        'staff_id'       => $staff->id,
         'scheduled_date' => $date->toDateTimeString(),
-        'notes' => 'Prima visita',
+        'payment_method' => 'online',
+        'notes'          => 'Prima visita',
     ]);
 
     $appointment = Appointment::where('user_id', $customer->id)->first();
@@ -102,9 +103,10 @@ it('rejects inactive services', function () {
     $this->mock(PaymentService::class)->shouldNotReceive('initiateStripePayment');
 
     $this->actingAs($customer)->post('/portal/bookings', [
-        'service_id' => $service->id,
-        'staff_id' => $staff->id,
+        'service_ids'    => [$service->id],
+        'staff_id'       => $staff->id,
         'scheduled_date' => $date->toDateTimeString(),
+        'payment_method' => 'online',
     ])->assertSessionHasErrors('scheduled_date');
 
     expect(Appointment::count())->toBe(0);
@@ -116,9 +118,10 @@ it('rejects staff not assigned to the selected service', function () {
     $service->staff()->detach($staff->id);
 
     $this->actingAs($customer)->post('/portal/bookings', [
-        'service_id' => $service->id,
-        'staff_id' => $staff->id,
+        'service_ids'    => [$service->id],
+        'staff_id'       => $staff->id,
         'scheduled_date' => $date->toDateTimeString(),
+        'payment_method' => 'online',
     ])->assertSessionHasErrors('scheduled_date');
 });
 
@@ -128,9 +131,10 @@ it('rejects users without staff role even if attached to the service', function 
     $staff->syncRoles([]);
 
     $this->actingAs($customer)->post('/portal/bookings', [
-        'service_id' => $service->id,
-        'staff_id' => $staff->id,
+        'service_ids'    => [$service->id],
+        'staff_id'       => $staff->id,
         'scheduled_date' => $date->toDateTimeString(),
+        'payment_method' => 'online',
     ])->assertSessionHasErrors('scheduled_date');
 });
 
@@ -147,9 +151,10 @@ it('rejects bookings when the slot is already taken by another appointment', fun
     ]);
 
     $this->actingAs($customer)->post('/portal/bookings', [
-        'service_id' => $service->id,
-        'staff_id' => $staff->id,
+        'service_ids'    => [$service->id],
+        'staff_id'       => $staff->id,
         'scheduled_date' => $date->toDateTimeString(),
+        'payment_method' => 'online',
     ])->assertSessionHasErrors('scheduled_date');
 });
 
@@ -158,8 +163,68 @@ it('rejects past booking dates', function () {
     [$service, $staff] = makePortalBookableSetup();
 
     $this->actingAs($customer)->post('/portal/bookings', [
-        'service_id' => $service->id,
-        'staff_id' => $staff->id,
+        'service_ids'    => [$service->id],
+        'staff_id'       => $staff->id,
         'scheduled_date' => now()->subDay()->toDateTimeString(),
+        'payment_method' => 'online',
     ])->assertSessionHasErrors('scheduled_date');
+});
+
+it('creates a confirmed appointment and redirects to show when payment is in_salon', function () {
+    $customer = makePortalCustomer();
+    [$service, $staff, $date] = makePortalBookableSetup();
+
+    $response = $this->actingAs($customer)->post('/portal/bookings', [
+        'service_ids'    => [$service->id],
+        'staff_id'       => $staff->id,
+        'scheduled_date' => $date->toDateTimeString(),
+        'payment_method' => 'in_salon',
+    ]);
+
+    $appointment = Appointment::where('user_id', $customer->id)->first();
+
+    expect($appointment)->not->toBeNull();
+    expect($appointment->status)->toBe('confirmed');
+    $response->assertRedirect(route('portal.appointments.show', $appointment));
+});
+
+it('creates a pending appointment and goes to payment when payment is online', function () {
+    $customer = makePortalCustomer();
+    [$service, $staff, $date] = makePortalBookableSetup();
+
+    $this->mock(PaymentService::class)
+        ->shouldReceive('initiateStripePayment')
+        ->once()
+        ->andReturnUsing(fn (int $appointmentId) => Payment::factory()->create([
+            'appointment_id'        => $appointmentId,
+            'user_id'               => $customer->id,
+            'amount'                => 75.00,
+            'status'                => 'pending',
+            'stripe_transaction_id' => 'pi_wizard_123',
+            'stripe_response'       => ['client_secret' => 'pi_wizard_123_secret'],
+        ]));
+
+    $response = $this->actingAs($customer)->post('/portal/bookings', [
+        'service_ids'    => [$service->id],
+        'staff_id'       => $staff->id,
+        'scheduled_date' => $date->toDateTimeString(),
+        'payment_method' => 'online',
+    ]);
+
+    $appointment = Appointment::where('user_id', $customer->id)->first();
+
+    expect($appointment)->not->toBeNull();
+    expect($appointment->status)->toBe('pending');
+    $response->assertRedirect(route('portal.appointments.payment', $appointment));
+});
+
+it('rejects store request when payment_method is missing', function () {
+    $customer = makePortalCustomer();
+    [$service, $staff, $date] = makePortalBookableSetup();
+
+    $this->actingAs($customer)->post('/portal/bookings', [
+        'service_ids'    => [$service->id],
+        'staff_id'       => $staff->id,
+        'scheduled_date' => $date->toDateTimeString(),
+    ])->assertSessionHasErrors('payment_method');
 });
