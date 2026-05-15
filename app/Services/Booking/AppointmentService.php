@@ -4,8 +4,10 @@ namespace App\Services\Booking;
 
 use App\Events\AppointmentCancelled;
 use App\Events\AppointmentConfirmed;
+use App\Jobs\SyncGoogleCalendar;
 use App\Models\Appointment;
 use App\Models\AppointmentHold;
+use App\Models\AppointmentReminder;
 use App\Models\Service;
 use App\Models\SystemSetting;
 use Carbon\Carbon;
@@ -187,6 +189,69 @@ class AppointmentService
     public function calculateTotalPrice(array $serviceIds): float
     {
         return (float) Service::whereIn('id', $serviceIds)->active()->sum('price');
+    }
+
+    public function bookDirect(array $params): Appointment
+    {
+        $userId             = $params['userId'];
+        $serviceIds         = $params['serviceIds'];
+        $staffId            = $params['staffId'] ?? null;
+        $scheduledDate      = Carbon::parse($params['scheduledDate']);
+        $confirmImmediately = $params['confirmImmediately'] ?? false;
+        $notes              = $params['notes'] ?? null;
+        $staffPreference    = $staffId ? 'specific' : 'any';
+
+        return DB::transaction(function () use ($userId, $serviceIds, $staffId, $scheduledDate, $confirmImmediately, $notes, $staffPreference) {
+            $date     = $scheduledDate->copy()->startOfDay();
+            $slotTime = $scheduledDate->format('H:i');
+
+            $slots = $this->slotService->getAvailableSlots([
+                'date'            => $date,
+                'serviceIds'      => $serviceIds,
+                'staffId'         => $staffId,
+                'staffPreference' => $staffPreference,
+            ]);
+
+            $matchingSlot = collect($slots)->first(fn ($s) => $s['start'] === $slotTime);
+
+            if (! $matchingSlot) {
+                throw new \RuntimeException('Slot non disponibile.');
+            }
+
+            if ($staffPreference === 'any') {
+                $duration = $this->slotService->calculateTotalDuration($serviceIds);
+                $staffId  = $this->pickBestOperator($date, $serviceIds, $scheduledDate, $duration);
+
+                if (! $staffId) {
+                    throw new \RuntimeException('Nessun operatore disponibile.');
+                }
+            }
+
+            $appointment = Appointment::create([
+                'user_id'        => $userId,
+                'service_id'     => $serviceIds[0],
+                'staff_id'       => $staffId,
+                'scheduled_date' => $scheduledDate,
+                'status'         => $confirmImmediately ? 'confirmed' : 'pending',
+                'final_price'    => $this->calculateTotalPrice($serviceIds),
+                'notes'          => $notes,
+            ]);
+
+            AppointmentReminder::create([
+                'appointment_id' => $appointment->id,
+                'type'           => 'email',
+                'scheduled_for'  => $scheduledDate->copy()->subDay(),
+                'status'         => 'pending',
+            ]);
+
+            SyncGoogleCalendar::dispatch($appointment, 'create');
+
+            if ($confirmImmediately) {
+                AppointmentConfirmed::dispatch($appointment);
+            }
+
+            return $appointment;
+        });
     }
 
     private function isSlotAvailable(
