@@ -53,6 +53,20 @@ services:
       retries: 3
       start_period: 40s
 
+  vite:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: booking_vite
+    working_dir: /app
+    volumes:
+      - ./:/app
+    networks:
+      - booking_network
+    ports:
+      - "5173:5173"
+    command: npx vite
+
   nginx:
     image: nginx:alpine
     container_name: booking_nginx
@@ -100,6 +114,8 @@ services:
       PMA_HOST: mysql
       PMA_USER: booking
       PMA_PASSWORD: secret
+    volumes:
+      - ./docker/phpmyadmin/limits.conf:/etc/apache2/conf-enabled/limits.conf:ro
     ports:
       - "8080:80"
     networks:

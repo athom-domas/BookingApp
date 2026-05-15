@@ -22,8 +22,12 @@ class SystemSettings extends Page
 
     public function mount(): void
     {
+        $setting = SystemSetting::current();
         $this->form->fill([
-            'slot_generation_weeks' => SystemSetting::current()->slot_generation_weeks,
+            'slot_granularity_minutes'     => $setting->slot_granularity_minutes,
+            'hold_duration_minutes'        => $setting->hold_duration_minutes,
+            'hold_extension_minutes'       => $setting->hold_extension_minutes,
+            'min_service_duration_minutes' => $setting->min_service_duration_minutes,
         ]);
     }
 
@@ -31,13 +35,41 @@ class SystemSettings extends Page
     {
         return $schema
             ->schema([
-                TextInput::make('slot_generation_weeks')
-                    ->label('Settimane di anticipo per la generazione degli slot')
+                TextInput::make('slot_granularity_minutes')
+                    ->label('Granularità slot (minuti)')
+                    ->helperText('Intervallo di tempo in minuti che divide il calendario in fasce orarie prenotabili. Ad esempio, con 15 minuti gli slot disponibili saranno 09:00, 09:15, 09:30 ecc.')
+                    ->integer()
+                    ->minValue(5)
+                    ->maxValue(60)
+                    ->required()
+                    ->suffix('min'),
+
+                TextInput::make('hold_duration_minutes')
+                    ->label('Durata prenotazione temporanea')
+                    ->helperText('Tempo massimo in minuti durante il quale uno slot rimane riservato mentre il cliente completa la procedura di prenotazione. Allo scadere, lo slot torna disponibile.')
                     ->integer()
                     ->minValue(1)
-                    ->maxValue(52)
+                    ->maxValue(60)
                     ->required()
-                    ->suffix('settimane'),
+                    ->suffix('min'),
+
+                TextInput::make('hold_extension_minutes')
+                    ->label('Estensione prenotazione temporanea')
+                    ->helperText('Minuti aggiuntivi concessi automaticamente se il cliente è ancora attivo nel wizard di prenotazione prima della scadenza del blocco temporaneo.')
+                    ->integer()
+                    ->minValue(1)
+                    ->maxValue(60)
+                    ->required()
+                    ->suffix('min'),
+
+                TextInput::make('min_service_duration_minutes')
+                    ->label('Durata minima servizio')
+                    ->helperText('Durata minima in minuti che un servizio può avere. Utilizzata come validazione durante la creazione e modifica dei servizi.')
+                    ->integer()
+                    ->minValue(5)
+                    ->maxValue(120)
+                    ->required()
+                    ->suffix('min'),
             ])
             ->statePath('data');
     }

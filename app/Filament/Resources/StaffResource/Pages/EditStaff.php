@@ -13,8 +13,6 @@ class EditStaff extends EditRecord
 {
     protected static string $resource = StaffResource::class;
 
-    private int $pendingSlotDurationMinutes = 60;
-
     protected function getHeaderActions(): array
     {
         return [
@@ -31,7 +29,6 @@ class EditStaff extends EditRecord
     {
         $data['password'] = null;
         $data['password_confirmation'] = null;
-        $data['slot_duration_minutes'] = $this->getRecord()->preferences->slot_duration_minutes ?? 60;
 
         return $data;
     }
@@ -44,15 +41,7 @@ class EditStaff extends EditRecord
 
         unset($data['password_confirmation']);
 
-        $this->pendingSlotDurationMinutes = $data['slot_duration_minutes'] ?? 60;
-        unset($data['slot_duration_minutes']);
-
         return $data;
-    }
-
-    protected function afterSave(): void
-    {
-        $this->getRecord()->preferences()->updateOrCreate([], ['slot_duration_minutes' => $this->pendingSlotDurationMinutes]);
     }
 
     protected function handleRecordUpdate(Model $record, array $data): Model

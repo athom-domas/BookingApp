@@ -8,9 +8,9 @@
         <title>@yield('title', 'Booking App') - Booking App</title>
 
         @fonts
-        @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
-            @vite(['resources/css/app.css', 'resources/js/app.js'])
-        @endif
+        @filamentStyles
+        @vite('resources/css/app.css')
+        @vite('resources/css/filament/admin/theme.css')
         @stack('head')
     </head>
     <body class="min-h-screen bg-gray-50 font-sans text-gray-950 antialiased">
@@ -22,7 +22,7 @@
                 </a>
 
                 <nav class="flex items-center gap-2 text-sm font-medium">
-                    <a href="{{ route('booking.index') }}" class="rounded-md px-3 py-2 text-gray-700 hover:bg-gray-100 hover:text-gray-950">Prenota</a>
+                    <a href="{{ route('booking.create') }}" class="rounded-md px-3 py-2 text-gray-700 hover:bg-gray-100 hover:text-gray-950">Prenota</a>
                     @auth
                         <a href="{{ route('portal.appointments.index') }}" class="rounded-md px-3 py-2 text-gray-700 hover:bg-gray-100 hover:text-gray-950">Appuntamenti</a>
                         @if (auth()->user()->isAdmin() || auth()->user()->isStaff())
@@ -62,5 +62,7 @@
         </main>
 
         @stack('scripts')
+        @filamentScripts
+        @vite('resources/js/app.js')
     </body>
 </html>

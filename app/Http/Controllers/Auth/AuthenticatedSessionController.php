@@ -30,7 +30,12 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('portal.appointments.index'));
+        $user = Auth::user();
+        $default = ($user->isAdmin() || $user->isStaff())
+            ? '/admin'
+            : route('portal.appointments.index');
+
+        return redirect()->intended($default);
     }
 
     public function destroy(Request $request): RedirectResponse

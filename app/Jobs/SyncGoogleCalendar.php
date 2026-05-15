@@ -22,29 +22,28 @@ class SyncGoogleCalendar implements ShouldQueue
 
     public function handle(GoogleCalendarService $calendarService): void
     {
-        if ($this->action === 'create') {
-            $eventId = $calendarService->createEvent($this->appointment);
-            $this->appointment->update(['google_event_id' => $eventId]);
-            return;
-        }
-
-        if ($this->action === 'delete') {
-            if ($this->appointment->google_event_id) {
-                $calendarService->deleteEvent($this->appointment->google_event_id);
-                $this->appointment->update(['google_event_id' => null]);
+        try {
+            if ($this->action === 'create') {
+                $eventId = $calendarService->createEvent($this->appointment);
+                $this->appointment->update(['google_event_id' => $eventId]);
+                return;
             }
-            return;
+
+            if ($this->action === 'delete') {
+                if ($this->appointment->google_event_id) {
+                    $calendarService->deleteEvent($this->appointment->google_event_id);
+                    $this->appointment->update(['google_event_id' => null]);
+                }
+                return;
+            }
+
+            throw new \InvalidArgumentException("Unknown SyncGoogleCalendar action: {$this->action}");
+        } catch (\Throwable $e) {
+            Log::warning('SyncGoogleCalendar failed — calendar sync skipped', [
+                'appointment_id' => $this->appointment->id,
+                'action'         => $this->action,
+                'error'          => $e->getMessage(),
+            ]);
         }
-
-        throw new \InvalidArgumentException("Unknown SyncGoogleCalendar action: {$this->action}");
-    }
-
-    public function failed(\Throwable $e): void
-    {
-        Log::error('SyncGoogleCalendar failed', [
-            'appointment_id' => $this->appointment->id,
-            'action'         => $this->action,
-            'error'          => $e->getMessage(),
-        ]);
     }
 }
