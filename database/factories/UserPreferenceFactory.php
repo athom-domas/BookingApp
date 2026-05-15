@@ -13,12 +13,11 @@ class UserPreferenceFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id' => User::factory(),
-            'receive_email_reminders' => true,
-            'receive_sms_reminders' => false,
-            'phone_number' => null,
-            'timezone' => 'UTC',
-            'preferred_staff' => null,
+            'user_id'              => User::factory(),
+            'notification_channel' => 'email',
+            'phone_number'         => null,
+            'timezone'             => 'UTC',
+            'preferred_staff'      => null,
             'slot_duration_minutes' => 60,
         ];
     }

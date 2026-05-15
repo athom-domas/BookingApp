@@ -45,9 +45,9 @@ it('SendAppointmentReminder sends email to customer', function () {
 it('SendAppointmentReminder sends SMS when user has sms preference enabled', function () {
     $user = User::factory()->create();
     UserPreference::factory()->create([
-        'user_id'               => $user->id,
-        'receive_sms_reminders' => true,
-        'phone_number'          => '+39123456789',
+        'user_id'              => $user->id,
+        'notification_channel' => 'sms',
+        'phone_number'         => '+39123456789',
     ]);
     $appointment = Appointment::factory()->create(['user_id' => $user->id]);
     $reminder = AppointmentReminder::factory()->create([
@@ -66,9 +66,9 @@ it('SendAppointmentReminder sends SMS when user has sms preference enabled', fun
 it('SendAppointmentReminder sends SMS exception propagates', function () {
     $user = User::factory()->create();
     UserPreference::factory()->create([
-        'user_id'               => $user->id,
-        'receive_sms_reminders' => true,
-        'phone_number'          => '+39123456789',
+        'user_id'              => $user->id,
+        'notification_channel' => 'sms',
+        'phone_number'         => '+39123456789',
     ]);
     $appointment = Appointment::factory()->create(['user_id' => $user->id]);
     $reminder = AppointmentReminder::factory()->create([
