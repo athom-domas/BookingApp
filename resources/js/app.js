@@ -1,5 +1,8 @@
 import Alpine from 'alpinejs';
+import { bookingWizard } from './booking-wizard.js';
+
 window.Alpine = Alpine;
+window.bookingWizard = bookingWizard;
 
 const ready = (callback) => {
     if (document.readyState === 'loading') {
