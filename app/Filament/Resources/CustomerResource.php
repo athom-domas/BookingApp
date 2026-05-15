@@ -6,11 +6,12 @@ use App\Filament\Resources\CustomerResource\Pages;
 use App\Filament\Resources\CustomerResource\RelationManagers;
 use App\Models\User;
 use Filament\Actions\EditAction;
-use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Get;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Group;
+use Filament\Schemas\Components\Section;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
@@ -93,7 +94,7 @@ class CustomerResource extends Resource
 
             Section::make('Preferenze notifiche')
                 ->schema([
-                    \Filament\Forms\Components\Group::make()
+                    Group::make()
                         ->relationship('preferences')
                         ->schema([
                             Select::make('notification_channel')
