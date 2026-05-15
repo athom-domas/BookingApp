@@ -17,23 +17,24 @@ class DemoBookingSeeder extends Seeder
 {
     public function run(): void
     {
-        $staff    = $this->seedStaff();
-        $customer = $this->seedCustomer();
-        $services = $this->seedServices();
+        $staff     = $this->seedStaff();
+        $customers = $this->seedCustomers();
+        $services  = $this->seedServices();
 
         $this->attachServicesToStaff($services, $staff);
         $this->seedAvailabilityRules($staff);
-        $this->seedPreferences($customer, $staff);
-        $this->seedDemoAppointments($customer, $staff, $services);
-        $this->seedDemoHolds($staff, $customer, $services);
+        $this->seedPreferences($customers, $staff);
+        $this->seedAppointments($customers, $staff, $services);
+        $this->seedDemoHolds($staff, $customers, $services);
     }
 
     /** @return array<string, User> */
     private function seedStaff(): array
     {
         $staffData = [
-            'giulia' => ['email' => 'giulia.staff@test.com', 'name' => 'Giulia Bianchi'],
-            'marco'  => ['email' => 'marco.staff@test.com',  'name' => 'Marco Verdi'],
+            'marco'   => ['email' => 'marco@barbershop.test',   'name' => 'Marco Russo'],
+            'andrea'  => ['email' => 'andrea@barbershop.test',  'name' => 'Andrea Conti'],
+            'filippo' => ['email' => 'filippo@barbershop.test', 'name' => 'Filippo Mancini'],
         ];
 
         $users = [];
@@ -46,50 +47,70 @@ class DemoBookingSeeder extends Seeder
             $users[$key] = $user;
         }
 
-        // Default staff da RolesAndUsersSeeder
-        $default = User::where('email', 'staff@test.com')->first();
-        if ($default) {
-            $default->syncRoles(['staff']);
-            $users['demo'] = $default;
-        }
-
         return $users;
     }
 
-    private function seedCustomer(): User
+    /** @return array<string, User> */
+    private function seedCustomers(): array
     {
-        $customer = User::updateOrCreate(
-            ['email' => 'customer@test.com'],
-            ['name' => 'Cliente Demo', 'password' => Hash::make('password')]
-        );
-        $customer->syncRoles(['customer']);
+        $customerData = [
+            'giovanni'   => ['email' => 'giovanni@customer.test',   'name' => 'Giovanni Esposito'],
+            'alessandro' => ['email' => 'alessandro@customer.test', 'name' => 'Alessandro Romano'],
+            'matteo'     => ['email' => 'matteo@customer.test',     'name' => 'Matteo Ricci'],
+            'davide'     => ['email' => 'davide@customer.test',     'name' => 'Davide Gallo'],
+            'simone'     => ['email' => 'simone@customer.test',     'name' => 'Simone Marino'],
+        ];
 
-        return $customer;
+        $users = [];
+        foreach ($customerData as $key => $data) {
+            $user = User::updateOrCreate(
+                ['email' => $data['email']],
+                ['name' => $data['name'], 'password' => Hash::make('password')]
+            );
+            $user->syncRoles(['customer']);
+            $users[$key] = $user;
+        }
+
+        return $users;
     }
 
     /** @return array<string, Service> */
     private function seedServices(): array
     {
         $definitions = [
-            'consultation' => [
-                'name'             => 'Consulenza iniziale',
-                'description'      => 'Primo incontro per valutare esigenze e obiettivi.',
-                'duration_minutes' => 60,
-                'price'            => 75.00,
-                'active'           => true,
-            ],
-            'follow_up' => [
-                'name'             => 'Controllo periodico',
-                'description'      => 'Follow-up per clienti già registrati.',
+            'taglio' => [
+                'name'             => 'Taglio capelli',
+                'description'      => 'Taglio classico o moderno con finishing.',
                 'duration_minutes' => 30,
-                'price'            => 45.00,
+                'price'            => 18.00,
                 'active'           => true,
             ],
-            'planning' => [
-                'name'             => 'Pianificazione avanzata',
-                'description'      => 'Sessione per definire piano e prossime attività.',
-                'duration_minutes' => 90,
-                'price'            => 110.00,
+            'taglio_barba' => [
+                'name'             => 'Taglio + Barba',
+                'description'      => 'Taglio capelli con cura e rifinitura della barba.',
+                'duration_minutes' => 50,
+                'price'            => 28.00,
+                'active'           => true,
+            ],
+            'rasatura' => [
+                'name'             => 'Rasatura tradizionale',
+                'description'      => 'Rasatura con rasoio a mano libera e asciugamano caldo.',
+                'duration_minutes' => 30,
+                'price'            => 15.00,
+                'active'           => true,
+            ],
+            'barba' => [
+                'name'             => 'Rimodellamento barba',
+                'description'      => 'Modellatura, rifinitura e trattamento della barba.',
+                'duration_minutes' => 20,
+                'price'            => 12.00,
+                'active'           => true,
+            ],
+            'colore' => [
+                'name'             => 'Colore / Tinta',
+                'description'      => 'Colorazione capelli con prodotti professionali.',
+                'duration_minutes' => 60,
+                'price'            => 40.00,
                 'active'           => true,
             ],
         ];
@@ -107,198 +128,178 @@ class DemoBookingSeeder extends Seeder
      */
     private function attachServicesToStaff(array $services, array $staff): void
     {
-        $services['consultation']->staff()->syncWithoutDetaching([$staff['giulia']->id]);
-        $services['follow_up']->staff()->syncWithoutDetaching([$staff['giulia']->id]);
+        foreach (['taglio', 'taglio_barba', 'barba'] as $key) {
+            $services[$key]->staff()->syncWithoutDetaching([$staff['marco']->id]);
+        }
 
-        $services['consultation']->staff()->syncWithoutDetaching([$staff['marco']->id]);
-        $services['planning']->staff()->syncWithoutDetaching([$staff['marco']->id]);
+        foreach (['taglio', 'taglio_barba', 'rasatura', 'barba'] as $key) {
+            $services[$key]->staff()->syncWithoutDetaching([$staff['andrea']->id]);
+        }
 
-        if (isset($staff['demo'])) {
-            foreach ($services as $service) {
-                $service->staff()->syncWithoutDetaching([$staff['demo']->id]);
-            }
+        foreach ($services as $service) {
+            $service->staff()->syncWithoutDetaching([$staff['filippo']->id]);
         }
     }
 
     /** @param array<string, User> $staff */
     private function seedAvailabilityRules(array $staff): void
     {
-        // Carbon day_of_week: 0=Dom, 1=Lun, 2=Mar, 3=Mer, 4=Gio, 5=Ven, 6=Sab
-        $schedule = [
-            1 => ['09:00:00', '17:00:00'], // Lunedì
-            2 => ['09:00:00', '17:00:00'], // Martedì
-            3 => ['10:00:00', '18:00:00'], // Mercoledì
-            4 => ['09:00:00', '17:00:00'], // Giovedì
-            5 => ['09:00:00', '15:00:00'], // Venerdì
+        // Barbershop: martedì–sabato, mattina 08:00–13:00 e pomeriggio 16:00–21:00
+        $days = [2, 3, 4, 5, 6];
+        $slots = [
+            ['08:00:00', '13:00:00'],
+            ['16:00:00', '21:00:00'],
         ];
 
         foreach ($staff as $user) {
-            foreach ($schedule as $dayOfWeek => [$start, $end]) {
-                AvailabilityRule::updateOrCreate(
-                    ['user_id' => $user->id, 'day_of_week' => $dayOfWeek],
-                    ['start_time' => $start, 'end_time' => $end, 'is_available' => true]
-                );
+            foreach ($days as $dayOfWeek) {
+                foreach ($slots as [$start, $end]) {
+                    AvailabilityRule::updateOrCreate(
+                        ['user_id' => $user->id, 'day_of_week' => $dayOfWeek, 'start_time' => $start],
+                        ['end_time' => $end, 'is_available' => true]
+                    );
+                }
             }
         }
     }
 
-    /** @param array<string, User> $staff */
-    private function seedPreferences(User $customer, array $staff): void
+    /**
+     * @param  array<string, User> $customers
+     * @param  array<string, User> $staff
+     */
+    private function seedPreferences(array $customers, array $staff): void
     {
-        UserPreference::updateOrCreate(
-            ['user_id' => $customer->id],
-            [
-                'receive_email_reminders' => true,
-                'receive_sms_reminders'   => false,
-                'phone_number'            => '+39123456789',
-                'timezone'                => 'Europe/Rome',
-                'preferred_staff'         => $staff['giulia']->id,
-            ]
-        );
+        $prefs = [
+            'giovanni'   => ['preferred_staff' => $staff['marco']->id,   'phone' => '+39 333 1234567'],
+            'alessandro' => ['preferred_staff' => $staff['andrea']->id,  'phone' => '+39 347 2345678'],
+            'matteo'     => ['preferred_staff' => $staff['marco']->id,   'phone' => '+39 320 3456789'],
+            'davide'     => ['preferred_staff' => $staff['filippo']->id, 'phone' => '+39 393 4567890'],
+            'simone'     => ['preferred_staff' => null,                  'phone' => '+39 366 5678901'],
+        ];
+
+        foreach ($prefs as $key => $pref) {
+            UserPreference::updateOrCreate(
+                ['user_id' => $customers[$key]->id],
+                [
+                    'notification_channel' => 'email',
+                    'phone_number'         => $pref['phone'],
+                    'timezone'             => 'Europe/Rome',
+                    'preferred_staff'      => $pref['preferred_staff'],
+                ]
+            );
+        }
 
         foreach ($staff as $user) {
             UserPreference::updateOrCreate(
                 ['user_id' => $user->id],
                 [
-                    'receive_email_reminders' => true,
-                    'receive_sms_reminders'   => false,
-                    'phone_number'            => null,
-                    'timezone'                => 'Europe/Rome',
-                    'preferred_staff'         => null,
+                    'notification_channel' => 'email',
+                    'phone_number'         => null,
+                    'timezone'             => 'Europe/Rome',
+                    'preferred_staff'      => null,
                 ]
             );
         }
     }
 
     /**
-     * @param  array<string, User>     $staff
-     * @param  array<string, Service>  $services
-     */
-    private function seedDemoAppointments(User $customer, array $staff, array $services): void
-    {
-        // Futuro confermato — prossimo mercoledì 10:00
-        $confirmed = Appointment::updateOrCreate(
-            [
-                'user_id'        => $customer->id,
-                'service_id'     => $services['consultation']->id,
-                'staff_id'       => $staff['giulia']->id,
-                'scheduled_date' => Carbon::now()->next(Carbon::WEDNESDAY)->setTime(10, 0),
-            ],
-            [
-                'status'      => 'confirmed',
-                'final_price' => $services['consultation']->price,
-                'notes'       => 'Prenotazione demo — slot dinamico.',
-            ]
-        );
-
-        // Futuro pending — prossimo giovedì 14:00
-        Appointment::updateOrCreate(
-            [
-                'user_id'        => $customer->id,
-                'service_id'     => $services['follow_up']->id,
-                'staff_id'       => $staff['marco']->id,
-                'scheduled_date' => Carbon::now()->next(Carbon::THURSDAY)->setTime(14, 0),
-            ],
-            [
-                'status'      => 'pending',
-                'final_price' => $services['follow_up']->price,
-                'notes'       => 'In attesa di conferma.',
-            ]
-        );
-
-        // Passato completato — martedì scorso
-        $completed = Appointment::updateOrCreate(
-            [
-                'user_id'        => $customer->id,
-                'service_id'     => $services['follow_up']->id,
-                'staff_id'       => $staff['giulia']->id,
-                'scheduled_date' => Carbon::now()->subWeek()->next(Carbon::TUESDAY)->setTime(11, 0),
-            ],
-            [
-                'status'      => 'completed',
-                'final_price' => $services['follow_up']->price,
-                'notes'       => 'Completato.',
-            ]
-        );
-
-        // Passato cancellato — 3 giorni fa
-        Appointment::updateOrCreate(
-            [
-                'user_id'        => $customer->id,
-                'service_id'     => $services['planning']->id,
-                'staff_id'       => $staff['marco']->id,
-                'scheduled_date' => Carbon::now()->subDays(3)->setTime(9, 0),
-            ],
-            [
-                'status'      => 'cancelled',
-                'final_price' => null,
-                'notes'       => 'Cancellato dal cliente.',
-            ]
-        );
-
-        $this->seedPayment($confirmed, 'completed');
-        $this->seedPayment($completed, 'completed');
-    }
-
-    /**
-     * Seed di AppointmentHold per dimostrare il sistema hold.
-     * - active: cliente sta compilando il form (slot bloccato)
-     * - expired: non confermato in tempo (slot ora libero)
-     * - converted: ha generato un appuntamento confermato
-     *
+     * @param  array<string, User>    $customers
      * @param  array<string, User>    $staff
      * @param  array<string, Service> $services
      */
-    private function seedDemoHolds(array $staff, User $customer, array $services): void
+    private function seedAppointments(array $customers, array $staff, array $services): void
     {
-        $nextMonday = Carbon::now()->next(Carbon::MONDAY);
-        $nextWed    = Carbon::now()->next(Carbon::WEDNESDAY);
+        // Passato completato
+        $past = [
+            $this->upsertAppointment($customers['giovanni'],   $staff['marco'],   $services['taglio'],       Carbon::now()->subWeeks(2)->next(Carbon::TUESDAY)->setTime(10, 0),   'completed'),
+            $this->upsertAppointment($customers['alessandro'], $staff['andrea'],  $services['taglio_barba'], Carbon::now()->subDays(10)->setTime(11, 30),                          'completed'),
+            $this->upsertAppointment($customers['matteo'],     $staff['andrea'],  $services['rasatura'],     Carbon::now()->subWeek()->next(Carbon::THURSDAY)->setTime(15, 0),    'completed'),
+            $this->upsertAppointment($customers['davide'],     $staff['filippo'], $services['colore'],       Carbon::now()->subWeeks(3)->next(Carbon::WEDNESDAY)->setTime(14, 0), 'completed'),
+            $this->upsertAppointment($customers['simone'],     $staff['filippo'], $services['barba'],        Carbon::now()->subDays(5)->setTime(16, 0),                           'completed'),
+            $this->upsertAppointment($customers['giovanni'],   $staff['marco'],   $services['taglio_barba'], Carbon::now()->subWeeks(5)->next(Carbon::SATURDAY)->setTime(9, 30),  'completed'),
+        ];
 
-        // ACTIVE — slot 11:00-12:00 lunedì prossimo
-        AppointmentHold::updateOrCreate(
+        // Cancellato
+        $this->upsertAppointment($customers['matteo'], $staff['marco'], $services['taglio'], Carbon::now()->subDays(4)->setTime(9, 0), 'cancelled');
+
+        // Futuro confermato
+        $confirmed = [
+            $this->upsertAppointment($customers['giovanni'],   $staff['marco'],   $services['taglio'],   Carbon::now()->next(Carbon::TUESDAY)->setTime(10, 0),    'confirmed'),
+            $this->upsertAppointment($customers['alessandro'], $staff['andrea'],  $services['barba'],    Carbon::now()->next(Carbon::WEDNESDAY)->setTime(11, 30), 'confirmed'),
+            $this->upsertAppointment($customers['davide'],     $staff['filippo'], $services['taglio'],   Carbon::now()->next(Carbon::THURSDAY)->setTime(14, 0),   'confirmed'),
+        ];
+
+        // Futuro pending
+        $this->upsertAppointment($customers['matteo'], $staff['marco'],   $services['taglio_barba'], Carbon::now()->next(Carbon::FRIDAY)->setTime(16, 0),    'pending');
+        $this->upsertAppointment($customers['simone'], $staff['filippo'], $services['colore'],       Carbon::now()->next(Carbon::SATURDAY)->setTime(10, 30), 'pending');
+
+        foreach ($past as $a) {
+            $this->seedPayment($a, 'completed');
+        }
+
+        foreach ($confirmed as $a) {
+            $this->seedPayment($a, 'pending');
+        }
+    }
+
+    private function upsertAppointment(
+        User $customer,
+        User $staff,
+        Service $service,
+        Carbon $date,
+        string $status,
+    ): Appointment {
+        return Appointment::updateOrCreate(
             [
-                'staff_id'   => $staff['giulia']->id,
-                'session_id' => 'demo-session-active',
-                'starts_at'  => $nextMonday->copy()->setTime(11, 0),
+                'user_id'        => $customer->id,
+                'service_id'     => $service->id,
+                'staff_id'       => $staff->id,
+                'scheduled_date' => $date,
             ],
             [
-                'customer_id' => $customer->id,
-                'ends_at'     => $nextMonday->copy()->setTime(12, 0),
-                'service_ids' => [$services['consultation']->id],
+                'status'      => $status,
+                'final_price' => $status === 'cancelled' ? null : $service->price,
+            ]
+        );
+    }
+
+    /**
+     * @param  array<string, User>    $staff
+     * @param  array<string, User>    $customers
+     * @param  array<string, Service> $services
+     */
+    private function seedDemoHolds(array $staff, array $customers, array $services): void
+    {
+        $nextTuesday = Carbon::now()->next(Carbon::TUESDAY);
+        $nextFriday  = Carbon::now()->next(Carbon::FRIDAY);
+
+        AppointmentHold::updateOrCreate(
+            [
+                'staff_id'   => $staff['marco']->id,
+                'session_id' => 'demo-session-active',
+                'starts_at'  => $nextTuesday->copy()->setTime(15, 0),
+            ],
+            [
+                'customer_id' => $customers['simone']->id,
+                'ends_at'     => $nextTuesday->copy()->setTime(15, 30),
+                'service_ids' => [$services['taglio']->id],
                 'status'      => 'active',
                 'expires_at'  => now()->addMinutes(8),
             ]
         );
 
-        // EXPIRED — slot 14:00-14:30 lunedì prossimo (non confermato)
         AppointmentHold::updateOrCreate(
             [
-                'staff_id'   => $staff['marco']->id,
+                'staff_id'   => $staff['andrea']->id,
                 'session_id' => 'demo-session-expired',
-                'starts_at'  => $nextMonday->copy()->setTime(14, 0),
+                'starts_at'  => $nextFriday->copy()->setTime(10, 0),
             ],
             [
-                'customer_id' => $customer->id,
-                'ends_at'     => $nextMonday->copy()->setTime(14, 30),
-                'service_ids' => [$services['follow_up']->id],
+                'customer_id' => $customers['matteo']->id,
+                'ends_at'     => $nextFriday->copy()->setTime(10, 30),
+                'service_ids' => [$services['rasatura']->id],
                 'status'      => 'expired',
-                'expires_at'  => now()->subMinutes(10),
-            ]
-        );
-
-        // CONVERTED — slot 10:00-11:00 mercoledì prossimo (ha generato l'appuntamento confermato)
-        AppointmentHold::updateOrCreate(
-            [
-                'staff_id'   => $staff['giulia']->id,
-                'session_id' => 'demo-session-converted',
-                'starts_at'  => $nextWed->copy()->setTime(10, 0),
-            ],
-            [
-                'customer_id' => $customer->id,
-                'ends_at'     => $nextWed->copy()->setTime(11, 0),
-                'service_ids' => [$services['consultation']->id],
-                'status'      => 'converted',
-                'expires_at'  => now()->subMinutes(5),
+                'expires_at'  => now()->subMinutes(15),
             ]
         );
     }
@@ -315,7 +316,7 @@ class DemoBookingSeeder extends Seeder
                 'stripe_response'       => [
                     'id'      => 'pi_demo_' . $appointment->id,
                     'object'  => 'payment_intent',
-                    'status'  => 'succeeded',
+                    'status'  => $status === 'completed' ? 'succeeded' : 'requires_payment_method',
                     'livemode' => false,
                 ],
             ]
