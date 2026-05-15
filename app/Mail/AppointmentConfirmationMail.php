@@ -19,7 +19,7 @@ class AppointmentConfirmationMail extends Mailable
     {
         return new Envelope(
             to:      $this->appointment->user->email,
-            subject: 'Appointment Confirmed: ' . $this->appointment->service->name,
+            subject: 'Appuntamento confermato: ' . $this->appointment->service->name,
         );
     }
 
