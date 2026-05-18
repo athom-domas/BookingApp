@@ -10,6 +10,7 @@ use Filament\Actions\Action;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Schemas\Schema;
 use Livewire\Attributes\On;
 use Saade\FilamentFullCalendar\Widgets\FullCalendarWidget;
@@ -75,6 +76,24 @@ class AppointmentCalendarWidget extends FullCalendarWidget
         })->toArray();
     }
 
+    private function authorizeAppointmentAccess(Action $action): bool
+    {
+        $user          = auth()->user();
+        $appointmentId = $action->getArguments()['appointmentId'] ?? null;
+
+        if ($user->isAdmin()) {
+            return true;
+        }
+
+        if ($user->isStaff() && $appointmentId) {
+            return Appointment::where('id', $appointmentId)
+                ->where('staff_id', $user->id)
+                ->exists();
+        }
+
+        return false;
+    }
+
     private function staffColor(int $staffId): string
     {
         $palette = [
@@ -123,22 +142,7 @@ class AppointmentCalendarWidget extends FullCalendarWidget
                     ->in(['pending', 'confirmed', 'completed', 'cancelled'])
                     ->required(),
             ])
-            ->authorize(function (Action $action): bool {
-                $user          = auth()->user();
-                $appointmentId = $action->getArguments()['appointmentId'] ?? null;
-
-                if ($user->isAdmin()) {
-                    return true;
-                }
-
-                if ($user->isStaff() && $appointmentId) {
-                    return Appointment::where('id', $appointmentId)
-                        ->where('staff_id', $user->id)
-                        ->exists();
-                }
-
-                return false;
-            })
+            ->authorize(fn (Action $action) => $this->authorizeAppointmentAccess($action))
             ->extraModalFooterActions(function (Action $action): array {
                 $appointmentId = $action->getArguments()['appointmentId'] ?? null;
                 $appointment   = Appointment::with('payment')->find($appointmentId);
@@ -182,25 +186,10 @@ class AppointmentCalendarWidget extends FullCalendarWidget
                 TextInput::make('amount')
                     ->label('Importo (€)')
                     ->numeric()
-                    ->minValue(0.01)
+                    ->rules(['numeric', 'min:0.01'])
                     ->required(),
             ])
-            ->authorize(function (Action $action): bool {
-                $user          = auth()->user();
-                $appointmentId = $action->getArguments()['appointmentId'] ?? null;
-
-                if ($user->isAdmin()) {
-                    return true;
-                }
-
-                if ($user->isStaff() && $appointmentId) {
-                    return Appointment::where('id', $appointmentId)
-                        ->where('staff_id', $user->id)
-                        ->exists();
-                }
-
-                return false;
-            })
+            ->authorize(fn (Action $action) => $this->authorizeAppointmentAccess($action))
             ->action(function (array $data, Action $action): void {
                 $appointmentId = $action->getArguments()['appointmentId'];
                 try {
@@ -210,6 +199,11 @@ class AppointmentCalendarWidget extends FullCalendarWidget
                         (float) $data['amount']
                     );
                 } catch (BookingException $e) {
+                    Notification::make()
+                        ->title($e->getMessage())
+                        ->danger()
+                        ->send();
+
                     $this->halt();
                 }
             });
