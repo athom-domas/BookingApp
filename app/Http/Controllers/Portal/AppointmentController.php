@@ -26,7 +26,7 @@ class AppointmentController extends Controller
     public function index(Request $request): View
     {
         $appointments = Appointment::where('user_id', $request->user()->id)
-            ->with(['service', 'staff', 'payment'])
+            ->with(['staff', 'payment'])
             ->latest('scheduled_date')
             ->get();
 
@@ -41,7 +41,7 @@ class AppointmentController extends Controller
         $this->authorizeAppointment($request, $appointment);
 
         return view('portal.appointments.show', [
-            'appointment' => $appointment->load(['service', 'staff', 'payment']),
+            'appointment' => $appointment->load(['staff', 'payment']),
         ]);
     }
 
@@ -49,7 +49,7 @@ class AppointmentController extends Controller
     {
         $this->authorizeAppointment($request, $appointment);
 
-        $appointment->load(['service', 'staff', 'payment']);
+        $appointment->load(['staff', 'payment']);
 
         if (! $appointment->payment) {
             return redirect()

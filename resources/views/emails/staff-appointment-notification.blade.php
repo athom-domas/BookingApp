@@ -30,8 +30,8 @@
                     <span class="value">{{ $appointment->user->name }}</span>
                 </div>
                 <div class="detail-row">
-                    <span class="label">Servizio</span>
-                    <span class="value">{{ $appointment->service->name }}</span>
+                    <span class="label">Servizi</span>
+                    <span class="value">{{ $appointment->services_label }}</span>
                 </div>
                 <div class="detail-row">
                     <span class="label">Data</span>

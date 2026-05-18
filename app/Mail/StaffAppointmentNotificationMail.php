@@ -19,7 +19,7 @@ class StaffAppointmentNotificationMail extends Mailable
     {
         return new Envelope(
             to: $this->appointment->staff->email,
-            subject: 'Nuovo appuntamento: ' . $this->appointment->service->name,
+            subject: 'Nuovo appuntamento: ' . $this->appointment->services_label,
         );
     }
 

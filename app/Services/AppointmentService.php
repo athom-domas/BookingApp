@@ -18,12 +18,18 @@ class AppointmentService
 {
     public function __construct(private readonly SlotCalculationService $slotService) {}
 
-    public function validateAvailability(int $staffId, int $serviceId, Carbon $dateTime): bool
+    public function validateAvailability(int $staffId, array $serviceIds, Carbon $dateTime): bool
     {
-        $service = Service::active()->find($serviceId);
+        $services = Service::active()->whereIn('id', $serviceIds)->get();
 
-        if (! $service || ! $this->staffCanProvideService($service, $staffId)) {
+        if ($services->isEmpty()) {
             return false;
+        }
+
+        foreach ($serviceIds as $serviceId) {
+            if (! $this->staffCanProvideService(Service::find($serviceId), $staffId)) {
+                return false;
+            }
         }
 
         $rule = AvailabilityRule::where('user_id', $staffId)
@@ -35,9 +41,10 @@ class AppointmentService
             return false;
         }
 
+        $totalDuration = $services->sum('duration_minutes');
         $ruleStart  = Carbon::parse($dateTime->format('Y-m-d') . ' ' . $rule->start_time);
         $ruleEnd    = Carbon::parse($dateTime->format('Y-m-d') . ' ' . $rule->end_time);
-        $newApptEnd = $dateTime->copy()->addMinutes($service->duration_minutes + config('booking.buffer_minutes', 0));
+        $newApptEnd = $dateTime->copy()->addMinutes($totalDuration + config('booking.buffer_minutes', 0));
 
         if ($dateTime->lt($ruleStart) || $dateTime->gte($ruleEnd) || $newApptEnd->gt($ruleEnd)) {
             return false;
@@ -46,14 +53,16 @@ class AppointmentService
         $conflicts = Appointment::where('staff_id', $staffId)
             ->where('status', '!=', 'cancelled')
             ->whereDate('scheduled_date', $dateTime->format('Y-m-d'))
-            ->with('service')
             ->get();
 
+        $allServiceIds = $conflicts->flatMap(fn ($a) => $a->service_ids ?? [])->unique()->values()->all();
+        $durations     = Service::whereIn('id', $allServiceIds)->pluck('duration_minutes', 'id');
+
         foreach ($conflicts as $existing) {
+            $sids          = $existing->service_ids ?? [];
+            $existingDur   = collect($sids)->sum(fn ($id) => $durations[$id] ?? 0);
             $existingStart = $existing->scheduled_date;
-            $existingEnd   = $existingStart->copy()->addMinutes(
-                $existing->service->duration_minutes + config('booking.buffer_minutes', 0)
-            );
+            $existingEnd   = $existingStart->copy()->addMinutes($existingDur + config('booking.buffer_minutes', 0));
 
             if ($dateTime->lt($existingEnd) && $newApptEnd->gt($existingStart)) {
                 return false;
@@ -63,35 +72,36 @@ class AppointmentService
         return true;
     }
 
-    public function bookAppointment(int $userId, int $serviceId, int $staffId, Carbon $scheduledDate): Appointment
+    public function bookAppointment(int $userId, array $serviceIds, int $staffId, Carbon $scheduledDate): Appointment
     {
-        $service = Service::findOrFail($serviceId);
+        $services = Service::active()->whereIn('id', $serviceIds)->get();
 
-        if (! $service->active) {
-            throw new BookingException('Servizio non disponibile.');
+        if ($services->count() !== count($serviceIds)) {
+            throw new BookingException('Uno o più servizi non disponibili.');
         }
 
-        if (! $this->staffCanProvideService($service, $staffId)) {
-            throw new BookingException('Lo staff selezionato non eroga questo servizio.');
+        foreach ($services as $service) {
+            if (! $this->staffCanProvideService($service, $staffId)) {
+                throw new BookingException('Lo staff selezionato non eroga tutti i servizi richiesti.');
+            }
         }
 
-        if (! $this->validateAvailability($staffId, $serviceId, $scheduledDate)) {
+        if (! $this->validateAvailability($staffId, $serviceIds, $scheduledDate)) {
             throw new BookingException('Staff non disponibile per questa data e ora.');
         }
 
-        return DB::transaction(function () use ($userId, $serviceId, $staffId, $scheduledDate, $service): Appointment {
-            // Re-check inside transaction to prevent double booking
-            if (! $this->validateAvailability($staffId, $serviceId, $scheduledDate)) {
+        return DB::transaction(function () use ($userId, $serviceIds, $services, $staffId, $scheduledDate): Appointment {
+            if (! $this->validateAvailability($staffId, $serviceIds, $scheduledDate)) {
                 throw new BookingException('Slot non più disponibile.');
             }
 
             $appointment = Appointment::create([
                 'user_id'        => $userId,
-                'service_id'     => $serviceId,
+                'service_ids'    => $serviceIds,
                 'staff_id'       => $staffId,
                 'scheduled_date' => $scheduledDate,
                 'status'         => 'pending',
-                'final_price'    => $service->price,
+                'final_price'    => $services->sum('price'),
             ]);
 
             AppointmentReminder::create([
@@ -156,8 +166,12 @@ class AppointmentService
         ], $slots);
     }
 
-    private function staffCanProvideService(Service $service, int $staffId): bool
+    private function staffCanProvideService(?Service $service, int $staffId): bool
     {
+        if (! $service) {
+            return false;
+        }
+
         $staff = User::find($staffId);
 
         return $staff !== null

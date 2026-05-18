@@ -20,11 +20,11 @@ it('belongs to a staff user', function () {
     expect($appointment->staff->id)->toBe($staff->id);
 });
 
-it('belongs to a service', function () {
+it('returns services via accessor', function () {
     $service = Service::factory()->create();
-    $appointment = Appointment::factory()->create(['service_id' => $service->id]);
+    $appointment = Appointment::factory()->create(['service_ids' => [$service->id]]);
 
-    expect($appointment->service->id)->toBe($service->id);
+    expect($appointment->services->first()->id)->toBe($service->id);
 });
 
 it('has many reminders', function () {

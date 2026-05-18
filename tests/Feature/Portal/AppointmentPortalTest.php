@@ -19,18 +19,18 @@ it('shows only the authenticated customer appointments', function () {
     $customer = User::factory()->create();
     $customer->assignRole('customer');
     $ownAppointment = Appointment::factory()->create([
-        'user_id' => $customer->id,
-        'service_id' => Service::factory()->create(['name' => 'Servizio cliente'])->id,
+        'user_id'     => $customer->id,
+        'service_ids' => [Service::factory()->create(['name' => 'Servizio cliente'])->id],
     ]);
     $otherAppointment = Appointment::factory()->create([
-        'service_id' => Service::factory()->create(['name' => 'Servizio altro cliente'])->id,
+        'service_ids' => [Service::factory()->create(['name' => 'Servizio altro cliente'])->id],
     ]);
 
     $response = $this->actingAs($customer)->get('/portal/appointments');
 
     $response->assertOk()
-        ->assertSee($ownAppointment->service->name)
-        ->assertDontSee($otherAppointment->service->name);
+        ->assertSee($ownAppointment->services_label)
+        ->assertDontSee($otherAppointment->services_label);
 });
 
 it('forbids viewing another customer appointment', function () {

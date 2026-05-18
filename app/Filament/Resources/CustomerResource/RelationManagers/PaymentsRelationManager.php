@@ -28,10 +28,10 @@ class PaymentsRelationManager extends RelationManager
                     ->label('Prenotazione #')
                     ->sortable(),
 
-                TextColumn::make('appointment.service.name')
-                    ->label('Servizio')
-                    ->placeholder('-')
-                    ->sortable(),
+                TextColumn::make('appointment_services')
+                    ->label('Servizi')
+                    ->getStateUsing(fn ($record) => $record->appointment?->services_label ?? '-')
+                    ->placeholder('-'),
 
                 TextColumn::make('appointment.scheduled_date')
                     ->label('Data appuntamento')

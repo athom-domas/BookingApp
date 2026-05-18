@@ -60,11 +60,11 @@ it('customer detail page shows linked appointments and payments', function () {
     $staff->assignRole('staff');
     $service = Service::factory()->create(['name' => 'Consulenza Test']);
     $appointment = Appointment::factory()->create([
-        'user_id' => $customer->id,
-        'staff_id' => $staff->id,
-        'service_id' => $service->id,
-        'notes' => 'Nota appuntamento visibile in scheda',
-        'status' => 'confirmed',
+        'user_id'     => $customer->id,
+        'staff_id'    => $staff->id,
+        'service_ids' => [$service->id],
+        'notes'       => 'Nota appuntamento visibile in scheda',
+        'status'      => 'confirmed',
         'final_price' => 120,
     ]);
     Payment::factory()->create([

@@ -4,13 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
-#[Fillable(['user_id', 'service_id', 'service_ids', 'staff_id', 'scheduled_date', 'status', 'final_price', 'notes', 'google_event_id'])]
+#[Fillable(['user_id', 'service_ids', 'staff_id', 'scheduled_date', 'status', 'final_price', 'notes', 'google_event_id'])]
 class Appointment extends Model
 {
     /** @use HasFactory<\Database\Factories\AppointmentFactory> */
@@ -25,6 +26,16 @@ class Appointment extends Model
         ];
     }
 
+    public function getServicesAttribute(): Collection
+    {
+        return Service::whereIn('id', $this->service_ids ?? [])->get();
+    }
+
+    public function getServicesLabelAttribute(): string
+    {
+        return $this->services->pluck('name')->implode(', ');
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
@@ -33,11 +44,6 @@ class Appointment extends Model
     public function staff(): BelongsTo
     {
         return $this->belongsTo(User::class, 'staff_id');
-    }
-
-    public function service(): BelongsTo
-    {
-        return $this->belongsTo(Service::class);
     }
 
     public function reminders(): HasMany

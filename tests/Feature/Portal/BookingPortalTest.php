@@ -154,7 +154,7 @@ it('rejects bookings when the slot is already taken by another appointment', fun
     // Occupy the slot with an existing confirmed appointment
     Appointment::factory()->create([
         'staff_id'       => $staff->id,
-        'service_id'     => $service->id,
+        'service_ids'    => [$service->id],
         'scheduled_date' => $date,
         'status'         => 'confirmed',
     ]);

@@ -7,7 +7,7 @@
         <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6 shadow-sm">
             <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
                 <div>
-                    <h1 class="text-2xl font-semibold text-gray-950 dark:text-gray-50">{{ $appointment->service->name }}</h1>
+                    <h1 class="text-2xl font-semibold text-gray-950 dark:text-gray-50">{{ $appointment->services_label }}</h1>
                     <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">{{ $appointment->scheduled_date->format('d/m/Y H:i') }}</p>
                 </div>
                 @include('portal.appointments.partials.status-badge', ['status' => $appointment->status])
@@ -20,7 +20,7 @@
                 </div>
                 <div>
                     <dt class="text-sm font-medium text-gray-600 dark:text-gray-400">Durata</dt>
-                    <dd class="mt-1 text-base text-gray-950 dark:text-gray-50">{{ $appointment->service->duration_minutes }} min</dd>
+                    <dd class="mt-1 text-base text-gray-950 dark:text-gray-50">{{ $appointment->services->sum('duration_minutes') }} min</dd>
                 </div>
                 <div>
                     <dt class="text-sm font-medium text-gray-600 dark:text-gray-400">Prezzo</dt>

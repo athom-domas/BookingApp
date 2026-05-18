@@ -26,7 +26,7 @@ it('POST /api/appointments books appointment and returns payment_intent_id', fun
 
     $appointment = Appointment::factory()->create([
         'user_id'     => $user->id,
-        'service_id'  => $service->id,
+        'service_ids' => [$service->id],
         'staff_id'    => $staff->id,
         'final_price' => 60.00,
     ]);
@@ -41,7 +41,7 @@ it('POST /api/appointments books appointment and returns payment_intent_id', fun
 
     $this->mock(AppointmentService::class)
         ->shouldReceive('bookAppointment')
-        ->with($user->id, $service->id, $staff->id, Mockery::on(fn ($d) => $d instanceof Carbon))
+        ->with($user->id, [$service->id], $staff->id, Mockery::on(fn ($d) => $d instanceof Carbon))
         ->andReturn($appointment);
 
     $this->mock(PaymentService::class)
@@ -50,7 +50,7 @@ it('POST /api/appointments books appointment and returns payment_intent_id', fun
         ->andReturn($payment);
 
     $response = $this->actingAs($user)->postJson('/api/appointments', [
-        'service_id'     => $service->id,
+        'service_ids'    => [$service->id],
         'staff_id'       => $staff->id,
         'scheduled_date' => '2026-06-10 10:00:00',
     ]);
@@ -71,7 +71,7 @@ it('POST /api/appointments returns 422 on BookingException', function () {
         ->andThrow(new BookingException('Staff non disponibile.'));
 
     $response = $this->actingAs($user)->postJson('/api/appointments', [
-        'service_id'     => $service->id,
+        'service_ids'    => [$service->id],
         'staff_id'       => $staff->id,
         'scheduled_date' => '2026-06-10 10:00:00',
     ]);
@@ -87,7 +87,7 @@ it('POST /api/appointments validates required fields', function () {
     $response = $this->actingAs($user)->postJson('/api/appointments', []);
 
     $response->assertUnprocessable()
-        ->assertJsonValidationErrors(['service_id', 'staff_id', 'scheduled_date']);
+        ->assertJsonValidationErrors(['service_ids', 'staff_id', 'scheduled_date']);
 });
 
 it('POST /api/appointments requires auth', function () {
@@ -140,11 +140,11 @@ it('PUT /api/appointments/{id} updates notes on pending appointment', function (
     $staff   = User::factory()->create();
     $service = Service::factory()->create(['duration_minutes' => 30]);
     $appointment = Appointment::factory()->create([
-        'user_id'    => $user->id,
-        'staff_id'   => $staff->id,
-        'service_id' => $service->id,
-        'status'     => 'pending',
-        'notes'      => 'original note',
+        'user_id'     => $user->id,
+        'staff_id'    => $staff->id,
+        'service_ids' => [$service->id],
+        'status'      => 'pending',
+        'notes'       => 'original note',
     ]);
 
     $response = $this->actingAs($user)->putJson("/api/appointments/{$appointment->id}", [
@@ -176,10 +176,10 @@ it('PUT /api/appointments/{id} validates availability when changing date', funct
     $staff   = User::factory()->create();
     $service = Service::factory()->create(['duration_minutes' => 30]);
     $appointment = Appointment::factory()->create([
-        'user_id'    => $user->id,
-        'staff_id'   => $staff->id,
-        'service_id' => $service->id,
-        'status'     => 'pending',
+        'user_id'     => $user->id,
+        'staff_id'    => $staff->id,
+        'service_ids' => [$service->id],
+        'status'      => 'pending',
     ]);
 
     $this->mock(AppointmentService::class)
@@ -258,10 +258,10 @@ it('PUT /api/appointments/{id} updates scheduled_date when availability allows',
     $staff   = User::factory()->create();
     $service = Service::factory()->create(['duration_minutes' => 30]);
     $appointment = Appointment::factory()->create([
-        'user_id'    => $user->id,
-        'staff_id'   => $staff->id,
-        'service_id' => $service->id,
-        'status'     => 'pending',
+        'user_id'     => $user->id,
+        'staff_id'    => $staff->id,
+        'service_ids' => [$service->id],
+        'status'      => 'pending',
     ]);
     $newDate = now()->addDays(10)->toDateTimeString();
 

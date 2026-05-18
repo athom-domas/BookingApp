@@ -8,7 +8,7 @@ use Mockery;
 
 it('createEvent creates a Google Calendar event and returns its ID', function () {
     $appointment = Appointment::factory()->create();
-    $appointment->load('user', 'service', 'staff');
+    $appointment->load('user', 'staff');
 
     $mockEvent = Mockery::mock(Event::class);
     $mockEvent->shouldReceive('getId')->andReturn('google_event_abc');

@@ -20,7 +20,7 @@ class SendCancellationNotification implements ShouldQueue
 
     public function handle(NotificationService $notificationService): void
     {
-        $appointment = $this->appointment->load('user', 'service', 'staff.preferences');
+        $appointment = $this->appointment->load('user', 'staff.preferences');
 
         Mail::send(new AppointmentCancellationMail($appointment, $appointment->user));
 
@@ -28,7 +28,7 @@ class SendCancellationNotification implements ShouldQueue
 
         $staffPrefs = $appointment->staff->preferences;
         if ($staffPrefs?->receive_sms_reminders && $staffPrefs->phone_number) {
-            $message = "Cancelled: {$appointment->service->name} on {$appointment->scheduled_date->format('d/m/Y H:i')}";
+            $message = "Cancelled: {$appointment->services_label} on {$appointment->scheduled_date->format('d/m/Y H:i')}";
             $notificationService->sendSms($staffPrefs->phone_number, $message);
         }
     }

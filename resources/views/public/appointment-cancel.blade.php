@@ -43,7 +43,7 @@
     <div class="card">
         <h1>Disdici appuntamento</h1>
         <div class="detail">
-            <strong>{{ $appointment->service->name }}</strong><br>
+            <strong>{{ $appointment->services_label }}</strong><br>
             {{ $appointment->scheduled_date->format('d/m/Y') }} alle <strong>{{ $appointment->scheduled_date->format('H:i') }}</strong><br>
             con {{ $appointment->staff->name }}
         </div>

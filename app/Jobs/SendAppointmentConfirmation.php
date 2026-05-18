@@ -19,7 +19,7 @@ class SendAppointmentConfirmation implements ShouldQueue
 
     public function handle(): void
     {
-        $appointment = $this->appointment->load('user', 'service', 'staff');
+        $appointment = $this->appointment->load('user', 'staff');
 
         Mail::send(new AppointmentConfirmationMail($appointment));
     }

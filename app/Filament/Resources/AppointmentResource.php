@@ -4,9 +4,11 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\AppointmentResource\Pages;
 use App\Models\Appointment;
+use App\Models\Service;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -32,11 +34,11 @@ class AppointmentResource extends Resource
                 ->required()
                 ->searchable(),
 
-            Select::make('service_id')
-                ->label('Servizio')
-                ->relationship('service', 'name')
+            CheckboxList::make('service_ids')
+                ->label('Servizi')
+                ->options(fn () => Service::active()->orderBy('name')->pluck('name', 'id')->all())
                 ->required()
-                ->searchable(),
+                ->columns(2),
 
             Select::make('staff_id')
                 ->label('Staff')
@@ -75,9 +77,10 @@ class AppointmentResource extends Resource
                     ->searchable()
                     ->sortable(),
 
-                TextColumn::make('service.name')
-                    ->label('Servizio')
-                    ->sortable(),
+                TextColumn::make('services_label')
+                    ->label('Servizi')
+                    ->getStateUsing(fn ($record) => $record->services_label)
+                    ->wrap(),
 
                 TextColumn::make('scheduled_date')
                     ->label('Data e ora')
@@ -111,11 +114,6 @@ class AppointmentResource extends Resource
                         'cancelled' => 'Annullato',
                         'completed' => 'Completato',
                     ]),
-
-                SelectFilter::make('service')
-                    ->label('Servizio')
-                    ->relationship('service', 'name')
-                    ->searchable(),
 
                 SelectFilter::make('staff')
                     ->label('Staff')

@@ -26,7 +26,7 @@ class SendAppointmentReminder implements ShouldQueue
             return;
         }
 
-        $reminder    = $this->reminder->load('appointment.user.preferences', 'appointment.service', 'appointment.staff');
+        $reminder    = $this->reminder->load('appointment.user.preferences', 'appointment.staff');
         $appointment = $reminder->appointment;
         $user        = $appointment->user;
         $prefs       = $user->preferences;
@@ -48,7 +48,7 @@ class SendAppointmentReminder implements ShouldQueue
 
     private function sendSms(Appointment $appointment, string $phone, NotificationService $notificationService): void
     {
-        $text = "Ciao {$appointment->user->name}, appuntamento {$appointment->service->name} il {$appointment->scheduled_date->format('d/m/Y')} alle {$appointment->scheduled_date->format('H:i')} con {$appointment->staff->name}. Conferma: " .
+        $text = "Ciao {$appointment->user->name}, appuntamento {$appointment->services_label} il {$appointment->scheduled_date->format('d/m/Y')} alle {$appointment->scheduled_date->format('H:i')} con {$appointment->staff->name}. Conferma: " .
             URL::signedRoute('appointment.public.confirm', ['appointment' => $appointment], now()->addHours(48)) .
             " | Disdici: " .
             URL::signedRoute('appointment.public.cancel', ['appointment' => $appointment], now()->addHours(48));
@@ -57,7 +57,7 @@ class SendAppointmentReminder implements ShouldQueue
 
     private function sendWhatsApp(Appointment $appointment, string $phone, NotificationService $notificationService): void
     {
-        $text = "Ciao {$appointment->user->name}, appuntamento {$appointment->service->name} il {$appointment->scheduled_date->format('d/m/Y')} alle {$appointment->scheduled_date->format('H:i')} con {$appointment->staff->name}. Conferma: " .
+        $text = "Ciao {$appointment->user->name}, appuntamento {$appointment->services_label} il {$appointment->scheduled_date->format('d/m/Y')} alle {$appointment->scheduled_date->format('H:i')} con {$appointment->staff->name}. Conferma: " .
             URL::signedRoute('appointment.public.confirm', ['appointment' => $appointment], now()->addHours(48)) .
             " | Disdici: " .
             URL::signedRoute('appointment.public.cancel', ['appointment' => $appointment], now()->addHours(48));

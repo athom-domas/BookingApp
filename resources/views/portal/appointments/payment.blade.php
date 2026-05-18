@@ -12,8 +12,8 @@
             <h1 class="text-2xl font-semibold text-gray-950 dark:text-gray-50">Pagamento prenotazione</h1>
             <dl class="mt-6 grid gap-5 sm:grid-cols-2">
                 <div>
-                    <dt class="text-sm font-medium text-gray-600 dark:text-gray-400">Servizio</dt>
-                    <dd class="mt-1 text-base text-gray-950 dark:text-gray-50">{{ $appointment->service->name }}</dd>
+                    <dt class="text-sm font-medium text-gray-600 dark:text-gray-400">Servizi</dt>
+                    <dd class="mt-1 text-base text-gray-950 dark:text-gray-50">{{ $appointment->services_label }}</dd>
                 </div>
                 <div>
                     <dt class="text-sm font-medium text-gray-600 dark:text-gray-400">Data</dt>

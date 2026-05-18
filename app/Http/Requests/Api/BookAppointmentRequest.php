@@ -14,7 +14,8 @@ class BookAppointmentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'service_id'     => ['required', 'integer', 'exists:services,id'],
+            'service_ids'    => ['required', 'array', 'min:1'],
+            'service_ids.*'  => ['integer', 'exists:services,id'],
             'staff_id'       => ['required', 'integer', 'exists:users,id'],
             'scheduled_date' => ['required', 'date', 'after:now'],
             'notes'          => ['nullable', 'string', 'max:1000'],

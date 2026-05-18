@@ -22,7 +22,7 @@ class LatestAppointmentsWidget extends BaseWidget
         return $table
             ->query(
                 Appointment::query()
-                    ->with(['user', 'staff', 'service'])
+                    ->with(['user', 'staff'])
                     ->latest('scheduled_date')
                     ->limit(5)
             )
@@ -34,8 +34,9 @@ class LatestAppointmentsWidget extends BaseWidget
                 TextColumn::make('staff.name')
                     ->label('Staff'),
 
-                TextColumn::make('service.name')
-                    ->label('Servizio'),
+                TextColumn::make('services_label')
+                    ->label('Servizi')
+                    ->getStateUsing(fn ($record) => $record->services_label),
 
                 TextColumn::make('scheduled_date')
                     ->label('Data')

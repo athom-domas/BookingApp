@@ -18,7 +18,7 @@ class AdminAppointmentNotificationMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Nuova prenotazione: ' . $this->appointment->service->name,
+            subject: 'Nuova prenotazione: ' . $this->appointment->services_label,
         );
     }
 

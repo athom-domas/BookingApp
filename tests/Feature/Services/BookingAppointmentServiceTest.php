@@ -335,7 +335,7 @@ describe('bookDirect', function () {
 
         expect($appointment->status)->toBe('pending');
         expect($appointment->staff_id)->toBe($staff->id);
-        expect($appointment->service_id)->toBe($service->id);
+        expect($appointment->service_ids)->toBe([$service->id]);
         expect((float) $appointment->final_price)->toBe(50.0);
     });
 
@@ -394,7 +394,7 @@ describe('bookDirect', function () {
         // Occupy the slot
         \App\Models\Appointment::factory()->create([
             'staff_id'       => $staff->id,
-            'service_id'     => $service->id,
+            'service_ids'    => [$service->id],
             'scheduled_date' => $monday,
             'status'         => 'confirmed',
         ]);

@@ -225,16 +225,16 @@ it('POST /api/booking/confirm creates appointment from hold', function () {
     ]);
 
     $appointment = Appointment::factory()->create([
-        'user_id'    => $user->id,
-        'service_id' => $service->id,
-        'staff_id'   => $staff->id,
-        'status'     => 'confirmed',
+        'user_id'     => $user->id,
+        'service_ids' => [$service->id],
+        'staff_id'    => $staff->id,
+        'status'      => 'confirmed',
     ]);
 
     $this->mock(AppointmentService::class)
         ->shouldReceive('confirmFromHold')
         ->once()
-        ->andReturn($appointment->load(['service', 'staff']));
+        ->andReturn($appointment->load(['staff']));
 
     $response = $this->actingAs($user)->postJson('/api/booking/confirm', [
         'holdId' => $hold->id,
@@ -265,7 +265,9 @@ it('returns available dates in a month for given services and staff', function (
     $service->staff()->attach($staff->id);
 
     // Staff disponibile il lunedì
-    $monday = Carbon::parse('next monday');
+    $monday = Carbon::now()->dayOfWeek === Carbon::MONDAY
+        ? Carbon::now()
+        : Carbon::parse('next monday');
     AvailabilityRule::factory()->create([
         'user_id'      => $staff->id,
         'day_of_week'  => 1,

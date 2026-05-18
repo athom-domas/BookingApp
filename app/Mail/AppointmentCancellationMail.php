@@ -23,7 +23,7 @@ class AppointmentCancellationMail extends Mailable
     {
         return new Envelope(
             to:      $this->recipient->email,
-            subject: 'Appointment Cancelled: ' . $this->appointment->service->name,
+            subject: 'Appuntamento cancellato: ' . $this->appointment->services_label,
         );
     }
 

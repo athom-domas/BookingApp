@@ -30,9 +30,10 @@ class AppointmentsRelationManager extends RelationManager
                     ->dateTime('d/m/Y H:i')
                     ->sortable(),
 
-                TextColumn::make('service.name')
-                    ->label('Servizio')
-                    ->sortable(),
+                TextColumn::make('services_label')
+                    ->label('Servizi')
+                    ->getStateUsing(fn ($record) => $record->services_label)
+                    ->wrap(),
 
                 TextColumn::make('staff.name')
                     ->label('Staff')

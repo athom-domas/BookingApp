@@ -156,7 +156,7 @@ class BookingController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data'    => new AppointmentResource($appointment->load(['service', 'staff'])),
+                'data'    => new AppointmentResource($appointment->load(['staff'])),
                 'message' => 'Appointment confirmed!',
             ], 201);
         } catch (\Throwable $e) {

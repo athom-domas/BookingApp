@@ -252,11 +252,11 @@ class DemoBookingSeeder extends Seeder
         return Appointment::updateOrCreate(
             [
                 'user_id'        => $customer->id,
-                'service_id'     => $service->id,
                 'staff_id'       => $staff->id,
                 'scheduled_date' => $date,
             ],
             [
+                'service_ids' => [$service->id],
                 'status'      => $status,
                 'final_price' => $status === 'cancelled' ? null : $service->price,
             ]
@@ -300,6 +300,21 @@ class DemoBookingSeeder extends Seeder
                 'service_ids' => [$services['rasatura']->id],
                 'status'      => 'expired',
                 'expires_at'  => now()->subMinutes(15),
+            ]
+        );
+
+        AppointmentHold::updateOrCreate(
+            [
+                'staff_id'   => $staff['filippo']->id,
+                'session_id' => 'demo-session-pending',
+                'starts_at'  => $nextFriday->copy()->setTime(14, 0),
+            ],
+            [
+                'customer_id' => $customers['davide']->id,
+                'ends_at'     => $nextFriday->copy()->setTime(14, 60),
+                'service_ids' => [$services['colore']->id],
+                'status'      => 'active',
+                'expires_at'  => now()->addMinutes(10),
             ]
         );
     }

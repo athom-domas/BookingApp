@@ -13,7 +13,8 @@ class GoogleCalendarService
 
     public function createEvent(Appointment $appointment): string
     {
-        $appointment->load('user', 'service', 'staff');
+        $appointment->load('user', 'staff');
+        $services = $appointment->services;
 
         $start = new EventDateTime();
         $start->setDateTime($appointment->scheduled_date->toRfc3339String());
@@ -22,13 +23,13 @@ class GoogleCalendarService
         $end = new EventDateTime();
         $end->setDateTime(
             $appointment->scheduled_date->clone()
-                ->addMinutes($appointment->service->duration_minutes)
+                ->addMinutes($services->sum('duration_minutes'))
                 ->toRfc3339String()
         );
         $end->setTimeZone('UTC');
 
         $event = new Event([
-            'summary'     => $appointment->service->name . ' - ' . $appointment->user->name,
+            'summary'     => $services->pluck('name')->implode(', ') . ' - ' . $appointment->user->name,
             'description' => $appointment->notes ?? '',
             'start'       => $start,
             'end'         => $end,

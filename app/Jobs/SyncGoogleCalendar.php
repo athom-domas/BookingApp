@@ -22,6 +22,10 @@ class SyncGoogleCalendar implements ShouldQueue
 
     public function handle(GoogleCalendarService $calendarService): void
     {
+        if (! in_array($this->action, ['create', 'delete'])) {
+            throw new \InvalidArgumentException("Unknown SyncGoogleCalendar action: {$this->action}");
+        }
+
         try {
             if ($this->action === 'create') {
                 $eventId = $calendarService->createEvent($this->appointment);
@@ -29,15 +33,10 @@ class SyncGoogleCalendar implements ShouldQueue
                 return;
             }
 
-            if ($this->action === 'delete') {
-                if ($this->appointment->google_event_id) {
-                    $calendarService->deleteEvent($this->appointment->google_event_id);
-                    $this->appointment->update(['google_event_id' => null]);
-                }
-                return;
+            if ($this->appointment->google_event_id) {
+                $calendarService->deleteEvent($this->appointment->google_event_id);
+                $this->appointment->update(['google_event_id' => null]);
             }
-
-            throw new \InvalidArgumentException("Unknown SyncGoogleCalendar action: {$this->action}");
         } catch (\Throwable $e) {
             Log::warning('SyncGoogleCalendar failed — calendar sync skipped', [
                 'appointment_id' => $this->appointment->id,
@@ -45,5 +44,14 @@ class SyncGoogleCalendar implements ShouldQueue
                 'error'          => $e->getMessage(),
             ]);
         }
+    }
+
+    public function failed(\Throwable $exception): void
+    {
+        Log::error('SyncGoogleCalendar failed', [
+            'appointment_id' => $this->appointment->id,
+            'action'         => $this->action,
+            'error'          => $exception->getMessage(),
+        ]);
     }
 }

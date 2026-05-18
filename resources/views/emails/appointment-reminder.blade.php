@@ -29,8 +29,8 @@
 
             <div style="margin: 20px 0; padding: 16px; background: #f9fafb; border-radius: 8px;">
                 <div class="detail-row">
-                    <span class="label">Servizio</span>
-                    <span class="value">{{ $appointment->service->name }}</span>
+                    <span class="label">Servizi</span>
+                    <span class="value">{{ $appointment->services_label }}</span>
                 </div>
                 <div class="detail-row">
                     <span class="label">Con</span>

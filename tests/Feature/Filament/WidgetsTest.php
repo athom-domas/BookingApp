@@ -79,5 +79,5 @@ it('dashboard shows latest appointments widget', function () {
         ->assertSee('Ultimi appuntamenti')
         ->assertSee('Cliente')
         ->assertSee('Staff')
-        ->assertSee('Servizio');
+        ->assertSee('Servizi');
 });

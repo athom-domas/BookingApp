@@ -23,7 +23,7 @@ class AppointmentController extends Controller
     public function index(): JsonResponse
     {
         $appointments = Appointment::where('user_id', auth()->id())
-            ->with(['service', 'staff', 'payment'])
+            ->with(['staff', 'payment'])
             ->latest('scheduled_date')
             ->get();
 
@@ -36,7 +36,7 @@ class AppointmentController extends Controller
             return response()->json(['message' => 'Forbidden.'], 403);
         }
 
-        return response()->json(['data' => $appointment->load('service', 'staff', 'payment')]);
+        return response()->json(['data' => $appointment->load('staff', 'payment')]);
     }
 
     public function store(BookAppointmentRequest $request): JsonResponse
@@ -44,7 +44,7 @@ class AppointmentController extends Controller
         try {
             $appointment = $this->appointmentService->bookAppointment(
                 userId:        $request->user()->id,
-                serviceId:     $request->integer('service_id'),
+                serviceIds:    $request->input('service_ids', []),
                 staffId:       $request->integer('staff_id'),
                 scheduledDate: Carbon::parse($request->string('scheduled_date')),
             );
@@ -61,7 +61,7 @@ class AppointmentController extends Controller
 
         return response()->json([
             'data' => [
-                'appointment'       => $appointment->load('service', 'staff'),
+                'appointment'       => $appointment->load('staff'),
                 'payment_intent_id' => $payment->stripe_transaction_id,
             ],
         ], 201);
@@ -82,7 +82,7 @@ class AppointmentController extends Controller
         if ($request->has('scheduled_date')) {
             $newDate = Carbon::parse($request->string('scheduled_date'));
 
-            if (! $this->appointmentService->validateAvailability($appointment->staff_id, $appointment->service_id, $newDate)) {
+            if (! $this->appointmentService->validateAvailability($appointment->staff_id, $appointment->service_ids ?? [], $newDate)) {
                 return response()->json(['message' => 'Staff non disponibile per questa data e ora.'], 422);
             }
 
@@ -105,7 +105,7 @@ class AppointmentController extends Controller
             }
         }
 
-        return response()->json(['data' => $appointment->fresh()->load('service', 'staff')]);
+        return response()->json(['data' => $appointment->fresh()->load('staff')]);
     }
 
     public function destroy(Appointment $appointment): JsonResponse

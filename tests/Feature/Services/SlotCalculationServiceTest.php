@@ -158,7 +158,7 @@ it('excludes slots blocked by confirmed appointments', function () {
     Appointment::factory()->create([
         'user_id'        => $customer->id,
         'staff_id'       => $staff->id,
-        'service_id'     => $service->id,
+        'service_ids'    => [$service->id],
         'scheduled_date' => $date->copy()->setTime(9, 0),
         'status'         => 'confirmed',
     ]);
@@ -336,10 +336,9 @@ it('blocks time equal to combined duration of all service_ids on an appointment'
     // Appointment with two services stored in service_ids (total 80 min) starting at 08:00
     Appointment::factory()->create([
         'staff_id'       => $staff->id,
-        'service_id'     => $service1->id,
+        'service_ids'    => [$service1->id, $service2->id],
         'scheduled_date' => $date->copy()->setTime(8, 0),
         'status'         => 'confirmed',
-        'service_ids'    => [$service1->id, $service2->id],
     ]);
 
     $svc   = new SlotCalculationService();

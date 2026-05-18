@@ -21,7 +21,7 @@
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-700 bg-white dark:bg-gray-900">
                     @foreach ($appointments as $appointment)
                         <tr>
-                            <td class="px-5 py-4 font-medium text-gray-950 dark:text-gray-50">{{ $appointment->service->name }}</td>
+                            <td class="px-5 py-4 font-medium text-gray-950 dark:text-gray-50">{{ $appointment->services_label }}</td>
                             <td class="px-5 py-4 text-gray-700 dark:text-gray-300">{{ $appointment->staff->name }}</td>
                             <td class="px-5 py-4 text-gray-700 dark:text-gray-300">{{ $appointment->scheduled_date->format('d/m/Y H:i') }}</td>
                             <td class="px-5 py-4">

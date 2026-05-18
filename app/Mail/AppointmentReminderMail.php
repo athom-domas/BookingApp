@@ -20,7 +20,7 @@ class AppointmentReminderMail extends Mailable
     {
         return new Envelope(
             to:      $this->appointment->user->email,
-            subject: 'Promemoria: ' . $this->appointment->service->name,
+            subject: 'Promemoria: ' . $this->appointment->services_label,
         );
     }
 
