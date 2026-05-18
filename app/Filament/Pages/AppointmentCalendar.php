@@ -3,7 +3,9 @@
 namespace App\Filament\Pages;
 
 use App\Filament\Widgets\AppointmentCalendarWidget;
+use App\Models\Service;
 use App\Models\User;
+use Filament\Facades\Filament;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
@@ -26,28 +28,72 @@ class AppointmentCalendar extends Page implements HasForms
 
     public static function canAccess(): bool
     {
-        $user = auth()->user();
+        $user = Filament::auth()->user();
 
         return $user?->isAdmin() || $user?->isStaff() ?? false;
     }
 
-    public ?int $staffFilter = null;
+    public array $filterStaff    = [];
+    public array $filterStatus   = [];
+    public array $filterService  = [];
+    public array $filterCustomer = [];
 
-    public function staffFilterForm(Schema $schema): Schema
+    public function filtersForm(Schema $schema): Schema
     {
-        return $schema->schema([
-            Select::make('staffFilter')
-                ->label('Filtra per staff')
+        $user   = Filament::auth()->user();
+        $fields = [];
+
+        if ($user->isAdmin()) {
+            $fields[] = Select::make('filterStaff')
+                ->label('Staff')
                 ->options(fn () => User::role('staff')->orderBy('name')->pluck('name', 'id'))
-                ->placeholder('Tutti i membri')
-                ->live(),
-        ]);
+                ->placeholder('Tutti')
+                ->multiple()
+                ->live();
+        }
+
+        $fields[] = Select::make('filterStatus')
+            ->label('Stato')
+            ->options([
+                'pending'   => 'In attesa',
+                'confirmed' => 'Confermato',
+                'completed' => 'Completato',
+                'cancelled' => 'Annullato',
+            ])
+            ->placeholder('Tutti')
+            ->multiple()
+            ->live();
+
+        $fields[] = Select::make('filterService')
+            ->label('Servizio')
+            ->options(fn () => Service::orderBy('name')->pluck('name', 'id'))
+            ->placeholder('Tutti')
+            ->multiple()
+            ->live();
+
+        $fields[] = Select::make('filterCustomer')
+            ->label('Cliente')
+            ->options(fn () => User::role('customer')->orderBy('name')->pluck('name', 'id'))
+            ->placeholder('Tutti')
+            ->multiple()
+            ->live();
+
+        return $schema->schema($fields)->columns(2);
     }
 
-    public function updatedStaffFilter(?int $value): void
+    public function updatedFilterStaff(): void    { $this->dispatchFilters(); }
+    public function updatedFilterStatus(): void   { $this->dispatchFilters(); }
+    public function updatedFilterService(): void  { $this->dispatchFilters(); }
+    public function updatedFilterCustomer(): void { $this->dispatchFilters(); }
+
+    private function dispatchFilters(): void
     {
-        $this->dispatch('calendar-staff-filter-updated', staffId: $value)
-            ->to(AppointmentCalendarWidget::class);
+        $this->dispatch('calendar-filters-updated',
+            staff:    $this->filterStaff,
+            status:   $this->filterStatus,
+            service:  $this->filterService,
+            customer: $this->filterCustomer,
+        )->to(AppointmentCalendarWidget::class);
     }
 
     protected function getHeaderWidgets(): array
