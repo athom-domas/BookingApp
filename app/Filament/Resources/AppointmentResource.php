@@ -15,6 +15,7 @@ use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
@@ -146,11 +147,20 @@ class AppointmentResource extends Resource
                         'amount' => $record->final_price,
                     ])
                     ->action(function (Appointment $record, array $data): void {
-                        app(PaymentService::class)->recordInPersonPayment(
-                            $record->id,
-                            $data['method'],
-                            (float) $data['amount']
-                        );
+                        try {
+                            app(PaymentService::class)->recordInPersonPayment(
+                                $record->id,
+                                $data['method'],
+                                (float) $data['amount']
+                            );
+                        } catch (\App\Exceptions\BookingException $e) {
+                            Notification::make()
+                                ->title($e->getMessage())
+                                ->danger()
+                                ->send();
+
+                            $this->halt();
+                        }
                     })
                     ->successNotificationTitle('Pagamento registrato con successo')
                     ->visible(fn (Appointment $record): bool => ! $record->payment || $record->payment->status !== 'completed'),
