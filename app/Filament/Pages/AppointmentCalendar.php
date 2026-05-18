@@ -96,7 +96,7 @@ class AppointmentCalendar extends Page implements HasForms
         )->to(AppointmentCalendarWidget::class);
     }
 
-    protected function getHeaderWidgets(): array
+    protected function getFooterWidgets(): array
     {
         return [AppointmentCalendarWidget::class];
     }
