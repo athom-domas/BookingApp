@@ -131,3 +131,24 @@ it('la pagina calendario è accessibile a staff', function () {
         ->get('/admin/appointment-calendar')
         ->assertSuccessful();
 });
+
+it('il cambio stato aggiorna il record nel database', function () {
+    $admin = User::factory()->create()->assignRole('admin');
+    $staff = User::factory()->create()->assignRole('staff');
+
+    $appointment = Appointment::factory()->create([
+        'staff_id' => $staff->id,
+        'status'   => 'pending',
+        'scheduled_date' => now()->addDays(1),
+    ]);
+
+    $this->actingAs($admin);
+
+    Livewire::test(AppointmentCalendarWidget::class)
+        ->mountAction('changeStatus', ['appointmentId' => $appointment->id])
+        ->set('mountedActions.0.data.status', 'confirmed')
+        ->callMountedAction(['appointmentId' => $appointment->id])
+        ->assertHasNoActionErrors();
+
+    expect($appointment->fresh()->status)->toBe('confirmed');
+});
