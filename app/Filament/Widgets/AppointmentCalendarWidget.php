@@ -17,7 +17,15 @@ use Saade\FilamentFullCalendar\Widgets\FullCalendarWidget;
 
 class AppointmentCalendarWidget extends FullCalendarWidget
 {
-    public ?int $staffFilter = null;
+    public array $filterStaff    = [];
+    public array $filterStatus   = [];
+    public array $filterService  = [];
+    public array $filterCustomer = [];
+
+    protected function headerActions(): array
+    {
+        return [];
+    }
 
     public function config(): array
     {
@@ -42,8 +50,20 @@ class AppointmentCalendarWidget extends FullCalendarWidget
 
         if ($user->isStaff()) {
             $query->where('staff_id', $user->id);
-        } elseif ($user->isAdmin() && $this->staffFilter) {
-            $query->where('staff_id', $this->staffFilter);
+        } elseif ($user->isAdmin() && !empty($this->filterStaff)) {
+            $query->whereIn('staff_id', $this->filterStaff);
+        }
+
+        if (!empty($this->filterStatus)) {
+            $query->whereIn('status', $this->filterStatus);
+        }
+
+        if (!empty($this->filterCustomer)) {
+            $query->whereIn('user_id', $this->filterCustomer);
+        }
+
+        if (!empty($this->filterService)) {
+            $query->whereRaw('JSON_OVERLAPS(service_ids, ?)', [json_encode($this->filterService)]);
         }
 
         $appointments = $query->get();
@@ -209,10 +229,13 @@ class AppointmentCalendarWidget extends FullCalendarWidget
             });
     }
 
-    #[On('calendar-staff-filter-updated')]
-    public function handleStaffFilterUpdated(?int $staffId): void
+    #[On('calendar-filters-updated')]
+    public function handleFiltersUpdated(array $staff, array $status, array $service, array $customer): void
     {
-        $this->staffFilter = $staffId;
+        $this->filterStaff    = $staff;
+        $this->filterStatus   = $status;
+        $this->filterService  = $service;
+        $this->filterCustomer = $customer;
         $this->dispatch('filament-fullcalendar--refresh');
     }
 }

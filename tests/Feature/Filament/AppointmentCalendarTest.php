@@ -97,7 +97,7 @@ it('costruisce il titolo da nome cliente e nomi servizi', function () use (&$fet
     expect($events[0]['title'])->toBe('Mario Rossi – Taglio');
 });
 
-it('filtra gli eventi per staff quando admin imposta staffFilter', function () use (&$fetchRange) {
+it('filtra gli eventi per staff quando admin imposta filterStaff', function () use (&$fetchRange) {
     $admin  = User::factory()->create()->assignRole('admin');
     $staff1 = User::factory()->create()->assignRole('staff');
     $staff2 = User::factory()->create()->assignRole('staff');
@@ -108,7 +108,89 @@ it('filtra gli eventi per staff quando admin imposta staffFilter', function () u
     $this->actingAs($admin);
 
     $events = Livewire::test(AppointmentCalendarWidget::class)
-        ->set('staffFilter', $staff1->id)
+        ->set('filterStaff', [$staff1->id])
+        ->instance()
+        ->fetchEvents($fetchRange());
+
+    expect($events)->toHaveCount(1)
+        ->and($events[0]['id'])->toBe($own->id);
+});
+
+it('filtra gli eventi per stato', function () use (&$fetchRange) {
+    $admin = User::factory()->create()->assignRole('admin');
+    $staff = User::factory()->create()->assignRole('staff');
+
+    $confirmed = Appointment::factory()->create([
+        'staff_id'       => $staff->id,
+        'status'         => 'confirmed',
+        'scheduled_date' => now()->addDays(1),
+    ]);
+    Appointment::factory()->create([
+        'staff_id'       => $staff->id,
+        'status'         => 'pending',
+        'scheduled_date' => now()->addDays(2),
+    ]);
+
+    $this->actingAs($admin);
+
+    $events = Livewire::test(AppointmentCalendarWidget::class)
+        ->set('filterStatus', ['confirmed'])
+        ->instance()
+        ->fetchEvents($fetchRange());
+
+    expect($events)->toHaveCount(1)
+        ->and($events[0]['id'])->toBe($confirmed->id);
+});
+
+it('filtra gli eventi per cliente', function () use (&$fetchRange) {
+    $admin     = User::factory()->create()->assignRole('admin');
+    $staff     = User::factory()->create()->assignRole('staff');
+    $customer1 = User::factory()->create()->assignRole('customer');
+    $customer2 = User::factory()->create()->assignRole('customer');
+
+    $own = Appointment::factory()->create([
+        'user_id'        => $customer1->id,
+        'staff_id'       => $staff->id,
+        'scheduled_date' => now()->addDays(1),
+    ]);
+    Appointment::factory()->create([
+        'user_id'        => $customer2->id,
+        'staff_id'       => $staff->id,
+        'scheduled_date' => now()->addDays(2),
+    ]);
+
+    $this->actingAs($admin);
+
+    $events = Livewire::test(AppointmentCalendarWidget::class)
+        ->set('filterCustomer', [$customer1->id])
+        ->instance()
+        ->fetchEvents($fetchRange());
+
+    expect($events)->toHaveCount(1)
+        ->and($events[0]['id'])->toBe($own->id);
+});
+
+it('filtra gli eventi per servizio', function () use (&$fetchRange) {
+    $admin    = User::factory()->create()->assignRole('admin');
+    $staff    = User::factory()->create()->assignRole('staff');
+    $service1 = Service::factory()->create();
+    $service2 = Service::factory()->create();
+
+    $own = Appointment::factory()->create([
+        'staff_id'       => $staff->id,
+        'service_ids'    => [$service1->id],
+        'scheduled_date' => now()->addDays(1),
+    ]);
+    Appointment::factory()->create([
+        'staff_id'       => $staff->id,
+        'service_ids'    => [$service2->id],
+        'scheduled_date' => now()->addDays(2),
+    ]);
+
+    $this->actingAs($admin);
+
+    $events = Livewire::test(AppointmentCalendarWidget::class)
+        ->set('filterService', [$service1->id])
         ->instance()
         ->fetchEvents($fetchRange());
 
