@@ -31,7 +31,7 @@
 
         <p class="mt-5 text-sm text-gray-600 dark:text-gray-400">
             Non hai un account?
-            <a href="{{ route('register') }}" class="font-semibold text-blue-700 hover:text-blue-800">Registrati</a>
+            <a href="{{ route('register') }}{{ request()->filled('return') ? '?return='.urlencode(request('return')) : '' }}" class="font-semibold text-blue-700 hover:text-blue-800">Registrati</a>
         </p>
     </section>
 @endsection
