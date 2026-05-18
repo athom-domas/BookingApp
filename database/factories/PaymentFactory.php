@@ -18,6 +18,7 @@ class PaymentFactory extends Factory
             'user_id' => User::factory(),
             'amount' => fake()->randomFloat(2, 10, 500),
             'status' => 'pending',
+            'payment_method' => 'stripe',
             'stripe_transaction_id' => null,
             'stripe_response' => null,
         ];
