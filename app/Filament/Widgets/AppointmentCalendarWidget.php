@@ -11,6 +11,19 @@ class AppointmentCalendarWidget extends FullCalendarWidget
 {
     public ?int $staffFilter = null;
 
+    public function config(): array
+    {
+        return [
+            'initialView'   => 'dayGridMonth',
+            'headerToolbar' => [
+                'left'   => 'prev,next today',
+                'center' => 'title',
+                'right'  => 'dayGridMonth,timeGridWeek,timeGridDay',
+            ],
+            'locale' => 'it',
+        ];
+    }
+
     public function fetchEvents(array $fetchInfo): array
     {
         $query = Appointment::query()

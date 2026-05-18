@@ -115,3 +115,19 @@ it('filtra gli eventi per staff quando admin imposta staffFilter', function () u
     expect($events)->toHaveCount(1)
         ->and($events[0]['id'])->toBe($own->id);
 });
+
+it('la pagina calendario è accessibile a admin', function () {
+    $admin = User::factory()->create()->assignRole('admin');
+
+    $this->actingAs($admin)
+        ->get('/admin/appointment-calendar')
+        ->assertSuccessful();
+});
+
+it('la pagina calendario è accessibile a staff', function () {
+    $staff = User::factory()->create()->assignRole('staff');
+
+    $this->actingAs($staff)
+        ->get('/admin/appointment-calendar')
+        ->assertSuccessful();
+});
