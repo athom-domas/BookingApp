@@ -24,6 +24,13 @@ class AppointmentCalendar extends Page implements HasForms
 
     protected static ?string $title = 'Calendario Appuntamenti';
 
+    public static function canAccess(): bool
+    {
+        $user = auth()->user();
+
+        return $user?->isAdmin() || $user?->isStaff() ?? false;
+    }
+
     public ?int $staffFilter = null;
 
     public function staffFilterForm(Schema $schema): Schema

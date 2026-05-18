@@ -132,6 +132,14 @@ it('la pagina calendario è accessibile a staff', function () {
         ->assertSuccessful();
 });
 
+it('la pagina calendario non è accessibile a customer', function () {
+    $customer = User::factory()->create()->assignRole('customer');
+
+    $this->actingAs($customer)
+        ->get('/admin/appointment-calendar')
+        ->assertForbidden();
+});
+
 it('registra un pagamento in contanti dal popup calendario', function () {
     $admin = User::factory()->create()->assignRole('admin');
     $staff = User::factory()->create()->assignRole('staff');
