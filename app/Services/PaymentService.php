@@ -100,6 +100,28 @@ class PaymentService
         return $payment->fresh();
     }
 
+    public function recordInPersonPayment(int $appointmentId, string $method, float $amount): Payment
+    {
+        $appointment = Appointment::findOrFail($appointmentId);
+
+        $existing = $appointment->payment;
+        if ($existing && $existing->status === 'completed') {
+            throw new BookingException('Esiste già un pagamento completato per questo appuntamento.');
+        }
+
+        $payment = Payment::create([
+            'appointment_id' => $appointmentId,
+            'user_id'        => $appointment->user_id,
+            'amount'         => $amount,
+            'status'         => 'pending',
+            'payment_method' => $method,
+        ]);
+
+        $this->markPaymentCompleted($payment);
+
+        return $payment->fresh();
+    }
+
     private function markPaymentCompleted(Payment $payment): void
     {
         $alreadyCompleted = $payment->status === 'completed';
@@ -116,7 +138,7 @@ class PaymentService
             $appointment->update(['status' => 'confirmed']);
         }
 
-        if (! $alreadyCompleted) {
+        if (! $alreadyCompleted && $payment->payment_method === 'stripe') {
             SendAppointmentConfirmation::dispatch($appointment->fresh());
         }
     }

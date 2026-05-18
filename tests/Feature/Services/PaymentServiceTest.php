@@ -161,3 +161,56 @@ it('refundPayment throws BookingException if payment is not completed', function
     expect(fn () => ($this->makePaymentService)($mockStripe)->refundPayment($payment->id))
         ->toThrow(BookingException::class);
 });
+
+it('recordInPersonPayment creates a completed cash payment', function () {
+    $appointment = Appointment::factory()->create(['status' => 'pending', 'final_price' => 50.00]);
+    $mockStripe = Mockery::mock(StripeClient::class);
+
+    $payment = ($this->makePaymentService)($mockStripe)->recordInPersonPayment($appointment->id, 'cash', 50.00);
+
+    expect($payment->status)->toBe('completed');
+    expect($payment->payment_method)->toBe('cash');
+    expect((float) $payment->amount)->toBe(50.00);
+    expect($payment->stripe_transaction_id)->toBeNull();
+    expect($payment->appointment_id)->toBe($appointment->id);
+});
+
+it('recordInPersonPayment creates a completed pos payment', function () {
+    $appointment = Appointment::factory()->create();
+    $mockStripe = Mockery::mock(StripeClient::class);
+
+    $payment = ($this->makePaymentService)($mockStripe)->recordInPersonPayment($appointment->id, 'pos', 30.00);
+
+    expect($payment->status)->toBe('completed');
+    expect($payment->payment_method)->toBe('pos');
+});
+
+it('recordInPersonPayment sets appointment status to confirmed', function () {
+    $appointment = Appointment::factory()->create(['status' => 'pending']);
+    $mockStripe = Mockery::mock(StripeClient::class);
+
+    ($this->makePaymentService)($mockStripe)->recordInPersonPayment($appointment->id, 'cash', 50.00);
+
+    expect($appointment->fresh()->status)->toBe('confirmed');
+});
+
+it('recordInPersonPayment does not dispatch SendAppointmentConfirmation', function () {
+    $appointment = Appointment::factory()->create(['status' => 'pending']);
+    $mockStripe = Mockery::mock(StripeClient::class);
+
+    ($this->makePaymentService)($mockStripe)->recordInPersonPayment($appointment->id, 'cash', 50.00);
+
+    Queue::assertNotPushed(SendAppointmentConfirmation::class);
+});
+
+it('recordInPersonPayment throws BookingException if a completed payment already exists', function () {
+    $appointment = Appointment::factory()->create();
+    Payment::factory()->create([
+        'appointment_id' => $appointment->id,
+        'status' => 'completed',
+    ]);
+    $mockStripe = Mockery::mock(StripeClient::class);
+
+    expect(fn () => ($this->makePaymentService)($mockStripe)->recordInPersonPayment($appointment->id, 'cash', 50.00))
+        ->toThrow(BookingException::class);
+});
