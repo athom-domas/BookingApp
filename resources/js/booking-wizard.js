@@ -33,9 +33,47 @@ export function bookingWizard(allServices, allStaff) {
         init() {
             const now = new Date();
             this.calendarMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+            const saved = sessionStorage.getItem('bookingWizardState');
+            if (saved) {
+                sessionStorage.removeItem('bookingWizardState');
+                try {
+                    const s = JSON.parse(saved);
+                    this.selectedServiceIds = Array.isArray(s.selectedServiceIds) ? s.selectedServiceIds : [];
+                    this.staffId            = s.staffId ?? null;
+                    this.date               = (typeof s.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s.date)) ? s.date : null;
+                    this.slot               = (typeof s.slot === 'string' && /^\d{2}:\d{2}$/.test(s.slot)) ? s.slot : null;
+                    this.calendarMonth      = s.calendarMonth ?? this.calendarMonth;
+                    this.paymentMethod      = s.paymentMethod ?? null;
+                    this.notes              = (typeof s.notes === 'string') ? s.notes.slice(0, 1000) : '';
+                    this.completed          = Array.isArray(s.completed) ? s.completed : [];
+                    this.step               = (Number.isInteger(s.step) && s.step >= 1 && s.step <= 5) ? s.step : 1;
+                } catch (_) {}
+
+                if (this.step === 3 || (this.completed.includes(3) && this.date)) {
+                    this.loadAvailableDates();
+                    if (this.date) this.loadAvailableSlots();
+                }
+            }
+
             this.$watch('step', (v) => {
                 if (v === 3) this.loadAvailableDates();
             });
+        },
+
+        saveForAuth(returnPath) {
+            sessionStorage.setItem('bookingWizardState', JSON.stringify({
+                selectedServiceIds: this.selectedServiceIds,
+                staffId:            this.staffId,
+                date:               this.date,
+                slot:               this.slot,
+                calendarMonth:      this.calendarMonth,
+                paymentMethod:      this.paymentMethod,
+                notes:              this.notes,
+                step:               this.step,
+                completed:          this.completed,
+            }));
+            window.location.href = returnPath;
         },
 
         // ── navigation ────────────────────────────────────────────────────
