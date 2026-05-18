@@ -62,6 +62,22 @@ class PaymentResource extends Resource
                         default     => 'secondary',
                     }),
 
+                TextColumn::make('payment_method')
+                    ->label('Metodo')
+                    ->badge()
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'stripe' => 'Stripe',
+                        'cash'   => 'Contanti',
+                        'pos'    => 'POS',
+                        default  => $state,
+                    })
+                    ->color(fn (string $state): string => match ($state) {
+                        'stripe' => 'info',
+                        'cash'   => 'success',
+                        'pos'    => 'warning',
+                        default  => 'secondary',
+                    }),
+
                 TextColumn::make('created_at')
                     ->label('Data')
                     ->dateTime('d/m/Y H:i')
@@ -75,6 +91,15 @@ class PaymentResource extends Resource
                         'completed' => 'Completato',
                         'refunded'  => 'Rimborsato',
                         'failed'    => 'Fallito',
+                        'cancelled' => 'Annullato',
+                    ]),
+
+                SelectFilter::make('payment_method')
+                    ->label('Metodo')
+                    ->options([
+                        'stripe' => 'Stripe',
+                        'cash'   => 'Contanti',
+                        'pos'    => 'POS',
                     ]),
 
                 Filter::make('created_at')
