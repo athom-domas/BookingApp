@@ -156,14 +156,22 @@ class SlotCalculationService
         $dayEnd   = $date->copy()->endOfDay();
         $result   = [];
 
-        $appointments = Appointment::with('service')
-            ->where('staff_id', $staff->id)
+        $appointments = Appointment::where('staff_id', $staff->id)
             ->whereIn('status', ['pending', 'confirmed'])
             ->whereBetween('scheduled_date', [$dayStart, $dayEnd])
             ->get();
 
+        $allServiceIds = $appointments
+            ->flatMap(fn ($a) => $a->service_ids ?? ($a->service_id ? [$a->service_id] : []))
+            ->unique()
+            ->values()
+            ->all();
+
+        $durations = Service::whereIn('id', $allServiceIds)->pluck('duration_minutes', 'id');
+
         foreach ($appointments as $appt) {
-            $duration = $appt->service?->duration_minutes ?? 0;
+            $sids     = $appt->service_ids ?? ($appt->service_id ? [$appt->service_id] : []);
+            $duration = collect($sids)->sum(fn ($id) => $durations[$id] ?? 0);
             if ($duration <= 0) {
                 continue;
             }

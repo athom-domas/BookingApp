@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
-#[Fillable(['user_id', 'service_id', 'staff_id', 'scheduled_date', 'status', 'final_price', 'notes', 'google_event_id'])]
+#[Fillable(['user_id', 'service_id', 'service_ids', 'staff_id', 'scheduled_date', 'status', 'final_price', 'notes', 'google_event_id'])]
 class Appointment extends Model
 {
     /** @use HasFactory<\Database\Factories\AppointmentFactory> */
@@ -20,7 +20,8 @@ class Appointment extends Model
     {
         return [
             'scheduled_date' => 'datetime',
-            'final_price' => 'decimal:2',
+            'final_price'    => 'decimal:2',
+            'service_ids'    => 'array',
         ];
     }
 

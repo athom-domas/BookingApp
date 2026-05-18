@@ -11,6 +11,7 @@ use Carbon\Carbon;
 use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
+    Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
     Role::firstOrCreate(['name' => 'staff', 'guard_name' => 'web']);
     Role::firstOrCreate(['name' => 'customer', 'guard_name' => 'web']);
 
@@ -188,6 +189,37 @@ it('creates confirmed appointment from active hold and marks hold converted', fu
         ->and($hold->fresh()->status)->toBe('converted');
 });
 
+it('stores all service_ids on the appointment when confirming from hold with multiple services', function () {
+    [$staff, $service1] = bookingMakeStaff(60);
+    $service2 = Service::factory()->create(['active' => true, 'duration_minutes' => 20]);
+    $staff->services()->attach($service2->id);
+    $customer = User::factory()->create();
+
+    $date = Carbon::parse('2026-05-18');
+    AvailabilityRule::factory()->create([
+        'user_id'      => $staff->id,
+        'day_of_week'  => $date->dayOfWeek,
+        'start_time'   => '09:00:00',
+        'end_time'     => '17:00:00',
+        'is_available' => true,
+    ]);
+
+    $hold = AppointmentHold::create([
+        'staff_id'    => $staff->id,
+        'session_id'  => 'test',
+        'customer_id' => $customer->id,
+        'starts_at'   => $date->copy()->setTime(10, 0),
+        'ends_at'     => $date->copy()->setTime(11, 20),
+        'service_ids' => [$service1->id, $service2->id],
+        'status'      => 'active',
+        'expires_at'  => now()->addMinutes(10),
+    ]);
+
+    $appointment = app(AppointmentService::class)->confirmFromHold($hold);
+
+    expect($appointment->service_ids)->toBe([$service1->id, $service2->id]);
+});
+
 it('throws RuntimeException when hold is already expired', function () {
     [$staff, $service] = bookingMakeStaff(60);
 
@@ -265,6 +297,7 @@ it('marks only expired holds as expired', function () {
 describe('bookDirect', function () {
     function makeBookDirectSetup(): array
     {
+        Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
         Role::firstOrCreate(['name' => 'staff', 'guard_name' => 'web']);
         Role::firstOrCreate(['name' => 'customer', 'guard_name' => 'web']);
 
@@ -385,5 +418,20 @@ describe('bookDirect', function () {
         ]);
 
         expect($appointment->staff_id)->toBe($staff->id);
+    });
+
+    it('stores all service_ids on the appointment when booking multiple services', function () {
+        [$service1, $staff, $customer, $monday] = makeBookDirectSetup();
+        $service2 = Service::factory()->create(['active' => true, 'duration_minutes' => 20, 'price' => 10.00]);
+        $service2->staff()->attach($staff->id);
+
+        $appointment = app(\App\Services\Booking\AppointmentService::class)->bookDirect([
+            'userId'        => $customer->id,
+            'serviceIds'    => [$service1->id, $service2->id],
+            'staffId'       => $staff->id,
+            'scheduledDate' => $monday,
+        ]);
+
+        expect($appointment->service_ids)->toBe([$service1->id, $service2->id]);
     });
 });

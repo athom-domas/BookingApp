@@ -14,6 +14,7 @@ use Spatie\Permission\Models\Role;
 beforeEach(function () {
     $this->withoutMiddleware(PreventRequestForgery::class);
     Queue::fake();
+    Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
     Role::firstOrCreate(['name' => 'customer', 'guard_name' => 'web']);
     Role::firstOrCreate(['name' => 'staff', 'guard_name' => 'web']);
 });

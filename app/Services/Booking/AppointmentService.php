@@ -148,6 +148,7 @@ class AppointmentService
             $appointment = Appointment::create([
                 'user_id'        => $hold->customer_id ?? Auth::id(),
                 'service_id'     => $serviceId,
+                'service_ids'    => $hold->service_ids,
                 'staff_id'       => $hold->staff_id,
                 'scheduled_date' => $hold->starts_at,
                 'status'         => 'confirmed',
@@ -230,6 +231,7 @@ class AppointmentService
             $appointment = Appointment::create([
                 'user_id'        => $userId,
                 'service_id'     => $serviceIds[0],
+                'service_ids'    => $serviceIds,
                 'staff_id'       => $staffId,
                 'scheduled_date' => $scheduledDate,
                 'status'         => $confirmImmediately ? 'confirmed' : 'pending',

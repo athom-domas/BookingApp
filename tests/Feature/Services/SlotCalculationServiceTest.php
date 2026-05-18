@@ -315,3 +315,46 @@ it('generates slots from both ranges when staff has a split schedule', function 
     expect($times)->not->toContain('13:00');
     expect($times)->not->toContain('13:30');
 });
+
+it('blocks time equal to combined duration of all service_ids on an appointment', function () {
+    $staff = User::factory()->create();
+    $staff->assignRole('staff');
+
+    $service1 = Service::factory()->create(['duration_minutes' => 60, 'active' => true]);
+    $service2 = Service::factory()->create(['duration_minutes' => 20, 'active' => true]);
+    $staff->services()->attach([$service1->id, $service2->id]);
+
+    $date = Carbon::parse('2026-05-19'); // Tuesday
+    AvailabilityRule::factory()->create([
+        'user_id'      => $staff->id,
+        'day_of_week'  => $date->dayOfWeek,
+        'start_time'   => '08:00:00',
+        'end_time'     => '17:00:00',
+        'is_available' => true,
+    ]);
+
+    // Appointment with two services stored in service_ids (total 80 min) starting at 08:00
+    Appointment::factory()->create([
+        'staff_id'       => $staff->id,
+        'service_id'     => $service1->id,
+        'scheduled_date' => $date->copy()->setTime(8, 0),
+        'status'         => 'confirmed',
+        'service_ids'    => [$service1->id, $service2->id],
+    ]);
+
+    $svc   = new SlotCalculationService();
+    $slots = $svc->getAvailableSlots([
+        'date'            => $date->toDateString(),
+        'serviceIds'      => [$service1->id],
+        'staffId'         => $staff->id,
+        'staffPreference' => 'specific',
+    ]);
+
+    $startTimes = array_column($slots, 'start');
+
+    // 80-min occupation ends at 09:20; slots before that must not exist
+    expect($startTimes)->not->toContain('08:00')
+        ->and($startTimes)->not->toContain('08:30')
+        ->and($startTimes)->not->toContain('09:00')
+        ->and($startTimes)->toContain('09:20');
+});
