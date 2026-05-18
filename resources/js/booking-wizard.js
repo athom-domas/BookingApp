@@ -40,7 +40,7 @@ export function bookingWizard(allServices, allStaff) {
                 try {
                     const s = JSON.parse(saved);
                     this.selectedServiceIds = Array.isArray(s.selectedServiceIds) ? s.selectedServiceIds : [];
-                    this.staffId            = s.staffId ?? null;
+                    this.staffId            = (s.staffId === null || Number.isInteger(s.staffId)) ? s.staffId : null;
                     this.date               = (typeof s.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s.date)) ? s.date : null;
                     this.slot               = (typeof s.slot === 'string' && /^\d{2}:\d{2}$/.test(s.slot)) ? s.slot : null;
                     this.calendarMonth      = s.calendarMonth ?? this.calendarMonth;
