@@ -118,11 +118,28 @@ class AppointmentCalendarWidget extends FullCalendarWidget
                         'completed' => 'Completato',
                         'cancelled' => 'Annullato',
                     ])
+                    ->in(['pending', 'confirmed', 'completed', 'cancelled'])
                     ->required(),
             ])
+            ->authorize(function (Action $action): bool {
+                $user          = auth()->user();
+                $appointmentId = $action->getArguments()['appointmentId'] ?? null;
+
+                if ($user->isAdmin()) {
+                    return true;
+                }
+
+                if ($user->isStaff() && $appointmentId) {
+                    return Appointment::where('id', $appointmentId)
+                        ->where('staff_id', $user->id)
+                        ->exists();
+                }
+
+                return false;
+            })
             ->action(function (array $data, Action $action): void {
                 $appointmentId = $data['appointment_id'] ?? $action->getArguments()['appointmentId'];
-                Appointment::find($appointmentId)->update(['status' => $data['status']]);
+                Appointment::findOrFail($appointmentId)->update(['status' => $data['status']]);
             });
     }
 
