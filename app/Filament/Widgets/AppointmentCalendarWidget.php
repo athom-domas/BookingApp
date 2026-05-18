@@ -4,9 +4,7 @@ namespace App\Filament\Widgets;
 
 use App\Models\Appointment;
 use App\Models\Service;
-use App\Models\User;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Form;
+use Livewire\Attributes\On;
 use Saade\FilamentFullCalendar\Widgets\FullCalendarWidget;
 
 class AppointmentCalendarWidget extends FullCalendarWidget
@@ -67,23 +65,10 @@ class AppointmentCalendarWidget extends FullCalendarWidget
         return $palette[$staffId % count($palette)];
     }
 
-    public function filterForm(Form $form): Form
+    #[On('calendar-staff-filter-updated')]
+    public function handleStaffFilterUpdated(?int $staffId): void
     {
-        if (! auth()->user()->isAdmin()) {
-            return $form->schema([]);
-        }
-
-        return $form->schema([
-            Select::make('staffFilter')
-                ->label('Filtra per staff')
-                ->options(User::role('staff')->orderBy('name')->pluck('name', 'id'))
-                ->placeholder('Tutti i membri')
-                ->live(),
-        ]);
-    }
-
-    public function updatedStaffFilter(): void
-    {
-        $this->dispatch('filament-fullcalendar--refetch');
+        $this->staffFilter = $staffId;
+        $this->dispatch('filament-fullcalendar--refresh');
     }
 }
