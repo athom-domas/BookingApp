@@ -379,8 +379,8 @@
                     @else
                         <p class="text-sm text-gray-600 dark:text-gray-400">Accedi o crea un account per completare la prenotazione.</p>
                         <div class="flex gap-3">
-                            <a href="{{ route('login') }}" class="flex-1 rounded-md border border-gray-300 dark:border-gray-600 px-4 py-2.5 text-center text-sm font-semibold text-gray-900 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800">Accedi</a>
-                            <a href="{{ route('register') }}" class="flex-1 rounded-md bg-blue-700 px-4 py-2.5 text-center text-sm font-semibold text-white hover:bg-blue-800">Crea account</a>
+                            <button type="button" @click="saveForAuth('{{ route('login') }}?return=/prenota')" class="flex-1 rounded-md border border-gray-300 dark:border-gray-600 px-4 py-2.5 text-center text-sm font-semibold text-gray-900 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800">Accedi</button>
+                            <button type="button" @click="saveForAuth('{{ route('register') }}?return=/prenota')" class="flex-1 rounded-md bg-blue-700 px-4 py-2.5 text-center text-sm font-semibold text-white hover:bg-blue-800">Crea account</button>
                         </div>
                     @endauth
                 </div>
