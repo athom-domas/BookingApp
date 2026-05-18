@@ -13,8 +13,13 @@ use Spatie\Permission\Models\Role;
 
 class RegisteredUserController extends Controller
 {
-    public function create(): View
+    public function create(Request $request): View
     {
+        $return = $request->string('return')->toString();
+        if ($return !== '' && str_starts_with($return, '/')) {
+            session()->put('url.intended', $return);
+        }
+
         return view('auth.register');
     }
 
@@ -38,6 +43,6 @@ class RegisteredUserController extends Controller
         Auth::login($user);
         $request->session()->regenerate();
 
-        return redirect()->route('portal.appointments.index');
+        return redirect()->intended(route('portal.appointments.index'));
     }
 }

@@ -10,8 +10,13 @@ use Illuminate\View\View;
 
 class AuthenticatedSessionController extends Controller
 {
-    public function create(): View
+    public function create(Request $request): View
     {
+        $return = $request->string('return')->toString();
+        if ($return !== '' && str_starts_with($return, '/')) {
+            session()->put('url.intended', $return);
+        }
+
         return view('auth.login');
     }
 
