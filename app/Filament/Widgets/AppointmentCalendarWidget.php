@@ -63,13 +63,13 @@ class AppointmentCalendarWidget extends FullCalendarWidget
         }
 
         if (!empty($this->filterService)) {
-            $query->whereRaw('JSON_OVERLAPS(service_ids, ?)', [json_encode($this->filterService)]);
+            $query->whereRaw('JSON_OVERLAPS(service_ids, ?)', [json_encode(array_map('intval', $this->filterService))]);
         }
 
         $appointments = $query->get();
 
         $allServiceIds = $appointments
-            ->flatMap(fn ($a) => $a->service_ids ?? [])
+            ->flatMap(fn($a) => $a->service_ids ?? [])
             ->unique()
             ->values()
             ->all();
@@ -78,10 +78,10 @@ class AppointmentCalendarWidget extends FullCalendarWidget
 
         return $appointments->map(function ($appointment) use ($services) {
             $duration = collect($appointment->service_ids ?? [])
-                ->sum(fn ($id) => $services->get($id)?->duration_minutes ?? 30);
+                ->sum(fn($id) => $services->get($id)?->duration_minutes ?? 30);
 
             $serviceNames = collect($appointment->service_ids ?? [])
-                ->map(fn ($id) => $services->get($id)?->name)
+                ->map(fn($id) => $services->get($id)?->name)
                 ->filter()
                 ->implode(', ');
 
@@ -117,8 +117,14 @@ class AppointmentCalendarWidget extends FullCalendarWidget
     private function staffColor(int $staffId): string
     {
         $palette = [
-            '#3B82F6', '#10B981', '#F59E0B', '#EF4444',
-            '#8B5CF6', '#EC4899', '#14B8A6', '#F97316',
+            '#3B82F6',
+            '#10B981',
+            '#F59E0B',
+            '#EF4444',
+            '#8B5CF6',
+            '#EC4899',
+            '#14B8A6',
+            '#F97316',
         ];
 
         return $palette[$staffId % count($palette)];
@@ -162,7 +168,7 @@ class AppointmentCalendarWidget extends FullCalendarWidget
                     ->in(['pending', 'confirmed', 'completed', 'cancelled'])
                     ->required(),
             ])
-            ->authorize(fn (Action $action) => $this->authorizeAppointmentAccess($action))
+            ->authorize(fn(Action $action) => $this->authorizeAppointmentAccess($action))
             ->extraModalFooterActions(function (Action $action): array {
                 $appointmentId = $action->getArguments()['appointmentId'] ?? null;
                 $appointment   = Appointment::with('payment')->find($appointmentId);
@@ -176,7 +182,7 @@ class AppointmentCalendarWidget extends FullCalendarWidget
                         ->label('Registra pagamento')
                         ->icon('heroicon-o-banknotes')
                         ->color('success')
-                        ->action(fn () => $this->mountAction('registerPayment', arguments: ['appointmentId' => $appointmentId])),
+                        ->action(fn() => $this->mountAction('registerPayment', arguments: ['appointmentId' => $appointmentId])),
                 ];
             })
             ->action(function (array $data, Action $action): void {
@@ -209,7 +215,7 @@ class AppointmentCalendarWidget extends FullCalendarWidget
                     ->rules(['numeric', 'min:0.01'])
                     ->required(),
             ])
-            ->authorize(fn (Action $action) => $this->authorizeAppointmentAccess($action))
+            ->authorize(fn(Action $action) => $this->authorizeAppointmentAccess($action))
             ->action(function (array $data, Action $action): void {
                 $appointmentId = $action->getArguments()['appointmentId'];
                 try {
