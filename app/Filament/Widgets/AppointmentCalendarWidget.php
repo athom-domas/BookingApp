@@ -23,7 +23,7 @@ class AppointmentCalendarWidget extends FullCalendarWidget
 
         if ($user->isStaff()) {
             $query->where('staff_id', $user->id);
-        } elseif ($this->staffFilter) {
+        } elseif ($user->isAdmin() && $this->staffFilter) {
             $query->where('staff_id', $this->staffFilter);
         }
 
