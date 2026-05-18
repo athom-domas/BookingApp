@@ -22,7 +22,7 @@ class AppointmentCalendar extends Page implements HasForms
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-calendar-days';
 
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = -1;
 
     protected static ?string $title = 'Calendario Appuntamenti';
 
@@ -46,7 +46,7 @@ class AppointmentCalendar extends Page implements HasForms
         if ($user?->isAdmin()) {
             $fields[] = Select::make('filterStaff')
                 ->label('Staff')
-                ->options(fn () => User::role('staff')->orderBy('name')->pluck('name', 'id'))
+                ->options(fn() => User::role('staff')->orderBy('name')->pluck('name', 'id'))
                 ->placeholder('Tutti')
                 ->multiple()
                 ->live();
@@ -66,14 +66,14 @@ class AppointmentCalendar extends Page implements HasForms
 
         $fields[] = Select::make('filterService')
             ->label('Servizio')
-            ->options(fn () => Service::orderBy('name')->pluck('name', 'id'))
+            ->options(fn() => Service::orderBy('name')->pluck('name', 'id'))
             ->placeholder('Tutti')
             ->multiple()
             ->live();
 
         $fields[] = Select::make('filterCustomer')
             ->label('Cliente')
-            ->options(fn () => User::role('customer')->orderBy('name')->pluck('name', 'id'))
+            ->options(fn() => User::role('customer')->orderBy('name')->pluck('name', 'id'))
             ->placeholder('Tutti')
             ->multiple()
             ->live();
@@ -81,17 +81,30 @@ class AppointmentCalendar extends Page implements HasForms
         return $schema->schema($fields)->columns(2);
     }
 
-    public function updatedFilterStaff(): void    { $this->dispatchFilters(); }
-    public function updatedFilterStatus(): void   { $this->dispatchFilters(); }
-    public function updatedFilterService(): void  { $this->dispatchFilters(); }
-    public function updatedFilterCustomer(): void { $this->dispatchFilters(); }
+    public function updatedFilterStaff(): void
+    {
+        $this->dispatchFilters();
+    }
+    public function updatedFilterStatus(): void
+    {
+        $this->dispatchFilters();
+    }
+    public function updatedFilterService(): void
+    {
+        $this->dispatchFilters();
+    }
+    public function updatedFilterCustomer(): void
+    {
+        $this->dispatchFilters();
+    }
 
     private function dispatchFilters(): void
     {
-        $this->dispatch('calendar-filters-updated',
-            staff:    $this->filterStaff,
-            status:   $this->filterStatus,
-            service:  $this->filterService,
+        $this->dispatch(
+            'calendar-filters-updated',
+            staff: $this->filterStaff,
+            status: $this->filterStatus,
+            service: $this->filterService,
             customer: $this->filterCustomer,
         )->to(AppointmentCalendarWidget::class);
     }

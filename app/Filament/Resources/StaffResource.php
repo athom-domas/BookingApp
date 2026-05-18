@@ -58,7 +58,7 @@ class StaffResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
-            ->whereHas('roles', fn (Builder $query): Builder => $query
+            ->whereHas('roles', fn(Builder $query): Builder => $query
                 ->where('name', 'staff')
                 ->where('guard_name', 'web'));
     }
@@ -82,15 +82,15 @@ class StaffResource extends Resource
                 ->label('Password')
                 ->password()
                 ->confirmed()
-                ->required(fn (string $operation): bool => $operation === 'create')
-                ->dehydrated(fn (?string $state): bool => filled($state))
+                ->required(fn(string $operation): bool => $operation === 'create')
+                ->dehydrated(fn(?string $state): bool => filled($state))
                 ->minLength(8)
                 ->maxLength(255),
 
             TextInput::make('password_confirmation')
                 ->label('Conferma password')
                 ->password()
-                ->required(fn (string $operation): bool => $operation === 'create')
+                ->required(fn(string $operation): bool => $operation === 'create')
                 ->dehydrated(false)
                 ->maxLength(255),
 
@@ -99,7 +99,7 @@ class StaffResource extends Resource
                 ->relationship(
                     name: 'services',
                     titleAttribute: 'name',
-                    modifyQueryUsing: fn (Builder $query): Builder => $query->where('active', true)->orderBy('name'),
+                    modifyQueryUsing: fn(Builder $query): Builder => $query->where('active', true)->orderBy('name'),
                 )
                 ->multiple()
                 ->preload()
@@ -122,16 +122,6 @@ class StaffResource extends Resource
                 TextColumn::make('email')
                     ->label('Email')
                     ->searchable()
-                    ->sortable(),
-
-                TextColumn::make('services.name')
-                    ->label('Servizi')
-                    ->badge()
-                    ->separator(','),
-
-                TextColumn::make('created_at')
-                    ->label('Creato il')
-                    ->dateTime('d/m/Y H:i')
                     ->sortable(),
             ])
             ->actions([

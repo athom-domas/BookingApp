@@ -21,7 +21,7 @@
         @include('portal.appointments.partials.list', [
             'title' => 'Storico',
             'appointments' => $pastAppointments,
-            'empty' => 'Lo storico e vuoto.',
+            'empty' => 'Lo storico è vuoto.',
         ])
     </section>
 @endsection

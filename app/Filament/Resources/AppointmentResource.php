@@ -10,7 +10,6 @@ use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -20,6 +19,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
+use Illuminate\Database\Eloquent\Builder;
 use Filament\Tables\Table;
 
 class AppointmentResource extends Resource
@@ -38,11 +38,12 @@ class AppointmentResource extends Resource
                 ->required()
                 ->searchable(),
 
-            CheckboxList::make('service_ids')
+            Select::make('service_ids')
                 ->label('Servizi')
-                ->options(fn () => Service::active()->orderBy('name')->pluck('name', 'id')->all())
-                ->required()
-                ->columns(2),
+                ->options(fn() => Service::active()->orderBy('name')->pluck('name', 'id')->all())
+                ->multiple()
+                ->searchable()
+                ->required(),
 
             Select::make('staff_id')
                 ->label('Staff')
@@ -83,7 +84,7 @@ class AppointmentResource extends Resource
 
                 TextColumn::make('services_label')
                     ->label('Servizi')
-                    ->getStateUsing(fn ($record) => $record->services_label)
+                    ->getStateUsing(fn($record) => $record->services_label)
                     ->wrap(),
 
                 TextColumn::make('scheduled_date')
@@ -94,14 +95,14 @@ class AppointmentResource extends Resource
                 TextColumn::make('status')
                     ->label('Stato')
                     ->badge()
-                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                    ->formatStateUsing(fn(string $state): string => match ($state) {
                         'pending'   => 'In attesa',
                         'confirmed' => 'Confermato',
                         'cancelled' => 'Annullato',
                         'completed' => 'Completato',
                         default     => $state,
                     })
-                    ->color(fn (string $state): string => match ($state) {
+                    ->color(fn(string $state): string => match ($state) {
                         'pending'   => 'warning',
                         'confirmed' => 'success',
                         'cancelled' => 'danger',
@@ -143,7 +144,7 @@ class AppointmentResource extends Resource
                             ->minValue(0.01)
                             ->required(),
                     ])
-                    ->fillForm(fn (Appointment $record): array => [
+                    ->fillForm(fn(Appointment $record): array => [
                         'amount' => $record->final_price,
                     ])
                     ->action(function (Appointment $record, array $data): void {
@@ -163,7 +164,7 @@ class AppointmentResource extends Resource
                         }
                     })
                     ->successNotificationTitle('Pagamento registrato con successo')
-                    ->visible(fn (Appointment $record): bool => ! $record->payment || $record->payment->status !== 'completed'),
+                    ->visible(fn(Appointment $record): bool => ! $record->payment || $record->payment->status !== 'completed'),
                 EditAction::make(),
                 DeleteAction::make(),
             ])

@@ -18,8 +18,9 @@ class EditStaff extends EditRecord
         return [
             Action::make('manageAvailability')
                 ->label('Gestisci Disponibilità')
+                ->color('primary')
                 ->icon('heroicon-o-clock')
-                ->url(fn () => StaffResource::getUrl('manage-availability', ['record' => $this->getRecord()])),
+                ->url(fn() => StaffResource::getUrl('manage-availability', ['record' => $this->getRecord()])),
 
             DeleteAction::make(),
         ];
