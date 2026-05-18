@@ -2,8 +2,10 @@
 
 namespace App\Filament\Widgets;
 
+use App\Exceptions\BookingException;
 use App\Models\Appointment;
 use App\Models\Service;
+use App\Services\PaymentService;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
@@ -137,9 +139,79 @@ class AppointmentCalendarWidget extends FullCalendarWidget
 
                 return false;
             })
+            ->extraModalFooterActions(function (Action $action): array {
+                $appointmentId = $action->getArguments()['appointmentId'] ?? null;
+                $appointment   = Appointment::with('payment')->find($appointmentId);
+
+                if (! $appointment || $appointment->payment?->status === 'completed') {
+                    return [];
+                }
+
+                return [
+                    Action::make('goToRegisterPayment')
+                        ->label('Registra pagamento')
+                        ->icon('heroicon-o-banknotes')
+                        ->color('success')
+                        ->action(fn () => $this->mountAction('registerPayment', arguments: ['appointmentId' => $appointmentId])),
+                ];
+            })
             ->action(function (array $data, Action $action): void {
                 $appointmentId = $data['appointment_id'] ?? $action->getArguments()['appointmentId'];
                 Appointment::findOrFail($appointmentId)->update(['status' => $data['status']]);
+            });
+    }
+
+    public function registerPaymentAction(): Action
+    {
+        return Action::make('registerPayment')
+            ->label('Registra pagamento')
+            ->icon('heroicon-o-banknotes')
+            ->color('success')
+            ->mountUsing(function (Action $action, ?Schema $schema): void {
+                $appointment = Appointment::find($action->getArguments()['appointmentId']);
+                $schema?->fill(['amount' => $appointment?->final_price]);
+            })
+            ->schema([
+                Select::make('method')
+                    ->label('Metodo di pagamento')
+                    ->options([
+                        'cash' => 'Contanti',
+                        'pos'  => 'POS (carta)',
+                    ])
+                    ->required(),
+                TextInput::make('amount')
+                    ->label('Importo (€)')
+                    ->numeric()
+                    ->minValue(0.01)
+                    ->required(),
+            ])
+            ->authorize(function (Action $action): bool {
+                $user          = auth()->user();
+                $appointmentId = $action->getArguments()['appointmentId'] ?? null;
+
+                if ($user->isAdmin()) {
+                    return true;
+                }
+
+                if ($user->isStaff() && $appointmentId) {
+                    return Appointment::where('id', $appointmentId)
+                        ->where('staff_id', $user->id)
+                        ->exists();
+                }
+
+                return false;
+            })
+            ->action(function (array $data, Action $action): void {
+                $appointmentId = $action->getArguments()['appointmentId'];
+                try {
+                    app(PaymentService::class)->recordInPersonPayment(
+                        $appointmentId,
+                        $data['method'],
+                        (float) $data['amount']
+                    );
+                } catch (BookingException $e) {
+                    $this->halt();
+                }
             });
     }
 

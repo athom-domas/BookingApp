@@ -132,6 +132,32 @@ it('la pagina calendario è accessibile a staff', function () {
         ->assertSuccessful();
 });
 
+it('registra un pagamento in contanti dal popup calendario', function () {
+    $admin = User::factory()->create()->assignRole('admin');
+    $staff = User::factory()->create()->assignRole('staff');
+
+    $appointment = Appointment::factory()->create([
+        'staff_id'       => $staff->id,
+        'final_price'    => '50.00',
+        'scheduled_date' => now()->addDays(1),
+    ]);
+
+    $this->actingAs($admin);
+
+    Livewire::test(AppointmentCalendarWidget::class)
+        ->mountAction('registerPayment', arguments: ['appointmentId' => $appointment->id])
+        ->set('mountedActions.0.data.method', 'cash')
+        ->set('mountedActions.0.data.amount', '50.00')
+        ->callMountedAction()
+        ->assertHasNoActionErrors();
+
+    $payment = $appointment->fresh()->payment;
+
+    expect($payment)->not->toBeNull()
+        ->and($payment->status)->toBe('completed')
+        ->and($payment->payment_method)->toBe('cash');
+});
+
 it('il cambio stato aggiorna il record nel database', function () {
     $admin = User::factory()->create()->assignRole('admin');
     $staff = User::factory()->create()->assignRole('staff');
