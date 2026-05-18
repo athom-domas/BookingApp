@@ -29,6 +29,7 @@ class PaymentService
             'user_id' => $appointment->user_id,
             'amount' => $amountCents / 100,
             'status' => 'pending',
+            'payment_method' => 'stripe',
             'stripe_transaction_id' => $paymentIntent->id,
             'stripe_response' => $paymentIntent->toArray(),
         ]);

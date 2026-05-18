@@ -43,6 +43,7 @@ it('initiateStripePayment creates a pending payment record', function () {
     expect((float) $payment->amount)->toBe(50.00);
     expect($payment->appointment_id)->toBe($appointment->id);
     expect($payment->stripe_response['client_secret'])->toBe('pi_test_123_secret_test');
+    expect($payment->payment_method)->toBe('stripe');
 });
 
 it('handleStripeWebhook marks payment as completed on succeeded event', function () {

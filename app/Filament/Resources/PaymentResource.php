@@ -132,7 +132,7 @@ class PaymentResource extends Resource
                     ->modalHeading('Conferma rimborso')
                     ->modalDescription('Sei sicuro di voler rimborsare questo pagamento?')
                     ->action(fn (Payment $record) => $record->update(['status' => 'refunded']))
-                    ->visible(fn (Payment $record): bool => $record->status === 'completed'),
+                    ->visible(fn (Payment $record): bool => $record->status === 'completed' && $record->payment_method === 'stripe'),
             ]);
     }
 
