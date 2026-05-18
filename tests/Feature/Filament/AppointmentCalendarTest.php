@@ -51,3 +51,48 @@ it('restituisce solo i propri appuntamenti per lo staff', function () use (&$fet
     expect($events)->toHaveCount(1)
         ->and($events[0]['id'])->toBe($own->id);
 });
+
+it('calcola end time dalla somma dei duration_minutes dei servizi', function () use (&$fetchRange) {
+    $admin   = User::factory()->create()->assignRole('admin');
+    $staff   = User::factory()->create()->assignRole('staff');
+    $service1 = Service::factory()->create(['duration_minutes' => 30]);
+    $service2 = Service::factory()->create(['duration_minutes' => 45]);
+
+    $start = now()->addDays(1)->startOfHour();
+
+    Appointment::factory()->create([
+        'staff_id'       => $staff->id,
+        'scheduled_date' => $start,
+        'service_ids'    => [$service1->id, $service2->id],
+    ]);
+
+    $this->actingAs($admin);
+
+    $events = Livewire::test(AppointmentCalendarWidget::class)
+        ->instance()
+        ->fetchEvents($fetchRange());
+
+    expect($events[0]['end'])->toBe($start->copy()->addMinutes(75)->toIso8601String());
+});
+
+it('costruisce il titolo da nome cliente e nomi servizi', function () use (&$fetchRange) {
+    $admin    = User::factory()->create()->assignRole('admin');
+    $customer = User::factory()->create(['name' => 'Mario Rossi']);
+    $staff    = User::factory()->create()->assignRole('staff');
+    $service  = Service::factory()->create(['name' => 'Taglio']);
+
+    Appointment::factory()->create([
+        'user_id'        => $customer->id,
+        'staff_id'       => $staff->id,
+        'scheduled_date' => now()->addDays(1),
+        'service_ids'    => [$service->id],
+    ]);
+
+    $this->actingAs($admin);
+
+    $events = Livewire::test(AppointmentCalendarWidget::class)
+        ->instance()
+        ->fetchEvents($fetchRange());
+
+    expect($events[0]['title'])->toBe('Mario Rossi – Taglio');
+});
