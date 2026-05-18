@@ -9,7 +9,6 @@ use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Pages\Page;
 use Filament\Schemas\Schema;
-use Livewire\Attributes\On;
 
 class AppointmentCalendar extends Page implements HasForms
 {
@@ -32,7 +31,7 @@ class AppointmentCalendar extends Page implements HasForms
         return $schema->schema([
             Select::make('staffFilter')
                 ->label('Filtra per staff')
-                ->options(User::role('staff')->orderBy('name')->pluck('name', 'id'))
+                ->options(fn () => User::role('staff')->orderBy('name')->pluck('name', 'id'))
                 ->placeholder('Tutti i membri')
                 ->live(),
         ]);
