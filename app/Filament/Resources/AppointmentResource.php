@@ -5,6 +5,8 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\AppointmentResource\Pages;
 use App\Models\Appointment;
 use App\Models\Service;
+use App\Services\PaymentService;
+use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -12,6 +14,7 @@ use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
@@ -121,6 +124,36 @@ class AppointmentResource extends Resource
                     ->searchable(),
             ])
             ->actions([
+                Action::make('register_payment')
+                    ->label('Registra pagamento')
+                    ->icon('heroicon-o-banknotes')
+                    ->color('success')
+                    ->form([
+                        Select::make('method')
+                            ->label('Metodo di pagamento')
+                            ->options([
+                                'cash' => 'Contanti',
+                                'pos'  => 'POS (carta)',
+                            ])
+                            ->required(),
+                        TextInput::make('amount')
+                            ->label('Importo (€)')
+                            ->numeric()
+                            ->minValue(0.01)
+                            ->required(),
+                    ])
+                    ->fillForm(fn (Appointment $record): array => [
+                        'amount' => $record->final_price,
+                    ])
+                    ->action(function (Appointment $record, array $data): void {
+                        app(PaymentService::class)->recordInPersonPayment(
+                            $record->id,
+                            $data['method'],
+                            (float) $data['amount']
+                        );
+                    })
+                    ->successNotificationTitle('Pagamento registrato con successo')
+                    ->visible(fn (Appointment $record): bool => ! $record->payment || $record->payment->status !== 'completed'),
                 EditAction::make(),
                 DeleteAction::make(),
             ])
