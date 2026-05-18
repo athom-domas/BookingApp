@@ -96,3 +96,22 @@ it('costruisce il titolo da nome cliente e nomi servizi', function () use (&$fet
 
     expect($events[0]['title'])->toBe('Mario Rossi – Taglio');
 });
+
+it('filtra gli eventi per staff quando admin imposta staffFilter', function () use (&$fetchRange) {
+    $admin  = User::factory()->create()->assignRole('admin');
+    $staff1 = User::factory()->create()->assignRole('staff');
+    $staff2 = User::factory()->create()->assignRole('staff');
+
+    $own = Appointment::factory()->create(['staff_id' => $staff1->id, 'scheduled_date' => now()->addDays(1)]);
+    Appointment::factory()->create(['staff_id' => $staff2->id, 'scheduled_date' => now()->addDays(2)]);
+
+    $this->actingAs($admin);
+
+    $events = Livewire::test(AppointmentCalendarWidget::class)
+        ->set('staffFilter', $staff1->id)
+        ->instance()
+        ->fetchEvents($fetchRange());
+
+    expect($events)->toHaveCount(1)
+        ->and($events[0]['id'])->toBe($own->id);
+});
