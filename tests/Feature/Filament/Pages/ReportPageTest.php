@@ -2,6 +2,7 @@
 
 use App\Models\Appointment;
 use App\Models\Payment;
+use App\Models\Service;
 use App\Models\User;
 use Spatie\Permission\Models\Role;
 
@@ -78,4 +79,38 @@ it('shows correct total revenue in range', function () {
     $this->actingAs($admin)
         ->get('/admin/report')
         ->assertSee('120,00');
+});
+
+it('shows insight stats labels', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+
+    $this->actingAs($admin)
+        ->get('/admin/report')
+        ->assertSee('Incasso medio')
+        ->assertSee('Clienti unici')
+        ->assertSee('Servizio più richiesto')
+        ->assertSee('Appuntamenti in attesa');
+});
+
+it('counts unique customers correctly', function () {
+    $admin     = User::factory()->create();
+    $admin->assignRole('admin');
+    $customer1 = User::factory()->create();
+    $customer2 = User::factory()->create();
+
+    // stesso cliente due volte → 1 unico
+    Appointment::factory()->count(2)->create([
+        'user_id'        => $customer1->id,
+        'scheduled_date' => now()->startOfMonth()->addDays(1),
+    ]);
+    Appointment::factory()->create([
+        'user_id'        => $customer2->id,
+        'scheduled_date' => now()->startOfMonth()->addDays(2),
+    ]);
+
+    $this->actingAs($admin)
+        ->get('/admin/report')
+        ->assertSee('Clienti unici')
+        ->assertSee('2');
 });
