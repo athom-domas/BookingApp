@@ -113,3 +113,12 @@ it('counts unique customers correctly', function () {
         ->get('/admin/report')
         ->assertSee('Clienti unici');
 });
+
+it('shows revenue chart heading', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+
+    $this->actingAs($admin)
+        ->get('/admin/report')
+        ->assertSee('Incassi nel tempo');
+});
