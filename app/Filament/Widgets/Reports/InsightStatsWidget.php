@@ -30,20 +30,19 @@ class InsightStatsWidget extends StatsOverviewWidget
     {
         $from   = Carbon::parse($this->dateFrom ?? now()->startOfMonth()->toDateString());
         $to     = Carbon::parse($this->dateTo   ?? now()->endOfMonth()->toDateString());
-        $fromDt = $from->startOfDay();
+        $fromDt = $from->copy()->startOfDay();
         $toDt   = $to->copy()->endOfDay();
 
-        $paidCount = Payment::completed()
+        $paidRow = Payment::completed()
             ->join('appointments', 'appointments.id', '=', 'payments.appointment_id')
             ->whereBetween('appointments.scheduled_date', [$fromDt, $toDt])
-            ->count();
+            ->selectRaw('COUNT(*) as cnt, COALESCE(SUM(payments.amount), 0) as total')
+            ->first();
 
-        $totalRevenue = Payment::completed()
-            ->join('appointments', 'appointments.id', '=', 'payments.appointment_id')
-            ->whereBetween('appointments.scheduled_date', [$fromDt, $toDt])
-            ->sum('payments.amount');
+        $paidCount    = (int) ($paidRow->cnt ?? 0);
+        $totalRevenue = (float) ($paidRow->total ?? 0);
 
-        $avgRevenue = $paidCount > 0 ? round((float) $totalRevenue / $paidCount, 2) : 0;
+        $avgRevenue = $paidCount > 0 ? round($totalRevenue / $paidCount, 2) : 0;
 
         $uniqueCustomers = Appointment::whereBetween('scheduled_date', [$fromDt, $toDt])
             ->distinct('user_id')
