@@ -268,3 +268,40 @@ it('il cambio stato aggiorna il record nel database', function () {
 
     expect($appointment->fresh()->status)->toBe('confirmed');
 });
+
+it('usa il colore personalizzato dello staff per backgroundColor', function () use (&$fetchRange) {
+    $admin = User::factory()->create()->assignRole('admin');
+    $staff = User::factory()->create(['calendar_color' => '#FF5733'])->assignRole('staff');
+
+    Appointment::factory()->create([
+        'staff_id'       => $staff->id,
+        'scheduled_date' => now()->addDays(1),
+    ]);
+
+    $this->actingAs($admin);
+
+    $events = Livewire::test(AppointmentCalendarWidget::class)
+        ->instance()
+        ->fetchEvents($fetchRange());
+
+    expect($events[0]['backgroundColor'])->toBe('#FF5733');
+});
+
+it('usa il colore da palette come fallback quando staff non ha colore personalizzato', function () use (&$fetchRange) {
+    $palette = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#14B8A6', '#F97316'];
+    $admin   = User::factory()->create()->assignRole('admin');
+    $staff   = User::factory()->create(['calendar_color' => null])->assignRole('staff');
+
+    Appointment::factory()->create([
+        'staff_id'       => $staff->id,
+        'scheduled_date' => now()->addDays(1),
+    ]);
+
+    $this->actingAs($admin);
+
+    $events = Livewire::test(AppointmentCalendarWidget::class)
+        ->instance()
+        ->fetchEvents($fetchRange());
+
+    expect($events[0]['backgroundColor'])->toBe($palette[$staff->id % count($palette)]);
+});

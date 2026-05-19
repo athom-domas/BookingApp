@@ -11,6 +11,7 @@ use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Livewire\Attributes\On;
 use Saade\FilamentFullCalendar\Widgets\FullCalendarWidget;
@@ -36,7 +37,8 @@ class AppointmentCalendarWidget extends FullCalendarWidget
                 'center' => 'title',
                 'right'  => 'dayGridMonth,timeGridWeek,timeGridDay',
             ],
-            'locale' => 'it',
+            'locale'       => 'it',
+            'eventDisplay' => 'block',
         ];
     }
 
@@ -90,7 +92,7 @@ class AppointmentCalendarWidget extends FullCalendarWidget
                 'title'           => $appointment->user->name . ' – ' . $serviceNames,
                 'start'           => $appointment->scheduled_date->toIso8601String(),
                 'end'             => $appointment->scheduled_date->copy()->addMinutes($duration)->toIso8601String(),
-                'backgroundColor' => $this->staffColor($appointment->staff_id),
+                'backgroundColor' => $this->staffColor($appointment),
                 'extendedProps'   => ['status' => $appointment->status],
             ];
         })->toArray();
@@ -114,20 +116,18 @@ class AppointmentCalendarWidget extends FullCalendarWidget
         return false;
     }
 
-    private function staffColor(int $staffId): string
+    private function staffColor(Appointment $appointment): string
     {
+        if ($appointment->staff?->calendar_color) {
+            return $appointment->staff->calendar_color;
+        }
+
         $palette = [
-            '#3B82F6',
-            '#10B981',
-            '#F59E0B',
-            '#EF4444',
-            '#8B5CF6',
-            '#EC4899',
-            '#14B8A6',
-            '#F97316',
+            '#3B82F6', '#10B981', '#F59E0B', '#EF4444',
+            '#8B5CF6', '#EC4899', '#14B8A6', '#F97316',
         ];
 
-        return $palette[$staffId % count($palette)];
+        return $palette[$appointment->staff_id % count($palette)];
     }
 
     public function onEventClick(array $event): void
@@ -140,19 +140,26 @@ class AppointmentCalendarWidget extends FullCalendarWidget
         return Action::make('changeStatus')
             ->label('Dettagli prenotazione')
             ->mountUsing(function (Action $action, ?Schema $schema): void {
-                $arguments = $action->getArguments();
-                $appointment = Appointment::with(['user', 'staff'])->find($arguments['appointmentId']);
+                $arguments   = $action->getArguments();
+                $appointment = Appointment::with(['user', 'staff', 'payment'])->find($arguments['appointmentId']);
+
+                $hasCompletedPayment = $appointment->payment?->status === 'completed';
+
                 $schema?->fill([
-                    'appointment_id' => $appointment->id,
-                    'customer_name'  => $appointment->user->name,
-                    'staff_name'     => $appointment->staff->name,
-                    'scheduled_date' => $appointment->scheduled_date->format('d/m/Y H:i'),
-                    'services'       => $appointment->services_label,
-                    'status'         => $appointment->status,
+                    'appointment_id'       => $appointment->id,
+                    'customer_name'        => $appointment->user->name,
+                    'staff_name'           => $appointment->staff->name,
+                    'scheduled_date'       => $appointment->scheduled_date->format('d/m/Y H:i'),
+                    'services'             => $appointment->services_label,
+                    'status'               => $appointment->status,
+                    'has_completed_payment'=> $hasCompletedPayment,
+                    'payment_done'         => $hasCompletedPayment ? 'Pagamento già registrato' : null,
+                    'payment_amount'       => $hasCompletedPayment ? null : $appointment->final_price,
                 ]);
             })
             ->schema([
                 Hidden::make('appointment_id'),
+                Hidden::make('has_completed_payment'),
                 TextInput::make('customer_name')->label('Cliente')->disabled(),
                 TextInput::make('staff_name')->label('Staff')->disabled(),
                 TextInput::make('scheduled_date')->label('Data e ora')->disabled(),
@@ -167,70 +174,48 @@ class AppointmentCalendarWidget extends FullCalendarWidget
                     ])
                     ->in(['pending', 'confirmed', 'completed', 'cancelled'])
                     ->required(),
-            ])
-            ->authorize(fn(Action $action) => $this->authorizeAppointmentAccess($action))
-            ->extraModalFooterActions(function (Action $action): array {
-                $appointmentId = $action->getArguments()['appointmentId'] ?? null;
-                $appointment   = Appointment::with('payment')->find($appointmentId);
-
-                if (! $appointment || $appointment->payment?->status === 'completed') {
-                    return [];
-                }
-
-                return [
-                    Action::make('goToRegisterPayment')
-                        ->label('Registra pagamento')
-                        ->icon('heroicon-o-banknotes')
-                        ->color('success')
-                        ->action(fn() => $this->mountAction('registerPayment', arguments: ['appointmentId' => $appointmentId])),
-                ];
-            })
-            ->action(function (array $data, Action $action): void {
-                $appointmentId = $data['appointment_id'] ?? $action->getArguments()['appointmentId'];
-                Appointment::findOrFail($appointmentId)->update(['status' => $data['status']]);
-            });
-    }
-
-    public function registerPaymentAction(): Action
-    {
-        return Action::make('registerPayment')
-            ->label('Registra pagamento')
-            ->icon('heroicon-o-banknotes')
-            ->color('success')
-            ->mountUsing(function (Action $action, ?Schema $schema): void {
-                $appointment = Appointment::find($action->getArguments()['appointmentId']);
-                $schema?->fill(['amount' => $appointment?->final_price]);
-            })
-            ->schema([
-                Select::make('method')
+                Select::make('payment_method')
                     ->label('Metodo di pagamento')
                     ->options([
                         'cash' => 'Contanti',
                         'pos'  => 'POS (carta)',
                     ])
-                    ->required(),
-                TextInput::make('amount')
+                    ->hidden(fn (Get $get): bool => (bool) $get('has_completed_payment')),
+                TextInput::make('payment_amount')
                     ->label('Importo (€)')
                     ->numeric()
-                    ->rules(['numeric', 'min:0.01'])
-                    ->required(),
+                    ->rules(['nullable', 'numeric', 'min:0.01'])
+                    ->hidden(fn (Get $get): bool => (bool) $get('has_completed_payment')),
+                TextInput::make('payment_done')
+                    ->label('Pagamento')
+                    ->disabled()
+                    ->dehydrated(false)
+                    ->hidden(fn (Get $get): bool => ! (bool) $get('has_completed_payment')),
             ])
             ->authorize(fn(Action $action) => $this->authorizeAppointmentAccess($action))
             ->action(function (array $data, Action $action): void {
-                $appointmentId = $action->getArguments()['appointmentId'];
-                try {
-                    app(PaymentService::class)->recordInPersonPayment(
-                        $appointmentId,
-                        $data['method'],
-                        (float) $data['amount']
-                    );
-                } catch (BookingException $e) {
-                    Notification::make()
-                        ->title($e->getMessage())
-                        ->danger()
-                        ->send();
+                $appointmentId = $data['appointment_id'] ?? $action->getArguments()['appointmentId'];
 
-                    $this->halt();
+                Appointment::findOrFail($appointmentId)->update(['status' => $data['status']]);
+
+                if (empty($data['has_completed_payment']) && !empty($data['payment_method'])) {
+                    try {
+                        app(PaymentService::class)->recordInPersonPayment(
+                            $appointmentId,
+                            $data['payment_method'],
+                            (float) ($data['payment_amount'] ?? 0)
+                        );
+
+                        Notification::make()
+                            ->title('Pagamento registrato con successo')
+                            ->success()
+                            ->send();
+                    } catch (BookingException $e) {
+                        Notification::make()
+                            ->title($e->getMessage())
+                            ->danger()
+                            ->send();
+                    }
                 }
             });
     }
