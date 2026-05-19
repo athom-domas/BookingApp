@@ -235,10 +235,11 @@ it('registra un pagamento in contanti dal popup calendario', function () {
     $this->actingAs($admin);
 
     Livewire::test(AppointmentCalendarWidget::class)
-        ->mountAction('registerPayment', arguments: ['appointmentId' => $appointment->id])
-        ->set('mountedActions.0.data.method', 'cash')
-        ->set('mountedActions.0.data.amount', '50.00')
-        ->callMountedAction()
+        ->mountAction('changeStatus', ['appointmentId' => $appointment->id])
+        ->set('mountedActions.0.data.status', 'completed')
+        ->set('mountedActions.0.data.payment_method', 'cash')
+        ->set('mountedActions.0.data.payment_amount', '50.00')
+        ->callMountedAction(['appointmentId' => $appointment->id])
         ->assertHasNoActionErrors();
 
     $payment = $appointment->fresh()->payment;

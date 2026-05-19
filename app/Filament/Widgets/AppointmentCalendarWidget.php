@@ -185,6 +185,7 @@ class AppointmentCalendarWidget extends FullCalendarWidget
                     ->label('Importo (€)')
                     ->numeric()
                     ->rules(['nullable', 'numeric', 'min:0.01'])
+                    ->required(fn (Get $get): bool => filled($get('payment_method')))
                     ->hidden(fn (Get $get): bool => (bool) $get('has_completed_payment')),
                 TextInput::make('payment_done')
                     ->label('Pagamento')
