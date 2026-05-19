@@ -131,3 +131,12 @@ it('shows appointments by status chart heading', function () {
         ->get('/admin/report')
         ->assertSee('Appuntamenti per stato');
 });
+
+it('shows service breakdown chart heading', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+
+    $this->actingAs($admin)
+        ->get('/admin/report')
+        ->assertSee('Appuntamenti per servizio');
+});
