@@ -1,8 +1,5 @@
 <?php
 
-use App\Models\Appointment;
-use App\Models\Payment;
-use App\Models\Service;
 use App\Models\User;
 use Spatie\Permission\Models\Role;
 
@@ -10,6 +7,10 @@ beforeEach(function () {
     Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
     Role::firstOrCreate(['name' => 'staff', 'guard_name' => 'web']);
     Role::firstOrCreate(['name' => 'customer', 'guard_name' => 'web']);
+});
+
+it('redirects guest to login', function () {
+    $this->get('/admin/report')->assertRedirect('/admin/login');
 });
 
 it('returns 200 for admin', function () {
