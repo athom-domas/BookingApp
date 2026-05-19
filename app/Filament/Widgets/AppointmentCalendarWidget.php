@@ -11,6 +11,7 @@ use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
+use Filament\Schemas\Components\Html;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Livewire\Attributes\On;
@@ -156,17 +157,28 @@ class AppointmentCalendarWidget extends FullCalendarWidget
                     'services'             => $appointment->services_label,
                     'status'               => $appointment->status,
                     'has_completed_payment'=> $hasCompletedPayment,
-                    'payment_done'         => $hasCompletedPayment ? 'Pagamento già registrato' : null,
                     'payment_amount'       => $hasCompletedPayment ? null : $appointment->final_price,
                 ]);
             })
             ->schema([
                 Hidden::make('appointment_id'),
                 Hidden::make('has_completed_payment'),
-                TextInput::make('customer_name')->label('Cliente')->disabled(),
-                TextInput::make('staff_name')->label('Staff')->disabled(),
-                TextInput::make('scheduled_date')->label('Data e ora')->disabled(),
-                TextInput::make('services')->label('Servizi')->disabled(),
+                Hidden::make('customer_name'),
+                Hidden::make('staff_name'),
+                Hidden::make('scheduled_date'),
+                Hidden::make('services'),
+                Html::make(fn (Get $get): string => sprintf(
+                    '<div class="grid grid-cols-2 gap-4 text-sm rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 p-4 mb-1">
+                        <div><p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">Cliente</p><p class="font-semibold text-gray-900 dark:text-white">%s</p></div>
+                        <div><p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">Staff</p><p class="font-semibold text-gray-900 dark:text-white">%s</p></div>
+                        <div><p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">Data e ora</p><p class="font-semibold text-gray-900 dark:text-white">%s</p></div>
+                        <div><p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">Servizi</p><p class="font-semibold text-gray-900 dark:text-white">%s</p></div>
+                    </div>',
+                    e($get('customer_name')),
+                    e($get('staff_name')),
+                    e($get('scheduled_date')),
+                    e($get('services'))
+                )),
                 Select::make('status')
                     ->label('Stato')
                     ->options([
@@ -190,11 +202,10 @@ class AppointmentCalendarWidget extends FullCalendarWidget
                     ->rules(['nullable', 'numeric', 'min:0.01'])
                     ->required(fn (Get $get): bool => filled($get('payment_method')))
                     ->hidden(fn (Get $get): bool => (bool) $get('has_completed_payment')),
-                TextInput::make('payment_done')
-                    ->label('Pagamento')
-                    ->disabled()
-                    ->dehydrated(false)
-                    ->hidden(fn (Get $get): bool => ! (bool) $get('has_completed_payment')),
+                Html::make(fn (Get $get): string => (bool) $get('has_completed_payment')
+                    ? '<p class="text-sm font-medium text-success-600 dark:text-success-400">✓ Pagamento già registrato</p>'
+                    : ''
+                ),
             ])
             ->authorize(fn(Action $action) => $this->authorizeAppointmentAccess($action))
             ->action(function (array $data, Action $action): void {
