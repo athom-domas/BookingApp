@@ -27,12 +27,12 @@ class AppointmentController extends Controller
     {
         $appointments = Appointment::where('user_id', $request->user()->id)
             ->with(['staff', 'payment'])
-            ->latest('scheduled_date')
+            ->oldest('scheduled_date')
             ->get();
 
         return view('portal.appointments.index', [
             'upcomingAppointments' => $appointments->filter(fn (Appointment $appointment) => $appointment->isUpcoming())->values(),
-            'pastAppointments' => $appointments->filter(fn (Appointment $appointment) => $appointment->isPast())->values(),
+            'pastAppointments' => $appointments->filter(fn (Appointment $appointment) => $appointment->isPast())->sortByDesc('scheduled_date')->values(),
         ]);
     }
 

@@ -48,7 +48,7 @@ class AdminPanelProvider extends PanelProvider
                     ->url(fn(): string => route('portal.appointments.index'))
                     ->icon('heroicon-o-home'),
             ])
-            ->spa()
+            // ->spa()
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

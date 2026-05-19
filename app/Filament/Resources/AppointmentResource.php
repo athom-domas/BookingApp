@@ -76,6 +76,7 @@ class AppointmentResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->defaultSort('scheduled_date', 'desc')
             ->columns([
                 TextColumn::make('user.name')
                     ->label('Cliente')
