@@ -60,3 +60,22 @@ it('editing staff keeps the staff role and can update password', function () {
     expect(Hash::check('new-password123', $staff->password))->toBeTrue();
 });
 
+it('salva il colore calendario durante la creazione dello staff', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+
+    $this->actingAs($admin);
+
+    Livewire::test(CreateStaff::class)
+        ->set('data.name', 'Staff Colorato')
+        ->set('data.email', 'staff.colorato@test.com')
+        ->set('data.password', 'password123')
+        ->set('data.password_confirmation', 'password123')
+        ->set('data.calendar_color', '#FF5733')
+        ->call('create')
+        ->assertHasNoFormErrors();
+
+    $staff = User::where('email', 'staff.colorato@test.com')->first();
+    expect($staff->calendar_color)->toBe('#FF5733');
+});
+

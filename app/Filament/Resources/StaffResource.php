@@ -7,10 +7,12 @@ use App\Models\User;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
+use Filament\Tables\Columns\ColorColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -107,6 +109,13 @@ class StaffResource extends Resource
                 ->helperText('Seleziona almeno un servizio per rendere lo staff prenotabile dal portale clienti.')
                 ->columnSpanFull(),
 
+            ColorPicker::make('calendar_color')
+                ->label('Colore calendario')
+                ->default(fn () => collect([
+                    '#3B82F6', '#10B981', '#F59E0B', '#EF4444',
+                    '#8B5CF6', '#EC4899', '#14B8A6', '#F97316',
+                ])->random()),
+
         ]);
     }
 
@@ -123,6 +132,10 @@ class StaffResource extends Resource
                     ->label('Email')
                     ->searchable()
                     ->sortable(),
+
+                ColorColumn::make('calendar_color')
+                    ->label('Colore')
+                    ->sortable(false),
             ])
             ->actions([
                 EditAction::make(),
