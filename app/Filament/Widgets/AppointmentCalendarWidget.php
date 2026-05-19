@@ -37,8 +37,11 @@ class AppointmentCalendarWidget extends FullCalendarWidget
                 'center' => 'title',
                 'right'  => 'dayGridMonth,timeGridWeek,timeGridDay',
             ],
-            'locale'       => 'it',
-            'eventDisplay' => 'block',
+            'locale'           => 'it',
+            'eventDisplay'     => 'block',
+            'displayEventTime' => true,
+            'displayEventEnd'  => true,
+            'eventTimeFormat'  => ['hour' => '2-digit', 'minute' => '2-digit', 'hour12' => false],
         ];
     }
 
