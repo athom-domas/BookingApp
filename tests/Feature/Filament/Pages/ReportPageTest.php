@@ -77,5 +77,6 @@ it('shows correct total revenue in range', function () {
 
     $this->actingAs($admin)
         ->get('/admin/report')
-        ->assertSee('120');
+        ->assertSee('120,00')
+        ->assertDontSee('999');
 });

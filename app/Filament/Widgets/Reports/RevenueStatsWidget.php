@@ -4,7 +4,6 @@ namespace App\Filament\Widgets\Reports;
 
 use App\Models\Appointment;
 use App\Models\Payment;
-use App\Models\User;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Support\Facades\DB;
@@ -31,8 +30,8 @@ class RevenueStatsWidget extends StatsOverviewWidget
         $from = $this->dateFrom ?? now()->startOfMonth()->toDateString();
         $to   = $this->dateTo   ?? now()->endOfMonth()->toDateString();
 
-        $fromDt = $from . ' 00:00:00';
-        $toDt   = $to   . ' 23:59:59';
+        $fromDt = \Carbon\Carbon::parse($from)->startOfDay();
+        $toDt   = \Carbon\Carbon::parse($to)->endOfDay();
 
         $totalRevenue = Payment::completed()
             ->join('appointments', 'appointments.id', '=', 'payments.appointment_id')
@@ -51,12 +50,13 @@ class RevenueStatsWidget extends StatsOverviewWidget
 
         $topStaffRow = Appointment::whereBetween('scheduled_date', [$fromDt, $toDt])
             ->where('status', 'completed')
-            ->select('staff_id', DB::raw('COUNT(*) as cnt'))
-            ->groupBy('staff_id')
+            ->join('users', 'users.id', '=', 'appointments.staff_id')
+            ->select('appointments.staff_id', 'users.name', DB::raw('COUNT(*) as cnt'))
+            ->groupBy('appointments.staff_id', 'users.name')
             ->orderByDesc('cnt')
             ->first();
 
-        $topStaffName  = $topStaffRow ? (User::find($topStaffRow->staff_id)?->name ?? '-') : '-';
+        $topStaffName  = $topStaffRow?->name ?? '-';
         $topStaffCount = $topStaffRow?->cnt ?? 0;
 
         return [
