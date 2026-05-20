@@ -54,10 +54,12 @@ class AppointmentCalendarWidget extends FullCalendarWidget
 
         $user = auth()->user();
 
-        if ($user->isStaff()) {
+        if ($user->isAdmin()) {
+            if (!empty($this->filterStaff)) {
+                $query->whereIn('staff_id', $this->filterStaff);
+            }
+        } elseif ($user->isStaff()) {
             $query->where('staff_id', $user->id);
-        } elseif ($user->isAdmin() && !empty($this->filterStaff)) {
-            $query->whereIn('staff_id', $this->filterStaff);
         }
 
         if (!empty($this->filterStatus)) {
