@@ -7,10 +7,10 @@
 
         @php $salonProfile = \App\Models\SalonProfile::current(); @endphp
 
-        <title>@yield('title', $salonProfile->name) - {{ $salonProfile->name }}</title>
+        <title>@yield('title', e($salonProfile->name)) - {{ $salonProfile->name }}</title>
 
         <style>
-            :root { --color-primary: {{ $salonProfile->primary_color }}; }
+            :root { --color-primary: {{ preg_replace('/[^#0-9a-fA-F]/', '', $salonProfile->primary_color) }}; }
             .btn-primary { background-color: var(--color-primary) !important; }
             .btn-primary:hover { filter: brightness(0.9); }
         </style>
