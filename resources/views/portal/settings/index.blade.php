@@ -104,11 +104,16 @@
                 <label for="phone_number" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Numero di telefono <span class="text-red-500">*</span>
                 </label>
-                <input type="tel" id="phone_number" name="phone_number"
-                    value="{{ old('phone_number', $preferences->phone_number) }}"
-                    placeholder="+393341234567"
-                    class="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-950 dark:text-gray-50 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
-                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Formato internazionale, es. +393341234567</p>
+                <div class="mt-1 flex rounded-md border border-gray-300 dark:border-gray-600 shadow-sm focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500">
+                    <span class="inline-flex items-center rounded-l-md border-r border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 px-3 text-sm text-gray-500 dark:text-gray-400">
+                        +39
+                    </span>
+                    <input type="tel" id="phone_number" name="phone_number"
+                        value="{{ old('phone_number', $preferences->phone_number ? preg_replace('/^\+39/', '', $preferences->phone_number) : '') }}"
+                        placeholder="334 1234567"
+                        class="block w-full rounded-r-md border-0 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-950 dark:text-gray-50 focus:outline-none">
+                </div>
+                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Es. 334 1234567</p>
                 @error('phone_number')<p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
             </div>
 

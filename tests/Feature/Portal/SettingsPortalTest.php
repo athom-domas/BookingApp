@@ -204,7 +204,19 @@ it('requires phone_number when channel is whatsapp', function () {
         ->assertSessionHasErrors(['phone_number']);
 });
 
-it('rejects phone number without + prefix', function () {
+it('rejects phone number with non-digit characters', function () {
+    $customer = User::factory()->create();
+    $customer->assignRole('customer');
+
+    $this->actingAs($customer)
+        ->patch('/portal/settings/notifications', [
+            'notification_channel' => 'sms',
+            'phone_number'         => 'abc1234567',
+        ])
+        ->assertSessionHasErrors(['phone_number']);
+});
+
+it('saves sms with valid local phone number', function () {
     $customer = User::factory()->create();
     $customer->assignRole('customer');
 
@@ -212,18 +224,6 @@ it('rejects phone number without + prefix', function () {
         ->patch('/portal/settings/notifications', [
             'notification_channel' => 'sms',
             'phone_number'         => '3334567890',
-        ])
-        ->assertSessionHasErrors(['phone_number']);
-});
-
-it('saves sms with valid international phone number', function () {
-    $customer = User::factory()->create();
-    $customer->assignRole('customer');
-
-    $this->actingAs($customer)
-        ->patch('/portal/settings/notifications', [
-            'notification_channel' => 'sms',
-            'phone_number'         => '+393334567890',
         ])
         ->assertSessionDoesntHaveErrors();
 

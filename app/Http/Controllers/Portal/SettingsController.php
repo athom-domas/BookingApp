@@ -58,10 +58,14 @@ class SettingsController extends Controller
                 'nullable',
                 'required_if:notification_channel,sms',
                 'required_if:notification_channel,whatsapp',
-                'regex:/^\+\d{7,15}$/',
-                'max:20',
+                'regex:/^\d{8,12}$/',
+                'max:12',
             ],
         ]);
+
+        if (!empty($validated['phone_number'])) {
+            $validated['phone_number'] = '+39' . $validated['phone_number'];
+        }
 
         $request->user()->preferences()->firstOrCreate([])->update($validated);
 
