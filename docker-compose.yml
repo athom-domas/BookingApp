@@ -1,75 +1,44 @@
+name: bookingapp-local
+
 services:
   app:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: booking_app
-    working_dir: /app
-    environment:
-      - APP_NAME=BookingApp
-      - APP_ENV=local
-      - APP_DEBUG=true
-      - APP_URL=http://localhost
-      - DB_CONNECTION=mysql
-      - DB_HOST=mysql
-      - DB_PORT=3306
-      - DB_DATABASE=booking_app
-      - DB_USERNAME=booking
-      - DB_PASSWORD=secret
-      - CACHE_DRIVER=redis
-      - CACHE_REDIS_HOST=redis
-      - CACHE_REDIS_PORT=6379
-      - QUEUE_CONNECTION=redis
-      - QUEUE_REDIS_HOST=redis
-      - QUEUE_REDIS_PORT=6379
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - MAIL_MAILER=smtp
-      - MAIL_HOST=mailhog
-      - MAIL_PORT=1025
-      - MAIL_USERNAME=
-      - MAIL_PASSWORD=
-      - MAIL_ENCRYPTION=
-      - MAIL_FROM_ADDRESS=noreply@booking.local
-      - MAIL_FROM_NAME="Booking System"
+    ports:
+      - "8000:8000"
+      - "5173:5173"
     volumes:
       - ./:/app
-      - ./storage:/app/storage
-      - ./bootstrap/cache:/app/bootstrap/cache
+      - vendor:/app/vendor
     depends_on:
-      mysql:
+      db:
         condition: service_healthy
       redis:
         condition: service_healthy
-    networks:
-      - booking_network
-    ports:
-      - "8000:8000"
+    environment:
+      - APP_ENV=${APP_ENV:-local}
+      - APP_DEBUG=${APP_DEBUG:-true}
+      - APP_URL=${APP_URL:-http://localhost}
+      - DB_CONNECTION=mysql
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_DATABASE=${DB_DATABASE:-booking_app}
+      - DB_USERNAME=${DB_USERNAME:-booking}
+      - DB_PASSWORD=${DB_PASSWORD:-secret}
+      - CACHE_DRIVER=redis
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - QUEUE_CONNECTION=redis
+      - MAIL_MAILER=smtp
+      - MAIL_HOST=mailpit
+      - MAIL_PORT=1025
+      - MAIL_FROM_ADDRESS=${MAIL_FROM_ADDRESS:-noreply@booking.local}
+      - MAIL_FROM_NAME=${MAIL_FROM_NAME:-"Booking System"}
     command: php artisan serve --host=0.0.0.0 --port=8000
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/up"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-
-  vite:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: booking_vite
-    working_dir: /app
-    volumes:
-      - ./:/app
-    networks:
-      - booking_network
-    ports:
-      - "5173:5173"
-    command: npx vite
 
   nginx:
     image: nginx:alpine
-    container_name: booking_nginx
     ports:
       - "80:80"
       - "443:443"
@@ -79,76 +48,52 @@ services:
       - ./nginx/ssl:/etc/nginx/ssl
     depends_on:
       - app
-    networks:
-      - booking_network
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
-  mysql:
+  db:
     image: mysql:8.0
-    container_name: booking_mysql
     environment:
-      MYSQL_DATABASE: booking_app
-      MYSQL_USER: booking
-      MYSQL_PASSWORD: secret
-      MYSQL_ROOT_PASSWORD: rootsecret
+      MYSQL_DATABASE: ${DB_DATABASE:-booking_app}
+      MYSQL_USER: ${DB_USERNAME:-booking}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-secret}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootsecret}
     volumes:
-      - mysql_data:/var/lib/mysql
-    networks:
-      - booking_network
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "booking", "-psecret"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      - mysqldata:/var/lib/mysql
     ports:
       - "3306:3306"
-
-  phpmyadmin:
-    image: phpmyadmin/phpmyadmin:latest
-    container_name: booking_phpmyadmin
-    environment:
-      PMA_HOST: mysql
-      PMA_USER: booking
-      PMA_PASSWORD: secret
-    volumes:
-      - ./docker/phpmyadmin/limits.conf:/etc/apache2/conf-enabled/limits.conf:ro
-    ports:
-      - "8080:80"
-    networks:
-      - booking_network
-    depends_on:
-      - mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 10s
+      retries: 10
 
   redis:
     image: redis:7-alpine
-    container_name: booking_redis
-    networks:
-      - booking_network
+    ports:
+      - "6380:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
-    ports:
-      - "6380:6379"
 
-  mailhog:
-    image: mailhog/mailhog:latest
-    container_name: booking_mailhog
+  mailpit:
+    image: axllent/mailpit:latest
     ports:
       - "1025:1025"
       - "8025:8025"
-    networks:
-      - booking_network
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: db
+      PMA_USER: ${DB_USERNAME:-booking}
+      PMA_PASSWORD: ${DB_PASSWORD:-secret}
+      UPLOAD_LIMIT: 100M
+    depends_on:
+      db:
+        condition: service_healthy
 
 volumes:
-  mysql_data:
-    driver: local
-
-networks:
-  booking_network:
-    driver: bridge
+  mysqldata:
+  vendor:
