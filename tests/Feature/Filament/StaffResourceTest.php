@@ -79,3 +79,19 @@ it('salva il colore calendario durante la creazione dello staff', function () {
     expect($staff->calendar_color)->toBe('#FF5733');
 });
 
+it('admin-staff user shows Admin badge in staff list', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+
+    $adminStaff = User::factory()->create(['email' => 'admin.staff@test.com']);
+    $adminStaff->assignRole('admin');
+    $adminStaff->assignRole('staff');
+
+    $this->actingAs($admin);
+
+    $this->get(\App\Filament\Resources\StaffResource::getUrl('index'))
+        ->assertSuccessful()
+        ->assertSee('admin.staff@test.com')
+        ->assertSee('Admin');
+});
+

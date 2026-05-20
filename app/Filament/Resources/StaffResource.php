@@ -136,6 +136,12 @@ class StaffResource extends Resource
                 ColorColumn::make('calendar_color')
                     ->label('Colore')
                     ->sortable(false),
+
+                TextColumn::make('admin_badge')
+                    ->label('Ruolo')
+                    ->getStateUsing(fn(User $record): ?string => $record->isAdmin() ? 'Admin' : null)
+                    ->badge()
+                    ->color('warning'),
             ])
             ->actions([
                 EditAction::make(),
