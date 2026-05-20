@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Portal\AppointmentController as PortalAppointmentController;
 use App\Http\Controllers\Portal\BookingController;
+use App\Http\Controllers\Portal\SettingsController;
 use App\Http\Controllers\Public\AppointmentActionController;
 use App\Http\Controllers\StripeWebhookController;
 use Illuminate\Support\Facades\Route;
@@ -41,4 +42,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/portal/appointments/{appointment}/payment', [PortalAppointmentController::class, 'payment'])->name('portal.appointments.payment');
     Route::post('/portal/appointments/{appointment}/payment/confirm', [PortalAppointmentController::class, 'confirmPayment'])->name('portal.appointments.payment.confirm');
     Route::post('/portal/appointments/{appointment}/cancel', [PortalAppointmentController::class, 'cancel'])->name('portal.appointments.cancel');
+    Route::get('/portal/settings', [SettingsController::class, 'index'])->name('portal.settings.index');
+    Route::patch('/portal/settings/profile', [SettingsController::class, 'updateProfile'])->name('portal.settings.profile');
+    Route::patch('/portal/settings/notifications', [SettingsController::class, 'updateNotifications'])->name('portal.settings.notifications');
 });
