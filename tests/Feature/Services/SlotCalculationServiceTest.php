@@ -316,6 +316,43 @@ it('generates slots from both ranges when staff has a split schedule', function 
     expect($times)->not->toContain('13:30');
 });
 
+it('excludes past slots when date is today', function () {
+    Carbon::setTestNow(Carbon::parse('2026-05-20 10:15:00')); // Wednesday
+
+    $staff = User::factory()->create();
+    $staff->assignRole('staff');
+
+    $service = Service::factory()->create(['duration_minutes' => 60, 'active' => true]);
+    $staff->services()->attach($service->id);
+
+    $date = Carbon::today(); // 2026-05-20, day_of_week = 3
+    AvailabilityRule::factory()->create([
+        'user_id'      => $staff->id,
+        'day_of_week'  => $date->dayOfWeek,
+        'start_time'   => '09:00:00',
+        'end_time'     => '13:00:00',
+        'is_available' => true,
+    ]);
+
+    $svc   = new SlotCalculationService();
+    $slots = $svc->getAvailableSlots([
+        'date'            => $date,
+        'serviceIds'      => [$service->id],
+        'staffId'         => $staff->id,
+        'staffPreference' => 'specific',
+    ]);
+
+    Carbon::setTestNow(null);
+
+    $startTimes = array_column($slots, 'start');
+
+    expect($startTimes)->not->toContain('09:00')
+        ->and($startTimes)->not->toContain('09:30')
+        ->and($startTimes)->not->toContain('10:00')
+        ->and($startTimes)->toContain('10:15') // first slot starts at now (clipped)
+        ->and($startTimes)->toContain('11:45'); // last slot that fits (ends at 12:45 ≤ 13:00)
+});
+
 it('blocks time equal to combined duration of all service_ids on an appointment', function () {
     $staff = User::factory()->create();
     $staff->assignRole('staff');

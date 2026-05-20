@@ -118,6 +118,22 @@ class SlotCalculationService
         $occupations = $this->getOccupations($staff, $date, $excludeHoldId);
         $freeRanges  = $this->calculateFreeRanges($workRanges, $occupations);
 
+        if ($date->isToday()) {
+            $now        = Carbon::now();
+            $freeRanges = array_values(array_filter(
+                array_map(function (array $range) use ($now): ?array {
+                    if ($range['end'] <= $now) {
+                        return null;
+                    }
+                    if ($range['start'] < $now) {
+                        $range['start'] = $now->copy();
+                    }
+
+                    return $range;
+                }, $freeRanges)
+            ));
+        }
+
         $slots = [];
         foreach ($freeRanges as $freeRange) {
             $slots = array_merge($slots, $this->generateSlotsFromRange($freeRange, $duration));
