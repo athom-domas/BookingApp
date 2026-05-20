@@ -15,7 +15,10 @@
             </div>
 
             <div>
-                <label for="password" class="block text-sm font-medium text-gray-900 dark:text-gray-200">Password</label>
+                <div class="flex items-center justify-between">
+                    <label for="password" class="block text-sm font-medium text-gray-900 dark:text-gray-200">Password</label>
+                    <a href="{{ route('password.request') }}" class="text-sm font-semibold text-blue-700 hover:text-blue-800">Hai dimenticato la password?</a>
+                </div>
                 <input id="password" name="password" type="password" required class="mt-2 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-950 dark:text-gray-50 px-3 py-2 text-sm shadow-sm focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900">
             </div>
 

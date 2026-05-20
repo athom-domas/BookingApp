@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Auth\NewPasswordController;
+use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Portal\AppointmentController as PortalAppointmentController;
 use App\Http\Controllers\Portal\BookingController;
@@ -30,6 +32,10 @@ Route::middleware('guest')->group(function () {
     Route::post('/register', [RegisteredUserController::class, 'store']);
     Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
     Route::post('/login', [AuthenticatedSessionController::class, 'store']);
+    Route::get('/password/forgot', [PasswordResetLinkController::class, 'create'])->name('password.request');
+    Route::post('/password/forgot', [PasswordResetLinkController::class, 'store'])->name('password.email');
+    Route::get('/password/reset/{token}', [NewPasswordController::class, 'create'])->name('password.reset');
+    Route::post('/password/reset', [NewPasswordController::class, 'store'])->name('password.update');
 });
 
 Route::middleware('auth')->group(function () {

@@ -40,6 +40,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
+            ->passwordReset()
             ->brandName('Booking App')
             ->brandLogo(asset('img/logo.png'))
             ->brandLogoHeight('2rem')
