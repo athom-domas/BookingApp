@@ -42,7 +42,7 @@ class AdminResource extends Resource
 
     public static function canCreate(): bool
     {
-        return false;
+        return auth()->user()?->isAdmin() ?? false;
     }
 
     public static function canEdit(Model $record): bool
@@ -82,6 +82,22 @@ class AdminResource extends Resource
                 ->email()
                 ->required()
                 ->unique(User::class, 'email', ignoreRecord: true)
+                ->maxLength(255),
+
+            TextInput::make('password')
+                ->label('Password')
+                ->password()
+                ->confirmed()
+                ->required(fn(string $operation): bool => $operation === 'create')
+                ->dehydrated(fn(?string $state): bool => filled($state))
+                ->minLength(8)
+                ->maxLength(255),
+
+            TextInput::make('password_confirmation')
+                ->label('Conferma password')
+                ->password()
+                ->required(fn(string $operation): bool => $operation === 'create')
+                ->dehydrated(false)
                 ->maxLength(255),
 
             Toggle::make('works_as_staff')
@@ -139,8 +155,9 @@ class AdminResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListAdmins::route('/'),
-            'edit'  => Pages\EditAdmin::route('/{record}/edit'),
+            'index'  => Pages\ListAdmins::route('/'),
+            'create' => Pages\CreateAdmin::route('/create'),
+            'edit'   => Pages\EditAdmin::route('/{record}/edit'),
         ];
     }
 }

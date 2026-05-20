@@ -18,8 +18,11 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Forms\Components\DatePicker;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
 use Filament\Tables\Table;
 
 class AppointmentResource extends Resource
@@ -125,6 +128,28 @@ class AppointmentResource extends Resource
                     ->label('Staff')
                     ->relationship('staff', 'name')
                     ->searchable(),
+
+                Filter::make('scheduled_date')
+                    ->label('Data')
+                    ->form([
+                        DatePicker::make('from')->label('Dal'),
+                        DatePicker::make('until')->label('Al'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when($data['from'], fn(Builder $q, $date) => $q->whereDate('scheduled_date', '>=', $date))
+                            ->when($data['until'], fn(Builder $q, $date) => $q->whereDate('scheduled_date', '<=', $date));
+                    })
+                    ->indicateUsing(function (array $data): array {
+                        $indicators = [];
+                        if ($data['from']) {
+                            $indicators[] = 'Dal: ' . Carbon::parse($data['from'])->format('d/m/Y');
+                        }
+                        if ($data['until']) {
+                            $indicators[] = 'Al: ' . Carbon::parse($data['until'])->format('d/m/Y');
+                        }
+                        return $indicators;
+                    }),
             ])
             ->actions([
                 Action::make('register_payment')
