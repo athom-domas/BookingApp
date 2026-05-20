@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <body>
+@include('emails.partials.header')
 <h2>Nuova prenotazione ricevuta</h2>
 <ul>
   <li><strong>Cliente:</strong> {{ $appointment->user->name }} ({{ $appointment->user->email }})</li>
@@ -12,5 +13,6 @@
   <li><strong>Note:</strong> {{ $appointment->notes }}</li>
   @endif
 </ul>
+@include('emails.partials.salon-footer')
 </body>
 </html>

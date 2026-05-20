@@ -17,6 +17,7 @@
 </head>
 <body>
     <div class="container">
+        @include('emails.partials.header')
         <div class="header">
             <h1>Nuovo appuntamento</h1>
         </div>
@@ -48,6 +49,7 @@
         <div class="footer">
             Puoi gestire l'appuntamento dall'area admin.
         </div>
+        @include('emails.partials.salon-footer')
     </div>
 </body>
 </html>

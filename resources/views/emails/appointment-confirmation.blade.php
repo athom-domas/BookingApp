@@ -17,6 +17,7 @@
 </head>
 <body>
     <div class="container">
+        @include('emails.partials.header')
         <div class="header">
             <h1>✓ Appuntamento confermato</h1>
         </div>
@@ -46,6 +47,7 @@
         <div class="footer">
             Riceverai un promemoria prima dell'appuntamento.
         </div>
+        @include('emails.partials.salon-footer')
     </div>
 </body>
 </html>

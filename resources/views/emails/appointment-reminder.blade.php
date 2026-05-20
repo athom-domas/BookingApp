@@ -20,6 +20,7 @@
 </head>
 <body>
     <div class="container">
+        @include('emails.partials.header')
         <div class="header">
             <h1>Promemoria appuntamento</h1>
         </div>
@@ -49,6 +50,7 @@
         <div class="footer">
             I link di azione scadono entro 48 ore. Per modificare l'orario accedi al portale.
         </div>
+        @include('emails.partials.salon-footer')
     </div>
 </body>
 </html>
