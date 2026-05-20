@@ -11,8 +11,9 @@ use Livewire\Attributes\On;
 
 class RevenueChartWidget extends ChartWidget
 {
-    protected ?string $heading = 'Incassi nel tempo';
-    protected static ?int $sort = 3;
+    protected ?string $heading   = 'Incassi nel tempo';
+    protected static bool $isLazy = false;
+    protected static ?int $sort   = 3;
     protected int | string | array $columnSpan = 'full';
 
     public ?string $dateFrom = null;
@@ -55,13 +56,20 @@ class RevenueChartWidget extends ChartWidget
         return 'line';
     }
 
+    private function dateFormatExpr(string $column, string $format): \Illuminate\Database\Query\Expression
+    {
+        return DB::connection()->getDriverName() === 'sqlite'
+            ? DB::raw("strftime('{$format}', {$column}) as period")
+            : DB::raw("DATE_FORMAT({$column}, '{$format}') as period");
+    }
+
     private function dailyRevenue(Carbon $from, Carbon $to): array
     {
         $rows = Payment::completed()
             ->join('appointments', 'appointments.id', '=', 'payments.appointment_id')
             ->whereBetween('appointments.scheduled_date', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
             ->select(
-                DB::raw("DATE_FORMAT(appointments.scheduled_date, '%Y-%m-%d') as period"),
+                $this->dateFormatExpr('appointments.scheduled_date', '%Y-%m-%d'),
                 DB::raw('SUM(payments.amount) as total')
             )
             ->groupBy('period')
@@ -86,7 +94,7 @@ class RevenueChartWidget extends ChartWidget
             ->join('appointments', 'appointments.id', '=', 'payments.appointment_id')
             ->whereBetween('appointments.scheduled_date', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
             ->select(
-                DB::raw("DATE_FORMAT(appointments.scheduled_date, '%Y-%m') as period"),
+                $this->dateFormatExpr('appointments.scheduled_date', '%Y-%m'),
                 DB::raw('SUM(payments.amount) as total')
             )
             ->groupBy('period')

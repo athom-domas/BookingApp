@@ -11,8 +11,9 @@ use Livewire\Attributes\On;
 
 class AppointmentsByStatusChartWidget extends ChartWidget
 {
-    protected ?string $heading   = 'Appuntamenti per stato';
-    protected static ?int $sort  = 4;
+    protected ?string $heading    = 'Appuntamenti per stato';
+    protected static bool $isLazy = false;
+    protected static ?int $sort   = 4;
     protected int | string | array $columnSpan = 'full';
 
     public ?string $dateFrom = null;
@@ -34,9 +35,13 @@ class AppointmentsByStatusChartWidget extends ChartWidget
         $dbKeys = $byDay ? $this->dailyKeys($from, $to) : $this->monthlyKeys($from, $to);
         $format = $byDay ? '%Y-%m-%d' : '%Y-%m';
 
+        $dateExpr = DB::connection()->getDriverName() === 'sqlite'
+            ? DB::raw("strftime('{$format}', scheduled_date) as period")
+            : DB::raw("DATE_FORMAT(scheduled_date, '{$format}') as period");
+
         $rows = Appointment::whereBetween('scheduled_date', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
             ->select(
-                DB::raw("DATE_FORMAT(scheduled_date, '$format') as period"),
+                $dateExpr,
                 'status',
                 DB::raw('COUNT(*) as cnt')
             )

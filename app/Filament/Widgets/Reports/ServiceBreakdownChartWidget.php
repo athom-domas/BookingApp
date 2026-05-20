@@ -10,8 +10,9 @@ use Livewire\Attributes\On;
 
 class ServiceBreakdownChartWidget extends ChartWidget
 {
-    protected ?string $heading   = 'Appuntamenti per servizio';
-    protected static ?int $sort  = 5;
+    protected ?string $heading    = 'Appuntamenti per servizio';
+    protected static bool $isLazy = false;
+    protected static ?int $sort   = 5;
     protected int | string | array $columnSpan = 'full';
 
     public ?string $dateFrom = null;

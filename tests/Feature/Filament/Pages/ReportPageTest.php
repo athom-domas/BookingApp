@@ -140,3 +140,37 @@ it('shows service breakdown chart heading', function () {
         ->get('/admin/report')
         ->assertSee('Appuntamenti per servizio');
 });
+
+it('shows staff performance heading', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+
+    $this->actingAs($admin)
+        ->get('/admin/report')
+        ->assertSee('Performance Staff');
+});
+
+it('shows staff member with revenue in performance table', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+
+    $staffMember = User::factory()->create(['name' => 'Marco Rossi']);
+    $staffMember->assignRole('staff');
+
+    $appt = Appointment::factory()->create([
+        'staff_id'       => $staffMember->id,
+        'scheduled_date' => now()->startOfMonth()->addDays(3),
+        'status'         => 'completed',
+    ]);
+    Payment::factory()->create([
+        'appointment_id' => $appt->id,
+        'user_id'        => $appt->user_id,
+        'amount'         => 85.00,
+        'status'         => 'completed',
+    ]);
+
+    $this->actingAs($admin)
+        ->get('/admin/report')
+        ->assertSee('Marco Rossi')
+        ->assertSee('85,00');
+});
