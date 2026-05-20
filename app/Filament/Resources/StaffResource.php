@@ -60,6 +60,7 @@ class StaffResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
+            ->with('roles')
             ->whereHas('roles', fn(Builder $query): Builder => $query
                 ->where('name', 'staff')
                 ->where('guard_name', 'web'));

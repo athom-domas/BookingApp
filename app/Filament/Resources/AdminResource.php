@@ -63,6 +63,7 @@ class AdminResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
+            ->with('roles')
             ->whereHas('roles', fn(Builder $query): Builder => $query
                 ->where('name', 'admin')
                 ->where('guard_name', 'web'));
