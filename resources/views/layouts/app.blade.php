@@ -5,7 +5,15 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>@yield('title', 'Booking App') - Booking App</title>
+        @php $salonProfile = \App\Models\SalonProfile::current(); @endphp
+
+        <title>@yield('title', $salonProfile->name) - {{ $salonProfile->name }}</title>
+
+        <style>
+            :root { --color-primary: {{ $salonProfile->primary_color }}; }
+            .btn-primary { background-color: var(--color-primary) !important; }
+            .btn-primary:hover { filter: brightness(0.9); }
+        </style>
 
         <script>
             if (localStorage.theme === 'dark' ||
@@ -24,8 +32,12 @@
         <header class="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
             <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
                 <a href="{{ route('booking.index') }}" class="flex min-w-0 items-center gap-3">
-                    <img src="{{ asset('img/logo.png') }}" alt="" class="h-9 w-9 rounded-md object-contain">
-                    <span class="truncate text-base font-semibold text-gray-950 dark:text-gray-50">Booking App</span>
+                    @if($salonProfile->logoUrl())
+                        <img src="{{ $salonProfile->logoUrl() }}" alt="" class="h-9 w-9 rounded-md object-contain">
+                    @else
+                        <img src="{{ asset('img/logo.png') }}" alt="" class="h-9 w-9 rounded-md object-contain">
+                    @endif
+                    <span class="truncate text-base font-semibold text-gray-950 dark:text-gray-50">{{ $salonProfile->name }}</span>
                 </a>
 
                 <nav class="flex items-center gap-2 text-sm font-medium">
@@ -41,7 +53,7 @@
                         </form>
                     @else
                         <a href="{{ route('login') }}" class="rounded-md px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-950 dark:hover:text-gray-50">Accedi</a>
-                        <a href="{{ route('register') }}" class="rounded-md bg-blue-700 px-3 py-2 text-white hover:bg-blue-800">Registrati</a>
+                        <a href="{{ route('register') }}" class="btn-primary rounded-md px-3 py-2 text-white">Registrati</a>
                     @endauth
 
                     <button
@@ -84,6 +96,22 @@
 
             @yield('content')
         </main>
+
+        @if($salonProfile->phone || $salonProfile->address || $salonProfile->website)
+        <footer class="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 mt-8">
+            <div class="mx-auto max-w-6xl px-4 py-4 sm:px-6 lg:px-8 flex flex-wrap gap-4 text-sm text-gray-500 dark:text-gray-400">
+                @if($salonProfile->phone)
+                    <span>{{ $salonProfile->phone }}</span>
+                @endif
+                @if($salonProfile->address)
+                    <span>{{ $salonProfile->address }}</span>
+                @endif
+                @if($salonProfile->website)
+                    <a href="{{ $salonProfile->website }}" target="_blank" rel="noopener" class="hover:text-gray-700 dark:hover:text-gray-200">{{ $salonProfile->website }}</a>
+                @endif
+            </div>
+        </footer>
+        @endif
 
         @stack('scripts')
         @filamentScripts
