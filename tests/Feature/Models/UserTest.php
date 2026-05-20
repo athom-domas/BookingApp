@@ -51,12 +51,6 @@ it('has one preference', function () {
     expect($user->preferences)->toBeInstanceOf(UserPreference::class);
 });
 
-it('preference has a preferred staff user', function () {
-    $staff = User::factory()->create();
-    $preference = UserPreference::factory()->create(['preferred_staff' => $staff->id]);
-
-    expect($preference->preferredStaff->id)->toBe($staff->id);
-});
 
 it('has many payments', function () {
     $user = User::factory()->create();

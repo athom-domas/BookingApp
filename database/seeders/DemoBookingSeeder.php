@@ -169,22 +169,20 @@ class DemoBookingSeeder extends Seeder
      */
     private function seedPreferences(array $customers, array $staff): void
     {
-        $prefs = [
-            'giovanni'   => ['preferred_staff' => $staff['marco']->id,   'phone' => '+39 333 1234567'],
-            'alessandro' => ['preferred_staff' => $staff['andrea']->id,  'phone' => '+39 347 2345678'],
-            'matteo'     => ['preferred_staff' => $staff['marco']->id,   'phone' => '+39 320 3456789'],
-            'davide'     => ['preferred_staff' => $staff['filippo']->id, 'phone' => '+39 393 4567890'],
-            'simone'     => ['preferred_staff' => null,                  'phone' => '+39 366 5678901'],
+        $phones = [
+            'giovanni'   => '+39 333 1234567',
+            'alessandro' => '+39 347 2345678',
+            'matteo'     => '+39 320 3456789',
+            'davide'     => '+39 393 4567890',
+            'simone'     => '+39 366 5678901',
         ];
 
-        foreach ($prefs as $key => $pref) {
+        foreach ($phones as $key => $phone) {
             UserPreference::updateOrCreate(
                 ['user_id' => $customers[$key]->id],
                 [
                     'notification_channel' => 'email',
-                    'phone_number'         => $pref['phone'],
-                    'timezone'             => 'Europe/Rome',
-                    'preferred_staff'      => $pref['preferred_staff'],
+                    'phone_number'         => $phone,
                 ]
             );
         }
@@ -195,8 +193,6 @@ class DemoBookingSeeder extends Seeder
                 [
                     'notification_channel' => 'email',
                     'phone_number'         => null,
-                    'timezone'             => 'Europe/Rome',
-                    'preferred_staff'      => null,
                 ]
             );
         }

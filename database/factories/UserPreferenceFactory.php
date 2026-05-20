@@ -16,9 +16,6 @@ class UserPreferenceFactory extends Factory
             'user_id'              => User::factory(),
             'notification_channel' => 'email',
             'phone_number'         => null,
-            'timezone'             => 'UTC',
-            'preferred_staff'      => null,
-            'slot_duration_minutes' => 60,
         ];
     }
 }
