@@ -13,6 +13,7 @@
             :root { --color-primary: {{ preg_replace('/[^#0-9a-fA-F]/', '', $salonProfile->primary_color) }}; }
             .btn-primary { background-color: var(--color-primary) !important; }
             .btn-primary:hover { filter: brightness(0.9); }
+            [x-cloak] { display: none !important; }
         </style>
 
         <script>

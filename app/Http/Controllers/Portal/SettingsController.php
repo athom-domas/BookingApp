@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
 
 class SettingsController extends Controller
@@ -30,7 +31,7 @@ class SettingsController extends Controller
             'name'             => ['required', 'string', 'max:255'],
             'email'            => ['required', 'email', 'max:255', 'unique:users,email,' . $user->id],
             'current_password' => ['nullable', 'required_with:new_password', 'current_password'],
-            'new_password'     => ['nullable', 'min:8', 'confirmed'],
+            'new_password'     => ['nullable', Password::min(8), 'confirmed'],
         ]);
 
         $user->name  = $validated['name'];

@@ -100,7 +100,7 @@
                 @error('notification_channel')<p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
             </div>
 
-            <div x-show="channel === 'sms' || channel === 'whatsapp'">
+            <div x-cloak x-show="channel === 'sms' || channel === 'whatsapp'">
                 <label for="phone_number" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Numero di telefono <span class="text-red-500">*</span>
                 </label>
