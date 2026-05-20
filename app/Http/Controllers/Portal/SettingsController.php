@@ -32,6 +32,16 @@ class SettingsController extends Controller
             'email'            => ['required', 'email', 'max:255', 'unique:users,email,' . $user->id],
             'current_password' => ['nullable', 'required_with:new_password', 'current_password'],
             'new_password'     => ['nullable', Password::min(8), 'confirmed'],
+        ], [
+            'name.required'                   => 'Il nome è obbligatorio.',
+            'name.max'                        => 'Il nome non può superare 255 caratteri.',
+            'email.required'                  => 'L\'email è obbligatoria.',
+            'email.email'                     => 'Inserisci un indirizzo email valido.',
+            'email.unique'                    => 'Questo indirizzo email è già in uso.',
+            'current_password.required_with'  => 'La password attuale è obbligatoria per impostarne una nuova.',
+            'current_password.current_password' => 'La password attuale non è corretta.',
+            'new_password.min'                => 'La nuova password deve essere di almeno 8 caratteri.',
+            'new_password.confirmed'          => 'Le password non coincidono.',
         ]);
 
         $user->name  = $validated['name'];
@@ -61,6 +71,12 @@ class SettingsController extends Controller
                 'regex:/^\d{8,12}$/',
                 'max:12',
             ],
+        ], [
+            'notification_channel.required' => 'Seleziona un canale di notifica.',
+            'notification_channel.in'       => 'Il canale di notifica selezionato non è valido.',
+            'phone_number.required_if'      => 'Il numero di telefono è obbligatorio per il canale selezionato.',
+            'phone_number.regex'            => 'Inserisci un numero valido (solo cifre, es. 334 1234567).',
+            'phone_number.max'              => 'Il numero di telefono non può superare 12 cifre.',
         ]);
 
         if (!empty($validated['phone_number'])) {
