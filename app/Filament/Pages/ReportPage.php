@@ -66,13 +66,13 @@ class ReportPage extends Page
 
     public function getWidgets(): array
     {
-        return array_filter([
-            class_exists(RevenueStatsWidget::class) ? RevenueStatsWidget::class : null,
-            class_exists(InsightStatsWidget::class) ? InsightStatsWidget::class : null,
-            class_exists(RevenueChartWidget::class) ? RevenueChartWidget::class : null,
-            class_exists(AppointmentsByStatusChartWidget::class) ? AppointmentsByStatusChartWidget::class : null,
-            class_exists(ServiceBreakdownChartWidget::class) ? ServiceBreakdownChartWidget::class : null,
-            class_exists(StaffPerformanceWidget::class) ? StaffPerformanceWidget::class : null,
-        ]);
+        return [
+            RevenueStatsWidget::class,
+            InsightStatsWidget::class,
+            RevenueChartWidget::class,
+            AppointmentsByStatusChartWidget::class,
+            ServiceBreakdownChartWidget::class,
+            StaffPerformanceWidget::class,
+        ];
     }
 }

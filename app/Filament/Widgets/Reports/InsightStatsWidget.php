@@ -88,6 +88,7 @@ class InsightStatsWidget extends StatsOverviewWidget
         $topId    = (int) array_key_first($counts);
         $topCount = $counts[$topId];
 
-        return [Service::find($topId)?->name ?? '-', $topCount];
+        $names = Service::whereIn('id', [$topId])->pluck('name', 'id');
+        return [$names[$topId] ?? '-', $topCount];
     }
 }
