@@ -5,6 +5,7 @@ use App\Filament\Resources\AdminResource\Pages\EditAdmin;
 use App\Models\Appointment;
 use App\Models\Service;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Livewire\Livewire;
 use Spatie\Permission\Models\Role;
 
