@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Resources\AppointmentResource;
 use App\Filament\Resources\PaymentResource\Pages;
 use App\Models\Payment;
 use Filament\Actions\Action;
@@ -32,7 +33,8 @@ class PaymentResource extends Resource
             ->columns([
                 TextColumn::make('appointment_id')
                     ->label('Prenotazione #')
-                    ->sortable(),
+                    ->sortable()
+                    ->url(fn (Payment $record): string => AppointmentResource::getUrl('edit', ['record' => $record->appointment_id])),
 
                 TextColumn::make('user.name')
                     ->label('Cliente')

@@ -14,4 +14,12 @@ class ListAppointments extends ListRecords
     {
         return [CreateAction::make()];
     }
+
+    public function filterToday(): void
+    {
+        $this->tableFilters['scheduled_date'] = [
+            'from'  => now()->toDateString(),
+            'until' => now()->toDateString(),
+        ];
+    }
 }
