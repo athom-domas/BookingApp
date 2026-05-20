@@ -39,9 +39,12 @@ class EditAdmin extends EditRecord
 
         $record = parent::handleRecordUpdate($record, $data);
 
+        Role::firstOrCreate(['name' => 'staff', 'guard_name' => 'web']);
+
         if ($worksAsStaff) {
-            Role::firstOrCreate(['name' => 'staff', 'guard_name' => 'web']);
-            $record->assignRole('staff');
+            if (!$record->hasRole('staff')) {
+                $record->assignRole('staff');
+            }
         } elseif ($record->hasRole('staff')) {
             $hasUpcoming = $record->appointmentsAsStaff()
                 ->where('status', 'confirmed')
