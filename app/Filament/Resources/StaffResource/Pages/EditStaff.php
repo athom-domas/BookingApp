@@ -50,7 +50,10 @@ class EditStaff extends EditRecord
         Role::firstOrCreate(['name' => 'staff', 'guard_name' => 'web']);
 
         $record = parent::handleRecordUpdate($record, $data);
-        $record->syncRoles(['staff']);
+
+        if (!$record->hasRole('staff')) {
+            $record->assignRole('staff');
+        }
 
         return $record;
     }

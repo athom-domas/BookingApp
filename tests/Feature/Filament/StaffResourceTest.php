@@ -95,3 +95,37 @@ it('admin-staff user shows Admin badge in staff list', function () {
         ->assertSee('Admin');
 });
 
+it('editing an admin-staff user through StaffResource preserves the admin role', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+
+    $adminStaff = User::factory()->create();
+    $adminStaff->assignRole('admin');
+    $adminStaff->assignRole('staff');
+
+    $this->actingAs($admin);
+
+    Livewire::test(\App\Filament\Resources\StaffResource\Pages\EditStaff::class, ['record' => $adminStaff->id])
+        ->set('data.name', $adminStaff->name)
+        ->set('data.email', $adminStaff->email)
+        ->call('save')
+        ->assertHasNoFormErrors();
+
+    $adminStaff->refresh();
+    expect($adminStaff->hasRole('admin'))->toBeTrue();
+    expect($adminStaff->hasRole('staff'))->toBeTrue();
+});
+
+it('admin-staff user cannot be deleted through StaffResource', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+
+    $adminStaff = User::factory()->create();
+    $adminStaff->assignRole('admin');
+    $adminStaff->assignRole('staff');
+
+    $this->actingAs($admin);
+
+    expect(\App\Filament\Resources\StaffResource::canDelete($adminStaff))->toBeFalse();
+});
+

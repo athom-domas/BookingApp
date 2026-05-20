@@ -49,6 +49,9 @@ class StaffResource extends Resource
 
     public static function canDelete(Model $record): bool
     {
+        if ($record instanceof \App\Models\User && $record->isAdmin()) {
+            return false;
+        }
         return auth()->user()?->isAdmin() ?? false;
     }
 
