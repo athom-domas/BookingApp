@@ -106,9 +106,9 @@
                 </label>
                 <input type="tel" id="phone_number" name="phone_number"
                     value="{{ old('phone_number', $preferences->phone_number) }}"
-                    placeholder="+39 334 1234567"
+                    placeholder="+393341234567"
                     class="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-950 dark:text-gray-50 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
-                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Formato internazionale, es. +39 334 1234567</p>
+                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Formato internazionale, es. +393341234567</p>
                 @error('phone_number')<p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
             </div>
 

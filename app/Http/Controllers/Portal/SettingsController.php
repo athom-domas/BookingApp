@@ -36,6 +36,10 @@ class SettingsController extends Controller
         $user->name  = $validated['name'];
         $user->email = $validated['email'];
 
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
+        }
+
         if (!empty($validated['new_password'])) {
             $user->password = Hash::make($validated['new_password']);
         }
@@ -58,7 +62,7 @@ class SettingsController extends Controller
             ],
         ]);
 
-        $request->user()->preferences()->updateOrCreate([], $validated);
+        $request->user()->preferences()->firstOrCreate([])->update($validated);
 
         return back()->with('notifications_updated', 'Preferenze notifiche aggiornate.');
     }
