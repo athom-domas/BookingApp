@@ -166,3 +166,92 @@ it('nulls email_verified_at when email changes', function () {
 
     expect($customer->fresh()->email_verified_at)->toBeNull();
 });
+
+// --- Notifications ---
+
+it('saves email channel without phone', function () {
+    $customer = User::factory()->create();
+    $customer->assignRole('customer');
+
+    $this->actingAs($customer)
+        ->patch('/portal/settings/notifications', [
+            'notification_channel' => 'email',
+        ])
+        ->assertSessionDoesntHaveErrors();
+
+    expect($customer->fresh()->preferences->notification_channel)->toBe('email');
+});
+
+it('requires phone_number when channel is sms', function () {
+    $customer = User::factory()->create();
+    $customer->assignRole('customer');
+
+    $this->actingAs($customer)
+        ->patch('/portal/settings/notifications', [
+            'notification_channel' => 'sms',
+        ])
+        ->assertSessionHasErrors(['phone_number']);
+});
+
+it('requires phone_number when channel is whatsapp', function () {
+    $customer = User::factory()->create();
+    $customer->assignRole('customer');
+
+    $this->actingAs($customer)
+        ->patch('/portal/settings/notifications', [
+            'notification_channel' => 'whatsapp',
+        ])
+        ->assertSessionHasErrors(['phone_number']);
+});
+
+it('rejects phone number without + prefix', function () {
+    $customer = User::factory()->create();
+    $customer->assignRole('customer');
+
+    $this->actingAs($customer)
+        ->patch('/portal/settings/notifications', [
+            'notification_channel' => 'sms',
+            'phone_number'         => '3334567890',
+        ])
+        ->assertSessionHasErrors(['phone_number']);
+});
+
+it('saves sms with valid international phone number', function () {
+    $customer = User::factory()->create();
+    $customer->assignRole('customer');
+
+    $this->actingAs($customer)
+        ->patch('/portal/settings/notifications', [
+            'notification_channel' => 'sms',
+            'phone_number'         => '+393334567890',
+        ])
+        ->assertSessionDoesntHaveErrors();
+
+    $prefs = $customer->fresh()->preferences;
+    expect($prefs->notification_channel)->toBe('sms')
+        ->and($prefs->phone_number)->toBe('+393334567890');
+});
+
+it('creates UserPreference if none exists', function () {
+    $customer = User::factory()->create();
+    $customer->assignRole('customer');
+    expect(UserPreference::where('user_id', $customer->id)->exists())->toBeFalse();
+
+    $this->actingAs($customer)
+        ->patch('/portal/settings/notifications', [
+            'notification_channel' => 'email',
+        ]);
+
+    expect(UserPreference::where('user_id', $customer->id)->exists())->toBeTrue();
+});
+
+it('flashes notifications_updated on success', function () {
+    $customer = User::factory()->create();
+    $customer->assignRole('customer');
+
+    $this->actingAs($customer)
+        ->patch('/portal/settings/notifications', [
+            'notification_channel' => 'email',
+        ])
+        ->assertSessionHas('notifications_updated');
+});
