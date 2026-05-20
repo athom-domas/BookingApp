@@ -3,5 +3,5 @@
     @if($salonProfile->logoUrl())
         <img src="{{ $salonProfile->logoUrl() }}" alt="{{ e($salonProfile->name) }}" style="width:40px;height:40px;border-radius:6px;object-fit:contain;">
     @endif
-    <span style="color:#ffffff;font-weight:600;font-size:1rem;">{{ $salonProfile->name }}</span>
+    <span style="color:#ffffff;font-weight:600;font-size:1rem;">{{ e($salonProfile->name) }}</span>
 </div>
