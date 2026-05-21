@@ -25,8 +25,8 @@
 
         @fonts
         @filamentStyles
-        @vite('resources/css/app.css')
         @vite('resources/css/filament/admin/theme.css')
+        @vite('resources/css/app.css')
         @stack('head')
     </head>
     <body class="min-h-screen bg-gray-50 dark:bg-gray-950 font-sans text-gray-950 dark:text-gray-50 antialiased">

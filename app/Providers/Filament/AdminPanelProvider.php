@@ -13,7 +13,6 @@ use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use Filament\Support\Facades\FilamentView;
-use Filament\View\PanelsRenderHook;
 use Filament\Tables\View\TablesRenderHook;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -33,10 +32,6 @@ class AdminPanelProvider extends PanelProvider
             scopes: [ListAppointments::class, ListPayments::class],
         );
 
-        FilamentView::registerRenderHook(
-            PanelsRenderHook::TOPBAR_END,
-            fn () => \Illuminate\Support\Facades\Blade::render('@livewire(\'pending-completion-notifications\')'),
-        );
     }
 
     public function panel(Panel $panel): Panel

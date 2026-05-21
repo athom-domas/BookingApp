@@ -24,6 +24,11 @@ class ServiceResource extends Resource
     protected static ?string $modelLabel = 'servizio';
     protected static ?string $pluralModelLabel = 'servizi';
 
+    public static function canViewAny(): bool
+    {
+        return ! auth()->user()?->isStaff();
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema->schema([
@@ -103,9 +108,8 @@ class ServiceResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index'  => Pages\ListServices::route('/'),
-            'create' => Pages\CreateService::route('/create'),
-            'edit'   => Pages\EditService::route('/{record}/edit'),
+            'index' => Pages\ListServices::route('/'),
+            'edit'  => Pages\EditService::route('/{record}/edit'),
         ];
     }
 }

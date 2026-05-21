@@ -249,6 +249,8 @@
 
             {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::GLOBAL_SEARCH_AFTER) }}
 
+            @livewire('pending-completion-notifications')
+
             @if (filament()->auth()->check())
                 @if (filament()->hasDatabaseNotifications() && filament()->getDatabaseNotificationsPosition() === \Filament\Enums\DatabaseNotificationsPosition::Topbar)
                     @livewire(filament()->getDatabaseNotificationsLivewireComponent(), [

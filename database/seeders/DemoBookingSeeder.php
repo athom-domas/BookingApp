@@ -219,11 +219,9 @@ class DemoBookingSeeder extends Seeder
         $this->upsertAppointment($customers['matteo'], $staff['marco'], $services['taglio'], Carbon::now()->subDays(4)->setTime(9, 0), 'cancelled');
 
         // Futuro confermato
-        $confirmed = [
-            $this->upsertAppointment($customers['giovanni'],   $staff['marco'],   $services['taglio'],   Carbon::now()->next(Carbon::TUESDAY)->setTime(10, 0),    'confirmed'),
-            $this->upsertAppointment($customers['alessandro'], $staff['andrea'],  $services['barba'],    Carbon::now()->next(Carbon::WEDNESDAY)->setTime(11, 30), 'confirmed'),
-            $this->upsertAppointment($customers['davide'],     $staff['filippo'], $services['taglio'],   Carbon::now()->next(Carbon::THURSDAY)->setTime(14, 0),   'confirmed'),
-        ];
+        $this->upsertAppointment($customers['giovanni'],   $staff['marco'],   $services['taglio'],   Carbon::now()->next(Carbon::TUESDAY)->setTime(10, 0),    'confirmed');
+        $this->upsertAppointment($customers['alessandro'], $staff['andrea'],  $services['barba'],    Carbon::now()->next(Carbon::WEDNESDAY)->setTime(11, 30), 'confirmed');
+        $this->upsertAppointment($customers['davide'],     $staff['filippo'], $services['taglio'],   Carbon::now()->next(Carbon::THURSDAY)->setTime(14, 0),   'confirmed');
 
         // Futuro pending
         $this->upsertAppointment($customers['matteo'], $staff['marco'],   $services['taglio_barba'], Carbon::now()->next(Carbon::FRIDAY)->setTime(16, 0),    'pending');
@@ -233,9 +231,6 @@ class DemoBookingSeeder extends Seeder
             $this->seedPayment($a, 'completed');
         }
 
-        foreach ($confirmed as $a) {
-            $this->seedPayment($a, 'pending');
-        }
     }
 
     private function upsertAppointment(

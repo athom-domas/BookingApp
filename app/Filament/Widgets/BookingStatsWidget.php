@@ -15,18 +15,29 @@ class BookingStatsWidget extends BaseWidget
 
     protected function getStats(): array
     {
-        return [
+        $user    = auth()->user();
+        $isAdmin = $user?->isAdmin();
+
+        $base = $isAdmin
+            ? Appointment::query()
+            : Appointment::where('staff_id', $user?->id);
+
+        $stats = [
             Stat::make(
-                'Appuntamenti oggi',
-                Appointment::whereDate('scheduled_date', today())->count()
+                $isAdmin ? 'Appuntamenti oggi' : 'I miei appuntamenti oggi',
+                (clone $base)->whereDate('scheduled_date', today())->count()
             ),
             Stat::make(
-                'Appuntamenti questo mese',
-                Appointment::whereMonth('scheduled_date', now()->month)
+                $isAdmin ? 'Appuntamenti questo mese' : 'I miei appuntamenti questo mese',
+                (clone $base)
+                    ->whereMonth('scheduled_date', now()->month)
                     ->whereYear('scheduled_date', now()->year)
                     ->count()
             ),
-            Stat::make(
+        ];
+
+        if ($isAdmin) {
+            $stats[] = Stat::make(
                 'Ricavi del mese',
                 '€ ' . number_format(
                     Payment::completed()
@@ -35,7 +46,9 @@ class BookingStatsWidget extends BaseWidget
                         ->sum('amount'),
                     2, ',', '.'
                 )
-            ),
-        ];
+            );
+        }
+
+        return $stats;
     }
 }

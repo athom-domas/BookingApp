@@ -20,7 +20,11 @@ ready(() => {
 
     if (stripeForm && window.Stripe) {
         const stripe = window.Stripe(stripeForm.dataset.publicKey);
-        const elements = stripe.elements({ clientSecret: stripeForm.dataset.clientSecret });
+        const isDark = document.documentElement.classList.contains('dark');
+        const elements = stripe.elements({
+            clientSecret: stripeForm.dataset.clientSecret,
+            appearance: { theme: isDark ? 'night' : 'stripe' },
+        });
         const paymentElement = elements.create('payment');
         const errorTarget = stripeForm.querySelector('[data-payment-error]');
         const submitButton = stripeForm.querySelector('button[type="submit"]');

@@ -22,6 +22,11 @@ class PaymentResource extends Resource
     protected static ?string $modelLabel = 'pagamento';
     protected static ?string $pluralModelLabel = 'pagamenti';
 
+    public static function canViewAny(): bool
+    {
+        return ! auth()->user()?->isStaff();
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema->schema([]);
