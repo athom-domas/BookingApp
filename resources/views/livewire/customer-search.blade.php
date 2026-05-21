@@ -58,7 +58,7 @@
                                                         'confirmed' => ['label' => 'Confermato',  'class' => 'bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400'],
                                                         'completed' => ['label' => 'Completato',  'class' => 'bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-gray-400'],
                                                         'cancelled' => ['label' => 'Annullato',   'class' => 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400'],
-                                                        default     => ['label' => $appointment->status, 'class' => 'bg-gray-100 text-gray-600'],
+                                                        default     => ['label' => $appointment->status, 'class' => 'bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-gray-400'],
                                                     };
                                                 @endphp
                                                 <a
