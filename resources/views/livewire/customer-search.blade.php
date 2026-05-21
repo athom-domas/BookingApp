@@ -70,7 +70,7 @@
                                                         {{ $appointment->scheduled_date->format('d/m/Y H:i') }}
                                                     </span>
                                                     <span class="min-w-0 flex-1 truncate text-gray-500 dark:text-gray-400">
-                                                        {{ $appointment->services_label }}
+                                                        {{ $appointment->services_label_preloaded }}
                                                     </span>
                                                     <span class="shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold {{ $statusConfig['class'] }}">
                                                         {{ $statusConfig['label'] }}

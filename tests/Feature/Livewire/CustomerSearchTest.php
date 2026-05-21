@@ -1,6 +1,7 @@
 <?php
 
 use App\Livewire\CustomerSearch;
+use App\Models\Appointment;
 use App\Models\User;
 use Livewire\Livewire;
 use Spatie\Permission\Models\Role;
@@ -99,4 +100,25 @@ test('limits results to 5 customers', function () {
         ->count();
 
     expect($count)->toBe(5);
+});
+
+test('renders appointment date and status for found customers', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+
+    $customer = User::factory()->create(['name' => 'Mario Rossi']);
+    $customer->assignRole('customer');
+
+    $appointment = Appointment::factory()->create([
+        'user_id' => $customer->id,
+        'status' => 'confirmed',
+        'scheduled_date' => now()->setDate(2026, 5, 21)->setTime(10, 30),
+    ]);
+
+    $this->actingAs($admin);
+
+    Livewire::test(CustomerSearch::class)
+        ->set('query', 'Mario')
+        ->assertSee('21/05/2026 10:30')
+        ->assertSee('Confermato');
 });
