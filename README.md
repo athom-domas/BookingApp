@@ -6,7 +6,7 @@ Gestionale prenotazioni in Laravel con portale clienti, pannello admin Filament,
 
 - Laravel 13, PHP 8.4
 - Filament 4 per admin su `/admin`
-- MySQL 8, Redis 7, Mailhog
+- MySQL 8, Redis 7, Mailpit
 - Stripe, Twilio, Google Calendar
 - Pest per test feature/unit
 
@@ -25,7 +25,7 @@ Servizi principali:
 
 - App: `http://localhost:8000`
 - Admin Filament: `http://localhost:8000/admin`
-- Mailhog: `http://localhost:8025`
+- Mailpit: `http://localhost:8025`
 - phpMyAdmin: `http://localhost:8080`
 
 Utenti seed:

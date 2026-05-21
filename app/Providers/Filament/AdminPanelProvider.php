@@ -13,6 +13,7 @@ use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use Filament\Support\Facades\FilamentView;
+use Filament\View\PanelsRenderHook;
 use Filament\Tables\View\TablesRenderHook;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -30,6 +31,11 @@ class AdminPanelProvider extends PanelProvider
             TablesRenderHook::TOOLBAR_SEARCH_BEFORE,
             fn () => view('filament.tables.toolbar-today-button'),
             scopes: [ListAppointments::class, ListPayments::class],
+        );
+
+        FilamentView::registerRenderHook(
+            PanelsRenderHook::TOPBAR_END,
+            fn () => \Illuminate\Support\Facades\Blade::render('@livewire(\'pending-completion-notifications\')'),
         );
     }
 

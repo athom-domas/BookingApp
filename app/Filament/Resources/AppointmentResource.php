@@ -190,7 +190,7 @@ class AppointmentResource extends Resource
                         }
                     })
                     ->successNotificationTitle('Pagamento registrato con successo')
-                    ->visible(fn(Appointment $record): bool => ! $record->payment || $record->payment->status !== 'completed'),
+                    ->visible(fn(Appointment $record): bool => ! in_array($record->status, ['pending', 'completed', 'cancelled']) && (! $record->payment || $record->payment->status !== 'completed')),
                 EditAction::make(),
                 DeleteAction::make(),
             ])

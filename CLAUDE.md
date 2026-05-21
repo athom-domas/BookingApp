@@ -47,7 +47,7 @@ docker-compose run --rm --no-deps app composer require vendor/package
 - `mysql` — database, port 3306 (user: booking, password: secret, db: booking_app)
 - `phpmyadmin` — DB browser UI at port 8080
 - `redis` — cache + queue driver, host port 6380 (internal 6379)
-- `mailhog` — mail catcher, UI at port 8025
+- `mailpit` — mail catcher, UI at port 8025
 - `nginx` — reverse proxy, ports 80/443
 
 **Admin panel:** Filament 4 at `/admin`. Resources/Pages/Widgets are auto-discovered from `app/Filament/`. Panel provider: `app/Providers/Filament/AdminPanelProvider.php`.
