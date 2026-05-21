@@ -11,11 +11,13 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\DatePicker;
@@ -32,31 +34,55 @@ class AppointmentResource extends Resource
     protected static ?string $modelLabel = 'prenotazione';
     protected static ?string $pluralModelLabel = 'prenotazioni';
 
+    public static function canEdit($record): bool
+    {
+        if (auth()->user()?->isStaff()) {
+            return $record->staff_id === auth()->id()
+                && ! in_array($record->status, ['completed', 'cancelled']);
+        }
+
+        return ! in_array($record->status, ['completed', 'cancelled']);
+    }
+
+    public static function canDelete($record): bool
+    {
+        return ! auth()->user()?->isStaff();
+    }
+
+    public static function canCreate(): bool
+    {
+        return ! auth()->user()?->isStaff();
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema->schema([
             Select::make('user_id')
                 ->label('Cliente')
-                ->relationship('user', 'name')
+                ->relationship('user', 'name', fn ($query) => $query->role('customer'))
                 ->required()
-                ->searchable(),
+                ->searchable()
+                ->disabled(fn ($record) => $record !== null),
 
             Select::make('service_ids')
                 ->label('Servizi')
                 ->options(fn() => Service::active()->orderBy('name')->pluck('name', 'id')->all())
                 ->multiple()
                 ->searchable()
-                ->required(),
+                ->required()
+                ->disabled(fn ($record) => $record !== null),
 
             Select::make('staff_id')
                 ->label('Staff')
-                ->relationship('staff', 'name')
+                ->relationship('staff', 'name', fn ($query) => $query->role('staff'))
                 ->required()
-                ->searchable(),
+                ->searchable()
+                ->disabled(fn ($record) => in_array($record?->status, ['completed', 'cancelled'])),
 
             DateTimePicker::make('scheduled_date')
                 ->label('Data e ora')
-                ->required(),
+                ->required()
+                ->disabled(fn ($record) => $record !== null),
 
             Select::make('status')
                 ->label('Stato')
@@ -67,18 +93,50 @@ class AppointmentResource extends Resource
                     'completed' => 'Completato',
                 ])
                 ->required()
-                ->default('pending'),
+                ->live()
+                ->default('pending')
+                ->disabled(fn ($record) => in_array($record?->status, ['completed', 'cancelled'])),
 
             Textarea::make('notes')
                 ->label('Note')
                 ->rows(3)
-                ->columnSpanFull(),
+                ->columnSpanFull()
+                ->disabled(fn ($record) => $record !== null),
+
+            Hidden::make('has_completed_payment')
+                ->dehydrated(false),
+
+            Select::make('payment_method')
+                ->label('Metodo di pagamento')
+                ->options(['cash' => 'Contanti', 'pos' => 'POS (carta)'])
+                ->required()
+                ->disabled(fn (Get $get) => (bool) $get('has_completed_payment'))
+                ->hidden(fn (Get $get, string $operation) =>
+                    $operation !== 'edit'
+                    || $get('status') !== 'completed'
+                ),
+
+            TextInput::make('payment_amount')
+                ->label('Importo (€)')
+                ->numeric()
+                ->minValue(0.01)
+                ->required()
+                ->disabled(fn (Get $get) => (bool) $get('has_completed_payment'))
+                ->hidden(fn (Get $get, string $operation) =>
+                    $operation !== 'edit'
+                    || $get('status') !== 'completed'
+                ),
         ]);
     }
 
     public static function table(Table $table): Table
     {
+        $isStaff = auth()->user()?->isStaff();
+
         return $table
+            ->modifyQueryUsing(fn (Builder $query) =>
+                $isStaff ? $query->where('staff_id', auth()->id()) : $query
+            )
             ->defaultSort('scheduled_date', 'desc')
             ->columns([
                 TextColumn::make('user.name')
@@ -126,8 +184,9 @@ class AppointmentResource extends Resource
 
                 SelectFilter::make('staff')
                     ->label('Staff')
-                    ->relationship('staff', 'name')
-                    ->searchable(),
+                    ->relationship('staff', 'name', fn ($query) => $query->role('staff'))
+                    ->searchable()
+                    ->hidden($isStaff),
 
                 Filter::make('scheduled_date')
                     ->label('Data')
@@ -190,12 +249,12 @@ class AppointmentResource extends Resource
                         }
                     })
                     ->successNotificationTitle('Pagamento registrato con successo')
-                    ->visible(fn(Appointment $record): bool => ! in_array($record->status, ['pending', 'completed', 'cancelled']) && (! $record->payment || $record->payment->status !== 'completed')),
+                    ->visible(fn(Appointment $record): bool => ! $isStaff && ! in_array($record->status, ['pending', 'completed', 'cancelled']) && (! $record->payment || $record->payment->status !== 'completed')),
                 EditAction::make(),
                 DeleteAction::make(),
             ])
             ->bulkActions([
-                DeleteBulkAction::make(),
+                DeleteBulkAction::make()->hidden($isStaff),
             ]);
     }
 
