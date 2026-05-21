@@ -138,7 +138,13 @@ class AppointmentCalendarWidget extends FullCalendarWidget
 
     public function onEventClick(array $event): void
     {
-        $this->mountAction('changeStatus', arguments: ['appointmentId' => $event['id']]);
+        $status = $event['extendedProps']['status'] ?? null;
+
+        if ($status === 'completed') {
+            $this->mountAction('viewAppointment', arguments: ['appointmentId' => $event['id']]);
+        } else {
+            $this->mountAction('changeStatus', arguments: ['appointmentId' => $event['id']]);
+        }
     }
 
     public function changeStatusAction(): Action
@@ -190,7 +196,18 @@ class AppointmentCalendarWidget extends FullCalendarWidget
                         'cancelled' => 'Annullato',
                     ])
                     ->in(['pending', 'confirmed', 'completed', 'cancelled'])
-                    ->required(),
+                    ->required()
+                    ->rules(fn (Get $get): array => [
+                        function (string $attribute, mixed $value, \Closure $fail) use ($get): void {
+                            if (
+                                $value === 'completed'
+                                && ! (bool) $get('has_completed_payment')
+                                && empty($get('payment_method'))
+                            ) {
+                                $fail('Per completare è necessario registrare un pagamento.');
+                            }
+                        },
+                    ]),
                 Select::make('payment_method')
                     ->label('Metodo di pagamento')
                     ->options([
@@ -234,7 +251,59 @@ class AppointmentCalendarWidget extends FullCalendarWidget
                             ->send();
                     }
                 }
+
+                $this->dispatch('filament-fullcalendar--refresh');
             });
+    }
+
+    public function viewAppointmentAction(): Action
+    {
+        return Action::make('viewAppointment')
+            ->label('Dettagli prenotazione')
+            ->mountUsing(function (Action $action, ?Schema $schema): void {
+                $arguments   = $action->getArguments();
+                $appointment    = Appointment::with(['user', 'staff'])->find($arguments['appointmentId']);
+                $completedPayment = \App\Models\Payment::where('appointment_id', $appointment->id)
+                    ->where('status', 'completed')
+                    ->latest()
+                    ->first();
+
+                $paymentRow = '';
+                if ($completedPayment) {
+                    $methods    = ['cash' => 'Contanti', 'pos' => 'POS (carta)', 'stripe' => 'Stripe'];
+                    $method     = $methods[$completedPayment->payment_method] ?? $completedPayment->payment_method;
+                    $amount     = number_format((float) $completedPayment->amount, 2, ',', '.');
+                    $paymentRow = sprintf(
+                        '<div><p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">Pagamento</p><p class="font-semibold text-gray-900 dark:text-white">%s</p></div>',
+                        e($method . ' – €' . $amount)
+                    );
+                }
+
+                $html = sprintf(
+                    '<div class="grid grid-cols-2 gap-4 text-sm rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 p-4 mb-1">
+                        <div><p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">Cliente</p><p class="font-semibold text-gray-900 dark:text-white">%s</p></div>
+                        <div><p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">Staff</p><p class="font-semibold text-gray-900 dark:text-white">%s</p></div>
+                        <div><p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">Data e ora</p><p class="font-semibold text-gray-900 dark:text-white">%s</p></div>
+                        <div><p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">Servizi</p><p class="font-semibold text-gray-900 dark:text-white">%s</p></div>
+                        <div><p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">Stato</p><p class="font-semibold text-gray-900 dark:text-white">Completato</p></div>
+                        %s
+                    </div>',
+                    e($appointment->user->name),
+                    e($appointment->staff->name),
+                    e($appointment->scheduled_date->format('d/m/Y H:i')),
+                    e($appointment->services_label),
+                    $paymentRow
+                );
+
+                $schema?->fill(['content' => $html]);
+            })
+            ->schema([
+                Hidden::make('content'),
+                Html::make(fn (Get $get): string => (string) $get('content')),
+            ])
+            ->authorize(fn (Action $action) => $this->authorizeAppointmentAccess($action))
+            ->modalSubmitAction(false)
+            ->modalCancelActionLabel('Chiudi');
     }
 
     #[On('calendar-filters-updated')]

@@ -61,7 +61,7 @@ it('handleStripeWebhook marks payment as completed on succeeded event', function
     ]);
 
     expect($payment->fresh()->status)->toBe('completed');
-    expect($appointment->fresh()->status)->toBe('confirmed');
+    expect($appointment->fresh()->status)->toBe('completed');
     Queue::assertPushed(SendAppointmentConfirmation::class, fn ($job) => $job->appointment->id === $appointment->id);
 });
 
@@ -127,7 +127,7 @@ it('confirmPayment marks payment and appointment as completed when Stripe succee
     $result = ($this->makePaymentService)($mockStripe)->confirmPayment($appointment->id);
 
     expect($result->status)->toBe('completed');
-    expect($appointment->fresh()->status)->toBe('confirmed');
+    expect($appointment->fresh()->status)->toBe('completed');
     Queue::assertPushed(SendAppointmentConfirmation::class, fn ($job) => $job->appointment->id === $appointment->id);
 });
 
@@ -186,13 +186,13 @@ it('recordInPersonPayment creates a completed pos payment', function () {
     expect($payment->payment_method)->toBe('pos');
 });
 
-it('recordInPersonPayment sets appointment status to confirmed', function () {
+it('recordInPersonPayment sets appointment status to completed', function () {
     $appointment = Appointment::factory()->create(['status' => 'pending']);
     $mockStripe = Mockery::mock(StripeClient::class);
 
     ($this->makePaymentService)($mockStripe)->recordInPersonPayment($appointment->id, 'cash', 50.00);
 
-    expect($appointment->fresh()->status)->toBe('confirmed');
+    expect($appointment->fresh()->status)->toBe('completed');
 });
 
 it('recordInPersonPayment does not dispatch SendAppointmentConfirmation', function () {

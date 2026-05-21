@@ -135,8 +135,8 @@ class PaymentService
             return;
         }
 
-        if ($appointment->status !== 'confirmed') {
-            $appointment->update(['status' => 'confirmed']);
+        if ($appointment->status !== 'completed') {
+            $appointment->update(['status' => 'completed']);
         }
 
         if (! $alreadyCompleted && $payment->payment_method === 'stripe') {
