@@ -77,7 +77,7 @@ class AppointmentResource extends Resource
                 ->relationship('staff', 'name', fn ($query) => $query->role('staff'))
                 ->required()
                 ->searchable()
-                ->disabled(fn ($record) => in_array($record?->status, ['completed', 'cancelled'])),
+                ->disabled(fn ($record) => auth()->user()?->isStaff() || in_array($record?->status, ['completed', 'cancelled'])),
 
             DateTimePicker::make('scheduled_date')
                 ->label('Data e ora')
@@ -249,7 +249,7 @@ class AppointmentResource extends Resource
                         }
                     })
                     ->successNotificationTitle('Pagamento registrato con successo')
-                    ->visible(fn(Appointment $record): bool => ! $isStaff && ! in_array($record->status, ['pending', 'completed', 'cancelled']) && (! $record->payment || $record->payment->status !== 'completed')),
+                    ->visible(fn(Appointment $record): bool => ! in_array($record->status, ['pending', 'completed', 'cancelled']) && (! $record->payment || $record->payment->status !== 'completed')),
                 EditAction::make(),
                 DeleteAction::make(),
             ])
