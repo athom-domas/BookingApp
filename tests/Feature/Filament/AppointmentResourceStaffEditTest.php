@@ -3,7 +3,6 @@
 use App\Filament\Resources\AppointmentResource;
 use App\Filament\Resources\AppointmentResource\Pages\EditAppointment;
 use App\Models\Appointment;
-use App\Models\Service;
 use App\Models\User;
 use Livewire\Livewire;
 use Spatie\Permission\Models\Role;
@@ -28,7 +27,7 @@ it('staff can access edit page for their own pending appointment', function () {
 
     $this->actingAs($staff)
         ->get(AppointmentResource::getUrl('edit', ['record' => $appointment]))
-        ->assertSuccessful();
+        ->assertOk();
 });
 
 it('staff can access edit page for their own confirmed appointment', function () {
@@ -45,7 +44,7 @@ it('staff can access edit page for their own confirmed appointment', function ()
 
     $this->actingAs($staff)
         ->get(AppointmentResource::getUrl('edit', ['record' => $appointment]))
-        ->assertSuccessful();
+        ->assertOk();
 });
 
 it('staff cannot access edit page for another staff appointment', function () {
