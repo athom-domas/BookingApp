@@ -13,11 +13,6 @@ class EditAppointment extends EditRecord
 {
     protected static string $resource = AppointmentResource::class;
 
-    protected function authorizeAccess(): void
-    {
-        parent::authorizeAccess();
-    }
-
     protected function getFormActions(): array
     {
         if (in_array($this->record->status, ['completed', 'cancelled'])) {
@@ -29,7 +24,10 @@ class EditAppointment extends EditRecord
 
     protected function getHeaderActions(): array
     {
-        return [DeleteAction::make()];
+        return [
+            DeleteAction::make()
+                ->hidden(fn () => auth()->user()?->isStaff()),
+        ];
     }
 
     protected function mutateFormDataBeforeFill(array $data): array
