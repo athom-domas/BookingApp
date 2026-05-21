@@ -249,6 +249,8 @@
 
             {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::GLOBAL_SEARCH_AFTER) }}
 
+            @livewire('customer-search')
+
             @livewire('pending-completion-notifications')
 
             @if (filament()->auth()->check())
