@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Portal;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Portal\StoreBookingRequest;
+use App\Models\SalonProfile;
+use App\Models\SalonReview;
 use App\Models\Service;
 use App\Models\User;
 use App\Services\Booking\AppointmentService;
@@ -21,9 +23,18 @@ class BookingController extends Controller
 
     public function index(): View
     {
+        $profile  = SalonProfile::current()->load('media');
         $services = Service::active()->orderBy('name')->get();
+        $staff    = User::whereHas('roles', fn ($q) => $q->where('name', 'staff')->where('guard_name', 'web'))
+            ->with('media')
+            ->where(fn ($q) => $q
+                ->whereNotNull('bio')
+                ->orWhereHas('media', fn ($m) => $m->where('collection_name', 'avatar'))
+            )
+            ->get();
+        $reviews = SalonReview::published()->ordered()->get();
 
-        return view('welcome', ['services' => $services]);
+        return view('welcome', compact('profile', 'services', 'staff', 'reviews'));
     }
 
     public function create(): View
