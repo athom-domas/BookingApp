@@ -15,13 +15,12 @@ beforeEach(function () {
     Role::firstOrCreate(['name' => 'customer', 'guard_name' => 'web']);
 
     SystemSetting::create([
-        'id'                           => 1,
-        'slot_generation_weeks'        => 4,
-        'slot_granularity_minutes'     => 30,
-        'hold_duration_minutes'        => 5,
-        'hold_extension_minutes'       => 5,
-        'min_service_duration_minutes' => 15,
-        'timezone'                     => 'Europe/Rome',
+        'id'                       => 1,
+        'slot_generation_weeks'    => 4,
+        'slot_granularity_minutes' => 30,
+        'hold_duration_minutes'    => 5,
+        'hold_extension_minutes'   => 5,
+        'timezone'                 => 'Europe/Rome',
     ]);
 });
 

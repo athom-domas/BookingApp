@@ -47,7 +47,7 @@ class OperatorScoringService
     private function score(User $operator, Carbon $slotStart, int $duration, Carbon $date): float
     {
         $slotEnd     = $slotStart->copy()->addMinutes($duration);
-        $minGap      = SystemSetting::getMinServiceDuration();
+        $minGap      = SystemSetting::getSlotGranularity();
         $score       = 0.0;
 
         $freeRange = $this->findContainingFreeRange($operator, $slotStart, $slotEnd, $date);

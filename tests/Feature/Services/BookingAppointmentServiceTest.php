@@ -15,10 +15,9 @@ beforeEach(function () {
     Role::firstOrCreate(['name' => 'customer', 'guard_name' => 'web']);
 
     SystemSetting::create([
-        'slot_generation_weeks'        => 4,
-        'slot_granularity_minutes'     => 30,
-        'min_service_duration_minutes' => 15,
-        'timezone'                     => 'Europe/Rome',
+        'slot_generation_weeks'    => 4,
+        'slot_granularity_minutes' => 30,
+        'timezone'                 => 'Europe/Rome',
     ]);
 });
 

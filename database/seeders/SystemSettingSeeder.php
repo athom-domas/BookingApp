@@ -13,17 +13,15 @@ class SystemSettingSeeder extends Seeder
 
         if ($setting) {
             $setting->update([
-                'slot_generation_weeks'        => 4,
-                'slot_granularity_minutes'     => 10,
-                'min_service_duration_minutes' => 15,
-                'timezone'                     => 'Europe/Rome',
+                'slot_generation_weeks'    => 4,
+                'slot_granularity_minutes' => 10,
+                'timezone'                 => 'Europe/Rome',
             ]);
         } else {
             $setting = new SystemSetting([
-                'slot_generation_weeks'        => 4,
-                'slot_granularity_minutes'     => 10,
-                'min_service_duration_minutes' => 15,
-                'timezone'                     => 'Europe/Rome',
+                'slot_generation_weeks'    => 4,
+                'slot_granularity_minutes' => 10,
+                'timezone'                 => 'Europe/Rome',
             ]);
             $setting->id = 1;
             $setting->save();

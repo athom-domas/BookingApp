@@ -22,10 +22,7 @@ it('admin can view the system settings page', function () {
 
 it('form is pre-filled with current settings', function () {
     SystemSetting::current()->update([
-        'slot_granularity_minutes'     => 15,
-        'hold_duration_minutes'        => 10,
-        'hold_extension_minutes'       => 3,
-        'min_service_duration_minutes' => 20,
+        'slot_granularity_minutes' => 15,
     ]);
 
     $admin = User::factory()->create();
@@ -33,10 +30,7 @@ it('form is pre-filled with current settings', function () {
     $this->actingAs($admin);
 
     Livewire::test(SystemSettings::class)
-        ->assertSet('data.slot_granularity_minutes', 15)
-        ->assertSet('data.hold_duration_minutes', 10)
-        ->assertSet('data.hold_extension_minutes', 3)
-        ->assertSet('data.min_service_duration_minutes', 20);
+        ->assertSet('data.slot_granularity_minutes', 15);
 });
 
 it('admin can update system settings', function () {
@@ -46,17 +40,11 @@ it('admin can update system settings', function () {
 
     Livewire::test(SystemSettings::class)
         ->set('data.slot_granularity_minutes', 20)
-        ->set('data.hold_duration_minutes', 8)
-        ->set('data.hold_extension_minutes', 4)
-        ->set('data.min_service_duration_minutes', 30)
         ->call('save')
         ->assertHasNoFormErrors();
 
     $setting = SystemSetting::current();
     expect($setting->slot_granularity_minutes)->toBe(20);
-    expect($setting->hold_duration_minutes)->toBe(8);
-    expect($setting->hold_extension_minutes)->toBe(4);
-    expect($setting->min_service_duration_minutes)->toBe(30);
 });
 
 it('non-admin cannot access the system settings page', function () {

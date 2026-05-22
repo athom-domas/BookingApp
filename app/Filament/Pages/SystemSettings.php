@@ -25,8 +25,7 @@ class SystemSettings extends Page
     {
         $setting = SystemSetting::current();
         $this->form->fill([
-            'slot_granularity_minutes'     => $setting->slot_granularity_minutes,
-            'min_service_duration_minutes' => $setting->min_service_duration_minutes,
+            'slot_granularity_minutes' => $setting->slot_granularity_minutes,
         ]);
     }
 
@@ -43,15 +42,6 @@ class SystemSettings extends Page
                             ->integer()
                             ->minValue(5)
                             ->maxValue(60)
-                            ->required()
-                            ->suffix('min'),
-
-                        TextInput::make('min_service_duration_minutes')
-                            ->label('Durata minima servizio (min)')
-                            ->helperText('Durata minima consentita durante la creazione o modifica di un servizio.')
-                            ->integer()
-                            ->minValue(5)
-                            ->maxValue(120)
                             ->required()
                             ->suffix('min'),
 
