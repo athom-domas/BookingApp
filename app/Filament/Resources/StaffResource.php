@@ -9,6 +9,8 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -125,6 +127,17 @@ class StaffResource extends Resource
                     '#14B8A6',
                     '#F97316',
                 ])->random()),
+
+            SpatieMediaLibraryFileUpload::make('avatar')
+                ->label('Foto profilo')
+                ->collection('avatar')
+                ->image()
+                ->maxSize(2048),
+
+            Textarea::make('bio')
+                ->label('Bio')
+                ->rows(3)
+                ->columnSpanFull(),
 
         ]);
     }
