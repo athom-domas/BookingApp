@@ -34,15 +34,17 @@ class AppointmentCalendarWidget extends FullCalendarWidget
         return [
             'initialView'   => 'dayGridMonth',
             'headerToolbar' => [
-                'left'   => 'prev,next today',
+                'left'   => 'prev,next today dayGridMonth,timeGridDay',
                 'center' => 'title',
-                'right'  => 'dayGridMonth,timeGridWeek,timeGridDay',
+                'right'  => '',
             ],
             'locale'           => 'it',
             'eventDisplay'     => 'block',
             'displayEventTime' => true,
             'displayEventEnd'  => true,
             'eventTimeFormat'  => ['hour' => '2-digit', 'minute' => '2-digit', 'hour12' => false],
+            'dayMaxEvents'     => true,
+            'aspectRatio'      => 1.2,
         ];
     }
 

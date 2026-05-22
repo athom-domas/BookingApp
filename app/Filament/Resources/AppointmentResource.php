@@ -59,10 +59,10 @@ class AppointmentResource extends Resource
         return $schema->schema([
             Select::make('user_id')
                 ->label('Cliente')
-                ->relationship('user', 'name', fn ($query) => $query->role('customer'))
+                ->relationship('user', 'name', fn($query) => $query->role('customer'))
                 ->required()
                 ->searchable()
-                ->disabled(fn ($record) => $record !== null),
+                ->disabled(fn($record) => $record !== null),
 
             Select::make('service_ids')
                 ->label('Servizi')
@@ -70,19 +70,25 @@ class AppointmentResource extends Resource
                 ->multiple()
                 ->searchable()
                 ->required()
-                ->disabled(fn ($record) => $record !== null),
+                ->disabled(fn($record) => $record !== null),
 
             Select::make('staff_id')
                 ->label('Staff')
-                ->relationship('staff', 'name', fn ($query) => $query->role('staff'))
+                ->relationship('staff', 'name', fn($query) => $query->role('staff'))
                 ->required()
                 ->searchable()
-                ->disabled(fn ($record) => auth()->user()?->isStaff() || in_array($record?->status, ['completed', 'cancelled'])),
+                ->disabled(fn($record) => auth()->user()?->isStaff() || in_array($record?->status, ['completed', 'cancelled'])),
 
             DateTimePicker::make('scheduled_date')
                 ->label('Data e ora')
                 ->required()
-                ->disabled(fn ($record) => $record !== null),
+                ->disabled(fn($record) => $record !== null),
+
+            Textarea::make('notes')
+                ->label('Note')
+                ->rows(3)
+                ->columnSpanFull()
+                ->disabled(fn($record) => $record !== null),
 
             Select::make('status')
                 ->label('Stato')
@@ -95,13 +101,7 @@ class AppointmentResource extends Resource
                 ->required()
                 ->live()
                 ->default('pending')
-                ->disabled(fn ($record) => in_array($record?->status, ['completed', 'cancelled'])),
-
-            Textarea::make('notes')
-                ->label('Note')
-                ->rows(3)
-                ->columnSpanFull()
-                ->disabled(fn ($record) => $record !== null),
+                ->disabled(fn($record) => in_array($record?->status, ['completed', 'cancelled'])),
 
             Hidden::make('has_completed_payment')
                 ->dehydrated(false),
@@ -110,10 +110,11 @@ class AppointmentResource extends Resource
                 ->label('Metodo di pagamento')
                 ->options(['cash' => 'Contanti', 'pos' => 'POS (carta)'])
                 ->required()
-                ->disabled(fn (Get $get) => (bool) $get('has_completed_payment'))
-                ->hidden(fn (Get $get, string $operation) =>
+                ->disabled(fn(Get $get) => (bool) $get('has_completed_payment'))
+                ->hidden(
+                    fn(Get $get, string $operation) =>
                     $operation !== 'edit'
-                    || $get('status') !== 'completed'
+                        || $get('status') !== 'completed'
                 ),
 
             TextInput::make('payment_amount')
@@ -121,10 +122,11 @@ class AppointmentResource extends Resource
                 ->numeric()
                 ->minValue(0.01)
                 ->required()
-                ->disabled(fn (Get $get) => (bool) $get('has_completed_payment'))
-                ->hidden(fn (Get $get, string $operation) =>
+                ->disabled(fn(Get $get) => (bool) $get('has_completed_payment'))
+                ->hidden(
+                    fn(Get $get, string $operation) =>
                     $operation !== 'edit'
-                    || $get('status') !== 'completed'
+                        || $get('status') !== 'completed'
                 ),
         ]);
     }
@@ -134,7 +136,8 @@ class AppointmentResource extends Resource
         $isStaff = auth()->user()?->isStaff();
 
         return $table
-            ->modifyQueryUsing(fn (Builder $query) =>
+            ->modifyQueryUsing(
+                fn(Builder $query) =>
                 $isStaff ? $query->where('staff_id', auth()->id()) : $query
             )
             ->defaultSort('scheduled_date', 'desc')
@@ -184,7 +187,7 @@ class AppointmentResource extends Resource
 
                 SelectFilter::make('staff')
                     ->label('Staff')
-                    ->relationship('staff', 'name', fn ($query) => $query->role('staff'))
+                    ->relationship('staff', 'name', fn($query) => $query->role('staff'))
                     ->searchable()
                     ->hidden($isStaff),
 
@@ -251,9 +254,9 @@ class AppointmentResource extends Resource
                     ->successNotificationTitle('Pagamento registrato con successo')
                     ->visible(fn(Appointment $record): bool => ! in_array($record->status, ['pending', 'completed', 'cancelled']) && (! $record->payment || $record->payment->status !== 'completed')),
                 EditAction::make()
-                    ->hidden(fn (Appointment $record) => in_array($record->status, ['completed', 'cancelled'])),
+                    ->hidden(fn(Appointment $record) => in_array($record->status, ['completed', 'cancelled'])),
                 DeleteAction::make()
-                    ->hidden(fn () => auth()->user()?->isStaff()),
+                    ->hidden(fn() => auth()->user()?->isStaff()),
             ])
             ->bulkActions([
                 DeleteBulkAction::make()->hidden($isStaff),
