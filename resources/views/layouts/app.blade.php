@@ -30,7 +30,7 @@
         @stack('head')
     </head>
     <body class="min-h-screen bg-gray-50 dark:bg-gray-950 font-sans text-gray-950 dark:text-gray-50 antialiased">
-        <header class="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+        <header x-data="{ open: false }" class="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
             <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
                 <a href="{{ route('booking.index') }}" class="flex min-w-0 items-center gap-3">
                     @if($salonProfile->logoUrl())
@@ -41,13 +41,14 @@
                     <span class="truncate text-base font-semibold text-gray-950 dark:text-gray-50">{{ $salonProfile->name }}</span>
                 </a>
 
-                <nav class="flex items-center gap-2 text-sm font-medium">
+                {{-- Desktop nav --}}
+                <nav class="hidden sm:flex items-center gap-2 text-sm font-medium">
                     <a href="{{ route('booking.create') }}" class="rounded-md px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-950 dark:hover:text-gray-50">Prenota</a>
                     @auth
                         <a href="{{ route('portal.appointments.index') }}" class="rounded-md px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-950 dark:hover:text-gray-50">Appuntamenti</a>
                         <a href="{{ route('portal.settings.index') }}" class="rounded-md px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-950 dark:hover:text-gray-50">Impostazioni</a>
                         @if (auth()->user()->isAdmin() || auth()->user()->isStaff())
-                            <a href="{{ url('/admin') }}" class="hidden rounded-md px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-950 dark:hover:text-gray-50 sm:inline-flex">Admin</a>
+                            <a href="{{ url('/admin') }}" class="rounded-md px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-950 dark:hover:text-gray-50">Admin</a>
                         @endif
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
@@ -59,7 +60,6 @@
                     @endauth
 
                     <button
-                        x-data
                         @click="
                             document.documentElement.classList.toggle('dark');
                             localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light'
@@ -75,6 +75,52 @@
                         </svg>
                     </button>
                 </nav>
+
+                {{-- Mobile: dark mode + hamburger --}}
+                <div class="flex sm:hidden items-center gap-1">
+                    <button
+                        @click="
+                            document.documentElement.classList.toggle('dark');
+                            localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light'
+                        "
+                        class="rounded-md p-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                        aria-label="Cambia tema"
+                    >
+                        <svg class="hidden dark:block h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+                        </svg>
+                        <svg class="block dark:hidden h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+                        </svg>
+                    </button>
+                    <button @click="open = !open" class="rounded-md p-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800" aria-label="Menu">
+                        <svg x-show="!open" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                        </svg>
+                        <svg x-show="open" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            {{-- Mobile menu --}}
+            <div x-show="open" x-cloak class="sm:hidden border-t border-gray-200 dark:border-gray-700 px-4 py-2 flex flex-col text-sm font-medium">
+                <a href="{{ route('booking.create') }}" class="rounded-md px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">Prenota</a>
+                @auth
+                    <a href="{{ route('portal.appointments.index') }}" class="rounded-md px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">Appuntamenti</a>
+                    <a href="{{ route('portal.settings.index') }}" class="rounded-md px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">Impostazioni</a>
+                    @if (auth()->user()->isAdmin() || auth()->user()->isStaff())
+                        <a href="{{ url('/admin') }}" class="rounded-md px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">Admin</a>
+                    @endif
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" class="w-full text-left rounded-md px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">Esci</button>
+                    </form>
+                @else
+                    <a href="{{ route('login') }}" class="rounded-md px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">Accedi</a>
+                    <a href="{{ route('register') }}" class="btn-primary rounded-md px-3 py-2 text-white mt-1">Registrati</a>
+                @endauth
             </div>
         </header>
 
