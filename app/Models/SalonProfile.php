@@ -5,10 +5,28 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
-#[Fillable(['name', 'logo_path', 'primary_color', 'phone', 'address', 'website'])]
-class SalonProfile extends Model
+#[Fillable([
+    'name', 'tagline', 'logo_path', 'primary_color',
+    'phone', 'address', 'website',
+    'description', 'cancellation_policy', 'google_maps_embed',
+    'opening_hours',
+    'instagram_url', 'facebook_url', 'tiktok_url', 'whatsapp_number',
+])]
+class SalonProfile extends Model implements HasMedia
 {
+    use InteractsWithMedia;
+
+    protected function casts(): array
+    {
+        return [
+            'opening_hours' => 'array',
+        ];
+    }
+
     public static function current(): self
     {
         $existing = self::find(1);
@@ -31,10 +49,40 @@ class SalonProfile extends Model
         return $profile;
     }
 
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('logo')->singleFile();
+        $this->addMediaCollection('cover')->singleFile();
+        $this->addMediaCollection('gallery');
+    }
+
+    public function registerMediaConversions(?Media $media = null): void
+    {
+        $this->addMediaConversion('thumb')
+            ->width(200)
+            ->height(200)
+            ->nonQueued();
+
+        $this->addMediaConversion('web')
+            ->width(1200)
+            ->height(800)
+            ->nonQueued();
+    }
+
     public function logoUrl(): ?string
     {
+        $url = $this->getFirstMediaUrl('logo');
+        if ($url) {
+            return $url;
+        }
+
         return $this->logo_path
             ? Storage::disk('public')->url($this->logo_path)
             : null;
+    }
+
+    public function coverUrl(): ?string
+    {
+        return $this->getFirstMediaUrl('cover') ?: null;
     }
 }
