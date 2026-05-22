@@ -23,7 +23,8 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg && \
     zip \
     bcmath \
     intl \
-    && docker-php-ext-enable pdo pdo_mysql gd zip bcmath intl
+    exif \
+    && docker-php-ext-enable pdo pdo_mysql gd zip bcmath intl exif
 
 RUN apk add --no-cache $PHPIZE_DEPS \
     && pecl install redis \
