@@ -10,6 +10,6 @@ class DatabaseSeeder extends Seeder
     {
         $this->call(RolesAndUsersSeeder::class);
         $this->call(SystemSettingSeeder::class);
-        $this->call(DemoBookingSeeder::class);
+        $this->call(CurrentMonthSeeder::class);
     }
 }
