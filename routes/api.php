@@ -10,13 +10,6 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('booking')->group(function () {
     Route::get('/slots', [BookingController::class, 'getAvailableSlots']);
     Route::get('/available-dates', [BookingController::class, 'getAvailableDates']);
-
-    Route::middleware('auth:sanctum')->group(function () {
-        Route::post('/hold', [BookingController::class, 'createHold']);
-        Route::get('/holds/{hold}', [BookingController::class, 'getHold']);
-        Route::put('/holds/{hold}/extend', [BookingController::class, 'extendHold']);
-        Route::post('/confirm', [BookingController::class, 'confirmBooking']);
-    });
 });
 
 Route::get('/services', [ServiceController::class, 'index']);

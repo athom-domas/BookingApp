@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Appointment;
-use App\Models\AppointmentHold;
 use App\Models\AvailabilityRule;
 use App\Models\Payment;
 use App\Models\Service;
@@ -25,7 +24,6 @@ class DemoBookingSeeder extends Seeder
         $this->seedAvailabilityRules($staff);
         $this->seedPreferences($customers, $staff);
         $this->seedAppointments($customers, $staff, $services);
-        $this->seedDemoHolds($staff, $customers, $services);
     }
 
     /** @return array<string, User> */
@@ -250,62 +248,6 @@ class DemoBookingSeeder extends Seeder
                 'service_ids' => [$service->id],
                 'status'      => $status,
                 'final_price' => $status === 'cancelled' ? null : $service->price,
-            ]
-        );
-    }
-
-    /**
-     * @param  array<string, User>    $staff
-     * @param  array<string, User>    $customers
-     * @param  array<string, Service> $services
-     */
-    private function seedDemoHolds(array $staff, array $customers, array $services): void
-    {
-        $nextTuesday = Carbon::now()->next(Carbon::TUESDAY);
-        $nextFriday  = Carbon::now()->next(Carbon::FRIDAY);
-
-        AppointmentHold::updateOrCreate(
-            [
-                'staff_id'   => $staff['marco']->id,
-                'session_id' => 'demo-session-active',
-                'starts_at'  => $nextTuesday->copy()->setTime(15, 0),
-            ],
-            [
-                'customer_id' => $customers['simone']->id,
-                'ends_at'     => $nextTuesday->copy()->setTime(15, 30),
-                'service_ids' => [$services['taglio']->id],
-                'status'      => 'active',
-                'expires_at'  => now()->addMinutes(8),
-            ]
-        );
-
-        AppointmentHold::updateOrCreate(
-            [
-                'staff_id'   => $staff['andrea']->id,
-                'session_id' => 'demo-session-expired',
-                'starts_at'  => $nextFriday->copy()->setTime(10, 0),
-            ],
-            [
-                'customer_id' => $customers['matteo']->id,
-                'ends_at'     => $nextFriday->copy()->setTime(10, 30),
-                'service_ids' => [$services['rasatura']->id],
-                'status'      => 'expired',
-                'expires_at'  => now()->subMinutes(15),
-            ]
-        );
-
-        AppointmentHold::updateOrCreate(
-            [
-                'staff_id'   => $staff['filippo']->id,
-                'session_id' => 'demo-session-pending',
-                'starts_at'  => $nextFriday->copy()->setTime(14, 0),
-            ],
-            [
-                'customer_id' => $customers['davide']->id,
-                'ends_at'     => $nextFriday->copy()->setTime(14, 60),
-                'service_ids' => [$services['colore']->id],
-                'status'      => 'active',
-                'expires_at'  => now()->addMinutes(10),
             ]
         );
     }

@@ -1,7 +1,6 @@
 <?php
 
 use App\Models\Appointment;
-use App\Models\AppointmentHold;
 use App\Models\AvailabilityRule;
 use App\Models\Service;
 use App\Models\SystemSetting;
@@ -175,48 +174,6 @@ it('excludes slots blocked by confirmed appointments', function () {
     expect($startTimes)->not->toContain('09:00')
         ->and($startTimes)->not->toContain('09:30') // still blocked (appt ends at 10:00)
         ->and($startTimes)->toContain('10:00');
-});
-
-it('excludes slots blocked by active holds', function () {
-    $staff = User::factory()->create();
-    $staff->assignRole('staff');
-
-    $service = Service::factory()->create(['duration_minutes' => 60, 'active' => true]);
-    $staff->services()->attach($service->id);
-
-    $date = Carbon::parse('2026-05-18');
-    AvailabilityRule::factory()->create([
-        'user_id'      => $staff->id,
-        'day_of_week'  => $date->dayOfWeek,
-        'start_time'   => '09:00:00',
-        'end_time'     => '12:00:00',
-        'is_available' => true,
-    ]);
-
-    AppointmentHold::create([
-        'staff_id'    => $staff->id,
-        'session_id'  => 'test-session',
-        'customer_id' => null,
-        'starts_at'   => $date->copy()->setTime(10, 0),
-        'ends_at'     => $date->copy()->setTime(11, 0),
-        'service_ids' => [$service->id],
-        'status'      => 'active',
-        'expires_at'  => now()->addMinutes(10),
-    ]);
-
-    $svc   = new SlotCalculationService();
-    $slots = $svc->getAvailableSlots([
-        'date'            => $date,
-        'serviceIds'      => [$service->id],
-        'staffId'         => $staff->id,
-        'staffPreference' => 'specific',
-    ]);
-
-    $startTimes = array_column($slots, 'start');
-    expect($startTimes)->not->toContain('10:00')
-        ->and($startTimes)->not->toContain('09:30') // would end at 10:30 - blocked
-        ->and($startTimes)->toContain('09:00')
-        ->and($startTimes)->toContain('11:00');
 });
 
 it('groups same time slots across multiple staff when preference is any', function () {

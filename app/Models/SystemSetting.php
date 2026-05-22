@@ -5,16 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 
-#[Fillable(['slot_generation_weeks', 'slot_granularity_minutes', 'hold_duration_minutes', 'hold_extension_minutes', 'min_service_duration_minutes', 'timezone'])]
+#[Fillable(['slot_generation_weeks', 'slot_granularity_minutes', 'min_service_duration_minutes', 'timezone'])]
 class SystemSetting extends Model
 {
     protected function casts(): array
     {
         return [
-            'slot_generation_weeks'      => 'integer',
-            'slot_granularity_minutes'   => 'integer',
-            'hold_duration_minutes'      => 'integer',
-            'hold_extension_minutes'     => 'integer',
+            'slot_generation_weeks'        => 'integer',
+            'slot_granularity_minutes'     => 'integer',
             'min_service_duration_minutes' => 'integer',
         ];
     }
@@ -30,8 +28,6 @@ class SystemSetting extends Model
         $setting = new self([
             'slot_generation_weeks'        => 4,
             'slot_granularity_minutes'     => 10,
-            'hold_duration_minutes'        => 5,
-            'hold_extension_minutes'       => 5,
             'min_service_duration_minutes' => 15,
             'timezone'                     => 'Europe/Rome',
         ]);
@@ -44,16 +40,6 @@ class SystemSetting extends Model
     public static function getSlotGranularity(): int
     {
         return self::current()->slot_granularity_minutes;
-    }
-
-    public static function getHoldDuration(): int
-    {
-        return self::current()->hold_duration_minutes;
-    }
-
-    public static function getHoldExtension(): int
-    {
-        return self::current()->hold_extension_minutes;
     }
 
     public static function getMinServiceDuration(): int

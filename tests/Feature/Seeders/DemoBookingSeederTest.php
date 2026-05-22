@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\AppointmentHold;
 use App\Models\AvailabilityRule;
 use App\Models\Service;
 use App\Models\User;
@@ -14,7 +13,6 @@ it('seeds booking data needed by the customer portal', function () {
     expect(User::role('staff')->count())->toBeGreaterThanOrEqual(3);
     expect(Service::active()->whereHas('staff')->count())->toBeGreaterThanOrEqual(3);
     expect(AvailabilityRule::count())->toBeGreaterThanOrEqual(15);
-    expect(AppointmentHold::count())->toBeGreaterThanOrEqual(3);
 
     // The API should return available slots for a staff member on a working day
     $staff = User::role('staff')->whereHas('availabilityRules', fn ($q) => $q->where('is_available', true))->first();

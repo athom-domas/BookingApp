@@ -115,9 +115,15 @@ class StaffResource extends Resource
 
             ColorPicker::make('calendar_color')
                 ->label('Colore calendario')
-                ->default(fn () => collect([
-                    '#3B82F6', '#10B981', '#F59E0B', '#EF4444',
-                    '#8B5CF6', '#EC4899', '#14B8A6', '#F97316',
+                ->default(fn() => collect([
+                    '#3B82F6',
+                    '#10B981',
+                    '#F59E0B',
+                    '#EF4444',
+                    '#8B5CF6',
+                    '#EC4899',
+                    '#14B8A6',
+                    '#F97316',
                 ])->random()),
 
         ]);
@@ -136,16 +142,6 @@ class StaffResource extends Resource
                     ->label('Email')
                     ->searchable()
                     ->sortable(),
-
-                ColorColumn::make('calendar_color')
-                    ->label('Colore')
-                    ->sortable(false),
-
-                TextColumn::make('admin_badge')
-                    ->label('Ruolo')
-                    ->getStateUsing(fn(User $record): ?string => $record->isAdmin() ? 'Admin' : null)
-                    ->badge()
-                    ->color('warning'),
             ])
             ->actions([
                 EditAction::make(),

@@ -3,7 +3,6 @@
 namespace App\Services\Booking;
 
 use App\Models\Appointment;
-use App\Models\AppointmentHold;
 use App\Models\AvailabilityRule;
 use App\Models\Service;
 use App\Models\SystemSetting;
@@ -27,7 +26,6 @@ class SlotCalculationService
         $serviceIds      = $params['serviceIds'] ?? [];
         $staffId         = $params['staffId'] ?? null;
         $staffPreference = $params['staffPreference'] ?? 'specific';
-        $excludeHoldId   = $params['excludeHoldId'] ?? null;
 
         if (empty($serviceIds)) {
             return [];
@@ -45,7 +43,7 @@ class SlotCalculationService
 
         $slotsByOperator = [];
         foreach ($eligibleStaff as $staff) {
-            $slots = $this->getSlotsForOperator($staff, $date, $totalDuration, $excludeHoldId);
+            $slots = $this->getSlotsForOperator($staff, $date, $totalDuration);
             if (! empty($slots)) {
                 $slotsByOperator[$staff->id] = $slots;
             }
@@ -108,14 +106,14 @@ class SlotCalculationService
         return $this->calculateFreeRanges($workRanges, $occupations);
     }
 
-    private function getSlotsForOperator(User $staff, Carbon $date, int $duration, ?int $excludeHoldId = null): array
+    private function getSlotsForOperator(User $staff, Carbon $date, int $duration): array
     {
         $workRanges = $this->getWorkRanges($staff, $date);
         if (empty($workRanges)) {
             return [];
         }
 
-        $occupations = $this->getOccupations($staff, $date, $excludeHoldId);
+        $occupations = $this->getOccupations($staff, $date);
         $freeRanges  = $this->calculateFreeRanges($workRanges, $occupations);
 
         if ($date->isToday()) {
@@ -166,7 +164,7 @@ class SlotCalculationService
         return $ranges;
     }
 
-    private function getOccupations(User $staff, Carbon $date, ?int $excludeHoldId = null): array
+    private function getOccupations(User $staff, Carbon $date): array
     {
         $dayStart = $date->copy()->startOfDay();
         $dayEnd   = $date->copy()->endOfDay();
@@ -195,22 +193,6 @@ class SlotCalculationService
                 'start' => $appt->scheduled_date,
                 'end'   => $appt->scheduled_date->copy()->addMinutes($duration),
                 'type'  => 'appointment',
-            ];
-        }
-
-        $holdsQuery = AppointmentHold::active()
-            ->where('staff_id', $staff->id)
-            ->whereBetween('starts_at', [$dayStart, $dayEnd]);
-
-        if ($excludeHoldId !== null) {
-            $holdsQuery->where('id', '!=', $excludeHoldId);
-        }
-
-        foreach ($holdsQuery->get() as $hold) {
-            $result[] = [
-                'start' => $hold->starts_at,
-                'end'   => $hold->ends_at,
-                'type'  => 'hold',
             ];
         }
 

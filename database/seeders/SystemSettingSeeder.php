@@ -15,8 +15,6 @@ class SystemSettingSeeder extends Seeder
             $setting->update([
                 'slot_generation_weeks'        => 4,
                 'slot_granularity_minutes'     => 10,
-                'hold_duration_minutes'        => 10,
-                'hold_extension_minutes'       => 5,
                 'min_service_duration_minutes' => 15,
                 'timezone'                     => 'Europe/Rome',
             ]);
@@ -24,8 +22,6 @@ class SystemSettingSeeder extends Seeder
             $setting = new SystemSetting([
                 'slot_generation_weeks'        => 4,
                 'slot_granularity_minutes'     => 10,
-                'hold_duration_minutes'        => 10,
-                'hold_extension_minutes'       => 5,
                 'min_service_duration_minutes' => 15,
                 'timezone'                     => 'Europe/Rome',
             ]);

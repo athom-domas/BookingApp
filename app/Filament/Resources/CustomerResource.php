@@ -66,7 +66,7 @@ class CustomerResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
-            ->whereHas('roles', fn (Builder $query): Builder => $query
+            ->whereHas('roles', fn(Builder $query): Builder => $query
                 ->where('name', 'customer')
                 ->where('guard_name', 'web'));
     }
@@ -112,7 +112,8 @@ class CustomerResource extends Resource
                                 ->label('Numero di telefono')
                                 ->tel()
                                 ->placeholder('+39 333 123 4567')
-                                ->visible(fn (Get $get): bool =>
+                                ->visible(
+                                    fn(Get $get): bool =>
                                     in_array($get('notification_channel'), ['sms', 'whatsapp'])
                                 ),
                         ]),
@@ -133,19 +134,6 @@ class CustomerResource extends Resource
                 TextColumn::make('email')
                     ->label('Email')
                     ->searchable()
-                    ->sortable(),
-
-                TextColumn::make('appointments_as_customer_count')
-                    ->label('Appuntamenti')
-                    ->counts('appointmentsAsCustomer')
-                    ->sortable(),
-
-                TextColumn::make('payments_sum_amount')
-                    ->label('Totale pagato')
-                    ->sum([
-                        'payments' => fn (Builder $query): Builder => $query->where('status', 'completed'),
-                    ], 'amount')
-                    ->money('EUR')
                     ->sortable(),
 
                 TextColumn::make('created_at')
