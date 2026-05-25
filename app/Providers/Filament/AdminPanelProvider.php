@@ -9,16 +9,19 @@ use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Actions\Action;
+use Filament\Navigation\NavigationGroup;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use Filament\Support\Facades\FilamentView;
 use Filament\Tables\View\TablesRenderHook;
+use Filament\View\PanelsRenderHook;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\HtmlString;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Saade\FilamentFullCalendar\FilamentFullCalendarPlugin;
 
@@ -28,10 +31,27 @@ class AdminPanelProvider extends PanelProvider
     {
         FilamentView::registerRenderHook(
             TablesRenderHook::TOOLBAR_SEARCH_BEFORE,
-            fn () => view('filament.tables.toolbar-today-button'),
+            fn() => view('filament.tables.toolbar-today-button'),
             scopes: [ListAppointments::class, ListPayments::class],
         );
 
+        FilamentView::registerRenderHook(
+            PanelsRenderHook::HEAD_END,
+            function (): HtmlString {
+                try {
+                    $hex = preg_replace('/[^#0-9a-fA-F]/', '', \App\Models\SalonProfile::current()->primary_color ?? '#2563eb');
+                    $palette = Color::hex($hex);
+                    $vars = implode('', array_map(
+                        fn($shade, $value) => "--primary-{$shade}:{$value};",
+                        array_keys($palette),
+                        $palette
+                    ));
+                    return new HtmlString("<style>:root{{$vars}}</style>");
+                } catch (\Throwable) {
+                    return new HtmlString('');
+                }
+            }
+        );
     }
 
     public function panel(Panel $panel): Panel
@@ -42,12 +62,17 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->login()
             ->passwordReset()
-            ->brandName('Booking App')
+            ->brandName(fn() => \App\Models\SalonProfile::current()->name ?? 'Booking App')
             ->brandLogo(asset('img/logo.png'))
             ->brandLogoHeight('2rem')
             ->favicon(asset('img/logo.png'))
             ->colors([
                 'primary' => Color::hex('#2563eb'),
+            ])
+            ->navigationGroups([
+                NavigationGroup::make('Prenotazioni'),
+                NavigationGroup::make('Salone'),
+                NavigationGroup::make('Impostazioni'),
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')

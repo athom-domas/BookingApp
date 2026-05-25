@@ -24,7 +24,8 @@ class AdminResource extends Resource
 
     protected static ?string $navigationLabel = 'Amministratori';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Utenti';
+    protected static string|\UnitEnum|null $navigationGroup = 'Impostazioni';
+    protected static ?int $navigationSort = 1;
 
     protected static ?string $modelLabel = 'amministratore';
 

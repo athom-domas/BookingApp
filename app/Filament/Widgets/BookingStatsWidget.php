@@ -22,31 +22,42 @@ class BookingStatsWidget extends BaseWidget
             ? Appointment::query()
             : Appointment::where('staff_id', $user?->id);
 
+        $todayCount = (clone $base)->whereDate('scheduled_date', today())->count();
+        $monthCount = (clone $base)
+            ->whereMonth('scheduled_date', now()->month)
+            ->whereYear('scheduled_date', now()->year)
+            ->count();
+
         $stats = [
             Stat::make(
                 $isAdmin ? 'Appuntamenti oggi' : 'I miei appuntamenti oggi',
-                (clone $base)->whereDate('scheduled_date', today())->count()
-            ),
+                $todayCount
+            )
+                ->icon('heroicon-o-calendar-days')
+                ->description(today()->translatedFormat('l j F'))
+                ->color('primary'),
             Stat::make(
                 $isAdmin ? 'Appuntamenti questo mese' : 'I miei appuntamenti questo mese',
-                (clone $base)
-                    ->whereMonth('scheduled_date', now()->month)
-                    ->whereYear('scheduled_date', now()->year)
-                    ->count()
-            ),
+                $monthCount
+            )
+                ->icon('heroicon-o-calendar')
+                ->description(now()->translatedFormat('F Y'))
+                ->color('info'),
         ];
 
         if ($isAdmin) {
+            $revenue = Payment::completed()
+                ->whereMonth('created_at', now()->month)
+                ->whereYear('created_at', now()->year)
+                ->sum('amount');
+
             $stats[] = Stat::make(
                 'Ricavi del mese',
-                '€ ' . number_format(
-                    Payment::completed()
-                        ->whereMonth('created_at', now()->month)
-                        ->whereYear('created_at', now()->year)
-                        ->sum('amount'),
-                    2, ',', '.'
-                )
-            );
+                '€ ' . number_format((float) $revenue, 2, ',', '.')
+            )
+                ->icon('heroicon-o-banknotes')
+                ->description('Pagamenti completati ' . now()->translatedFormat('F'))
+                ->color('success');
         }
 
         return $stats;

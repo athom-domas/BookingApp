@@ -16,8 +16,8 @@ class SystemSettings extends Page
     protected static ?string $navigationLabel = 'Impostazioni';
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-cog-6-tooth';
-
-    protected static ?int $navigationSort = 99;
+    protected static string|\UnitEnum|null $navigationGroup = 'Impostazioni';
+    protected static ?int $navigationSort = 3;
 
     public ?array $data = [];
 

@@ -40,8 +40,8 @@ class LatestAppointmentsWidget extends BaseWidget
                     ->getStateUsing(fn ($record) => $record->services_label),
 
                 TextColumn::make('scheduled_date')
-                    ->label('Data')
-                    ->dateTime('d/m/Y'),
+                    ->label('Data e ora')
+                    ->dateTime('d/m/Y H:i'),
 
                 TextColumn::make('status')
                     ->label('Stato')

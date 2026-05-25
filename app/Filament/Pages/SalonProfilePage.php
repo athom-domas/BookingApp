@@ -27,8 +27,8 @@ class SalonProfilePage extends Page
     protected static ?string $navigationLabel = 'Profilo Salone';
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-building-storefront';
-
-    protected static ?int $navigationSort = 98;
+    protected static string|\UnitEnum|null $navigationGroup = 'Impostazioni';
+    protected static ?int $navigationSort = 2;
 
     public ?array $data = [];
 

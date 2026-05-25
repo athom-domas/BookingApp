@@ -24,6 +24,8 @@ class AvailabilityRuleResource extends Resource
 {
     protected static ?string $model = AvailabilityRule::class;
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-clock';
+    protected static string|\UnitEnum|null $navigationGroup = 'Salone';
+    protected static ?int $navigationSort = 3;
     protected static ?string $modelLabel = 'regola disponibilità';
     protected static ?string $pluralModelLabel = 'regole disponibilità';
 

@@ -17,7 +17,7 @@ class ReportPage extends Page
     protected static ?string                $navigationLabel = 'Report';
     protected static ?string                $title           = 'Report';
     protected string                        $view            = 'filament.pages.report';
-    protected static ?int                   $navigationSort  = 10;
+    protected static ?int                   $navigationSort  = 3;
 
     public string $period   = 'month';
     public string $dateFrom = '';

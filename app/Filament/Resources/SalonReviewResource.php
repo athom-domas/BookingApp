@@ -24,8 +24,8 @@ class SalonReviewResource extends Resource
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-star';
 
     protected static ?string $navigationLabel = 'Recensioni';
-
-    protected static ?int $navigationSort = 99;
+    protected static string|\UnitEnum|null $navigationGroup = 'Salone';
+    protected static ?int $navigationSort = 4;
 
     public static function form(Schema $schema): Schema
     {
