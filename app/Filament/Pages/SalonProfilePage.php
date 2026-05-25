@@ -18,6 +18,7 @@ use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Arr;
 use Illuminate\Support\HtmlString;
+use Filament\Schemas\Components\Utilities\Get;
 
 class SalonProfilePage extends Page
 {
@@ -53,9 +54,12 @@ class SalonProfilePage extends Page
         ];
 
         foreach (['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as $day) {
-            $formData["hours_{$day}_closed"] = $hours[$day]['closed'] ?? false;
-            $formData["hours_{$day}_open"]   = $hours[$day]['open']   ?? '09:00';
-            $formData["hours_{$day}_close"]  = $hours[$day]['close']  ?? '18:00';
+            $d = $hours[$day] ?? [];
+            $formData["hours_{$day}_open"]            = $d['open']            ?? false;
+            $formData["hours_{$day}_morning_open"]    = $d['morning_open']    ?? '09:00';
+            $formData["hours_{$day}_morning_close"]   = $d['morning_close']   ?? '13:00';
+            $formData["hours_{$day}_afternoon_open"]  = $d['afternoon_open']  ?? '15:00';
+            $formData["hours_{$day}_afternoon_close"] = $d['afternoon_close'] ?? '19:30';
         }
 
         $this->form->fill($formData);
@@ -73,16 +77,26 @@ class SalonProfilePage extends Page
 
         $hoursFields = [];
         foreach ($days as $key => $label) {
-            $hoursFields[] = Grid::make(3)->schema([
-                Toggle::make("hours_{$key}_closed")
+            $hoursFields[] = Grid::make(5)->schema([
+                Toggle::make("hours_{$key}_open")
                     ->label($label)
                     ->inline(false),
-                TextInput::make("hours_{$key}_open")
-                    ->label('Apertura')
-                    ->placeholder('09:00'),
-                TextInput::make("hours_{$key}_close")
-                    ->label('Chiusura')
-                    ->placeholder('18:00'),
+                TextInput::make("hours_{$key}_morning_open")
+                    ->label('Mat. apertura')
+                    ->placeholder('09:00')
+                    ->disabled(fn (Get $get) => ! $get("hours_{$key}_open")),
+                TextInput::make("hours_{$key}_morning_close")
+                    ->label('Mat. chiusura')
+                    ->placeholder('13:00')
+                    ->disabled(fn (Get $get) => ! $get("hours_{$key}_open")),
+                TextInput::make("hours_{$key}_afternoon_open")
+                    ->label('Pom. apertura')
+                    ->placeholder('15:00')
+                    ->disabled(fn (Get $get) => ! $get("hours_{$key}_open")),
+                TextInput::make("hours_{$key}_afternoon_close")
+                    ->label('Pom. chiusura')
+                    ->placeholder('19:30')
+                    ->disabled(fn (Get $get) => ! $get("hours_{$key}_open")),
             ]);
         }
 
@@ -186,14 +200,19 @@ class SalonProfilePage extends Page
         $openingHours = [];
         foreach ($days as $day) {
             $openingHours[$day] = [
-                'closed' => (bool) ($state["hours_{$day}_closed"] ?? false),
-                'open'   => $state["hours_{$day}_open"]   ?? '09:00',
-                'close'  => $state["hours_{$day}_close"]  ?? '18:00',
+                'open'            => (bool) ($state["hours_{$day}_open"]            ?? false),
+                'morning_open'    => $state["hours_{$day}_morning_open"]    ?? '09:00',
+                'morning_close'   => $state["hours_{$day}_morning_close"]   ?? '13:00',
+                'afternoon_open'  => $state["hours_{$day}_afternoon_open"]  ?? '15:00',
+                'afternoon_close' => $state["hours_{$day}_afternoon_close"] ?? '19:30',
             ];
         }
 
         $hourKeys    = array_merge(...array_map(
-            fn ($d) => ["hours_{$d}_closed", "hours_{$d}_open", "hours_{$d}_close"],
+            fn ($d) => [
+                "hours_{$d}_open", "hours_{$d}_morning_open", "hours_{$d}_morning_close",
+                "hours_{$d}_afternoon_open", "hours_{$d}_afternoon_close",
+            ],
             $days
         ));
         $profileData = Arr::except($state, [...$hourKeys, 'logo', 'cover', 'gallery']);

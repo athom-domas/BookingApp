@@ -48,7 +48,7 @@
 
         <aside class="space-y-4">
             @if ($appointment->payment && $appointment->payment->status !== 'completed' && $appointment->status !== 'cancelled')
-                <a href="{{ route('portal.appointments.payment', $appointment) }}" class="block rounded-md bg-blue-700 px-4 py-3 text-center text-sm font-semibold text-white shadow-sm hover:bg-blue-800">Completa pagamento</a>
+                <a href="{{ route('portal.appointments.payment', $appointment) }}" class="block rounded-md px-6 py-3 text-sm font-semibold text-white shadow-sm" style="background-color: var(--color-primary)">Completa pagamento</a>
             @endif
 
             @if ($appointment->canBeCancelled())
