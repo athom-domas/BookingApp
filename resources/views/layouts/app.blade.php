@@ -9,8 +9,11 @@
 
         <title>@yield('title', e($salonProfile->name)) - {{ $salonProfile->name }}</title>
 
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
         <style>
             :root { --color-primary: {{ preg_replace('/[^#0-9a-fA-F]/', '', $salonProfile->primary_color) }}; }
+            .font-display { font-family: 'Playfair Display', Georgia, serif; }
             .btn-primary { background-color: var(--color-primary) !important; }
             .btn-primary:hover { filter: brightness(0.9); }
             [x-cloak] { display: none !important; }
@@ -124,7 +127,7 @@
             </div>
         </header>
 
-        <main class="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+        <main class="@yield('main-class', 'mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8')">
             @if (session('status'))
                 <div class="mb-6 rounded-lg border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950 px-4 py-3 text-sm text-green-800 dark:text-green-300">
                     {{ session('status') }}
