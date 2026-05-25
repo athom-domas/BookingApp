@@ -26,10 +26,6 @@ class SendCancellationNotification implements ShouldQueue
 
         Mail::send(new AppointmentCancellationMail($appointment, $appointment->user));
 
-        if ($appointment->staff?->receive_email_notifications) {
-            Mail::send(new AppointmentCancellationMail($appointment, $appointment->staff));
-        }
-
         $staffPrefs = $appointment->staff->preferences;
         if ($staffPrefs?->receive_sms_reminders && $staffPrefs->phone_number) {
             $message = "Cancelled: {$appointment->services_label} on {$appointment->scheduled_date->format('d/m/Y H:i')}";
