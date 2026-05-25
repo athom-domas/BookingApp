@@ -67,8 +67,6 @@ class SalonProfilePage extends Page
 
     public function form(Schema $schema): Schema
     {
-        $profile = SalonProfile::current();
-
         $days = [
             'mon' => 'Lunedì',   'tue' => 'Martedì',  'wed' => 'Mercoledì',
             'thu' => 'Giovedì',  'fri' => 'Venerdì',  'sat' => 'Sabato',
@@ -102,6 +100,7 @@ class SalonProfilePage extends Page
 
         return $schema
             ->statePath('data')
+            ->model(SalonProfile::current()->load('media'))
             ->schema([
                 Tabs::make()->tabs([
 
@@ -119,13 +118,11 @@ class SalonProfilePage extends Page
                         Grid::make(2)->schema([
                             SpatieMediaLibraryFileUpload::make('logo')
                                 ->label('Logo')
-                                ->model($profile)
                                 ->collection('logo')
                                 ->image()
                                 ->maxSize(2048),
                             SpatieMediaLibraryFileUpload::make('cover')
                                 ->label('Immagine di copertina')
-                                ->model($profile)
                                 ->collection('cover')
                                 ->image()
                                 ->maxSize(5120),
@@ -144,7 +141,6 @@ class SalonProfilePage extends Page
                     Tab::make('Galleria')->schema([
                         SpatieMediaLibraryFileUpload::make('gallery')
                             ->label('Foto galleria')
-                            ->model($profile)
                             ->collection('gallery')
                             ->multiple()
                             ->reorderable()
