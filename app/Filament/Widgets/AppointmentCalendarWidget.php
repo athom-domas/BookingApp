@@ -165,19 +165,21 @@ class AppointmentCalendarWidget extends FullCalendarWidget
                 $hasCompletedPayment = $appointment->payment?->status === 'completed';
 
                 $schema?->fill([
-                    'appointment_id'       => $appointment->id,
-                    'customer_name'        => $appointment->user->name,
-                    'staff_name'           => $appointment->staff->name,
-                    'scheduled_date'       => $appointment->scheduled_date->format('d/m/Y H:i'),
-                    'services'             => $appointment->services_label,
-                    'status'               => $appointment->status,
-                    'has_completed_payment'=> $hasCompletedPayment,
-                    'payment_amount'       => $hasCompletedPayment ? null : $appointment->final_price,
+                    'appointment_id'        => $appointment->id,
+                    'customer_name'         => $appointment->user->name,
+                    'staff_name'            => $appointment->staff->name,
+                    'scheduled_date'        => $appointment->scheduled_date->format('d/m/Y H:i'),
+                    'services'              => $appointment->services_label,
+                    'status'                => $appointment->status,
+                    'has_completed_payment' => $hasCompletedPayment,
+                    'payment_amount'        => $hasCompletedPayment ? null : $appointment->final_price,
+                    'customer_confirmed'    => (bool) $appointment->customer_confirmed_at,
                 ]);
             })
             ->schema([
                 Hidden::make('appointment_id'),
                 Hidden::make('has_completed_payment'),
+                Hidden::make('customer_confirmed'),
                 Hidden::make('customer_name'),
                 Hidden::make('staff_name'),
                 Hidden::make('scheduled_date'),
@@ -194,6 +196,10 @@ class AppointmentCalendarWidget extends FullCalendarWidget
                     e($get('scheduled_date')),
                     e($get('services'))
                 )),
+                Html::make(fn (Get $get): string => (bool) $get('customer_confirmed')
+                    ? '<p class="text-sm font-medium text-success-600 dark:text-success-400 -mt-1 mb-1">✓ Presenza confermata via email</p>'
+                    : ''
+                ),
                 Select::make('status')
                     ->label('Stato')
                     ->options([

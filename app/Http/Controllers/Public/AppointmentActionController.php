@@ -2,12 +2,16 @@
 
 namespace App\Http\Controllers\Public;
 
+use App\Exceptions\BookingException;
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
+use App\Services\AppointmentService;
 use Illuminate\Http\Request;
 
 class AppointmentActionController extends Controller
 {
+    public function __construct(private readonly AppointmentService $appointmentService) {}
+
     public function confirm(Appointment $appointment)
     {
         if ($appointment->status === 'cancelled' || $appointment->isPast()) {
@@ -21,7 +25,7 @@ class AppointmentActionController extends Controller
 
     public function cancelForm(Appointment $appointment)
     {
-        if (!$appointment->canBeCancelled()) {
+        if (! $appointment->canBeCancelled()) {
             return view('public.appointment-cancelled', ['appointment' => $appointment, 'alreadyDone' => true]);
         }
 
@@ -30,13 +34,18 @@ class AppointmentActionController extends Controller
 
     public function processCancellation(Appointment $appointment, Request $request)
     {
-        if ($appointment->canBeCancelled()) {
-            $appointment->update([
-                'status' => 'cancelled',
-                'notes'  => $request->input('reason'),
-            ]);
+        try {
+            $this->appointmentService->cancelAppointment($appointment->id, $request->input('reason'));
+        } catch (BookingException) {
+            // canBeCancelled check or 24h window — treat as already done
         }
 
-        return view('public.appointment-cancelled', ['appointment' => $appointment, 'alreadyDone' => false]);
+        $fresh = $appointment->fresh();
+
+        return view('public.appointment-cancelled', [
+            'appointment' => $fresh,
+            'alreadyDone' => false,
+            'refunded'    => $fresh->payment?->status === 'refunded',
+        ]);
     }
 }

@@ -38,12 +38,16 @@ class AppointmentResource extends Resource
 
     public static function canEdit($record): bool
     {
+        if (auth()->user()?->isAdmin()) {
+            return true;
+        }
+
         if (auth()->user()?->isStaff()) {
             return $record->staff_id === auth()->id()
                 && ! in_array($record->status, ['completed', 'cancelled']);
         }
 
-        return ! in_array($record->status, ['completed', 'cancelled']);
+        return false;
     }
 
     public static function canDelete($record): bool
@@ -79,18 +83,27 @@ class AppointmentResource extends Resource
                 ->relationship('staff', 'name', fn($query) => $query->role('staff'))
                 ->required()
                 ->searchable()
-                ->disabled(fn($record) => auth()->user()?->isStaff() || in_array($record?->status, ['completed', 'cancelled'])),
+                ->disabled(fn($record) =>
+                    $record?->status === 'completed'
+                    || (! auth()->user()?->isAdmin() && (auth()->user()?->isStaff() || $record?->status === 'cancelled'))
+                ),
 
             DateTimePicker::make('scheduled_date')
                 ->label('Data e ora')
                 ->required()
-                ->disabled(fn($record) => $record !== null),
+                ->disabled(fn($record) =>
+                    $record?->status === 'completed'
+                    || (! auth()->user()?->isAdmin() && $record !== null)
+                ),
 
             Textarea::make('notes')
                 ->label('Note')
                 ->rows(3)
                 ->columnSpanFull()
-                ->disabled(fn($record) => $record !== null),
+                ->disabled(fn($record) =>
+                    $record?->status === 'completed'
+                    || (! auth()->user()?->isAdmin() && $record !== null)
+                ),
 
             Select::make('status')
                 ->label('Stato')
@@ -103,7 +116,10 @@ class AppointmentResource extends Resource
                 ->required()
                 ->live()
                 ->default('pending')
-                ->disabled(fn($record) => in_array($record?->status, ['completed', 'cancelled'])),
+                ->disabled(fn($record) =>
+                    ($record?->status === 'completed' && $record?->payment?->status !== 'refunded')
+                    || (! auth()->user()?->isAdmin() && $record?->status === 'cancelled')
+                ),
 
             Hidden::make('has_completed_payment')
                 ->dehydrated(false),
@@ -112,11 +128,11 @@ class AppointmentResource extends Resource
                 ->label('Metodo di pagamento')
                 ->options(['cash' => 'Contanti', 'pos' => 'POS (carta)'])
                 ->required()
-                ->disabled(fn(Get $get) => (bool) $get('has_completed_payment'))
                 ->hidden(
                     fn(Get $get, string $operation) =>
                     $operation !== 'edit'
                         || $get('status') !== 'completed'
+                        || (bool) $get('has_completed_payment')
                 ),
 
             TextInput::make('payment_amount')
@@ -124,11 +140,11 @@ class AppointmentResource extends Resource
                 ->numeric()
                 ->minValue(0.01)
                 ->required()
-                ->disabled(fn(Get $get) => (bool) $get('has_completed_payment'))
                 ->hidden(
                     fn(Get $get, string $operation) =>
                     $operation !== 'edit'
                         || $get('status') !== 'completed'
+                        || (bool) $get('has_completed_payment')
                 ),
         ]);
     }
@@ -256,7 +272,7 @@ class AppointmentResource extends Resource
                     ->successNotificationTitle('Pagamento registrato con successo')
                     ->visible(fn(Appointment $record): bool => ! in_array($record->status, ['pending', 'completed', 'cancelled']) && (! $record->payment || $record->payment->status !== 'completed')),
                 EditAction::make()
-                    ->hidden(fn(Appointment $record) => in_array($record->status, ['completed', 'cancelled'])),
+                    ->hidden(fn(Appointment $record) => ! auth()->user()?->isAdmin() && in_array($record->status, ['completed', 'cancelled'])),
                 DeleteAction::make()
                     ->hidden(fn() => auth()->user()?->isStaff()),
             ])

@@ -2,8 +2,10 @@
 
 namespace App\Jobs;
 
+use App\Mail\AdminCancellationNotificationMail;
 use App\Mail\AppointmentCancellationMail;
 use App\Models\Appointment;
+use App\Models\User;
 use App\Services\NotificationService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -20,7 +22,7 @@ class SendCancellationNotification implements ShouldQueue
 
     public function handle(NotificationService $notificationService): void
     {
-        $appointment = $this->appointment->load('user', 'staff.preferences');
+        $appointment = $this->appointment->load('user', 'staff.preferences', 'payment');
 
         Mail::send(new AppointmentCancellationMail($appointment, $appointment->user));
 
@@ -32,6 +34,14 @@ class SendCancellationNotification implements ShouldQueue
         if ($staffPrefs?->receive_sms_reminders && $staffPrefs->phone_number) {
             $message = "Cancelled: {$appointment->services_label} on {$appointment->scheduled_date->format('d/m/Y H:i')}";
             $notificationService->sendSms($staffPrefs->phone_number, $message);
+        }
+
+        $payment = $appointment->payment;
+        $admins  = User::role('admin')->get();
+        foreach ($admins as $admin) {
+            if ($admin->receive_email_notifications) {
+                Mail::send(new AdminCancellationNotificationMail($appointment, $admin, $payment));
+            }
         }
     }
 

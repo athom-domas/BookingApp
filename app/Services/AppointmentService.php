@@ -13,10 +13,14 @@ use App\Models\User;
 use App\Services\Booking\SlotCalculationService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class AppointmentService
 {
-    public function __construct(private readonly SlotCalculationService $slotService) {}
+    public function __construct(
+        private readonly SlotCalculationService $slotService,
+        private readonly PaymentService $paymentService,
+    ) {}
 
     public function validateAvailability(int $staffId, array $serviceIds, Carbon $dateTime): bool
     {
@@ -129,11 +133,7 @@ class AppointmentService
         $appointment = Appointment::findOrFail($appointmentId);
 
         if (! $appointment->canBeCancelled()) {
-            throw new BookingException('Prenotazione non può essere cancellata.');
-        }
-
-        if (now()->diffInHours($appointment->scheduled_date, false) < 24) {
-            throw new BookingException('Impossibile cancellare meno di 24 ore prima.');
+            throw new BookingException('Impossibile cancellare: prenotazione non cancellabile o mancano meno di 24 ore.');
         }
 
         $appointment->update([
@@ -141,8 +141,29 @@ class AppointmentService
             'notes'  => $reason ?? $appointment->notes,
         ]);
 
+        $this->refundIfPaid($appointment);
+
         SendCancellationNotification::dispatch($appointment);
         SyncGoogleCalendar::dispatch($appointment, 'delete');
+    }
+
+    private function refundIfPaid(Appointment $appointment): void
+    {
+        $payment = $appointment->payment;
+
+        if (! $payment || $payment->status !== 'completed' || $payment->payment_method !== 'stripe') {
+            return;
+        }
+
+        try {
+            $this->paymentService->refundPayment($payment->id);
+        } catch (\Throwable $e) {
+            Log::error('Auto-refund failed on cancellation', [
+                'appointment_id' => $appointment->id,
+                'payment_id'     => $payment->id,
+                'error'          => $e->getMessage(),
+            ]);
+        }
     }
 
     public function getAvailableSlots(int $serviceId, int $staffId, string $date): array

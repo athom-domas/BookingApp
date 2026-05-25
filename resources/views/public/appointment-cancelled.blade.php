@@ -36,7 +36,11 @@
             <p>Questo appuntamento non può essere annullato.</p>
         @else
             <h1>Appuntamento annullato</h1>
-            <p>Il tuo appuntamento è stato annullato. Puoi prenotarne uno nuovo quando vuoi.</p>
+            @if($refunded ?? false)
+                <p>Il tuo appuntamento è stato annullato e il rimborso è stato avviato. L'importo tornerà sul tuo metodo di pagamento entro 3–5 giorni lavorativi.</p>
+            @else
+                <p>Il tuo appuntamento è stato annullato. Puoi prenotarne uno nuovo quando vuoi.</p>
+            @endif
         @endif
     </div>
 </body>

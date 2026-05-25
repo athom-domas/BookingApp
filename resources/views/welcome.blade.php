@@ -216,7 +216,6 @@
          style="background-color: var(--color-primary)">
     <div class="mx-auto max-w-6xl">
         <div class="text-center mb-14">
-            <div class="mx-auto mb-5 h-px w-8 bg-white/30"></div>
             <h2 class="font-display text-3xl font-semibold text-white">Contatti</h2>
         </div>
         <div class="grid gap-12 lg:grid-cols-2">
@@ -230,7 +229,7 @@
                     </div>
                 @endif
                 @if($profile->address)
-                    <div class="flex items-start gap-4">
+                    <div class="flex items-center gap-4">
                         <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/20">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-white/60" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                         </div>

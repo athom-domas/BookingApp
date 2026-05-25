@@ -74,9 +74,9 @@ it('isUpcoming returns true for future appointments', function () {
     expect($appointment->isUpcoming())->toBeTrue();
 });
 
-it('canBeCancelled returns true for pending future appointments', function () {
+it('canBeCancelled returns true for pending appointments more than 24h away', function () {
     $appointment = Appointment::factory()->create([
-        'scheduled_date' => now()->addDay(),
+        'scheduled_date' => now()->addDays(2),
         'status' => 'pending',
     ]);
 
@@ -85,7 +85,7 @@ it('canBeCancelled returns true for pending future appointments', function () {
 
 it('canBeCancelled returns false for completed appointments', function () {
     $appointment = Appointment::factory()->create([
-        'scheduled_date' => now()->addDay(),
+        'scheduled_date' => now()->addDays(2),
         'status' => 'completed',
     ]);
 
@@ -95,6 +95,15 @@ it('canBeCancelled returns false for completed appointments', function () {
 it('canBeCancelled returns false for past appointments', function () {
     $appointment = Appointment::factory()->create([
         'scheduled_date' => now()->subDay(),
+        'status' => 'pending',
+    ]);
+
+    expect($appointment->canBeCancelled())->toBeFalse();
+});
+
+it('canBeCancelled returns false when less than 24 hours away', function () {
+    $appointment = Appointment::factory()->create([
+        'scheduled_date' => now()->addHours(12),
         'status' => 'pending',
     ]);
 

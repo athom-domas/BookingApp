@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\AppointmentResource;
 use App\Filament\Resources\PaymentResource\Pages;
 use App\Models\Payment;
+use App\Services\PaymentService;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
 use Filament\Resources\Resource;
@@ -140,7 +141,21 @@ class PaymentResource extends Resource
                     ->requiresConfirmation()
                     ->modalHeading('Conferma rimborso')
                     ->modalDescription('Sei sicuro di voler rimborsare questo pagamento?')
-                    ->action(fn (Payment $record) => $record->update(['status' => 'refunded']))
+                    ->action(function (Payment $record): void {
+                    try {
+                        app(PaymentService::class)->refundPayment($record->id);
+                        \Filament\Notifications\Notification::make()
+                            ->success()
+                            ->title('Rimborso effettuato')
+                            ->send();
+                    } catch (\Throwable $e) {
+                        \Filament\Notifications\Notification::make()
+                            ->danger()
+                            ->title('Rimborso fallito')
+                            ->body($e->getMessage())
+                            ->send();
+                    }
+                })
                     ->visible(fn (Payment $record): bool => $record->status === 'completed' && $record->payment_method === 'stripe'),
             ]);
     }

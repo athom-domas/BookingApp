@@ -29,7 +29,3 @@
     <a href="{{ $confirmUrl }}" class="btn" style="background-color: {{ $btnColor }}; color: #ffffff;">✓ Conferma presenza</a>
     <a href="{{ $cancelUrl }}" class="btn btn-secondary">Disdici</a>
 @endsection
-
-@section('footer-note')
-    I link di conferma e disdetta scadono entro 48 ore. Per modificare l'orario accedi al portale clienti.
-@endsection

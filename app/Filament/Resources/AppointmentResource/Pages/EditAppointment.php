@@ -15,7 +15,9 @@ class EditAppointment extends EditRecord
 
     protected function getFormActions(): array
     {
-        if (in_array($this->record->status, ['completed', 'cancelled'])) {
+        $record = $this->record;
+
+        if ($record->status === 'completed' && $record->payment?->status !== 'refunded') {
             return [];
         }
 

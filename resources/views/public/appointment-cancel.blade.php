@@ -47,7 +47,7 @@
             {{ $appointment->scheduled_date->format('d/m/Y') }} alle <strong>{{ $appointment->scheduled_date->format('H:i') }}</strong><br>
             con {{ $appointment->staff->name }}
         </div>
-        <form method="POST" action="{{ request()->url() }}">
+        <form method="POST" action="{{ request()->fullUrl() }}">
             @csrf
             <label for="reason">Motivo (opzionale)</label>
             <textarea id="reason" name="reason" rows="3" placeholder="Es. impegno improvviso..."></textarea>
