@@ -34,9 +34,9 @@ class AppointmentCalendarWidget extends FullCalendarWidget
         return [
             'initialView'   => 'dayGridMonth',
             'headerToolbar' => [
-                'left'   => 'prev,next today dayGridMonth,timeGridDay',
+                'left'   => 'prev,next today',
                 'center' => 'title',
-                'right'  => '',
+                'right'  => 'dayGridMonth,timeGridWeek,listWeek',
             ],
             'locale'           => 'it',
             'eventDisplay'     => 'block',
@@ -44,7 +44,10 @@ class AppointmentCalendarWidget extends FullCalendarWidget
             'displayEventEnd'  => true,
             'eventTimeFormat'  => ['hour' => '2-digit', 'minute' => '2-digit', 'hour12' => false],
             'dayMaxEvents'     => true,
-            'aspectRatio'      => 1.2,
+            'aspectRatio'      => 1.4,
+            'slotMinTime'      => '07:00:00',
+            'slotMaxTime'      => '21:00:00',
+            'allDaySlot'       => false,
         ];
     }
 
@@ -101,6 +104,8 @@ class AppointmentCalendarWidget extends FullCalendarWidget
                 'start'           => $appointment->scheduled_date->toIso8601String(),
                 'end'             => $appointment->scheduled_date->copy()->addMinutes($duration)->toIso8601String(),
                 'backgroundColor' => $this->staffColor($appointment),
+                'borderColor'     => $this->staffColor($appointment),
+                'classNames'      => ['fc-appt-' . $appointment->status],
                 'extendedProps'   => ['status' => $appointment->status],
             ];
         })->toArray();
