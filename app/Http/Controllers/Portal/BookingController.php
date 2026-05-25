@@ -24,7 +24,7 @@ class BookingController extends Controller
     public function index(): View
     {
         $profile  = SalonProfile::current()->load('media');
-        $services = Service::active()->orderBy('name')->get();
+        $services = Service::active()->orderByDesc('featured')->orderBy('name')->get();
         $staff    = User::whereHas('roles', fn ($q) => $q->where('name', 'staff')->where('guard_name', 'web'))
             ->with('media')
             ->where(fn ($q) => $q
@@ -43,6 +43,7 @@ class BookingController extends Controller
             ->with(['staff' => fn ($q) => $q
                 ->whereHas('roles', fn ($r) => $r->where('name', 'staff')->where('guard_name', 'web'))
                 ->orderBy('name')])
+            ->orderByDesc('featured')
             ->orderBy('name')
             ->get();
 

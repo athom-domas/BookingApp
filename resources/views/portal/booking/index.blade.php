@@ -58,6 +58,7 @@
             'description' => $s->description ?? '',
             'duration'    => $s->duration_minutes,
             'price'       => (float) $s->price,
+            'featured'    => (bool) $s->featured,
             'staff_ids'   => $s->staff->pluck('id')->values()->all(),
         ])->values()->all();
 
@@ -114,7 +115,7 @@
                 </button>
                 <div x-show="isOpen(1)" class="border-t border-gray-100 dark:border-gray-700 px-5 pb-5 pt-4">
                     <div class="grid gap-3 sm:grid-cols-2">
-                        <template x-for="service in allServices" :key="service.id">
+                        <template x-for="service in visibleServices" :key="service.id">
                             <button
                                 type="button"
                                 @click="toggleService(service.id)"
@@ -132,6 +133,14 @@
                                 <p class="mt-2 text-xs text-gray-400 dark:text-gray-500" x-text="service.duration + ' min'"></p>
                             </button>
                         </template>
+                    </div>
+                    <div x-show="hasMoreServices && !showAllServices" class="mt-3">
+                        <button
+                            type="button"
+                            @click="showAllServices = true"
+                            class="text-xs font-semibold text-gray-500 dark:text-gray-400 underline underline-offset-2 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+                            x-text="'Mostra tutti i servizi (' + allServices.length + ')'">
+                        </button>
                     </div>
                     <div class="mt-4 flex items-center justify-between">
                         <p x-show="selectedServiceIds.length > 0" class="text-xs text-gray-500 dark:text-gray-400"

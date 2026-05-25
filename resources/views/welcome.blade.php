@@ -43,15 +43,18 @@
 
 {{-- 2. SERVIZI --}}
 @if($services->isNotEmpty())
-<section class="py-20 px-4 sm:px-6 lg:px-8 bg-[#f9f6f2] dark:bg-gray-900">
+<section class="py-20 px-4 sm:px-6 lg:px-8 bg-[#f9f6f2] dark:bg-gray-900"
+         x-data="{ showAll: false }">
     <div class="mx-auto max-w-6xl">
         <div class="text-center mb-14">
             <div class="mx-auto bg-gray-400 dark:bg-gray-500"></div>
             <h2 class="font-display text-3xl font-semibold text-gray-900 dark:text-gray-50">I nostri servizi</h2>
         </div>
         <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            @foreach($services as $service)
-                <article class="bg-white dark:bg-gray-800 p-7 shadow-sm hover:shadow transition-shadow duration-300">
+            @foreach($services as $index => $service)
+                <article
+                    @if($index >= 4) x-show="showAll" x-cloak @endif
+                    class="bg-white dark:bg-gray-800 p-7 shadow-sm hover:shadow transition-shadow duration-300">
                     <div class="flex items-start justify-between gap-4 mb-3">
                         <h3 class="font-display text-xl font-semibold text-gray-900 dark:text-gray-50 leading-tight">
                             {{ $service->name }}
@@ -72,6 +75,22 @@
                 </article>
             @endforeach
         </div>
+        @if($services->count() > 4)
+            <div class="mt-10 text-center">
+                <button
+                    x-show="!showAll"
+                    @click="showAll = true"
+                    class="text-sm font-semibold tracking-wide text-gray-600 dark:text-gray-400 underline underline-offset-4 hover:text-gray-900 dark:hover:text-white transition-colors">
+                    Mostra tutti i servizi ({{ $services->count() }})
+                </button>
+                <button
+                    x-show="showAll" x-cloak
+                    @click="showAll = false"
+                    class="text-sm font-semibold tracking-wide text-gray-600 dark:text-gray-400 underline underline-offset-4 hover:text-gray-900 dark:hover:text-white transition-colors">
+                    Mostra meno
+                </button>
+            </div>
+        @endif
     </div>
 </section>
 @endif

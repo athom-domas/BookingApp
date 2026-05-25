@@ -10,6 +10,7 @@ export function bookingWizard(allServices, allStaff) {
 
         // step 1
         selectedServiceIds: [],
+        showAllServices: false,
 
         // step 2
         staffId: null,
@@ -122,6 +123,18 @@ export function bookingWizard(allServices, allStaff) {
                 const s = this.allServices.find(s => s.id === id);
                 return sum + (s ? s.price : 0);
             }, 0);
+        },
+
+        get visibleServices() {
+            if (this.showAllServices) return this.allServices;
+            const featured = this.allServices.filter(s => s.featured);
+            return featured.length > 0 ? featured : this.allServices.slice(0, 4);
+        },
+
+        get hasMoreServices() {
+            const featured = this.allServices.filter(s => s.featured);
+            const shown = featured.length > 0 ? featured : this.allServices.slice(0, 4);
+            return shown.length < this.allServices.length;
         },
 
         get filteredStaff() {

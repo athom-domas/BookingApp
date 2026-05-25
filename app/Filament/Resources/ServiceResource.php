@@ -62,6 +62,25 @@ class ServiceResource extends Resource
             Toggle::make('active')
                 ->label('Attivo')
                 ->default(true),
+
+            Toggle::make('featured')
+                ->label('In evidenza')
+                ->helperText('Mostrato in primo piano nella pagina del salone. Massimo 4 servizi.')
+                ->live()
+                ->afterStateUpdated(function (bool $state, $set, $record): void {
+                    if (! $state) return;
+                    $count = Service::where('featured', true)
+                        ->when($record?->id, fn ($q, $id) => $q->where('id', '!=', $id))
+                        ->count();
+                    if ($count >= 4) {
+                        $set('featured', false);
+                        \Filament\Notifications\Notification::make()
+                            ->danger()
+                            ->title('Limite raggiunto')
+                            ->body('Puoi selezionare al massimo 4 servizi in evidenza.')
+                            ->send();
+                    }
+                }),
         ]);
     }
 
@@ -85,6 +104,22 @@ class ServiceResource extends Resource
 
                 ToggleColumn::make('active')
                     ->label('Attivo'),
+
+                ToggleColumn::make('featured')
+                    ->label('In evidenza')
+                    ->disabled(fn (Service $record): bool => ! $record->featured && Service::where('featured', true)->count() >= 4)
+                    ->updateStateUsing(function (Service $record, bool $state): bool {
+                        if ($state && Service::where('featured', true)->where('id', '!=', $record->id)->count() >= 4) {
+                            \Filament\Notifications\Notification::make()
+                                ->danger()
+                                ->title('Limite raggiunto')
+                                ->body('Puoi selezionare al massimo 4 servizi in evidenza.')
+                                ->send();
+                            return false;
+                        }
+                        $record->update(['featured' => $state]);
+                        return $state;
+                    }),
             ])
             ->filters([
                 TernaryFilter::make('active')
