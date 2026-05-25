@@ -119,6 +119,11 @@ class AdminResource extends Resource
                 ->visible(fn(Get $get): bool => (bool) $get('works_as_staff'))
                 ->helperText('Seleziona almeno un servizio per rendere lo staff prenotabile dal portale clienti.')
                 ->columnSpanFull(),
+
+            Toggle::make('receive_email_notifications')
+                ->label('Ricevi notifiche email')
+                ->helperText('Invia una email per ogni nuova prenotazione ricevuta nel sistema.')
+                ->default(true),
         ]);
     }
 

@@ -12,6 +12,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\ColorColumn;
@@ -139,6 +140,11 @@ class StaffResource extends Resource
                 ->label('Bio')
                 ->rows(3)
                 ->columnSpanFull(),
+
+            Toggle::make('receive_email_notifications')
+                ->label('Ricevi notifiche email')
+                ->helperText('Invia una email per ogni nuovo appuntamento assegnato a questo membro.')
+                ->default(true),
 
         ]);
     }

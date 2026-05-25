@@ -20,12 +20,14 @@ class SendAppointmentNotifications
         $admins = User::role('admin')->get();
 
         foreach ($admins as $admin) {
-            Mail::to($admin->email)->send(new AdminAppointmentNotificationMail($event->appointment));
+            if ($admin->receive_email_notifications) {
+                Mail::to($admin->email)->send(new AdminAppointmentNotificationMail($event->appointment));
+            }
         }
 
-        if ($event->appointment->staff) {
-            Mail::to($event->appointment->staff->email)
-                ->send(new StaffAppointmentNotificationMail($event->appointment));
+        $staff = $event->appointment->staff;
+        if ($staff && $staff->receive_email_notifications) {
+            Mail::to($staff->email)->send(new StaffAppointmentNotificationMail($event->appointment));
         }
     }
 }

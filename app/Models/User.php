@@ -19,7 +19,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Spatie\Permission\Traits\HasRoles;
 
-#[Fillable(['name', 'email', 'password', 'internal_notes', 'calendar_color', 'bio'])]
+#[Fillable(['name', 'email', 'password', 'internal_notes', 'calendar_color', 'bio', 'receive_email_notifications'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements FilamentUser, HasMedia
 {
@@ -29,8 +29,9 @@ class User extends Authenticatable implements FilamentUser, HasMedia
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
+            'email_verified_at'              => 'datetime',
+            'password'                       => 'hashed',
+            'receive_email_notifications'    => 'boolean',
         ];
     }
 
