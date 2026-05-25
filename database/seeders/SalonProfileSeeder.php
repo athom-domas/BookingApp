@@ -52,6 +52,13 @@ class SalonProfileSeeder extends Seeder
             'cover.jpg'
         );
 
+        $this->addMediaSafely(
+            $profile,
+            'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=200&h=200&fit=crop&q=80',
+            'logo',
+            'logo.jpg'
+        );
+
         $galleryUrls = [
             'https://images.unsplash.com/photo-1621605815971-fbc98d665033?w=800&h=600&fit=crop&q=80',
             'https://images.unsplash.com/photo-1622286342621-4bd786c2447c?w=800&h=600&fit=crop&q=80',

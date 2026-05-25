@@ -18,11 +18,6 @@
         <div class="absolute inset-0" style="background: linear-gradient(135deg, rgba(0,0,0,0.8) 0%, rgba(40,40,40,0.85) 100%)"></div>
     @endif
     <div class="relative z-10 space-y-7 px-6 text-center max-w-3xl">
-        @if($profile->logoUrl())
-            <img src="{{ $profile->logoUrl() }}"
-                 class="mx-auto h-14 object-contain brightness-0 invert opacity-85"
-                 alt="{{ $profile->name }}">
-        @endif
         <h1 class="font-display text-5xl font-semibold text-white sm:text-6xl lg:text-7xl tracking-tight"
             style="text-shadow: 0 2px 24px rgba(0,0,0,0.35)">
             {{ $profile->name }}

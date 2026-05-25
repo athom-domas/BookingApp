@@ -51,9 +51,9 @@ class SalonProfile extends Model implements HasMedia
 
     public function registerMediaCollections(): void
     {
-        $this->addMediaCollection('logo')->singleFile();
-        $this->addMediaCollection('cover')->singleFile();
-        $this->addMediaCollection('gallery');
+        $this->addMediaCollection('logo')->singleFile()->useDisk('public');
+        $this->addMediaCollection('cover')->singleFile()->useDisk('public');
+        $this->addMediaCollection('gallery')->useDisk('public');
     }
 
     public function registerMediaConversions(?Media $media = null): void
