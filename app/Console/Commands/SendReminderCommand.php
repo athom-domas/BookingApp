@@ -14,7 +14,12 @@ class SendReminderCommand extends Command
 
     public function handle(): int
     {
-        $appointmentId = $this->argument('appointment_id');
+        $appointmentId = (int) $this->argument('appointment_id');
+
+        if ($appointmentId <= 0) {
+            $this->error('ID appuntamento non valido.');
+            return self::FAILURE;
+        }
 
         $reminders = AppointmentReminder::where('appointment_id', $appointmentId)->get();
 
