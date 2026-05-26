@@ -26,16 +26,13 @@ class AppointmentReminderMail extends Mailable
 
     public function content(): Content
     {
-        $hoursLabel = $this->appointment->scheduled_date->isAfter(now()->addHours(20))
-            ? 'domani'
-            : 'tra 2 ore';
+        $expiry = $this->appointment->scheduled_date->copy()->subDay();
 
         return new Content(
             view: 'emails.appointment-reminder',
             with: [
-                'confirmUrl' => URL::signedRoute('appointment.public.confirm', ['appointment' => $this->appointment], now()->addHours(48)),
-                'cancelUrl'  => URL::signedRoute('appointment.public.cancel', ['appointment' => $this->appointment], now()->addHours(48)),
-                'hoursLabel' => $hoursLabel,
+                'confirmUrl' => URL::signedRoute('appointment.public.confirm', ['appointment' => $this->appointment, 'uid' => $this->appointment->user_id], $expiry),
+                'cancelUrl'  => URL::signedRoute('appointment.public.cancel', ['appointment' => $this->appointment, 'uid' => $this->appointment->user_id], $expiry),
             ],
         );
     }

@@ -8,6 +8,7 @@ use App\Http\Requests\Api\GetAvailableSlotsRequest;
 use App\Http\Resources\SlotResource;
 use App\Services\Booking\AppointmentService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Log;
 
 class BookingController extends Controller
 {
@@ -37,7 +38,8 @@ class BookingController extends Controller
                 'count'   => count($slots),
             ]);
         } catch (\Throwable $e) {
-            return response()->json(['success' => false, 'error' => $e->getMessage()], 400);
+            Log::error('getAvailableSlots failed', ['error' => $e->getMessage()]);
+            return response()->json(['success' => false, 'error' => 'Impossibile recuperare gli slot disponibili.'], 400);
         }
     }
 
@@ -61,7 +63,8 @@ class BookingController extends Controller
                 'data'    => $dates,
             ]);
         } catch (\Throwable $e) {
-            return response()->json(['success' => false, 'error' => $e->getMessage()], 400);
+            Log::error('getAvailableDates failed', ['error' => $e->getMessage()]);
+            return response()->json(['success' => false, 'error' => 'Impossibile recuperare le date disponibili.'], 400);
         }
     }
 }

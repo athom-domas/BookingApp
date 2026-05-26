@@ -4,7 +4,7 @@
 
 @section('body')
     <p>Ciao <strong>{{ $appointment->user->name }}</strong>,</p>
-    <p>ti ricordiamo che hai un appuntamento <strong>{{ $hoursLabel }}</strong> alle <strong>{{ $appointment->scheduled_date->format('H:i') }}</strong>.</p>
+    <p>ti ricordiamo che hai un appuntamento tra 2 giorni.</p>
 
     <div class="detail-card">
         <div class="detail-row">
@@ -20,6 +20,8 @@
             <span class="detail-value">{{ $appointment->scheduled_date->format('d/m/Y') }} alle {{ $appointment->scheduled_date->format('H:i') }}</span>
         </div>
     </div>
+
+    <p style="font-size:0.875rem; color:#6b7280;">Puoi disdire fino a 24 ore prima dell'appuntamento tramite il link qui sotto. Dopo tale termine non sarà più possibile annullare.</p>
 @endsection
 
 @section('actions')

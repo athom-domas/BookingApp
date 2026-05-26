@@ -49,18 +49,18 @@ class SendAppointmentReminder implements ShouldQueue
     private function sendSms(Appointment $appointment, string $phone, NotificationService $notificationService): void
     {
         $text = "Ciao {$appointment->user->name}, appuntamento {$appointment->services_label} il {$appointment->scheduled_date->format('d/m/Y')} alle {$appointment->scheduled_date->format('H:i')} con {$appointment->staff->name}. Conferma: " .
-            URL::signedRoute('appointment.public.confirm', ['appointment' => $appointment], now()->addHours(48)) .
+            URL::signedRoute('appointment.public.confirm', ['appointment' => $appointment, 'uid' => $appointment->user_id], $appointment->scheduled_date->copy()->subDay()) .
             " | Disdici: " .
-            URL::signedRoute('appointment.public.cancel', ['appointment' => $appointment], now()->addHours(48));
+            URL::signedRoute('appointment.public.cancel', ['appointment' => $appointment, 'uid' => $appointment->user_id], $appointment->scheduled_date->copy()->subDay());
         $notificationService->sendSms($phone, $text);
     }
 
     private function sendWhatsApp(Appointment $appointment, string $phone, NotificationService $notificationService): void
     {
         $text = "Ciao {$appointment->user->name}, appuntamento {$appointment->services_label} il {$appointment->scheduled_date->format('d/m/Y')} alle {$appointment->scheduled_date->format('H:i')} con {$appointment->staff->name}. Conferma: " .
-            URL::signedRoute('appointment.public.confirm', ['appointment' => $appointment], now()->addHours(48)) .
+            URL::signedRoute('appointment.public.confirm', ['appointment' => $appointment, 'uid' => $appointment->user_id], $appointment->scheduled_date->copy()->subDay()) .
             " | Disdici: " .
-            URL::signedRoute('appointment.public.cancel', ['appointment' => $appointment], now()->addHours(48));
+            URL::signedRoute('appointment.public.cancel', ['appointment' => $appointment, 'uid' => $appointment->user_id], $appointment->scheduled_date->copy()->subDay());
         $notificationService->sendWhatsApp($phone, $text);
     }
 

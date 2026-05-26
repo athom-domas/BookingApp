@@ -19,8 +19,8 @@ class BookingStatsWidget extends BaseWidget
         $isAdmin = $user?->isAdmin();
 
         $base = $isAdmin
-            ? Appointment::query()
-            : Appointment::where('staff_id', $user?->id);
+            ? Appointment::query()->where('status', '<>', 'cancelled')
+            : Appointment::where('staff_id', $user?->id)->where('status', '<>', 'cancelled');
 
         $todayCount = (clone $base)->whereDate('scheduled_date', today())->count();
         $monthCount = (clone $base)

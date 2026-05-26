@@ -3,6 +3,7 @@
 use App\Jobs\SendAppointmentConfirmation;
 use App\Jobs\SendAppointmentReminder;
 use App\Jobs\SendCancellationNotification;
+use App\Mail\AdminCancellationNotificationMail;
 use App\Mail\AppointmentCancellationMail;
 use App\Mail\AppointmentConfirmationMail;
 use App\Mail\AppointmentReminderMail;
@@ -17,6 +18,7 @@ use Spatie\Permission\Models\Role;
 beforeEach(function () {
     Role::firstOrCreate(['name' => 'customer', 'guard_name' => 'web']);
     Role::firstOrCreate(['name' => 'staff', 'guard_name' => 'web']);
+    Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
     Mail::fake();
 });
 
@@ -128,11 +130,13 @@ it('SendAppointmentConfirmation sends confirmation email', function () {
 
 // --- SendCancellationNotification ---
 
-it('SendCancellationNotification emails both customer and staff', function () {
+it('SendCancellationNotification emails customer and admin', function () {
     $customer = User::factory()->create();
     $customer->assignRole('customer');
     $staff = User::factory()->create();
     $staff->assignRole('staff');
+    $admin = User::factory()->create(['receive_email_notifications' => true]);
+    $admin->assignRole('admin');
 
     $appointment = Appointment::factory()->create([
         'user_id'  => $customer->id,
@@ -144,5 +148,6 @@ it('SendCancellationNotification emails both customer and staff', function () {
 
     (new SendCancellationNotification($appointment))->handle($mockNotification);
 
-    Mail::assertSent(AppointmentCancellationMail::class, 2);
+    Mail::assertSent(AppointmentCancellationMail::class, 1);
+    Mail::assertSent(AdminCancellationNotificationMail::class, 1);
 });

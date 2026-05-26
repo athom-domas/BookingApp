@@ -123,14 +123,7 @@ class AppointmentService
             AppointmentReminder::create([
                 'appointment_id' => $appointment->id,
                 'type'           => 'email',
-                'scheduled_for'  => $scheduledDate->copy()->subDay(),
-                'status'         => 'pending',
-            ]);
-
-            AppointmentReminder::create([
-                'appointment_id' => $appointment->id,
-                'type'           => 'email',
-                'scheduled_for'  => $scheduledDate->copy()->subHours(2),
+                'scheduled_for'  => $scheduledDate->copy()->subDays(2),
                 'status'         => 'pending',
             ]);
 

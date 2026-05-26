@@ -12,8 +12,10 @@ class AppointmentActionController extends Controller
 {
     public function __construct(private readonly AppointmentService $appointmentService) {}
 
-    public function confirm(Appointment $appointment)
+    public function confirm(Appointment $appointment, Request $request)
     {
+        abort_unless((int) $request->query('uid') === $appointment->user_id, 403);
+
         if ($appointment->status === 'cancelled' || $appointment->isPast()) {
             return view('public.appointment-confirmed', ['appointment' => $appointment, 'alreadyPast' => true]);
         }
@@ -23,8 +25,10 @@ class AppointmentActionController extends Controller
         return view('public.appointment-confirmed', ['appointment' => $appointment, 'alreadyPast' => false]);
     }
 
-    public function cancelForm(Appointment $appointment)
+    public function cancelForm(Appointment $appointment, Request $request)
     {
+        abort_unless((int) $request->query('uid') === $appointment->user_id, 403);
+
         if (! $appointment->canBeCancelled()) {
             return view('public.appointment-cancelled', ['appointment' => $appointment, 'alreadyDone' => true]);
         }
@@ -34,6 +38,8 @@ class AppointmentActionController extends Controller
 
     public function processCancellation(Appointment $appointment, Request $request)
     {
+        abort_unless((int) $request->query('uid') === $appointment->user_id, 403);
+
         try {
             $this->appointmentService->cancelAppointment($appointment->id, $request->input('reason'));
         } catch (BookingException) {
