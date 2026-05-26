@@ -15,6 +15,10 @@ Route::get('/', [BookingController::class, 'index'])->name('booking.index');
 Route::get('/prenota', [BookingController::class, 'create'])->name('booking.create');
 Route::post('/stripe/webhook', StripeWebhookController::class)->name('stripe.webhook');
 
+Route::get('/waitlist/offer/{entry}/accept', fn () => abort(501))
+    ->name('waitlist.offer.accept')
+    ->middleware('signed');
+
 Route::get('/r/{appointment}/conferma', [AppointmentActionController::class, 'confirm'])
     ->name('appointment.public.confirm')
     ->middleware('signed');
