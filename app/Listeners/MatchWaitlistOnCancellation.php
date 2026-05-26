@@ -32,6 +32,7 @@ class MatchWaitlistOnCancellation
     {
         $date       = $slotInfo['date'];
         $time       = $slotInfo['time'];
+        // force English to match stored day names — AppServiceProvider sets global locale to 'it'
         $dayName    = strtolower(\Carbon\Carbon::parse($date)->locale('en')->dayName);
         $serviceIds = $slotInfo['service_ids'];
         $staffId    = $slotInfo['staff_id'];
@@ -44,7 +45,7 @@ class MatchWaitlistOnCancellation
                 $timeFrom = substr($entry->preferred_time_from, 0, 5);
                 $timeTo   = substr($entry->preferred_time_to, 0, 5);
 
-                return ! empty(array_intersect($entry->service_ids, $serviceIds))
+                return ! empty(array_intersect(array_map('intval', $entry->service_ids), array_map('intval', $serviceIds)))
                     && $date >= $entry->preferred_date_from->toDateString()
                     && $date <= $entry->preferred_date_to->toDateString()
                     && $time >= $timeFrom

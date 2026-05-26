@@ -206,3 +206,29 @@ it('dispatches when preferred_staff_id is null (any staff)', function () {
 
     Queue::assertPushed(NotifyWaitlistCandidateJob::class);
 });
+
+it('does not dispatch for a notified entry (already holding an offer)', function () {
+    Queue::fake();
+
+    $service = Service::factory()->create();
+
+    WaitlistEntry::factory()->create([
+        'service_ids'         => [$service->id],
+        'preferred_date_from' => today(),
+        'preferred_date_to'   => today()->addDays(30),
+        'preferred_time_from' => '09:00',
+        'preferred_time_to'   => '18:00',
+        'preferred_days'      => ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'],
+        'status'              => 'notified',
+    ]);
+
+    $appointment = Appointment::factory()->create([
+        'service_ids'    => [$service->id],
+        'scheduled_date' => now()->next('Monday')->setTime(10, 0),
+        'status'         => 'cancelled',
+    ]);
+
+    event(new AppointmentCancelled($appointment));
+
+    Queue::assertNotPushed(NotifyWaitlistCandidateJob::class);
+});
