@@ -52,6 +52,7 @@
                     <label for="preferred_date_to" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Al <span class="text-red-500">*</span></label>
                     <input type="date" name="preferred_date_to" id="preferred_date_to"
                         value="{{ old('preferred_date_to') }}"
+                        min="{{ today()->toDateString() }}"
                         class="mt-1 block w-full rounded-md border-gray-300 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100">
                     @error('preferred_date_to')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
@@ -78,7 +79,7 @@
                     @foreach(['monday' => 'Lun', 'tuesday' => 'Mar', 'wednesday' => 'Mer', 'thursday' => 'Gio', 'friday' => 'Ven', 'saturday' => 'Sab', 'sunday' => 'Dom'] as $value => $label)
                         <label class="flex items-center gap-1.5">
                             <input type="checkbox" name="preferred_days[]" value="{{ $value }}"
-                                {{ !old('preferred_days') || in_array($value, old('preferred_days', [])) ? 'checked' : '' }}
+                                {{ in_array($value, old('preferred_days', [])) ? 'checked' : '' }}
                                 class="rounded border-gray-300 dark:border-gray-600">
                             <span class="text-sm text-gray-700 dark:text-gray-300">{{ $label }}</span>
                         </label>

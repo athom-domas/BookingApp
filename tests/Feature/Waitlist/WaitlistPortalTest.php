@@ -17,7 +17,7 @@ it('shows waitlist index for authenticated customer', function () {
     $user->assignRole('customer');
 
     $this->actingAs($user)
-        ->get('/portal/waitlist')
+        ->get(route('portal.waitlist.index'))
         ->assertOk()
         ->assertViewIs('portal.waitlist.index');
 });
@@ -28,7 +28,7 @@ it('creates a waitlist entry', function () {
     $service = Service::factory()->create();
 
     $this->actingAs($user)
-        ->post('/portal/waitlist', [
+        ->post(route('portal.waitlist.store'), [
             'service_ids'         => [$service->id],
             'preferred_date_from' => today()->addDay()->toDateString(),
             'preferred_date_to'   => today()->addDays(30)->toDateString(),
@@ -36,7 +36,7 @@ it('creates a waitlist entry', function () {
             'preferred_time_to'   => '18:00',
             'preferred_days'      => ['monday', 'wednesday', 'friday'],
         ])
-        ->assertRedirect('/portal/waitlist');
+        ->assertRedirect(route('portal.waitlist.index'));
 
     expect(WaitlistEntry::where('user_id', $user->id)->exists())->toBeTrue();
 });
@@ -46,7 +46,7 @@ it('validates required fields on store', function () {
     $user->assignRole('customer');
 
     $this->actingAs($user)
-        ->post('/portal/waitlist', [])
+        ->post(route('portal.waitlist.store'), [])
         ->assertSessionHasErrors(['service_ids', 'preferred_date_from', 'preferred_date_to', 'preferred_time_from', 'preferred_time_to', 'preferred_days']);
 });
 
@@ -56,8 +56,8 @@ it('cancels a waitlist entry owned by the user', function () {
     $entry = WaitlistEntry::factory()->create(['user_id' => $user->id, 'status' => 'waiting']);
 
     $this->actingAs($user)
-        ->delete('/portal/waitlist/' . $entry->id)
-        ->assertRedirect('/portal/waitlist');
+        ->delete(route('portal.waitlist.destroy', $entry->id))
+        ->assertRedirect(route('portal.waitlist.index'));
 
     expect($entry->fresh()->status)->toBe('cancelled');
 });
@@ -70,25 +70,25 @@ it('prevents cancelling another user\'s entry', function () {
     $entry   = WaitlistEntry::factory()->create(['user_id' => $other->id, 'status' => 'waiting']);
 
     $this->actingAs($user)
-        ->delete('/portal/waitlist/' . $entry->id)
+        ->delete(route('portal.waitlist.destroy', $entry->id))
         ->assertStatus(403);
 });
 
 it('redirects guests to login', function () {
-    $this->get('/portal/waitlist')->assertRedirect('/login');
+    $this->get(route('portal.waitlist.index'))->assertRedirect('/login');
 });
 
 it('redirects guests to login on create page', function () {
-    $this->get('/portal/waitlist/create')->assertRedirect('/login');
+    $this->get(route('portal.waitlist.create'))->assertRedirect('/login');
 });
 
 it('redirects guests to login on store', function () {
-    $this->post('/portal/waitlist', [])->assertRedirect('/login');
+    $this->post(route('portal.waitlist.store'), [])->assertRedirect('/login');
 });
 
 it('redirects guests to login on destroy', function () {
     $entry = WaitlistEntry::factory()->create(['status' => 'waiting']);
-    $this->delete('/portal/waitlist/' . $entry->id)->assertRedirect('/login');
+    $this->delete(route('portal.waitlist.destroy', $entry->id))->assertRedirect('/login');
 });
 
 it('pre-fills services on create page from query params', function () {
@@ -97,7 +97,7 @@ it('pre-fills services on create page from query params', function () {
     $service = Service::factory()->create();
 
     $response = $this->actingAs($user)
-        ->get('/portal/waitlist/create?service_ids[]=' . $service->id);
+        ->get(route('portal.waitlist.create') . '?service_ids[]=' . $service->id);
 
     $response->assertOk()
         ->assertViewIs('portal.waitlist.create')

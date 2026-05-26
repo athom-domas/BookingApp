@@ -16,6 +16,7 @@ class WaitlistController extends Controller
     {
         $entries = WaitlistEntry::where('user_id', $request->user()->id)
             ->whereIn('status', ['waiting', 'notified'])
+            ->with('preferredStaff')
             ->latest()
             ->get();
 
