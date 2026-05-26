@@ -33,7 +33,7 @@
                     class="mt-1 block w-full rounded-md border-gray-300 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100">
                     <option value="">Qualsiasi operatore</option>
                     @foreach($staff as $member)
-                        <option value="{{ $member->id }}" {{ old('preferred_staff_id') == $member->id ? 'selected' : '' }}>
+                        <option value="{{ $member->id }}" {{ (old('preferred_staff_id') ?? $prefilledStaffId) == $member->id ? 'selected' : '' }}>
                             {{ $member->name }}
                         </option>
                     @endforeach

@@ -25,11 +25,12 @@ class WaitlistController extends Controller
 
     public function create(Request $request): View
     {
-        $services            = Service::active()->get();
-        $staff               = User::role('staff')->get();
-        $prefilledServiceIds = array_map('intval', (array) $request->query('service_ids', []));
+        $services              = Service::active()->get();
+        $staff                 = User::role('staff')->get();
+        $prefilledServiceIds   = array_map('intval', (array) $request->query('service_ids', []));
+        $prefilledStaffId      = $request->query('preferred_staff_id') ? (int) $request->query('preferred_staff_id') : null;
 
-        return view('portal.waitlist.create', compact('services', 'staff', 'prefilledServiceIds'));
+        return view('portal.waitlist.create', compact('services', 'staff', 'prefilledServiceIds', 'prefilledStaffId'));
     }
 
     public function store(Request $request): RedirectResponse

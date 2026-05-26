@@ -285,11 +285,6 @@
                         <div x-show="loadingSlots" class="text-xs text-gray-500 dark:text-gray-400">Caricamento orari...</div>
                         <div x-show="!loadingSlots && availableSlots.length === 0 && date !== null" class="text-xs text-gray-500 dark:text-gray-400">
                             Nessun orario disponibile per questa data.
-                            <a
-                                :href="'{{ route('portal.waitlist.create') }}?service_ids[]=' + selectedServiceIds.join('&service_ids[]=')"
-                                class="ml-1 font-medium text-indigo-600 hover:underline dark:text-indigo-400"
-                                x-show="selectedServiceIds.length > 0"
-                            >Iscriviti alla lista d'attesa →</a>
                         </div>
                         <div class="flex flex-wrap gap-2">
                             <template x-for="s in availableSlots" :key="s.start">
@@ -303,6 +298,20 @@
                                     x-text="s.start"
                                 ></button>
                             </template>
+                        </div>
+                    </div>
+
+                    {{-- Lista d'attesa --}}
+                    <div x-show="isCompleted(2)" class="mt-5 border-t border-gray-100 dark:border-gray-700 pt-4">
+                        <div class="flex items-start justify-between gap-4">
+                            <div>
+                                <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Non trovi un orario che ti soddisfa?</p>
+                                <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Iscriviti alla lista d'attesa: ti avvisiamo non appena si libera uno slot compatibile.</p>
+                            </div>
+                            <a
+                                :href="'{{ route('portal.waitlist.create') }}?' + selectedServiceIds.map(id => 'service_ids[]=' + id).join('&') + (staffId ? '&preferred_staff_id=' + staffId : '')"
+                                class="shrink-0 text-sm font-semibold text-indigo-600 hover:underline dark:text-indigo-400 whitespace-nowrap"
+                            >Lista d'attesa →</a>
                         </div>
                     </div>
 
