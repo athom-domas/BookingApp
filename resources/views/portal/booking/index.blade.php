@@ -285,6 +285,11 @@
                         <div x-show="loadingSlots" class="text-xs text-gray-500 dark:text-gray-400">Caricamento orari...</div>
                         <div x-show="!loadingSlots && availableSlots.length === 0 && date !== null" class="text-xs text-gray-500 dark:text-gray-400">
                             Nessun orario disponibile per questa data.
+                            <a
+                                :href="'{{ route('portal.waitlist.create') }}?service_ids[]=' + selectedServiceIds.join('&service_ids[]=')"
+                                class="ml-1 font-medium text-indigo-600 hover:underline dark:text-indigo-400"
+                                x-show="selectedServiceIds.length > 0"
+                            >Iscriviti alla lista d'attesa →</a>
                         </div>
                         <div class="flex flex-wrap gap-2">
                             <template x-for="s in availableSlots" :key="s.start">
