@@ -14,7 +14,7 @@ class SlotsRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'date'     => ['required', 'date'],
+            'date'     => ['required', 'date', 'after_or_equal:today'],
             'staff_id' => ['required', 'integer', 'exists:users,id'],
         ];
     }

@@ -68,19 +68,18 @@ class SettingsController extends Controller
                 'nullable',
                 'required_if:notification_channel,sms',
                 'required_if:notification_channel,whatsapp',
-                'regex:/^\d{8,12}$/',
-                'max:12',
+                'regex:/^\d{10}$/',
             ],
         ], [
             'notification_channel.required' => 'Seleziona un canale di notifica.',
             'notification_channel.in'       => 'Il canale di notifica selezionato non è valido.',
             'phone_number.required_if'      => 'Il numero di telefono è obbligatorio per il canale selezionato.',
-            'phone_number.regex'            => 'Inserisci un numero valido (solo cifre, es. 334 1234567).',
-            'phone_number.max'              => 'Il numero di telefono non può superare 12 cifre.',
+            'phone_number.regex'            => 'Inserisci un numero italiano valido (10 cifre, es. 3341234567).',
         ]);
 
         if (!empty($validated['phone_number'])) {
-            $validated['phone_number'] = '+39' . $validated['phone_number'];
+            $digits = preg_replace('/\D/', '', $validated['phone_number']);
+            $validated['phone_number'] = '+39' . $digits;
         }
 
         $request->user()->preferences()->firstOrCreate([])->update($validated);
