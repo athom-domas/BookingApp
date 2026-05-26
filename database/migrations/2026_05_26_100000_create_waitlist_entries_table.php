@@ -21,6 +21,7 @@ return new class extends Migration
             $table->enum('status', ['waiting', 'notified', 'booked', 'expired', 'cancelled'])->default('waiting');
             $table->json('offered_slot')->nullable();
             $table->datetime('offer_expires_at')->nullable();
+            $table->index(['status', 'created_at']);
             $table->timestamps();
         });
     }
