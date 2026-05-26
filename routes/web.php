@@ -15,7 +15,7 @@ Route::get('/', [BookingController::class, 'index'])->name('booking.index');
 Route::get('/prenota', [BookingController::class, 'create'])->name('booking.create');
 Route::post('/stripe/webhook', StripeWebhookController::class)->name('stripe.webhook');
 
-Route::get('/waitlist/offer/{entry}/accept', fn () => abort(501))
+Route::get('/r/waitlist/{entry}/accetta', [\App\Http\Controllers\WaitlistOfferController::class, 'accept'])
     ->name('waitlist.offer.accept')
     ->middleware('signed');
 
