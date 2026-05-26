@@ -51,6 +51,11 @@ class WaitlistEntryResource extends Resource
                 TextColumn::make('preferred_time_to')
                     ->label('Alle')
                     ->formatStateUsing(fn ($state) => substr((string) $state, 0, 5)),
+                TextColumn::make('preferred_days')
+                    ->label('Giorni')
+                    ->formatStateUsing(
+                        fn ($state) => collect($state ?? [])->map(fn ($d) => ucfirst($d))->implode(', ')
+                    ),
                 TextColumn::make('status')
                     ->label('Stato')
                     ->badge()
@@ -74,6 +79,14 @@ class WaitlistEntryResource extends Resource
                         'expired'   => 'Scaduto',
                         'cancelled' => 'Cancellato',
                     ]),
+                SelectFilter::make('service')
+                    ->label('Servizio')
+                    ->options(fn () => Service::pluck('name', 'id')->toArray())
+                    ->query(function ($query, $data) {
+                        if ($data['value']) {
+                            $query->whereJsonContains('service_ids', (int) $data['value']);
+                        }
+                    }),
             ])
             ->defaultSort('created_at', 'desc');
     }
@@ -102,6 +115,6 @@ class WaitlistEntryResource extends Resource
 
     public static function canAccess(): bool
     {
-        return auth()->user()?->isAdmin() || auth()->user()?->isStaff() ?? false;
+        return (auth()->user()?->isAdmin() || auth()->user()?->isStaff()) ?? false;
     }
 }
