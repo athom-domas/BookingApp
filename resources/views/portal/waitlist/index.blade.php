@@ -36,15 +36,18 @@
                                     {{ substr($entry->preferred_time_from, 0, 5) }}–{{ substr($entry->preferred_time_to, 0, 5) }}
                                 </p>
                             </div>
-                            @if($entry->status === 'waiting')
-                                <form method="POST" action="{{ route('portal.waitlist.destroy', $entry) }}">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="text-sm text-red-600 hover:underline dark:text-red-400">Rimuovi</button>
-                                </form>
-                            @else
-                                <span class="text-sm font-medium text-blue-600 dark:text-blue-400">Notificato</span>
-                            @endif
+                            <div class="flex flex-col items-end gap-2">
+                                @if($entry->status === 'waiting')
+                                    <span class="text-xs font-medium text-yellow-600 dark:text-yellow-400">In attesa</span>
+                                    <form method="POST" action="{{ route('portal.waitlist.destroy', $entry) }}">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="text-sm text-red-600 hover:underline dark:text-red-400">Rimuovi</button>
+                                    </form>
+                                @else
+                                    <span class="text-sm font-medium text-blue-600 dark:text-blue-400">Notificato</span>
+                                @endif
+                            </div>
                         </div>
                     </div>
                 @endforeach

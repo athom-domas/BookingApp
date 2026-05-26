@@ -77,3 +77,29 @@ it('prevents cancelling another user\'s entry', function () {
 it('redirects guests to login', function () {
     $this->get('/portal/waitlist')->assertRedirect('/login');
 });
+
+it('redirects guests to login on create page', function () {
+    $this->get('/portal/waitlist/create')->assertRedirect('/login');
+});
+
+it('redirects guests to login on store', function () {
+    $this->post('/portal/waitlist', [])->assertRedirect('/login');
+});
+
+it('redirects guests to login on destroy', function () {
+    $entry = WaitlistEntry::factory()->create(['status' => 'waiting']);
+    $this->delete('/portal/waitlist/' . $entry->id)->assertRedirect('/login');
+});
+
+it('pre-fills services on create page from query params', function () {
+    $user    = User::factory()->create();
+    $user->assignRole('customer');
+    $service = Service::factory()->create();
+
+    $response = $this->actingAs($user)
+        ->get('/portal/waitlist/create?service_ids[]=' . $service->id);
+
+    $response->assertOk()
+        ->assertViewIs('portal.waitlist.create')
+        ->assertViewHas('prefilledServiceIds', [$service->id]);
+});
