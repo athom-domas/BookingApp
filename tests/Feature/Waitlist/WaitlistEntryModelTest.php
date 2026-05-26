@@ -5,13 +5,20 @@ use App\Models\User;
 use App\Models\WaitlistEntry;
 use Spatie\Permission\Models\Role;
 
+beforeEach(function () {
+    Role::firstOrCreate(['name' => 'customer', 'guard_name' => 'web']);
+    Role::firstOrCreate(['name' => 'staff', 'guard_name' => 'web']);
+});
+
 it('casts service_ids and preferred_days to array', function () {
+    $s1 = Service::factory()->create();
+    $s2 = Service::factory()->create();
     $entry = WaitlistEntry::factory()->create([
-        'service_ids'    => [1, 2],
+        'service_ids'    => [$s1->id, $s2->id],
         'preferred_days' => ['monday', 'friday'],
     ]);
 
-    expect($entry->service_ids)->toBeArray()->toEqual([1, 2])
+    expect($entry->service_ids)->toBeArray()->toEqual([$s1->id, $s2->id])
         ->and($entry->preferred_days)->toBeArray()->toEqual(['monday', 'friday']);
 });
 
@@ -26,7 +33,6 @@ it('casts preferred_date_from and preferred_date_to to Carbon', function () {
 });
 
 it('belongs to a user', function () {
-    Role::firstOrCreate(['name' => 'customer', 'guard_name' => 'web']);
     $user  = User::factory()->create();
     $user->assignRole('customer');
     $entry = WaitlistEntry::factory()->create(['user_id' => $user->id]);
@@ -35,7 +41,6 @@ it('belongs to a user', function () {
 });
 
 it('belongs to preferred staff when set', function () {
-    Role::firstOrCreate(['name' => 'staff', 'guard_name' => 'web']);
     $staff = User::factory()->create();
     $staff->assignRole('staff');
     $entry = WaitlistEntry::factory()->create(['preferred_staff_id' => $staff->id]);
