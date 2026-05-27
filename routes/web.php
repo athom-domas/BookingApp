@@ -44,7 +44,7 @@ Route::middleware('guest')->group(function () {
     Route::post('/password/reset', [NewPasswordController::class, 'store'])->name('password.update');
 });
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'tenant.user', 'tenant.status'])->group(function () {
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 
     Route::get('/portal', [PortalAppointmentController::class, 'dashboard'])->name('portal.dashboard');

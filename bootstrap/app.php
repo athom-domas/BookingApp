@@ -19,6 +19,19 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->preventRequestForgery(except: [
             'stripe/webhook',
         ]);
+
+        $middleware->alias([
+            'tenant.user'   => \App\Http\Middleware\EnsureUserBelongsToCurrentBusiness::class,
+            'tenant.status' => \App\Http\Middleware\EnforceTenantStatus::class,
+        ]);
+
+        $middleware->web(append: [
+            \App\Http\Middleware\SubdomainMiddleware::class,
+        ]);
+
+        $middleware->api(append: [
+            \App\Http\Middleware\SubdomainMiddleware::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
