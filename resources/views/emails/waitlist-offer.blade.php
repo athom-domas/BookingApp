@@ -5,7 +5,7 @@
 @section('body')
     <p>Ciao <strong>{{ $entry->user->name }}</strong>,</p>
     <p>si è liberato uno slot compatibile con la tua lista d'attesa.</p>
-    <p><strong>Nota:</strong> questa notifica è stata inviata a tutti gli iscritti compatibili — sarà prenotato il primo che risponde.</p>
+    <p><strong>Nota:</strong> questa notifica è stata inviata a tutti gli iscritti compatibili, sarà prenotato il primo che risponde.</p>
 
     <div class="detail-card">
         <div class="detail-row">

@@ -25,8 +25,7 @@ class SystemSettings extends Page
     {
         $setting = SystemSetting::current();
         $this->form->fill([
-            'slot_granularity_minutes'       => $setting->slot_granularity_minutes,
-            'waitlist_offer_timeout_minutes' => $setting->waitlist_offer_timeout_minutes,
+            'slot_granularity_minutes' => $setting->slot_granularity_minutes,
         ]);
     }
 
@@ -43,14 +42,6 @@ class SystemSettings extends Page
                             ->integer()
                             ->minValue(5)
                             ->maxValue(60)
-                            ->required()
-                            ->suffix('min'),
-
-                        TextInput::make('waitlist_offer_timeout_minutes')
-                            ->label('Timeout offerta lista d\'attesa')
-                            ->helperText('Minuti entro cui il cliente deve accettare l\'offerta prima che passi al successivo in lista')
-                            ->integer()
-                            ->minValue(30)
                             ->required()
                             ->suffix('min'),
 
