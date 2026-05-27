@@ -27,7 +27,7 @@ class Business extends Model
             throw new \RuntimeException('No current business context bound.');
         }
 
-        return app('current_business_id');
+        return (int) app('current_business_id');
     }
 
     public function users(): HasMany        { return $this->hasMany(User::class); }

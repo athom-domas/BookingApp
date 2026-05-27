@@ -30,7 +30,7 @@ it('BelongsToBusiness global scope filters records by current business', functio
 
     app()->instance('current_business_id', $b2->id);
     expect(\App\Models\SalonReview::count())->toBe(1);
-});
+})->skip('Requires business_id migration (Task 3) and BelongsToBusiness on SalonReview (Task 5)');
 
 it('BelongsToBusiness auto-fills business_id on create', function () {
     $business = Business::factory()->create();
@@ -45,4 +45,4 @@ it('BelongsToBusiness auto-fills business_id on create', function () {
     ]);
 
     expect($review->business_id)->toBe($business->id);
-});
+})->skip('Requires business_id migration (Task 3) and BelongsToBusiness on SalonReview (Task 5)');
