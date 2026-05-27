@@ -4,6 +4,7 @@ use App\Enums\BusinessStatus;
 use App\Models\Business;
 
 it('throws RuntimeException when no business context is bound', function () {
+    unset(app()['current_business_id']);
     expect(fn() => Business::currentId())->toThrow(\RuntimeException::class, 'No current business context bound.');
 });
 

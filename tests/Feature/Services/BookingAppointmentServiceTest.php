@@ -10,11 +10,14 @@ use Carbon\Carbon;
 use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
+    app()->instance('current_business_id', 1);
+
     Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
     Role::firstOrCreate(['name' => 'staff', 'guard_name' => 'web']);
     Role::firstOrCreate(['name' => 'customer', 'guard_name' => 'web']);
 
     SystemSetting::create([
+        'business_id'              => 1,
         'slot_generation_weeks'    => 4,
         'slot_granularity_minutes' => 30,
         'timezone'                 => 'Europe/Rome',

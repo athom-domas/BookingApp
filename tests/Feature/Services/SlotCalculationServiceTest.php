@@ -16,6 +16,7 @@ beforeEach(function () {
 
     SystemSetting::create([
         'id'                       => 1,
+        'business_id'              => 1,
         'slot_generation_weeks'    => 4,
         'slot_granularity_minutes' => 30,
         'hold_duration_minutes'    => 5,
