@@ -2,15 +2,17 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToBusiness;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-#[Fillable(['user_id', 'notification_channel', 'phone_number'])]
+
+#[Fillable(['business_id', 'user_id', 'notification_channel', 'phone_number'])]
 class UserPreference extends Model
 {
     /** @use HasFactory<\Database\Factories\UserPreferenceFactory> */
-    use HasFactory;
+    use BelongsToBusiness, HasFactory;
 
     public function user(): BelongsTo
     {

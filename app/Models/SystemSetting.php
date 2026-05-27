@@ -2,16 +2,20 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToBusiness;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 
 #[Fillable([
+    'business_id',
     'slot_generation_weeks', 'slot_granularity_minutes', 'timezone',
     'booking_max_days_ahead', 'cancellation_deadline_hours',
     'reminder_count', 'reminder_1_hours', 'reminder_2_hours', 'payment_mode',
 ])]
 class SystemSetting extends Model
 {
+    use BelongsToBusiness;
+
     protected function casts(): array
     {
         return [
@@ -44,7 +48,8 @@ class SystemSetting extends Model
             'reminder_2_hours'            => 2,
             'payment_mode'                => 'both',
         ]);
-        $setting->id = 1;
+        $setting->id          = 1;
+        $setting->business_id = 1;
         $setting->save();
 
         return $setting;

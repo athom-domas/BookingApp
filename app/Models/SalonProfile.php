@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToBusiness;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
@@ -10,6 +11,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 #[Fillable([
+    'business_id',
     'name', 'tagline', 'logo_path', 'primary_color',
     'phone', 'address', 'website',
     'description', 'cancellation_policy', 'google_maps_embed',
@@ -18,7 +20,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 ])]
 class SalonProfile extends Model implements HasMedia
 {
-    use InteractsWithMedia;
+    use BelongsToBusiness, InteractsWithMedia;
 
     protected function casts(): array
     {
@@ -43,7 +45,8 @@ class SalonProfile extends Model implements HasMedia
             'address'       => null,
             'website'       => null,
         ]);
-        $profile->id = 1;
+        $profile->id          = 1;
+        $profile->business_id = 1;
         $profile->save();
 
         return $profile;

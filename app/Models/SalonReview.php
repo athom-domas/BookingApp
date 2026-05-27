@@ -2,17 +2,18 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToBusiness;
 use Database\Factories\SalonReviewFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-#[Fillable(['author_name', 'body', 'rating', 'is_published', 'sort_order'])]
+#[Fillable(['business_id', 'author_name', 'body', 'rating', 'is_published', 'sort_order'])]
 class SalonReview extends Model
 {
     /** @use HasFactory<SalonReviewFactory> */
-    use HasFactory;
+    use BelongsToBusiness, HasFactory;
 
     protected function casts(): array
     {

@@ -2,16 +2,20 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToBusiness;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 
 #[Fillable([
+    'business_id',
     'stripe_public_key', 'stripe_secret_key', 'stripe_webhook_secret',
     'twilio_sid', 'twilio_token', 'twilio_from',
     'google_calendar_id', 'google_credentials_json',
 ])]
 class IntegrationSetting extends Model
 {
+    use BelongsToBusiness;
+
     protected function casts(): array
     {
         return [
@@ -32,7 +36,8 @@ class IntegrationSetting extends Model
         }
 
         $setting = new self();
-        $setting->id = 1;
+        $setting->id          = 1;
+        $setting->business_id = 1;
         $setting->save();
 
         return $setting;

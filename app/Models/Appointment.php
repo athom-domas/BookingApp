@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToBusiness;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -11,11 +12,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
-#[Fillable(['user_id', 'service_ids', 'staff_id', 'scheduled_date', 'status', 'customer_confirmed_at', 'final_price', 'notes', 'google_event_id'])]
+#[Fillable(['user_id', 'service_ids', 'staff_id', 'scheduled_date', 'status', 'customer_confirmed_at', 'final_price', 'notes', 'google_event_id', 'business_id'])]
 class Appointment extends Model
 {
     /** @use HasFactory<\Database\Factories\AppointmentFactory> */
-    use HasFactory;
+    use HasFactory, BelongsToBusiness;
 
     protected function casts(): array
     {

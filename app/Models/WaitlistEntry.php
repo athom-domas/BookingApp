@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToBusiness;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -9,14 +10,14 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable([
-    'user_id', 'service_ids', 'preferred_staff_id',
+    'business_id', 'user_id', 'service_ids', 'preferred_staff_id',
     'preferred_time_from', 'preferred_time_to',
     'preferred_days', 'status', 'offered_slot',
 ])]
 class WaitlistEntry extends Model
 {
     /** @use HasFactory<\Database\Factories\WaitlistEntryFactory> */
-    use HasFactory;
+    use BelongsToBusiness, HasFactory;
 
     protected function casts(): array
     {
