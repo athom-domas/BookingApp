@@ -75,6 +75,9 @@
             <p class="text-sm text-gray-500 dark:text-gray-400">Completa i passi in ordine per prenotare il tuo appuntamento.</p>
         </div>
 
+        @if($wizardPrefill ?? null)
+        <script>sessionStorage.setItem('bookingWizardState', JSON.stringify({{ Illuminate\Support\Js::from($wizardPrefill) }}));</script>
+        @endif
         <div
             x-data="bookingWizard({{ Illuminate\Support\Js::from($servicesJson) }}, {{ Illuminate\Support\Js::from($staffJson) }})"
             class="space-y-3"
@@ -89,6 +92,7 @@
                 <input type="hidden" name="scheduled_date" :value="scheduledDateTime">
                 <input type="hidden" name="payment_method" :value="paymentMethod ?? ''">
                 <input type="hidden" name="notes" :value="notes">
+                <input type="hidden" name="waitlist_entry_id" :value="waitlistEntryId ?? ''">
             </form>
 
             {{-- Step 1: Servizi --}}
@@ -310,7 +314,7 @@
                             </div>
                             <a
                                 :href="'{{ route('portal.waitlist.create') }}?' + selectedServiceIds.map(id => 'service_ids[]=' + id).join('&') + (staffId ? '&preferred_staff_id=' + staffId : '')"
-                                class="shrink-0 text-sm font-semibold text-indigo-600 hover:underline dark:text-indigo-400 whitespace-nowrap"
+                                class="shrink-0 text-sm font-semibold hover:underline whitespace-nowrap" style="color: var(--color-primary)"
                             >Lista d'attesa →</a>
                         </div>
                     </div>

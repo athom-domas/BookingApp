@@ -3,7 +3,6 @@
 namespace App\Jobs;
 
 use App\Mail\WaitlistOfferMail;
-use App\Models\SystemSetting;
 use App\Models\WaitlistEntry;
 use App\Services\NotificationService;
 use Illuminate\Bus\Queueable;
@@ -22,23 +21,18 @@ class NotifyWaitlistCandidateJob implements ShouldQueue
     public function __construct(
         public readonly WaitlistEntry $entry,
         public readonly array $slotInfo,
-        public readonly array $excludeIds = [],
     ) {}
 
     public function handle(NotificationService $notificationService): void
     {
-        $timeout   = SystemSetting::getWaitlistOfferTimeout();
-        $expiresAt = now()->addMinutes($timeout);
-
         $this->entry->update([
-            'status'           => 'notified',
-            'offered_slot'     => $this->slotInfo,
-            'offer_expires_at' => $expiresAt,
+            'status'       => 'notified',
+            'offered_slot' => $this->slotInfo,
         ]);
 
         $offerUrl = URL::temporarySignedRoute(
             'waitlist.offer.accept',
-            $expiresAt,
+            now()->addDays(7),
             ['entry' => $this->entry->id],
         );
 
@@ -48,24 +42,21 @@ class NotifyWaitlistCandidateJob implements ShouldQueue
 
         match ($channel) {
             'sms'      => $prefs->phone_number
-                ? $notificationService->sendSms($prefs->phone_number, $this->buildSmsText($offerUrl, $expiresAt))
+                ? $notificationService->sendSms($prefs->phone_number, $this->buildSmsText($offerUrl))
                 : Mail::to($user->email)->send(new WaitlistOfferMail($this->entry, $offerUrl)),
             'whatsapp' => $prefs->phone_number
-                ? $notificationService->sendWhatsApp($prefs->phone_number, $this->buildSmsText($offerUrl, $expiresAt))
+                ? $notificationService->sendWhatsApp($prefs->phone_number, $this->buildSmsText($offerUrl))
                 : Mail::to($user->email)->send(new WaitlistOfferMail($this->entry, $offerUrl)),
             default    => Mail::to($user->email)->send(new WaitlistOfferMail($this->entry, $offerUrl)),
         };
-
-        ExpireWaitlistOfferJob::dispatch($this->entry, $this->slotInfo, $this->excludeIds)
-            ->delay($expiresAt);
     }
 
-    private function buildSmsText(string $offerUrl, \Carbon\Carbon $expiresAt): string
+    private function buildSmsText(string $offerUrl): string
     {
         $date = \Carbon\Carbon::parse($this->slotInfo['date'])->locale('it')->isoFormat('D MMMM');
         $time = $this->slotInfo['time'];
 
-        return "Posto disponibile il {$date} alle {$time}. Prenota entro le {$expiresAt->format('H:i')}: {$offerUrl}";
+        return "Posto disponibile il {$date} alle {$time}. Prenota subito (prima di altri): {$offerUrl}";
     }
 
     public function failed(\Throwable $e): void

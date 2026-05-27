@@ -22,15 +22,6 @@ it('casts service_ids and preferred_days to array', function () {
         ->and($entry->preferred_days)->toBeArray()->toEqual(['monday', 'friday']);
 });
 
-it('casts preferred_date_from and preferred_date_to to Carbon', function () {
-    $entry = WaitlistEntry::factory()->create([
-        'preferred_date_from' => '2026-06-01',
-        'preferred_date_to'   => '2026-06-30',
-    ]);
-
-    expect($entry->preferred_date_from)->toBeInstanceOf(\Carbon\Carbon::class)
-        ->and($entry->preferred_date_to)->toBeInstanceOf(\Carbon\Carbon::class);
-});
 
 it('belongs to a user', function () {
     $user  = User::factory()->create();

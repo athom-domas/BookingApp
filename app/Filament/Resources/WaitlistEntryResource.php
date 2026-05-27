@@ -47,10 +47,10 @@ class WaitlistEntryResource extends Resource
                     ->date('d/m/Y'),
                 TextColumn::make('preferred_time_from')
                     ->label('Dalle')
-                    ->formatStateUsing(fn ($state) => substr((string) $state, 0, 5)),
+                    ->formatStateUsing(fn ($state) => $state ? substr((string) $state, 0, 5) : '-'),
                 TextColumn::make('preferred_time_to')
                     ->label('Alle')
-                    ->formatStateUsing(fn ($state) => substr((string) $state, 0, 5)),
+                    ->formatStateUsing(fn ($state) => $state ? substr((string) $state, 0, 5) : '-'),
                 TextColumn::make('preferred_days')
                     ->label('Giorni')
                     ->formatStateUsing(

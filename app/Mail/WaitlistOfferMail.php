@@ -20,11 +20,9 @@ class WaitlistOfferMail extends Mailable
 
     public function envelope(): Envelope
     {
-        $expiresAt = $this->entry->offer_expires_at?->format('H:i') ?? '';
-
         return new Envelope(
             to:      $this->entry->user->email,
-            subject: "Posto disponibile! Prenota entro le {$expiresAt}",
+            subject: 'Posto disponibile – prenota subito',
         );
     }
 

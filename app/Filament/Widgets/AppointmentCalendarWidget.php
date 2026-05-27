@@ -136,8 +136,14 @@ class AppointmentCalendarWidget extends FullCalendarWidget
         }
 
         $palette = [
-            '#3B82F6', '#10B981', '#F59E0B', '#EF4444',
-            '#8B5CF6', '#EC4899', '#14B8A6', '#F97316',
+            '#3B82F6',
+            '#10B981',
+            '#F59E0B',
+            '#EF4444',
+            '#8B5CF6',
+            '#EC4899',
+            '#14B8A6',
+            '#F97316',
         ];
 
         return $palette[$appointment->staff_id % count($palette)];
@@ -174,6 +180,7 @@ class AppointmentCalendarWidget extends FullCalendarWidget
                     'has_completed_payment' => $hasCompletedPayment,
                     'payment_amount'        => $hasCompletedPayment ? null : $appointment->final_price,
                     'customer_confirmed'    => (bool) $appointment->customer_confirmed_at,
+                    'notes'                 => $appointment->notes ?? '',
                 ]);
             })
             ->schema([
@@ -184,21 +191,25 @@ class AppointmentCalendarWidget extends FullCalendarWidget
                 Hidden::make('staff_name'),
                 Hidden::make('scheduled_date'),
                 Hidden::make('services'),
-                Html::make(fn (Get $get): string => sprintf(
+                Hidden::make('notes'),
+                Html::make(fn(Get $get): string => sprintf(
                     '<div class="grid grid-cols-2 gap-4 text-sm rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 p-4 mb-1">
                         <div><p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">Cliente</p><p class="font-semibold text-gray-900 dark:text-white">%s</p></div>
                         <div><p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">Staff</p><p class="font-semibold text-gray-900 dark:text-white">%s</p></div>
                         <div><p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">Data e ora</p><p class="font-semibold text-gray-900 dark:text-white">%s</p></div>
                         <div><p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">Servizi</p><p class="font-semibold text-gray-900 dark:text-white">%s</p></div>
+                        %s
                     </div>',
                     e($get('customer_name')),
                     e($get('staff_name')),
                     e($get('scheduled_date')),
-                    e($get('services'))
+                    e($get('services')),
+                    $get('notes') ? sprintf('<div class="col-span-2"><p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">Note</p><p class="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line">%s</p></div>', e($get('notes'))) : ''
                 )),
-                Html::make(fn (Get $get): string => (bool) $get('customer_confirmed')
-                    ? '<p class="text-sm font-medium text-success-600 dark:text-success-400 -mt-1 mb-1">✓ Presenza confermata via email</p>'
-                    : ''
+                Html::make(
+                    fn(Get $get): string => (bool) $get('customer_confirmed')
+                        ? '<p class="text-sm font-medium text-success-600 dark:text-success-400 -mt-1 mb-1">✓ Presenza confermata via email</p>'
+                        : ''
                 ),
                 Select::make('status')
                     ->label('Stato')
@@ -210,7 +221,7 @@ class AppointmentCalendarWidget extends FullCalendarWidget
                     ])
                     ->in(['pending', 'confirmed', 'completed', 'cancelled'])
                     ->required()
-                    ->rules(fn (Get $get): array => [
+                    ->rules(fn(Get $get): array => [
                         function (string $attribute, mixed $value, \Closure $fail) use ($get): void {
                             if (
                                 $value === 'completed'
@@ -227,16 +238,17 @@ class AppointmentCalendarWidget extends FullCalendarWidget
                         'cash' => 'Contanti',
                         'pos'  => 'POS (carta)',
                     ])
-                    ->hidden(fn (Get $get): bool => (bool) $get('has_completed_payment')),
+                    ->hidden(fn(Get $get): bool => (bool) $get('has_completed_payment')),
                 TextInput::make('payment_amount')
                     ->label('Importo (€)')
                     ->numeric()
                     ->rules(['nullable', 'numeric', 'min:0.01'])
-                    ->required(fn (Get $get): bool => filled($get('payment_method')))
-                    ->hidden(fn (Get $get): bool => (bool) $get('has_completed_payment')),
-                Html::make(fn (Get $get): string => (bool) $get('has_completed_payment')
-                    ? '<p class="text-sm font-medium text-success-600 dark:text-success-400">✓ Pagamento già registrato</p>'
-                    : ''
+                    ->required(fn(Get $get): bool => filled($get('payment_method')))
+                    ->hidden(fn(Get $get): bool => (bool) $get('has_completed_payment')),
+                Html::make(
+                    fn(Get $get): string => (bool) $get('has_completed_payment')
+                        ? '<p class="text-sm font-medium text-success-600 dark:text-success-400">✓ Pagamento già registrato</p>'
+                        : ''
                 ),
             ])
             ->authorize(fn(Action $action) => $this->authorizeAppointmentAccess($action))
@@ -292,6 +304,13 @@ class AppointmentCalendarWidget extends FullCalendarWidget
                     );
                 }
 
+                $notesRow = $appointment->notes
+                    ? sprintf(
+                        '<div class="col-span-2"><p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">Note</p><p class="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line">%s</p></div>',
+                        e($appointment->notes)
+                    )
+                    : '';
+
                 $html = sprintf(
                     '<div class="grid grid-cols-2 gap-4 text-sm rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 p-4 mb-1">
                         <div><p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">Cliente</p><p class="font-semibold text-gray-900 dark:text-white">%s</p></div>
@@ -300,21 +319,23 @@ class AppointmentCalendarWidget extends FullCalendarWidget
                         <div><p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">Servizi</p><p class="font-semibold text-gray-900 dark:text-white">%s</p></div>
                         <div><p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">Stato</p><p class="font-semibold text-gray-900 dark:text-white">Completato</p></div>
                         %s
+                        %s
                     </div>',
                     e($appointment->user->name),
                     e($appointment->staff->name),
                     e($appointment->scheduled_date->format('d/m/Y H:i')),
                     e($appointment->services_label),
-                    $paymentRow
+                    $paymentRow,
+                    $notesRow
                 );
 
                 $schema?->fill(['content' => $html]);
             })
             ->schema([
                 Hidden::make('content'),
-                Html::make(fn (Get $get): string => (string) $get('content')),
+                Html::make(fn(Get $get): string => (string) $get('content')),
             ])
-            ->authorize(fn (Action $action) => $this->authorizeAppointmentAccess($action))
+            ->authorize(fn(Action $action) => $this->authorizeAppointmentAccess($action))
             ->modalSubmitAction(false)
             ->modalCancelActionLabel('Chiudi');
     }

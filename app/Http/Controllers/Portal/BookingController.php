@@ -8,6 +8,7 @@ use App\Models\SalonProfile;
 use App\Models\SalonReview;
 use App\Models\Service;
 use App\Models\User;
+use App\Models\WaitlistEntry;
 use App\Services\Booking\AppointmentService;
 use App\Services\PaymentService;
 use Carbon\Carbon;
@@ -54,8 +55,9 @@ class BookingController extends Controller
             ->get();
 
         return view('portal.booking.index', [
-            'services' => $services,
-            'staff'    => $staff,
+            'services'      => $services,
+            'staff'         => $staff,
+            'wizardPrefill' => session('bookingWizardPrefill'),
         ]);
     }
 
@@ -72,6 +74,22 @@ class BookingController extends Controller
             ]);
         } catch (\RuntimeException $e) {
             return back()->withInput()->withErrors(['scheduled_date' => $e->getMessage()]);
+        }
+
+        if ($waitlistEntryId = $request->integer('waitlist_entry_id') ?: null) {
+            $waitlistEntry = WaitlistEntry::where('id', $waitlistEntryId)
+                ->where('user_id', $request->user()->id)
+                ->first();
+            if ($waitlistEntry && $waitlistEntry->status === 'notified') {
+                $slot = $waitlistEntry->offered_slot;
+                $waitlistEntry->update(['status' => 'booked']);
+                WaitlistEntry::where('status', 'notified')
+                    ->where('id', '!=', $waitlistEntry->id)
+                    ->where('offered_slot->date', $slot['date'])
+                    ->where('offered_slot->time', $slot['time'])
+                    ->where('offered_slot->staff_id', $slot['staff_id'])
+                    ->update(['status' => 'waiting', 'offered_slot' => null]);
+            }
         }
 
         if ($request->input('payment_method') === 'in_salon') {

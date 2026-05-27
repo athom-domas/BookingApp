@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Portal;
 use App\Exceptions\BookingException;
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
+use App\Models\WaitlistEntry;
 use App\Services\AppointmentService;
 use App\Services\PaymentService;
 use Illuminate\Http\RedirectResponse;
@@ -30,9 +31,16 @@ class AppointmentController extends Controller
             ->oldest('scheduled_date')
             ->get();
 
+        $waitlistEntries = WaitlistEntry::where('user_id', $request->user()->id)
+            ->whereIn('status', ['waiting', 'notified'])
+            ->with('preferredStaff')
+            ->latest()
+            ->get();
+
         return view('portal.appointments.index', [
             'upcomingAppointments' => $appointments->filter(fn (Appointment $appointment) => $appointment->isUpcoming())->values(),
-            'pastAppointments' => $appointments->filter(fn (Appointment $appointment) => $appointment->isPast())->sortByDesc('scheduled_date')->values(),
+            'pastAppointments'     => $appointments->filter(fn (Appointment $appointment) => $appointment->isPast())->sortByDesc('scheduled_date')->values(),
+            'waitlistEntries'      => $waitlistEntries,
         ]);
     }
 

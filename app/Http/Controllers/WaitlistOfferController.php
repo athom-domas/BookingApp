@@ -2,43 +2,33 @@
 
 namespace App\Http\Controllers;
 
-use App\Exceptions\BookingException;
 use App\Models\WaitlistEntry;
-use App\Services\AppointmentService;
-use Carbon\Carbon;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 class WaitlistOfferController extends Controller
 {
-    public function __construct(private readonly AppointmentService $appointmentService) {}
-
-    public function accept(WaitlistEntry $entry): View
+    public function accept(WaitlistEntry $entry): View|RedirectResponse
     {
-        if ($entry->status !== 'notified' || now()->isAfter($entry->offer_expires_at)) {
-            $entry->update(['status' => 'expired']);
-
+        if ($entry->status !== 'notified') {
             return view('portal.waitlist.offer-expired');
         }
 
-        $slot          = $entry->offered_slot;
-        $scheduledDate = Carbon::parse($slot['date'] . ' ' . $slot['time']);
+        $slot = $entry->offered_slot;
 
-        try {
-            $appointment = $this->appointmentService->bookAppointment(
-                $entry->user_id,
-                $entry->service_ids,
-                $slot['staff_id'],
-                $scheduledDate,
-            );
+        session()->flash('bookingWizardPrefill', [
+            'selectedServiceIds' => $entry->service_ids,
+            'staffId'            => $slot['staff_id'],
+            'date'               => $slot['date'],
+            'slot'               => $slot['time'],
+            'calendarMonth'      => substr($slot['date'], 0, 7),
+            'paymentMethod'      => null,
+            'notes'              => '',
+            'step'               => 4,
+            'completed'          => [1, 2, 3],
+            'waitlistEntryId'    => $entry->id,
+        ]);
 
-            $entry->update(['status' => 'booked']);
-
-            return view('portal.waitlist.offer-accepted', ['appointment' => $appointment]);
-
-        } catch (BookingException) {
-            $entry->update(['status' => 'expired']);
-
-            return view('portal.waitlist.offer-expired');
-        }
+        return redirect()->route('booking.create');
     }
 }

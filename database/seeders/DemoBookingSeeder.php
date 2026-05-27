@@ -229,6 +229,46 @@ class DemoBookingSeeder extends Seeder
             $this->seedPayment($a, 'completed');
         }
 
+        $this->seedFullyBookedDay($customers, $staff, $services);
+    }
+
+    /**
+     * Fills every slot of a future Tuesday with confirmed appointments across all staff.
+     * Use this day to test the waitlist: any search on this date returns no availability.
+     *
+     * @param  array<string, User>    $customers
+     * @param  array<string, User>    $staff
+     * @param  array<string, Service> $services
+     */
+    private function seedFullyBookedDay(array $customers, array $staff, array $services): void
+    {
+        // Two Tuesdays from now — avoids collisions with the existing next-Tuesday appointment
+        $day = Carbon::now()->next(Carbon::TUESDAY)->addWeek();
+
+        $slots = [];
+        foreach ([['08:00', '12:30'], ['16:00', '20:30']] as [$from, $to]) {
+            $cursor = $day->copy()->setTimeFromTimeString($from);
+            $end    = $day->copy()->setTimeFromTimeString($to);
+            while ($cursor->lte($end)) {
+                $slots[] = $cursor->copy();
+                $cursor->addMinutes(30);
+            }
+        }
+
+        $customerList = array_values($customers);
+        $i = 0;
+        foreach ($staff as $staffMember) {
+            foreach ($slots as $slot) {
+                $this->upsertAppointment(
+                    $customerList[$i % count($customerList)],
+                    $staffMember,
+                    $services['taglio'],
+                    $slot,
+                    'confirmed',
+                );
+                $i++;
+            }
+        }
     }
 
     private function upsertAppointment(

@@ -10,9 +10,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable([
     'user_id', 'service_ids', 'preferred_staff_id',
-    'preferred_date_from', 'preferred_date_to',
     'preferred_time_from', 'preferred_time_to',
-    'preferred_days', 'status', 'offered_slot', 'offer_expires_at',
+    'preferred_days', 'status', 'offered_slot',
 ])]
 class WaitlistEntry extends Model
 {
@@ -22,12 +21,9 @@ class WaitlistEntry extends Model
     protected function casts(): array
     {
         return [
-            'service_ids'         => 'array',
-            'preferred_days'      => 'array',
-            'offered_slot'        => 'array',
-            'preferred_date_from' => 'date',
-            'preferred_date_to'   => 'date',
-            'offer_expires_at'    => 'datetime',
+            'service_ids'    => 'array',
+            'preferred_days' => 'array',
+            'offered_slot'   => 'array',
         ];
     }
 

@@ -7,6 +7,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 return Application::configure(basePath: dirname(__DIR__))
     ->withCommands([
         App\Console\Commands\SendReminderCommand::class,
+        App\Console\Commands\TestWaitlistCommand::class,
     ])
     ->withRouting(
         web: __DIR__.'/../routes/web.php',

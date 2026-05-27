@@ -30,6 +30,9 @@ export function bookingWizard(allServices, allStaff) {
         // step 5
         notes: '',
 
+        // waitlist offer source (null when booking directly)
+        waitlistEntryId: null,
+
         // ── init ──────────────────────────────────────────────────────────
         init() {
             const now = new Date();
@@ -49,6 +52,7 @@ export function bookingWizard(allServices, allStaff) {
                     this.notes              = (typeof s.notes === 'string') ? s.notes.slice(0, 1000) : '';
                     this.completed          = Array.isArray(s.completed) ? s.completed : [];
                     this.step               = (Number.isInteger(s.step) && s.step >= 1 && s.step <= 5) ? s.step : 1;
+                    this.waitlistEntryId    = Number.isInteger(s.waitlistEntryId) ? s.waitlistEntryId : null;
                 } catch (_) {}
 
                 if (this.step === 3 || (this.completed.includes(3) && this.date)) {
@@ -73,6 +77,7 @@ export function bookingWizard(allServices, allStaff) {
                 notes:              this.notes,
                 step:               this.step,
                 completed:          this.completed,
+                waitlistEntryId:    this.waitlistEntryId,
             }));
             window.location.href = returnPath;
         },

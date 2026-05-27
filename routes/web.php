@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', [BookingController::class, 'index'])->name('booking.index');
 Route::get('/prenota', [BookingController::class, 'create'])->name('booking.create');
+Route::get('/portal/waitlist/create', [WaitlistController::class, 'create'])->name('portal.waitlist.create');
 Route::post('/stripe/webhook', StripeWebhookController::class)->name('stripe.webhook');
 
 Route::get('/r/waitlist/{entry}/accetta', [\App\Http\Controllers\WaitlistOfferController::class, 'accept'])
@@ -57,8 +58,6 @@ Route::middleware('auth')->group(function () {
     Route::patch('/portal/settings/profile', [SettingsController::class, 'updateProfile'])->name('portal.settings.profile');
     Route::patch('/portal/settings/notifications', [SettingsController::class, 'updateNotifications'])->name('portal.settings.notifications');
 
-    Route::get('/portal/waitlist', [WaitlistController::class, 'index'])->name('portal.waitlist.index');
-    Route::get('/portal/waitlist/create', [WaitlistController::class, 'create'])->name('portal.waitlist.create');
     Route::post('/portal/waitlist', [WaitlistController::class, 'store'])->name('portal.waitlist.store');
     Route::delete('/portal/waitlist/{entry}', [WaitlistController::class, 'destroy'])->name('portal.waitlist.destroy');
 });

@@ -17,14 +17,11 @@ class WaitlistEntryFactory extends Factory
             'user_id'             => User::factory(),
             'service_ids'         => fn () => [Service::factory()->create()->id],
             'preferred_staff_id'  => null,
-            'preferred_date_from' => today()->addDay(),
-            'preferred_date_to'   => today()->addDays(30),
             'preferred_time_from' => '09:00',
             'preferred_time_to'   => '18:00',
-            'preferred_days'      => ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
+            'preferred_days'      => [today()->addDay()->toDateString()],
             'status'              => 'waiting',
             'offered_slot'        => null,
-            'offer_expires_at'    => null,
         ];
     }
 }

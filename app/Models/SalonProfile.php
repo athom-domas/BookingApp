@@ -38,7 +38,7 @@ class SalonProfile extends Model implements HasMedia
         $profile = new self([
             'name'          => 'Il mio salone',
             'logo_path'     => null,
-            'primary_color' => '#1d4ed8',
+            'primary_color' => '#1d1d1d',
             'phone'         => null,
             'address'       => null,
             'website'       => null,
