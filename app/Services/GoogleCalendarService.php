@@ -36,7 +36,7 @@ class GoogleCalendarService
         ]);
 
         $created = $this->calendar->events->insert(
-            config('services.google.calendar_id'),
+            \App\Models\IntegrationSetting::getGoogleCalendarId() ?? config('services.google.calendar_id'),
             $event
         );
 
@@ -46,7 +46,7 @@ class GoogleCalendarService
     public function deleteEvent(string $eventId): void
     {
         $this->calendar->events->delete(
-            config('services.google.calendar_id'),
+            \App\Models\IntegrationSetting::getGoogleCalendarId() ?? config('services.google.calendar_id'),
             $eventId
         );
     }

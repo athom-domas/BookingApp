@@ -15,7 +15,7 @@ class StripeWebhookController extends Controller
 
     public function __invoke(Request $request): JsonResponse
     {
-        $secret = config('services.stripe.webhook_secret');
+        $secret = \App\Models\IntegrationSetting::getStripeWebhookSecret() ?? config('services.stripe.webhook_secret');
 
         if (! $secret) {
             return response()->json(['message' => 'Stripe webhook secret is not configured.'], 500);

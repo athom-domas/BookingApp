@@ -16,22 +16,27 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(\App\Services\Booking\AppointmentService::class);
 
         $this->app->singleton(PaymentService::class, function () {
-            return new PaymentService(new StripeClient(config('services.stripe.secret')));
+            $secret = \App\Models\IntegrationSetting::getStripeSecretKey() ?? config('services.stripe.secret');
+            return new PaymentService(new StripeClient($secret));
         });
 
         $this->app->singleton(\App\Services\NotificationService::class, function () {
-            $client = new \Twilio\Rest\Client(
-                config('services.twilio.sid'),
-                config('services.twilio.token'),
-            );
+            $sid   = \App\Models\IntegrationSetting::getTwilioSid()   ?? config('services.twilio.sid');
+            $token = \App\Models\IntegrationSetting::getTwilioToken() ?? config('services.twilio.token');
+            $client = new \Twilio\Rest\Client($sid, $token);
             return new \App\Services\NotificationService($client->messages);
         });
 
         $this->app->singleton(\App\Services\GoogleCalendarService::class, function () {
             $client = new \Google\Client();
-            $credPath = config('services.google.credentials');
-            if (file_exists($credPath)) {
-                $client->setAuthConfig($credPath);
+            $credJson = \App\Models\IntegrationSetting::getGoogleCredentialsJson();
+            if ($credJson) {
+                $client->setAuthConfig(json_decode($credJson, true));
+            } else {
+                $credPath = config('services.google.credentials');
+                if (file_exists($credPath)) {
+                    $client->setAuthConfig($credPath);
+                }
             }
             $client->addScope(\Google\Service\Calendar::CALENDAR);
             return new \App\Services\GoogleCalendarService(

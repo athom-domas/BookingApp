@@ -74,7 +74,7 @@ class AppointmentController extends Controller
         return view('portal.appointments.payment', [
             'appointment' => $appointment,
             'payment' => $appointment->payment,
-            'stripePublicKey' => config('services.stripe.public'),
+            'stripePublicKey' => \App\Models\IntegrationSetting::getStripePublicKey() ?? config('services.stripe.public'),
             'clientSecret' => $appointment->payment->stripe_response['client_secret'] ?? null,
         ]);
     }
