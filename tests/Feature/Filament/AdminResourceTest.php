@@ -3,8 +3,10 @@
 use App\Filament\Resources\AdminResource;
 use App\Filament\Resources\AdminResource\Pages\EditAdmin;
 use App\Models\Appointment;
+use App\Models\Business;
 use App\Models\Service;
 use App\Models\User;
+use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Builder;
 use Livewire\Livewire;
 use Spatie\Permission\Models\Role;
@@ -13,16 +15,19 @@ beforeEach(function () {
     Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
     Role::firstOrCreate(['name' => 'staff', 'guard_name' => 'web']);
     Role::firstOrCreate(['name' => 'customer', 'guard_name' => 'web']);
+
+    $this->business = Business::withoutGlobalScopes()->firstOrFail();
+    Filament::setTenant($this->business, isQuiet: true);
 });
 
 it('admin list shows only admin users', function () {
-    $admin = User::factory()->create();
+    $admin = User::factory()->create(['business_id' => $this->business->id]);
     $admin->assignRole('admin');
 
-    $staff = User::factory()->create(['email' => 'staff@test.com']);
+    $staff = User::factory()->create(['email' => 'staff@test.com', 'business_id' => $this->business->id]);
     $staff->assignRole('staff');
 
-    $customer = User::factory()->create(['email' => 'customer@test.com']);
+    $customer = User::factory()->create(['email' => 'customer@test.com', 'business_id' => $this->business->id]);
     $customer->assignRole('customer');
 
     $this->actingAs($admin);
@@ -35,7 +40,7 @@ it('admin list shows only admin users', function () {
 });
 
 it('non-admin cannot access admin resource', function () {
-    $staff = User::factory()->create();
+    $staff = User::factory()->create(['business_id' => $this->business->id]);
     $staff->assignRole('staff');
 
     $this->actingAs($staff);
@@ -45,7 +50,7 @@ it('non-admin cannot access admin resource', function () {
 });
 
 it('toggle ON assigns staff role to admin', function () {
-    $admin = User::factory()->create();
+    $admin = User::factory()->create(['business_id' => $this->business->id]);
     $admin->assignRole('admin');
     $service = Service::factory()->create(['active' => true]);
 
@@ -62,7 +67,7 @@ it('toggle ON assigns staff role to admin', function () {
 });
 
 it('toggle OFF removes staff role from admin', function () {
-    $admin = User::factory()->create();
+    $admin = User::factory()->create(['business_id' => $this->business->id]);
     $admin->assignRole('admin');
     $admin->assignRole('staff');
 
@@ -77,11 +82,11 @@ it('toggle OFF removes staff role from admin', function () {
 });
 
 it('toggle OFF with future confirmed appointments does not block the operation', function () {
-    $admin = User::factory()->create();
+    $admin = User::factory()->create(['business_id' => $this->business->id]);
     $admin->assignRole('admin');
     $admin->assignRole('staff');
 
-    $customer = User::factory()->create();
+    $customer = User::factory()->create(['business_id' => $this->business->id]);
     $customer->assignRole('customer');
 
     Appointment::factory()->create([
@@ -115,7 +120,7 @@ it('admin with staff role appears in staff resource query', function () {
 });
 
 it('edit form populates works_as_staff based on current role', function () {
-    $admin = User::factory()->create();
+    $admin = User::factory()->create(['business_id' => $this->business->id]);
     $admin->assignRole('admin');
     $admin->assignRole('staff');
 

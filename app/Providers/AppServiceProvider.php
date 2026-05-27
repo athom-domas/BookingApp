@@ -15,19 +15,19 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(\App\Services\Booking\OperatorScoringService::class);
         $this->app->singleton(\App\Services\Booking\AppointmentService::class);
 
-        $this->app->singleton(PaymentService::class, function () {
+        $this->app->bind(PaymentService::class, function () {
             $secret = \App\Models\IntegrationSetting::getStripeSecretKey() ?? config('services.stripe.secret');
             return new PaymentService(new StripeClient($secret));
         });
 
-        $this->app->singleton(\App\Services\NotificationService::class, function () {
+        $this->app->bind(\App\Services\NotificationService::class, function () {
             $sid   = \App\Models\IntegrationSetting::getTwilioSid()   ?? config('services.twilio.sid');
             $token = \App\Models\IntegrationSetting::getTwilioToken() ?? config('services.twilio.token');
             $client = new \Twilio\Rest\Client($sid, $token);
             return new \App\Services\NotificationService($client->messages);
         });
 
-        $this->app->singleton(\App\Services\GoogleCalendarService::class, function () {
+        $this->app->bind(\App\Services\GoogleCalendarService::class, function () {
             $client = new \Google\Client();
             $credJson = \App\Models\IntegrationSetting::getGoogleCredentialsJson();
             if ($credJson) {

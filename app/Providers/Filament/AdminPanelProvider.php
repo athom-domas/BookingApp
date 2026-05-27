@@ -4,6 +4,7 @@ namespace App\Providers\Filament;
 
 use App\Filament\Resources\AppointmentResource\Pages\ListAppointments;
 use App\Filament\Resources\PaymentResource\Pages\ListPayments;
+use App\Models\Business;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -56,11 +57,20 @@ class AdminPanelProvider extends PanelProvider
 
     public function panel(Panel $panel): Panel
     {
-        return $panel
+        $panel = $panel
             ->default()
             ->id('admin')
+            ->tenant(Business::class, slugAttribute: 'subdomain')
+            ->tenantMiddleware([\App\Http\Middleware\SubdomainMiddleware::class], isPersistent: true)
             ->path('admin')
-            ->login()
+            ->login();
+
+        $baseDomain = config('app.base_domain');
+        if ($baseDomain) {
+            $panel = $panel->tenantDomain('{tenant:subdomain}.' . $baseDomain);
+        }
+
+        return $panel
             ->passwordReset()
             ->brandName(fn() => \App\Models\SalonProfile::current()->name ?? 'Booking App')
             ->brandLogo(asset('img/logo.png'))

@@ -5,9 +5,11 @@ use App\Filament\Resources\CustomerResource\Pages\EditCustomer;
 use App\Filament\Resources\CustomerResource\RelationManagers\AppointmentsRelationManager;
 use App\Filament\Resources\CustomerResource\RelationManagers\PaymentsRelationManager;
 use App\Models\Appointment;
+use App\Models\Business;
 use App\Models\Payment;
 use App\Models\Service;
 use App\Models\User;
+use Filament\Facades\Filament;
 use Livewire\Livewire;
 use Spatie\Permission\Models\Role;
 
@@ -15,14 +17,17 @@ beforeEach(function () {
     Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
     Role::firstOrCreate(['name' => 'customer', 'guard_name' => 'web']);
     Role::firstOrCreate(['name' => 'staff', 'guard_name' => 'web']);
+
+    $this->business = Business::withoutGlobalScopes()->firstOrFail();
+    Filament::setTenant($this->business, isQuiet: true);
 });
 
 it('shows only registered customers in the customer resource', function () {
-    $admin = User::factory()->create();
+    $admin = User::factory()->create(['business_id' => $this->business->id]);
     $admin->assignRole('admin');
-    $customer = User::factory()->create(['email' => 'cliente@test.com']);
+    $customer = User::factory()->create(['email' => 'cliente@test.com', 'business_id' => $this->business->id]);
     $customer->assignRole('customer');
-    $staff = User::factory()->create(['email' => 'staff@test.com']);
+    $staff = User::factory()->create(['email' => 'staff@test.com', 'business_id' => $this->business->id]);
     $staff->assignRole('staff');
 
     $this->actingAs($admin);
@@ -34,9 +39,9 @@ it('shows only registered customers in the customer resource', function () {
 });
 
 it('admin can write internal notes on a customer', function () {
-    $admin = User::factory()->create();
+    $admin = User::factory()->create(['business_id' => $this->business->id]);
     $admin->assignRole('admin');
-    $customer = User::factory()->create();
+    $customer = User::factory()->create(['business_id' => $this->business->id]);
     $customer->assignRole('customer');
 
     $this->actingAs($admin);
@@ -52,14 +57,15 @@ it('admin can write internal notes on a customer', function () {
 });
 
 it('customer detail page shows linked appointments and payments', function () {
-    $admin = User::factory()->create();
+    $admin = User::factory()->create(['business_id' => $this->business->id]);
     $admin->assignRole('admin');
-    $customer = User::factory()->create();
+    $customer = User::factory()->create(['business_id' => $this->business->id]);
     $customer->assignRole('customer');
-    $staff = User::factory()->create(['name' => 'Operatore Test']);
+    $staff = User::factory()->create(['name' => 'Operatore Test', 'business_id' => $this->business->id]);
     $staff->assignRole('staff');
     $service = Service::factory()->create(['name' => 'Consulenza Test']);
     $appointment = Appointment::factory()->create([
+        'business_id' => $this->business->id,
         'user_id'     => $customer->id,
         'staff_id'    => $staff->id,
         'service_ids' => [$service->id],

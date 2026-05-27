@@ -2,8 +2,10 @@
 
 use App\Filament\Widgets\AppointmentCalendarWidget;
 use App\Models\Appointment;
+use App\Models\Business;
 use App\Models\Service;
 use App\Models\User;
+use Filament\Facades\Filament;
 use Livewire\Livewire;
 use Spatie\Permission\Models\Role;
 
@@ -11,6 +13,9 @@ beforeEach(function () {
     Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
     Role::firstOrCreate(['name' => 'staff', 'guard_name' => 'web']);
     Role::firstOrCreate(['name' => 'customer', 'guard_name' => 'web']);
+
+    $this->business = Business::withoutGlobalScopes()->firstOrFail();
+    Filament::setTenant($this->business, isQuiet: true);
 });
 
 $fetchRange = fn () => [
@@ -199,26 +204,26 @@ it('filtra gli eventi per servizio', function () use (&$fetchRange) {
 });
 
 it('la pagina calendario è accessibile a admin', function () {
-    $admin = User::factory()->create()->assignRole('admin');
+    $admin = User::factory()->create(['business_id' => $this->business->id])->assignRole('admin');
 
     $this->actingAs($admin)
-        ->get('/admin/appointment-calendar')
+        ->get("/admin/{$this->business->subdomain}/appointment-calendar")
         ->assertSuccessful();
 });
 
 it('la pagina calendario è accessibile a staff', function () {
-    $staff = User::factory()->create()->assignRole('staff');
+    $staff = User::factory()->create(['business_id' => $this->business->id])->assignRole('staff');
 
     $this->actingAs($staff)
-        ->get('/admin/appointment-calendar')
+        ->get("/admin/{$this->business->subdomain}/appointment-calendar")
         ->assertSuccessful();
 });
 
 it('la pagina calendario non è accessibile a customer', function () {
-    $customer = User::factory()->create()->assignRole('customer');
+    $customer = User::factory()->create(['business_id' => $this->business->id])->assignRole('customer');
 
     $this->actingAs($customer)
-        ->get('/admin/appointment-calendar')
+        ->get("/admin/{$this->business->subdomain}/appointment-calendar")
         ->assertForbidden();
 });
 
