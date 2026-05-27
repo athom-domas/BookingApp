@@ -18,10 +18,10 @@ it('returns the existing row without creating a new one on repeated calls', func
     expect(SystemSetting::count())->toBe(1);
 });
 
-it('always returns the row with id = 1', function () {
+it('always returns a row with a valid id', function () {
     $setting = SystemSetting::current();
 
-    expect($setting->id)->toBe(1);
+    expect($setting->id)->toBeInt()->toBeGreaterThan(0);
 });
 
 it('casts slot_generation_weeks to integer', function () {

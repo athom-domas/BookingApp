@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Business;
 use App\Models\Concerns\BelongsToBusiness;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
@@ -29,18 +30,9 @@ class IntegrationSetting extends Model
 
     public static function current(): self
     {
-        $existing = self::find(1);
-
-        if ($existing) {
-            return $existing;
-        }
-
-        $setting = new self();
-        $setting->id          = 1;
-        $setting->business_id = 1;
-        $setting->save();
-
-        return $setting;
+        return self::firstOrCreate(
+            ['business_id' => Business::currentId()]
+        );
     }
 
     public static function getStripePublicKey(): ?string

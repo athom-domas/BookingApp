@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\Concerns\BelongsToBusiness;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Business;
 
 #[Fillable([
     'business_id',
@@ -31,28 +32,20 @@ class SystemSetting extends Model
 
     public static function current(): self
     {
-        $existing = self::find(1);
-
-        if ($existing) {
-            return $existing;
-        }
-
-        $setting = new self([
-            'slot_generation_weeks'       => 4,
-            'slot_granularity_minutes'    => 10,
-            'timezone'                    => 'Europe/Rome',
-            'booking_max_days_ahead'      => 90,
-            'cancellation_deadline_hours' => 24,
-            'reminder_count'              => 1,
-            'reminder_1_hours'            => 24,
-            'reminder_2_hours'            => 2,
-            'payment_mode'                => 'both',
-        ]);
-        $setting->id          = 1;
-        $setting->business_id = 1;
-        $setting->save();
-
-        return $setting;
+        return self::firstOrCreate(
+            ['business_id' => Business::currentId()],
+            [
+                'slot_generation_weeks'       => 4,
+                'slot_granularity_minutes'    => 15,
+                'timezone'                    => 'Europe/Rome',
+                'booking_max_days_ahead'      => 30,
+                'cancellation_deadline_hours' => 24,
+                'reminder_count'              => 1,
+                'reminder_1_hours'            => 24,
+                'reminder_2_hours'            => 2,
+                'payment_mode'                => 'both',
+            ]
+        );
     }
 
     public static function getSlotGranularity(): int

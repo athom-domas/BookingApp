@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Business;
 use App\Models\Concerns\BelongsToBusiness;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
@@ -31,25 +32,13 @@ class SalonProfile extends Model implements HasMedia
 
     public static function current(): self
     {
-        $existing = self::find(1);
-
-        if ($existing) {
-            return $existing;
-        }
-
-        $profile = new self([
-            'name'          => 'Il mio salone',
-            'logo_path'     => null,
-            'primary_color' => '#1d1d1d',
-            'phone'         => null,
-            'address'       => null,
-            'website'       => null,
-        ]);
-        $profile->id          = 1;
-        $profile->business_id = 1;
-        $profile->save();
-
-        return $profile;
+        return self::firstOrCreate(
+            ['business_id' => Business::currentId()],
+            [
+                'name'          => 'Il mio salone',
+                'primary_color' => '#1d1d1d',
+            ]
+        );
     }
 
     public function registerMediaCollections(): void
