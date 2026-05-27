@@ -14,6 +14,7 @@ class PaymentFactory extends Factory
     public function definition(): array
     {
         return [
+            'business_id' => 1,
             'appointment_id' => Appointment::factory(),
             'user_id' => User::factory(),
             'amount' => fake()->randomFloat(2, 10, 500),

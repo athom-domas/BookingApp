@@ -13,6 +13,7 @@ class UserPreferenceFactory extends Factory
     public function definition(): array
     {
         return [
+            'business_id'          => 1,
             'user_id'              => User::factory(),
             'notification_channel' => 'email',
             'phone_number'         => null,
