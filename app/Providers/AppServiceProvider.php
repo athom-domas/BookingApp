@@ -31,7 +31,10 @@ class AppServiceProvider extends ServiceProvider
             $client = new \Google\Client();
             $credJson = \App\Models\IntegrationSetting::getGoogleCredentialsJson();
             if ($credJson) {
-                $client->setAuthConfig(json_decode($credJson, true));
+                $decoded = json_decode($credJson, true);
+                if ($decoded !== null) {
+                    $client->setAuthConfig($decoded);
+                }
             } else {
                 $credPath = config('services.google.credentials');
                 if (file_exists($credPath)) {

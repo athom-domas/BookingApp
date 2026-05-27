@@ -101,7 +101,7 @@ class IntegrationSettings extends Page
 
     public function save(): void
     {
-        $data = array_filter($this->form->getState(), fn ($v) => $v !== null);
+        $data = array_filter($this->form->getState(), fn ($v) => $v !== null && $v !== '');
         IntegrationSetting::current()->update($data);
 
         Notification::make()
