@@ -9,6 +9,7 @@ use App\Models\Appointment;
 use App\Models\AppointmentReminder;
 use App\Models\AvailabilityRule;
 use App\Models\Service;
+use App\Models\SystemSetting;
 use App\Models\User;
 use App\Services\Booking\SlotCalculationService;
 use Carbon\Carbon;
@@ -108,12 +109,23 @@ class AppointmentService
                 'final_price'    => $services->sum('price'),
             ]);
 
-            AppointmentReminder::create([
-                'appointment_id' => $appointment->id,
-                'type'           => 'email',
-                'scheduled_for'  => $scheduledDate->copy()->subDays(2),
-                'status'         => 'pending',
-            ]);
+            $reminderCount = SystemSetting::getReminderCount();
+            if ($reminderCount >= 1) {
+                AppointmentReminder::create([
+                    'appointment_id' => $appointment->id,
+                    'type'           => 'email',
+                    'scheduled_for'  => $scheduledDate->copy()->subHours(SystemSetting::getReminder1Hours()),
+                    'status'         => 'pending',
+                ]);
+            }
+            if ($reminderCount >= 2) {
+                AppointmentReminder::create([
+                    'appointment_id' => $appointment->id,
+                    'type'           => 'email',
+                    'scheduled_for'  => $scheduledDate->copy()->subHours(SystemSetting::getReminder2Hours()),
+                    'status'         => 'pending',
+                ]);
+            }
 
             SyncGoogleCalendar::dispatch($appointment, 'create');
 
@@ -126,7 +138,8 @@ class AppointmentService
         $appointment = Appointment::findOrFail($appointmentId);
 
         if (! $appointment->canBeCancelled()) {
-            throw new BookingException('Impossibile cancellare: prenotazione non cancellabile o mancano meno di 24 ore.');
+            $hours = SystemSetting::getCancellationDeadlineHours();
+            throw new BookingException("Impossibile cancellare: prenotazione non cancellabile o mancano meno di {$hours} ore.");
         }
 
         $appointment->update([

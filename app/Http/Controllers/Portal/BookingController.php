@@ -7,6 +7,7 @@ use App\Http\Requests\Portal\StoreBookingRequest;
 use App\Models\SalonProfile;
 use App\Models\SalonReview;
 use App\Models\Service;
+use App\Models\SystemSetting;
 use App\Models\User;
 use App\Models\WaitlistEntry;
 use App\Services\Booking\AppointmentService;
@@ -58,6 +59,7 @@ class BookingController extends Controller
             'services'      => $services,
             'staff'         => $staff,
             'wizardPrefill' => session('bookingWizardPrefill'),
+            'paymentMode'   => SystemSetting::getPaymentMode(),
         ]);
     }
 

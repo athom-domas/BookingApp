@@ -84,6 +84,6 @@ class Appointment extends Model
     public function canBeCancelled(): bool
     {
         return in_array($this->status, ['pending', 'confirmed'])
-            && now()->diffInHours($this->scheduled_date, false) >= 24;
+            && now()->diffInHours($this->scheduled_date, false) >= SystemSetting::getCancellationDeadlineHours();
     }
 }

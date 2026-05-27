@@ -3,10 +3,12 @@
 namespace App\Filament\Pages;
 
 use App\Models\SystemSetting;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 
 class SystemSettings extends Page
@@ -25,7 +27,13 @@ class SystemSettings extends Page
     {
         $setting = SystemSetting::current();
         $this->form->fill([
-            'slot_granularity_minutes' => $setting->slot_granularity_minutes,
+            'slot_granularity_minutes'    => $setting->slot_granularity_minutes,
+            'booking_max_days_ahead'      => $setting->booking_max_days_ahead,
+            'cancellation_deadline_hours' => $setting->cancellation_deadline_hours,
+            'reminder_count'              => (string) $setting->reminder_count,
+            'reminder_1_hours'            => $setting->reminder_1_hours,
+            'reminder_2_hours'            => $setting->reminder_2_hours,
+            'payment_mode'                => $setting->payment_mode ?? 'both',
         ]);
     }
 
@@ -45,6 +53,66 @@ class SystemSettings extends Page
                             ->required()
                             ->suffix('min'),
 
+                        TextInput::make('booking_max_days_ahead')
+                            ->label('Prenotazione massima anticipata')
+                            ->helperText('Quanti giorni in anticipo può prenotare un cliente')
+                            ->integer()
+                            ->minValue(1)
+                            ->maxValue(365)
+                            ->required()
+                            ->suffix('giorni'),
+
+                        TextInput::make('cancellation_deadline_hours')
+                            ->label('Scadenza cancellazione')
+                            ->helperText('Entro quante ore prima dell\'appuntamento il cliente può cancellare')
+                            ->integer()
+                            ->minValue(0)
+                            ->required()
+                            ->suffix('ore'),
+                    ]),
+
+                Section::make('Promemoria')
+                    ->columns(2)
+                    ->schema([
+                        Select::make('reminder_count')
+                            ->label('Numero di promemoria')
+                            ->options([
+                                '0' => 'Nessuno',
+                                '1' => '1 promemoria',
+                                '2' => '2 promemoria',
+                            ])
+                            ->required()
+                            ->live(),
+
+                        TextInput::make('reminder_1_hours')
+                            ->label('Primo promemoria')
+                            ->helperText('Ore prima dell\'appuntamento')
+                            ->integer()
+                            ->minValue(1)
+                            ->required()
+                            ->suffix('ore prima')
+                            ->visible(fn (Get $get): bool => (int) $get('reminder_count') >= 1),
+
+                        TextInput::make('reminder_2_hours')
+                            ->label('Secondo promemoria')
+                            ->helperText('Ore prima dell\'appuntamento')
+                            ->integer()
+                            ->minValue(1)
+                            ->required()
+                            ->suffix('ore prima')
+                            ->visible(fn (Get $get): bool => (int) $get('reminder_count') >= 2),
+                    ]),
+
+                Section::make('Pagamenti')
+                    ->schema([
+                        Select::make('payment_mode')
+                            ->label('Metodi di pagamento accettati')
+                            ->options([
+                                'both'      => 'Online (Stripe) e in salone',
+                                'online'    => 'Solo online (Stripe)',
+                                'in_salon'  => 'Solo in salone',
+                            ])
+                            ->required(),
                     ]),
             ])
             ->statePath('data');
@@ -52,7 +120,9 @@ class SystemSettings extends Page
 
     public function save(): void
     {
-        SystemSetting::current()->update($this->form->getState());
+        $data = $this->form->getState();
+        $data['reminder_count'] = (int) $data['reminder_count'];
+        SystemSetting::current()->update($data);
 
         Notification::make()
             ->title('Impostazioni salvate')

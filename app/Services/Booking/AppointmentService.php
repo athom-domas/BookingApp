@@ -8,6 +8,7 @@ use App\Jobs\SyncGoogleCalendar;
 use App\Models\Appointment;
 use App\Models\AppointmentReminder;
 use App\Models\Service;
+use App\Models\SystemSetting;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -30,14 +31,15 @@ class AppointmentService
         $staffId    = $params['staffId'] ?? null;
         $preference = $staffId ? 'specific' : 'any';
 
-        $start = Carbon::createFromFormat('Y-m', $month)->startOfMonth();
-        $end   = $start->copy()->endOfMonth();
-        $today = Carbon::today();
+        $start   = Carbon::createFromFormat('Y-m', $month)->startOfMonth();
+        $end     = $start->copy()->endOfMonth();
+        $today   = Carbon::today();
+        $maxDate = $today->copy()->addDays(SystemSetting::getBookingMaxDaysAhead());
 
         $available = [];
 
         for ($day = $start->copy(); $day->lte($end); $day->addDay()) {
-            if ($day->lt($today)) {
+            if ($day->lt($today) || $day->gt($maxDate)) {
                 continue;
             }
 
@@ -120,12 +122,23 @@ class AppointmentService
                 'notes'          => $notes,
             ]);
 
-            AppointmentReminder::create([
-                'appointment_id' => $appointment->id,
-                'type'           => 'email',
-                'scheduled_for'  => $scheduledDate->copy()->subDays(2),
-                'status'         => 'pending',
-            ]);
+            $reminderCount = SystemSetting::getReminderCount();
+            if ($reminderCount >= 1) {
+                AppointmentReminder::create([
+                    'appointment_id' => $appointment->id,
+                    'type'           => 'email',
+                    'scheduled_for'  => $scheduledDate->copy()->subHours(SystemSetting::getReminder1Hours()),
+                    'status'         => 'pending',
+                ]);
+            }
+            if ($reminderCount >= 2) {
+                AppointmentReminder::create([
+                    'appointment_id' => $appointment->id,
+                    'type'           => 'email',
+                    'scheduled_for'  => $scheduledDate->copy()->subHours(SystemSetting::getReminder2Hours()),
+                    'status'         => 'pending',
+                ]);
+            }
 
             SyncGoogleCalendar::dispatch($appointment, 'create');
 

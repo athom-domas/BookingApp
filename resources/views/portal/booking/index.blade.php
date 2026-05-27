@@ -357,6 +357,7 @@
                 </button>
                 <div x-show="isOpen(4)" class="border-t border-gray-100 dark:border-gray-700 px-5 pb-5 pt-4">
                     <div class="space-y-3">
+                        @if($paymentMode !== 'in_salon')
                         <button
                             type="button"
                             @click="paymentMethod = 'online'"
@@ -368,6 +369,8 @@
                             <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">Paga ora</p>
                             <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Pagamento online con carta — la prenotazione viene confermata solo al completamento del pagamento</p>
                         </button>
+                        @endif
+                        @if($paymentMode !== 'online')
                         <button
                             type="button"
                             @click="paymentMethod = 'in_salon'"
@@ -379,6 +382,7 @@
                             <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">Paga in salone</p>
                             <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Paghi direttamente al momento del servizio — la prenotazione è confermata subito</p>
                         </button>
+                        @endif
                     </div>
                     <div class="mt-4 flex justify-end">
                         <button
