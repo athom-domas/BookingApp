@@ -46,8 +46,7 @@ class IntegrationSettings extends Page
                         TextInput::make('stripe_public_key')
                             ->label('Chiave pubblica (pk_...)')
                             ->helperText('Usata nel frontend per Stripe.js')
-                            ->nullable()
-                            ->dehydrated(fn ($v) => $v !== null),
+                            ->nullable(),
 
                         TextInput::make('stripe_secret_key')
                             ->label('Chiave segreta (sk_...)')
