@@ -109,10 +109,15 @@
                 calYear: new Date().getFullYear(),
                 calMonth: new Date().getMonth(),
 
+                loadingSlots: false,
+                foundSlots: [],
+                slotsChecked: false,
+                slotsPage: 0,
+
                 isOpen(n) { return this.openStep === n; },
                 isCompleted(n) { return this.completedSteps.includes(n); },
                 allCompleted() { return [1,2,3,4].every(n => this.isCompleted(n)); },
-                goTo(n) { this.openStep = n; },
+                goTo(n) { this.slotsChecked = false; this.foundSlots = []; this.slotsPage = 0; this.completedSteps = this.completedSteps.filter(s => s < n); this.openStep = n; },
                 completeStep(n) {
                     if (!this.completedSteps.includes(n)) this.completedSteps.push(n);
                     this.openStep = n + 1;
@@ -188,7 +193,70 @@
                     if (this.timeTo)   p += (p ? '&' : '') + 'preferred_time_to=' + this.timeTo;
                     return encodeURIComponent('{{ route('portal.waitlist.create') }}' + (p ? '?' + p : ''));
                 },
+
+                get visibleSlots() {
+                    return this.foundSlots.slice(this.slotsPage * 6, (this.slotsPage + 1) * 6);
+                },
+                get totalSlotsPages() {
+                    return Math.ceil(this.foundSlots.length / 6);
+                },
+                prevSlotsPage() { if (this.slotsPage > 0) this.slotsPage--; },
+                nextSlotsPage() { if (this.slotsPage < this.totalSlotsPages - 1) this.slotsPage++; },
+
+                formatDate(iso) {
+                    const s = new Date(iso + 'T00:00:00').toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' });
+                    return s.charAt(0).toUpperCase() + s.slice(1);
+                },
+
+                bookSlot(date, time) {
+                    sessionStorage.setItem('bookingWizardState', JSON.stringify({
+                        selectedServiceIds: this.selectedServices,
+                        staffId:            this.staffId,
+                        date:               date,
+                        slot:               time,
+                        calendarMonth:      date.slice(0, 7),
+                        step:               4,
+                        completed:          [1, 2, 3],
+                        waitlistEntryId:    null,
+                        paymentMethod:      null,
+                        notes:              '',
+                    }));
+                    window.location.href = '{{ route('booking.create') }}';
+                },
+
+                async checkAvailableSlots() {
+                    if (!this.selectedServices.length || !this.selectedDates.length) return;
+                    this.loadingSlots = true;
+                    this.foundSlots   = [];
+                    this.slotsChecked = false;
+                    this.slotsPage    = 0;
+
+                    const params = new URLSearchParams();
+                    this.selectedServices.forEach(id => params.append('serviceIds[]', id));
+                    if (this.staffId) params.append('staffId', this.staffId);
+                    params.append('staffPreference', this.staffId ? 'specific' : 'any');
+
+                    const results = [];
+                    for (const date of this.selectedDates) {
+                        params.set('date', date);
+                        try {
+                            const res  = await fetch('/api/booking/slots?' + params.toString(), { headers: { Accept: 'application/json' } });
+                            const data = await res.json();
+                            for (const slot of (data.data ?? [])) {
+                                if (slot.start >= this.timeFrom && slot.start < this.timeTo) {
+                                    results.push({ date, time: slot.start });
+                                }
+                            }
+                        } catch (_) {}
+                    }
+
+                    results.sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
+                    this.foundSlots   = results;
+                    this.slotsChecked = true;
+                    this.loadingSlots = false;
+                },
             }"
+            x-init="$nextTick(() => allCompleted() && checkAvailableSlots())"
             class="space-y-3"
         >
             <form method="POST" action="{{ route('portal.waitlist.store') }}" class="space-y-3">
@@ -438,7 +506,7 @@
                         </div>
                     </div>
                     <div class="mt-4 flex justify-end">
-                        <button type="button" @click="completeStep(4)" class="btn-wl">Continua</button>
+                        <button type="button" @click="completeStep(4); checkAvailableSlots()" class="btn-wl">Continua</button>
                     </div>
                 </div>
             </div>
@@ -447,24 +515,85 @@
             <div x-show="allCompleted()"
                  class="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm">
                 <div class="px-5 py-5">
-                    @auth
-                        <div class="flex items-center justify-between">
-                            <a href="{{ route('portal.appointments.index') }}" class="text-sm text-gray-600 hover:underline dark:text-gray-400">Annulla</a>
-                            <button type="submit" class="btn-wl">Iscriviti alla lista d'attesa</button>
+
+                    {{-- Caricamento --}}
+                    <div x-show="loadingSlots" class="flex items-center justify-center gap-2 py-3 text-sm text-gray-500 dark:text-gray-400">
+                        <svg class="h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                        </svg>
+                        Verifica disponibilità...
+                    </div>
+
+                    {{-- Slot disponibili trovati --}}
+                    <div x-show="!loadingSlots && slotsChecked && foundSlots.length > 0">
+                        <p class="mb-3 text-sm font-semibold text-gray-900 dark:text-gray-100">Ci sono già slot disponibili nelle date selezionate:</p>
+                        <div class="mb-2 space-y-2">
+                            <template x-for="slot in visibleSlots" :key="slot.date + slot.time">
+                                <div class="flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-700 px-4 py-3">
+                                    <div>
+                                        <p class="text-sm font-semibold text-gray-900 dark:text-gray-100" x-text="formatDate(slot.date)"></p>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400" x-text="slot.time"></p>
+                                    </div>
+                                    <button type="button" @click="bookSlot(slot.date, slot.time)" class="btn-wl">Prenota</button>
+                                </div>
+                            </template>
                         </div>
-                    @else
-                        <p class="text-sm text-gray-600 dark:text-gray-400">Accedi o crea un account per iscriverti alla lista d'attesa.</p>
-                        <div class="mt-3 flex gap-3">
-                            <a :href="'{{ route('login') }}?return=' + returnUrl"
-                               class="flex-1 rounded border border-gray-200 dark:border-gray-700 px-4 py-2.5 text-center text-sm font-semibold text-gray-900 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800">
-                                Accedi
-                            </a>
-                            <a :href="'{{ route('register') }}?return=' + returnUrl"
-                               class="btn-wl-full flex-1 text-center">
-                                Crea account
-                            </a>
+                        <div x-show="totalSlotsPages > 1" class="mb-4 flex items-center justify-between">
+                            <button type="button" @click="prevSlotsPage()" :disabled="slotsPage === 0"
+                                    class="rounded p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+                                <svg class="h-4 w-4 text-gray-600 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                            </button>
+                            <p class="text-xs text-gray-500 dark:text-gray-400" x-text="(slotsPage + 1) + ' / ' + totalSlotsPages"></p>
+                            <button type="button" @click="nextSlotsPage()" :disabled="slotsPage >= totalSlotsPages - 1"
+                                    class="rounded p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+                                <svg class="h-4 w-4 text-gray-600 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            </button>
                         </div>
-                    @endauth
+                        @auth
+                            <div class="flex items-center justify-between border-t border-gray-100 dark:border-gray-700 pt-4">
+                                <a href="{{ route('portal.appointments.index') }}" class="text-sm text-gray-600 hover:underline dark:text-gray-400">Annulla</a>
+                                <button type="submit" class="text-sm text-gray-500 dark:text-gray-400 hover:underline">Iscriviti comunque alla lista d'attesa</button>
+                            </div>
+                        @else
+                            <div class="border-t border-gray-100 dark:border-gray-700 pt-4">
+                                <p class="mb-3 text-sm text-gray-600 dark:text-gray-400">Per iscriverti alla lista d'attesa accedi o crea un account.</p>
+                                <div class="flex gap-3">
+                                    <a :href="'{{ route('login') }}?return=' + returnUrl"
+                                       class="flex-1 rounded border border-gray-200 dark:border-gray-700 px-4 py-2.5 text-center text-sm font-semibold text-gray-900 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800">
+                                        Accedi
+                                    </a>
+                                    <a :href="'{{ route('register') }}?return=' + returnUrl"
+                                       class="btn-wl-full flex-1 text-center">
+                                        Crea account
+                                    </a>
+                                </div>
+                            </div>
+                        @endauth
+                    </div>
+
+                    {{-- Nessuno slot trovato o controllo non ancora eseguito --}}
+                    <div x-show="!loadingSlots && (!slotsChecked || foundSlots.length === 0)">
+                        @auth
+                            <div class="flex items-center justify-between">
+                                <a href="{{ route('portal.appointments.index') }}" class="text-sm text-gray-600 hover:underline dark:text-gray-400">Annulla</a>
+                                <button type="submit" class="btn-wl">Iscriviti alla lista d'attesa</button>
+                            </div>
+                        @else
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Accedi o crea un account per iscriverti alla lista d'attesa.</p>
+                            <div class="mt-3 flex gap-3">
+                                <a :href="'{{ route('login') }}?return=' + returnUrl"
+                                   class="flex-1 rounded border border-gray-200 dark:border-gray-700 px-4 py-2.5 text-center text-sm font-semibold text-gray-900 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800">
+                                    Accedi
+                                </a>
+                                <a :href="'{{ route('register') }}?return=' + returnUrl"
+                                   class="btn-wl-full flex-1 text-center">
+                                    Crea account
+                                </a>
+                            </div>
+                        @endauth
+                    </div>
+
                 </div>
             </div>
 
