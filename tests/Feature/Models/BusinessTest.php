@@ -40,7 +40,7 @@ it('BelongsToBusiness auto-fills business_id on create', function () {
         'author_name' => 'Test',
         'rating'      => 5,
         'body'        => 'Great!',
-        'published'   => true,
+        'is_published' => true,
         'sort_order'  => 1,
     ]);
 
