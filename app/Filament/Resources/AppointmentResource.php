@@ -57,7 +57,8 @@ class AppointmentResource extends Resource
 
     public static function canCreate(): bool
     {
-        return ! auth()->user()?->isStaff();
+        $user = auth()->user();
+        return $user?->isAdmin() || ($user?->isStaff() && $user->can('appointments.create')) ?? false;
     }
 
     public static function form(Schema $schema): Schema
@@ -151,12 +152,14 @@ class AppointmentResource extends Resource
 
     public static function table(Table $table): Table
     {
-        $isStaff = auth()->user()?->isStaff();
+        $user       = auth()->user();
+        $isStaff    = $user?->isStaff() ?? false;
+        $hasViewAll = $isStaff && ($user?->can('appointments.view_all') ?? false);
 
         return $table
             ->modifyQueryUsing(
                 fn(Builder $query) =>
-                $isStaff ? $query->where('staff_id', auth()->id()) : $query
+                ($isStaff && ! $hasViewAll) ? $query->where('staff_id', $user->id) : $query
             )
             ->defaultSort('scheduled_date', 'desc')
             ->columns([
@@ -207,7 +210,7 @@ class AppointmentResource extends Resource
                     ->label('Staff')
                     ->relationship('staff', 'name', fn($query) => $query->role('staff'))
                     ->searchable()
-                    ->hidden($isStaff),
+                    ->hidden($isStaff && ! $hasViewAll),
 
                 Filter::make('scheduled_date')
                     ->label('Data')

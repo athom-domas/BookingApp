@@ -1,6 +1,8 @@
 <?php
 
+use App\Filament\Resources\AppointmentResource\Pages\ListAppointments;
 use App\Filament\Resources\StaffResource\Pages\EditStaff;
+use App\Models\Appointment;
 use App\Models\Business;
 use App\Models\User;
 use Filament\Facades\Filament;
@@ -57,6 +59,75 @@ it('admin can revoke permissions from staff via edit form', function () {
     $staff->refresh();
     expect($staff->hasPermissionTo('appointments.view_all'))->toBeFalse();
     expect($staff->hasPermissionTo('reports.view'))->toBeFalse();
+});
+
+it('staff without appointments.create cannot create appointments', function () {
+    app()->instance('current_business_id', $this->business->id);
+
+    $staff = User::factory()->create(['business_id' => $this->business->id]);
+    $staff->assignRole('staff');
+
+    $this->actingAs($staff);
+
+    expect(\App\Filament\Resources\AppointmentResource::canCreate())->toBeFalse();
+});
+
+it('staff with appointments.create can create appointments', function () {
+    app()->instance('current_business_id', $this->business->id);
+
+    $staff = User::factory()->create(['business_id' => $this->business->id]);
+    $staff->assignRole('staff');
+    $staff->givePermissionTo('appointments.create');
+
+    $this->actingAs($staff);
+
+    expect(\App\Filament\Resources\AppointmentResource::canCreate())->toBeTrue();
+});
+
+it('staff without view_all sees only own appointments in list', function () {
+    app()->instance('current_business_id', $this->business->id);
+    Role::firstOrCreate(['name' => 'customer', 'guard_name' => 'web']);
+
+    $staff = User::factory()->create(['business_id' => $this->business->id]);
+    $staff->assignRole('staff');
+
+    $otherStaff = User::factory()->create(['business_id' => $this->business->id]);
+    $otherStaff->assignRole('staff');
+
+    $customer = User::factory()->create(['business_id' => $this->business->id]);
+    $customer->assignRole('customer');
+
+    $ownAppt = Appointment::factory()->create(['staff_id' => $staff->id, 'user_id' => $customer->id]);
+    $otherAppt = Appointment::factory()->create(['staff_id' => $otherStaff->id, 'user_id' => $customer->id]);
+
+    $this->actingAs($staff);
+
+    Livewire::test(ListAppointments::class)
+        ->assertCanSeeTableRecords([$ownAppt])
+        ->assertCanNotSeeTableRecords([$otherAppt]);
+});
+
+it('staff with view_all sees all appointments in list', function () {
+    app()->instance('current_business_id', $this->business->id);
+    Role::firstOrCreate(['name' => 'customer', 'guard_name' => 'web']);
+
+    $staff = User::factory()->create(['business_id' => $this->business->id]);
+    $staff->assignRole('staff');
+    $staff->givePermissionTo('appointments.view_all');
+
+    $otherStaff = User::factory()->create(['business_id' => $this->business->id]);
+    $otherStaff->assignRole('staff');
+
+    $customer = User::factory()->create(['business_id' => $this->business->id]);
+    $customer->assignRole('customer');
+
+    $ownAppt = Appointment::factory()->create(['staff_id' => $staff->id, 'user_id' => $customer->id]);
+    $otherAppt = Appointment::factory()->create(['staff_id' => $otherStaff->id, 'user_id' => $customer->id]);
+
+    $this->actingAs($staff);
+
+    Livewire::test(ListAppointments::class)
+        ->assertCanSeeTableRecords([$ownAppt, $otherAppt]);
 });
 
 it('seeder creates the 5 staff permissions', function () {
