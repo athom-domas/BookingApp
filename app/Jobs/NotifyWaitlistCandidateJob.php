@@ -25,6 +25,8 @@ class NotifyWaitlistCandidateJob implements ShouldQueue
 
     public function handle(NotificationService $notificationService): void
     {
+        app()->instance('current_business_id', $this->entry->business_id);
+
         $this->entry->update([
             'status'       => 'notified',
             'offered_slot' => $this->slotInfo,

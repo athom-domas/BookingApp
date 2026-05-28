@@ -31,6 +31,11 @@ class StripeWebhookController extends Controller
             return response()->json(['message' => 'Invalid Stripe webhook signature.'], 400);
         }
 
+        $businessId = $event->data->object?->metadata?->business_id ?? null;
+        if ($businessId) {
+            app()->instance('current_business_id', (int) $businessId);
+        }
+
         $this->paymentService->handleStripeWebhook($event->toArray());
 
         return response()->json(['received' => true]);

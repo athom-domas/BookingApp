@@ -21,7 +21,10 @@ class PaymentService
             'amount' => $amountCents,
             'currency' => 'eur',
             'automatic_payment_methods' => ['enabled' => true],
-            'metadata' => ['appointment_id' => $appointmentId],
+            'metadata' => [
+                'appointment_id' => $appointmentId,
+                'business_id'    => app()->bound('current_business_id') ? app('current_business_id') : null,
+            ],
         ]);
 
         return Payment::create([

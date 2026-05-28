@@ -22,6 +22,8 @@ class SendCancellationNotification implements ShouldQueue
 
     public function handle(NotificationService $notificationService): void
     {
+        app()->instance('current_business_id', $this->appointment->business_id);
+
         $appointment = $this->appointment->load('user', 'staff.preferences', 'payment');
 
         Mail::send(new AppointmentCancellationMail($appointment, $appointment->user));

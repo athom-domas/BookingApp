@@ -22,6 +22,8 @@ class SyncGoogleCalendar implements ShouldQueue
 
     public function handle(GoogleCalendarService $calendarService): void
     {
+        app()->instance('current_business_id', $this->appointment->business_id);
+
         if (! in_array($this->action, ['create', 'delete'])) {
             throw new \InvalidArgumentException("Unknown SyncGoogleCalendar action: {$this->action}");
         }

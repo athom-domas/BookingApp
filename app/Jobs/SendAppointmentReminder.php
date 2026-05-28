@@ -22,6 +22,8 @@ class SendAppointmentReminder implements ShouldQueue
 
     public function handle(NotificationService $notificationService): void
     {
+        app()->instance('current_business_id', $this->reminder->business_id);
+
         if ($this->reminder->status === 'sent') {
             return;
         }
