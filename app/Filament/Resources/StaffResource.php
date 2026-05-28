@@ -7,6 +7,7 @@ use App\Models\User;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
@@ -145,6 +146,22 @@ class StaffResource extends Resource
                 ->label('Ricevi notifiche email')
                 ->helperText('Invia una email per ogni nuovo appuntamento assegnato a questo membro.')
                 ->default(true),
+
+            CheckboxList::make('staff_permissions')
+                ->label('Permessi pannello admin')
+                ->options([
+                    'appointments.view_all' => 'Vedi tutti gli appuntamenti',
+                    'appointments.create'   => 'Crea appuntamenti',
+                    'customers.view'        => 'Gestisci clienti',
+                    'payments.manage'       => 'Registra pagamenti',
+                    'reports.view'          => 'Vedi report',
+                ])
+                ->afterStateHydrated(fn ($component, $record) =>
+                    $component->state($record ? $record->getPermissionNames()->toArray() : [])
+                )
+                ->dehydrated(false)
+                ->visibleOn('edit')
+                ->columnSpanFull(),
 
         ]);
     }

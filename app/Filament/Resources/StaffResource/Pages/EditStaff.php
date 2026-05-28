@@ -57,4 +57,10 @@ class EditStaff extends EditRecord
 
         return $record;
     }
+
+    protected function afterSave(): void
+    {
+        $permissions = $this->form->getRawState()['staff_permissions'] ?? [];
+        $this->record->syncPermissions($permissions);
+    }
 }
