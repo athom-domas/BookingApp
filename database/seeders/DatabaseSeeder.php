@@ -21,9 +21,23 @@ class DatabaseSeeder extends Seeder
             Role::firstOrCreate(['name' => $role, 'guard_name' => 'web']);
         }
 
-        foreach (['appointments.view_all', 'appointments.create', 'customers.view', 'payments.manage', 'reports.view'] as $perm) {
+        foreach ([
+            'appointments.view_all',
+            'appointments.create',
+            'appointments.edit',
+            'appointments.delete',
+            'appointments.payments',
+            'customers.view',
+            'customers.create',
+            'customers.edit',
+            'customers.delete',
+            'reports.view',
+            'reports.view_revenue',
+        ] as $perm) {
             Permission::firstOrCreate(['name' => $perm, 'guard_name' => 'web']);
         }
+
+        Permission::where('name', 'payments.manage')->where('guard_name', 'web')->delete();
 
         $superAdmin = User::updateOrCreate(
             ['email' => 'superadmin@test.com'],
