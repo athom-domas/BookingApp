@@ -58,7 +58,7 @@ class AppointmentResource extends Resource
     public static function canCreate(): bool
     {
         $user = auth()->user();
-        return $user?->isAdmin() || ($user?->isStaff() && $user->can('appointments.create')) ?? false;
+        return ($user?->isAdmin() || ($user?->isStaff() && $user->can('appointments.create'))) ?? false;
     }
 
     public static function form(Schema $schema): Schema

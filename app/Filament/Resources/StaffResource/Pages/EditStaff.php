@@ -60,7 +60,9 @@ class EditStaff extends EditRecord
 
     protected function afterSave(): void
     {
-        $permissions = $this->form->getRawState()['staff_permissions'] ?? [];
-        $this->record->syncPermissions($permissions);
+        $rawState = $this->form->getRawState();
+        if (array_key_exists('staff_permissions', $rawState)) {
+            $this->record->syncPermissions($rawState['staff_permissions'] ?? []);
+        }
     }
 }

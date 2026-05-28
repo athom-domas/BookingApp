@@ -28,7 +28,7 @@ class PaymentResource extends Resource
     public static function canViewAny(): bool
     {
         $user = auth()->user();
-        return $user?->isAdmin() || ($user?->isStaff() && $user->can('payments.manage')) ?? false;
+        return ($user?->isAdmin() || ($user?->isStaff() && $user->can('payments.manage'))) ?? false;
     }
 
     public static function form(Schema $schema): Schema

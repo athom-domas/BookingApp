@@ -37,13 +37,13 @@ class CustomerResource extends Resource
     public static function canViewAny(): bool
     {
         $user = auth()->user();
-        return $user?->isAdmin() || ($user?->isStaff() && $user->can('customers.view')) ?? false;
+        return ($user?->isAdmin() || ($user?->isStaff() && $user->can('customers.view'))) ?? false;
     }
 
     public static function canView(Model $record): bool
     {
         $user = auth()->user();
-        return $user?->isAdmin() || ($user?->isStaff() && $user->can('customers.view')) ?? false;
+        return ($user?->isAdmin() || ($user?->isStaff() && $user->can('customers.view'))) ?? false;
     }
 
     public static function canCreate(): bool
@@ -54,7 +54,7 @@ class CustomerResource extends Resource
     public static function canEdit(Model $record): bool
     {
         $user = auth()->user();
-        return $user?->isAdmin() || ($user?->isStaff() && $user->can('customers.view')) ?? false;
+        return ($user?->isAdmin() || ($user?->isStaff() && $user->can('customers.view'))) ?? false;
     }
 
     public static function canDelete(Model $record): bool

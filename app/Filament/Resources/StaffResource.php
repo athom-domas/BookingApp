@@ -157,7 +157,7 @@ class StaffResource extends Resource
                     'reports.view'          => 'Vedi report',
                 ])
                 ->afterStateHydrated(fn ($component, $record) =>
-                    $component->state($record ? $record->getPermissionNames()->toArray() : [])
+                    $component->state($record ? $record->getDirectPermissions()->pluck('name')->toArray() : [])
                 )
                 ->dehydrated(false)
                 ->visibleOn('edit')
