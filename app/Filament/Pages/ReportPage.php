@@ -31,7 +31,8 @@ class ReportPage extends Page
 
     public static function canAccess(): bool
     {
-        return auth()->user()?->isAdmin() ?? false;
+        $user = auth()->user();
+        return $user?->isAdmin() || ($user?->isStaff() && $user->can('reports.view')) ?? false;
     }
 
     public function setPeriod(string $period): void

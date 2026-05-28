@@ -1,6 +1,9 @@
 <?php
 
+use App\Filament\Pages\ReportPage;
 use App\Filament\Resources\AppointmentResource\Pages\ListAppointments;
+use App\Filament\Resources\CustomerResource;
+use App\Filament\Resources\PaymentResource;
 use App\Filament\Resources\StaffResource\Pages\EditStaff;
 use App\Models\Appointment;
 use App\Models\Business;
@@ -140,4 +143,73 @@ it('seeder creates the 5 staff permissions', function () {
     foreach (['appointments.view_all', 'appointments.create', 'customers.view', 'payments.manage', 'reports.view'] as $perm) {
         expect(Permission::where('name', $perm)->where('guard_name', 'web')->exists())->toBeTrue("Permission {$perm} missing");
     }
+});
+
+it('staff without customers.view cannot access customer list', function () {
+    app()->instance('current_business_id', $this->business->id);
+    Filament::setTenant($this->business, isQuiet: true);
+
+    $staff = User::factory()->create(['business_id' => $this->business->id]);
+    $staff->assignRole('staff');
+    $this->actingAs($staff);
+
+    expect(CustomerResource::canViewAny())->toBeFalse();
+});
+
+it('staff with customers.view can access customer list', function () {
+    app()->instance('current_business_id', $this->business->id);
+    Filament::setTenant($this->business, isQuiet: true);
+
+    $staff = User::factory()->create(['business_id' => $this->business->id]);
+    $staff->assignRole('staff');
+    $staff->givePermissionTo('customers.view');
+    $this->actingAs($staff);
+
+    expect(CustomerResource::canViewAny())->toBeTrue();
+});
+
+it('staff without payments.manage cannot access payment list', function () {
+    app()->instance('current_business_id', $this->business->id);
+    Filament::setTenant($this->business, isQuiet: true);
+
+    $staff = User::factory()->create(['business_id' => $this->business->id]);
+    $staff->assignRole('staff');
+    $this->actingAs($staff);
+
+    expect(PaymentResource::canViewAny())->toBeFalse();
+});
+
+it('staff with payments.manage can access payment list', function () {
+    app()->instance('current_business_id', $this->business->id);
+    Filament::setTenant($this->business, isQuiet: true);
+
+    $staff = User::factory()->create(['business_id' => $this->business->id]);
+    $staff->assignRole('staff');
+    $staff->givePermissionTo('payments.manage');
+    $this->actingAs($staff);
+
+    expect(PaymentResource::canViewAny())->toBeTrue();
+});
+
+it('staff without reports.view cannot access report page', function () {
+    app()->instance('current_business_id', $this->business->id);
+    Filament::setTenant($this->business, isQuiet: true);
+
+    $staff = User::factory()->create(['business_id' => $this->business->id]);
+    $staff->assignRole('staff');
+    $this->actingAs($staff);
+
+    expect(ReportPage::canAccess())->toBeFalse();
+});
+
+it('staff with reports.view can access report page', function () {
+    app()->instance('current_business_id', $this->business->id);
+    Filament::setTenant($this->business, isQuiet: true);
+
+    $staff = User::factory()->create(['business_id' => $this->business->id]);
+    $staff->assignRole('staff');
+    $staff->givePermissionTo('reports.view');
+    $this->actingAs($staff);
+
+    expect(ReportPage::canAccess())->toBeTrue();
 });
