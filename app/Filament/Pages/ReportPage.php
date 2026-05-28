@@ -67,13 +67,21 @@ class ReportPage extends Page
 
     public function getWidgets(): array
     {
-        return [
-            RevenueStatsWidget::class,
+        $user       = auth()->user();
+        $hasRevenue = $user?->isAdmin() || ($user?->isStaff() && $user->can('reports.view_revenue'));
+
+        $widgets = [
             InsightStatsWidget::class,
-            RevenueChartWidget::class,
             AppointmentsByStatusChartWidget::class,
             ServiceBreakdownChartWidget::class,
-            StaffPerformanceWidget::class,
         ];
+
+        if ($hasRevenue) {
+            array_unshift($widgets, RevenueStatsWidget::class);
+            $widgets[] = RevenueChartWidget::class;
+            $widgets[] = StaffPerformanceWidget::class;
+        }
+
+        return $widgets;
     }
 }
