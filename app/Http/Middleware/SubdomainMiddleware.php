@@ -15,6 +15,17 @@ class SubdomainMiddleware
         $baseDomain = config('app.base_domain');
 
         if (! $baseDomain) {
+            // After SubstituteBindings, the {tenant} route parameter is resolved.
+            $tenant = $request->route('tenant');
+            if ($tenant instanceof Business) {
+                if ($tenant->status === BusinessStatus::Suspended) {
+                    abort(503, 'This salon is currently unavailable.');
+                }
+                app()->instance('current_business_id', $tenant->id);
+                return $next($request);
+            }
+
+            // Fallback for pre-auth pages (login) and portal routes without a tenant segment.
             $business = Business::withoutGlobalScopes()
                 ->where('status', BusinessStatus::Active)
                 ->orderBy('id')
@@ -30,7 +41,18 @@ class SubdomainMiddleware
         $host = $request->getHost();
 
         if (! str_ends_with($host, '.' . $baseDomain)) {
-            abort(404);
+            if ($host !== $baseDomain) {
+                abort(404);
+            }
+            // Bare base domain (e.g. localhost) — no subdomain, fall back to first active business.
+            $business = Business::withoutGlobalScopes()
+                ->where('status', BusinessStatus::Active)
+                ->orderBy('id')
+                ->first();
+            if ($business) {
+                app()->instance('current_business_id', $business->id);
+            }
+            return $next($request);
         }
 
         $subdomain = str($host)->before('.' . $baseDomain)->value();

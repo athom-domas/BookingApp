@@ -179,9 +179,16 @@ class SalonProfilePage extends Page
                     Tab::make('Anteprima')->schema([
                         Placeholder::make('preview_link')
                             ->label('')
-                            ->content(new HtmlString(
-                                '<a href="/" target="_blank" class="text-primary-600 underline font-medium">Apri la vetrina pubblica →</a>'
-                            )),
+                            ->content(function (): HtmlString {
+                                $subdomain = \Filament\Facades\Filament::getTenant()?->subdomain;
+                                $baseDomain = config('app.base_domain');
+                                $url = ($subdomain && $baseDomain)
+                                    ? 'http://' . $subdomain . '.' . $baseDomain . '/'
+                                    : url('/');
+                                return new HtmlString(
+                                    '<a href="' . e($url) . '" target="_blank" class="text-primary-600 underline font-medium">Apri la vetrina pubblica →</a>'
+                                );
+                            }),
                     ]),
                 ]),
             ]);

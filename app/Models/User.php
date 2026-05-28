@@ -40,6 +40,7 @@ class User extends Authenticatable implements FilamentUser, HasMedia, HasTenants
             'password'                    => 'hashed',
             'receive_email_notifications' => 'boolean',
             'must_change_password'        => 'boolean',
+            'business_id'                 => 'integer',
         ];
     }
 

@@ -32,6 +32,10 @@ class SalonProfile extends Model implements HasMedia
 
     public static function current(): self
     {
+        if (! app()->bound('current_business_id')) {
+            return new self(['name' => config('app.name', 'Booking App'), 'primary_color' => '#1d1d1d']);
+        }
+
         return self::firstOrCreate(
             ['business_id' => Business::currentId()],
             [

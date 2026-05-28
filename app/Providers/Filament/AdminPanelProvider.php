@@ -61,7 +61,6 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->tenant(Business::class, slugAttribute: 'subdomain')
-            ->tenantMiddleware([\App\Http\Middleware\SubdomainMiddleware::class], isPersistent: true)
             ->path('admin')
             ->login();
 
@@ -107,6 +106,7 @@ class AdminPanelProvider extends PanelProvider
                 ShareErrorsFromSession::class,
                 PreventRequestForgery::class,
                 SubstituteBindings::class,
+                \App\Http\Middleware\SubdomainMiddleware::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
             ])
