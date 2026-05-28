@@ -59,8 +59,8 @@ class AppointmentResource extends Resource
         if ($user?->isAdmin()) {
             return true;
         }
-        if ($user?->isStaff()) {
-            return $user->can('appointments.delete');
+        if ($user?->isStaff() && $user->can('appointments.delete')) {
+            return $record->staff_id === $user->id || $user->can('appointments.view_all');
         }
         return false;
     }

@@ -99,6 +99,7 @@ class CustomerResource extends Resource
                 ->label('Password')
                 ->password()
                 ->required()
+                ->dehydrated(fn(?string $state): bool => filled($state))
                 ->minLength(8)
                 ->maxLength(255)
                 ->visibleOn('create'),
