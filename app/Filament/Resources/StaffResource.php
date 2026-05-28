@@ -7,7 +7,6 @@ use App\Models\User;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
@@ -15,6 +14,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\ColorColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -147,19 +147,121 @@ class StaffResource extends Resource
                 ->helperText('Invia una email per ogni nuovo appuntamento assegnato a questo membro.')
                 ->default(true),
 
-            CheckboxList::make('staff_permissions')
-                ->label('Permessi pannello admin')
-                ->options([
-                    'appointments.view_all' => 'Vedi tutti gli appuntamenti',
-                    'appointments.create'   => 'Crea appuntamenti',
-                    'customers.view'        => 'Gestisci clienti',
-                    'payments.manage'       => 'Registra pagamenti',
-                    'reports.view'          => 'Vedi report',
+            Section::make('Permessi pannello admin')
+                ->schema([
+                    Select::make('appointments_visibility')
+                        ->label('Visibilità appuntamenti')
+                        ->options([
+                            'personal' => 'Solo personali',
+                            'all'      => 'Tutti gli appuntamenti del salone',
+                        ])
+                        ->default('personal')
+                        ->required()
+                        ->afterStateHydrated(function ($component, $record) {
+                            if (! $record) {
+                                return;
+                            }
+                            $perms = $record->getDirectPermissions()->pluck('name')->toArray();
+                            $component->state(in_array('appointments.view_all', $perms) ? 'all' : 'personal');
+                        })
+                        ->dehydrated(false),
+
+                    Select::make('appointments_management')
+                        ->label('Gestione appuntamenti')
+                        ->options([
+                            'view_only'   => 'Solo visualizzazione',
+                            'create'      => 'Solo creazione',
+                            'full'        => 'Gestione completa',
+                            'full_delete' => 'Gestione completa con eliminazione',
+                        ])
+                        ->default('view_only')
+                        ->required()
+                        ->afterStateHydrated(function ($component, $record) {
+                            if (! $record) {
+                                return;
+                            }
+                            $perms = $record->getDirectPermissions()->pluck('name')->toArray();
+                            $has = fn($p) => in_array($p, $perms);
+                            if ($has('appointments.delete')) {
+                                $component->state('full_delete');
+                                return;
+                            }
+                            if ($has('appointments.edit')) {
+                                $component->state('full');
+                                return;
+                            }
+                            if ($has('appointments.create')) {
+                                $component->state('create');
+                                return;
+                            }
+                            $component->state('view_only');
+                        })
+                        ->dehydrated(false),
+
+                    Select::make('customers_management')
+                        ->label('Gestione clienti')
+                        ->options([
+                            'none'        => 'Nessun accesso',
+                            'view'        => 'Solo visualizzazione',
+                            'create'      => 'Visualizzazione e creazione',
+                            'full'        => 'Gestione completa',
+                            'full_delete' => 'Gestione completa con eliminazione',
+                        ])
+                        ->default('none')
+                        ->required()
+                        ->afterStateHydrated(function ($component, $record) {
+                            if (! $record) {
+                                return;
+                            }
+                            $perms = $record->getDirectPermissions()->pluck('name')->toArray();
+                            $has = fn($p) => in_array($p, $perms);
+                            if ($has('customers.delete')) {
+                                $component->state('full_delete');
+                                return;
+                            }
+                            if ($has('customers.edit')) {
+                                $component->state('full');
+                                return;
+                            }
+                            if ($has('customers.create')) {
+                                $component->state('create');
+                                return;
+                            }
+                            if ($has('customers.view')) {
+                                $component->state('view');
+                                return;
+                            }
+                            $component->state('none');
+                        })
+                        ->dehydrated(false),
+
+                    Select::make('reports_visibility')
+                        ->label('Accesso report')
+                        ->options([
+                            'none'       => 'Nessun accesso',
+                            'no_revenue' => 'Senza dati economici',
+                            'full'       => 'Completo (inclusi guadagni)',
+                        ])
+                        ->default('none')
+                        ->required()
+                        ->afterStateHydrated(function ($component, $record) {
+                            if (! $record) {
+                                return;
+                            }
+                            $perms = $record->getDirectPermissions()->pluck('name')->toArray();
+                            $has = fn($p) => in_array($p, $perms);
+                            if ($has('reports.view_revenue')) {
+                                $component->state('full');
+                                return;
+                            }
+                            if ($has('reports.view')) {
+                                $component->state('no_revenue');
+                                return;
+                            }
+                            $component->state('none');
+                        })
+                        ->dehydrated(false),
                 ])
-                ->afterStateHydrated(fn ($component, $record) =>
-                    $component->state($record ? $record->getDirectPermissions()->pluck('name')->toArray() : [])
-                )
-                ->dehydrated(false)
                 ->visibleOn('edit')
                 ->columnSpanFull(),
 

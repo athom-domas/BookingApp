@@ -61,8 +61,50 @@ class EditStaff extends EditRecord
     protected function afterSave(): void
     {
         $rawState = $this->form->getRawState();
-        if (array_key_exists('staff_permissions', $rawState)) {
-            $this->record->syncPermissions($rawState['staff_permissions'] ?? []);
+        if (! array_key_exists('appointments_visibility', $rawState)) {
+            return;
         }
+
+        $perms = [];
+
+        if (($rawState['appointments_visibility'] ?? 'personal') === 'all') {
+            $perms[] = 'appointments.view_all';
+        }
+
+        $management = $rawState['appointments_management'] ?? 'view_only';
+        if (in_array($management, ['create', 'full', 'full_delete'])) {
+            $perms[] = 'appointments.create';
+        }
+        if (in_array($management, ['full', 'full_delete'])) {
+            $perms[] = 'appointments.edit';
+            $perms[] = 'appointments.payments';
+        }
+        if ($management === 'full_delete') {
+            $perms[] = 'appointments.delete';
+        }
+
+        $customers = $rawState['customers_management'] ?? 'none';
+        if ($customers !== 'none') {
+            $perms[] = 'customers.view';
+        }
+        if (in_array($customers, ['create', 'full', 'full_delete'])) {
+            $perms[] = 'customers.create';
+        }
+        if (in_array($customers, ['full', 'full_delete'])) {
+            $perms[] = 'customers.edit';
+        }
+        if ($customers === 'full_delete') {
+            $perms[] = 'customers.delete';
+        }
+
+        $reports = $rawState['reports_visibility'] ?? 'none';
+        if (in_array($reports, ['no_revenue', 'full'])) {
+            $perms[] = 'reports.view';
+        }
+        if ($reports === 'full') {
+            $perms[] = 'reports.view_revenue';
+        }
+
+        $this->record->syncPermissions($perms);
     }
 }
