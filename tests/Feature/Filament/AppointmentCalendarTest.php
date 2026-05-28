@@ -7,6 +7,7 @@ use App\Models\Service;
 use App\Models\User;
 use Filament\Facades\Filament;
 use Livewire\Livewire;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
@@ -310,4 +311,46 @@ it('usa il colore da palette come fallback quando staff non ha colore personaliz
         ->fetchEvents($fetchRange());
 
     expect($events[0]['backgroundColor'])->toBe($palette[$staff->id % count($palette)]);
+});
+
+it('staff with view_all sees all appointments in calendar', function () use (&$fetchRange) {
+    Permission::firstOrCreate(['name' => 'appointments.view_all', 'guard_name' => 'web']);
+
+    $staff = User::factory()->create()->assignRole('staff');
+    $staff->givePermissionTo('appointments.view_all');
+    $other = User::factory()->create()->assignRole('staff');
+
+    $own   = Appointment::factory()->create(['staff_id' => $staff->id, 'scheduled_date' => now()->addDays(1)]);
+    $theirs = Appointment::factory()->create(['staff_id' => $other->id, 'scheduled_date' => now()->addDays(2)]);
+
+    $this->actingAs($staff);
+
+    $events = Livewire::test(AppointmentCalendarWidget::class)
+        ->instance()
+        ->fetchEvents($fetchRange());
+
+    $eventIds = array_column($events, 'id');
+
+    expect($eventIds)->toContain($own->id)
+        ->and($eventIds)->toContain($theirs->id)
+        ->and($events)->toHaveCount(2);
+});
+
+it('staff without view_all sees only own appointments in calendar', function () use (&$fetchRange) {
+    Permission::firstOrCreate(['name' => 'appointments.view_all', 'guard_name' => 'web']);
+
+    $staff = User::factory()->create()->assignRole('staff');
+    $other = User::factory()->create()->assignRole('staff');
+
+    $own = Appointment::factory()->create(['staff_id' => $staff->id, 'scheduled_date' => now()->addDays(1)]);
+    Appointment::factory()->create(['staff_id' => $other->id, 'scheduled_date' => now()->addDays(2)]);
+
+    $this->actingAs($staff);
+
+    $events = Livewire::test(AppointmentCalendarWidget::class)
+        ->instance()
+        ->fetchEvents($fetchRange());
+
+    expect($events)->toHaveCount(1)
+        ->and($events[0]['id'])->toBe($own->id);
 });

@@ -42,7 +42,7 @@ class AppointmentCalendar extends Page implements HasForms
         $user   = Filament::auth()->user();
         $fields = [];
 
-        if ($user?->isAdmin()) {
+        if ($user?->isAdmin() || ($user?->isStaff() && $user->can('appointments.view_all'))) {
             $fields[] = Select::make('filterStaff')
                 ->label('Staff')
                 ->options(fn() => User::role('staff')->orderBy('name')->pluck('name', 'id'))

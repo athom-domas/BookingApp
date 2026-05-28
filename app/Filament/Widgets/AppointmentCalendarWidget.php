@@ -64,7 +64,13 @@ class AppointmentCalendarWidget extends FullCalendarWidget
                 $query->whereIn('staff_id', $this->filterStaff);
             }
         } elseif ($user->isStaff()) {
-            $query->where('staff_id', $user->id);
+            if ($user->can('appointments.view_all')) {
+                if (!empty($this->filterStaff)) {
+                    $query->whereIn('staff_id', $this->filterStaff);
+                }
+            } else {
+                $query->where('staff_id', $user->id);
+            }
         }
 
         if (!empty($this->filterStatus)) {
@@ -121,6 +127,9 @@ class AppointmentCalendarWidget extends FullCalendarWidget
         }
 
         if ($user->isStaff() && $appointmentId) {
+            if ($user->can('appointments.view_all')) {
+                return Appointment::where('id', $appointmentId)->exists();
+            }
             return Appointment::where('id', $appointmentId)
                 ->where('staff_id', $user->id)
                 ->exists();
