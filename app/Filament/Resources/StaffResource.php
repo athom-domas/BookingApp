@@ -77,75 +77,91 @@ class StaffResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->schema([
-            TextInput::make('name')
-                ->label('Nome')
-                ->required()
-                ->maxLength(255),
+            Section::make('Dati personali')
+                ->schema([
+                    TextInput::make('name')
+                        ->label('Nome')
+                        ->required()
+                        ->maxLength(255),
 
-            TextInput::make('email')
-                ->label('Email')
-                ->email()
-                ->required()
-                ->unique(User::class, 'email', ignoreRecord: true)
-                ->maxLength(255),
+                    TextInput::make('email')
+                        ->label('Email')
+                        ->email()
+                        ->required()
+                        ->unique(User::class, 'email', ignoreRecord: true)
+                        ->maxLength(255),
 
-            TextInput::make('password')
-                ->label('Password')
-                ->password()
-                ->confirmed()
-                ->required(fn(string $operation): bool => $operation === 'create')
-                ->dehydrated(fn(?string $state): bool => filled($state))
-                ->minLength(8)
-                ->maxLength(255),
+                    SpatieMediaLibraryFileUpload::make('avatar')
+                        ->label('Foto profilo')
+                        ->collection('avatar')
+                        ->image()
+                        ->maxSize(2048)
+                        ->columnSpanFull(),
 
-            TextInput::make('password_confirmation')
-                ->label('Conferma password')
-                ->password()
-                ->required(fn(string $operation): bool => $operation === 'create')
-                ->dehydrated(false)
-                ->maxLength(255),
-
-            Select::make('services')
-                ->label('Servizi erogati')
-                ->relationship(
-                    name: 'services',
-                    titleAttribute: 'name',
-                    modifyQueryUsing: fn(Builder $query): Builder => $query->where('active', true)->orderBy('name'),
-                )
-                ->multiple()
-                ->preload()
-                ->searchable()
-                ->helperText('Seleziona almeno un servizio per rendere lo staff prenotabile dal portale clienti.')
+                    Textarea::make('bio')
+                        ->label('Bio')
+                        ->rows(3)
+                        ->columnSpanFull(),
+                ])
+                ->columns(2)
                 ->columnSpanFull(),
 
-            ColorPicker::make('calendar_color')
-                ->label('Colore calendario')
-                ->default(fn() => collect([
-                    '#3B82F6',
-                    '#10B981',
-                    '#F59E0B',
-                    '#EF4444',
-                    '#8B5CF6',
-                    '#EC4899',
-                    '#14B8A6',
-                    '#F97316',
-                ])->random()),
+            Section::make('Account')
+                ->schema([
+                    TextInput::make('password')
+                        ->label('Password')
+                        ->password()
+                        ->confirmed()
+                        ->required(fn(string $operation): bool => $operation === 'create')
+                        ->dehydrated(fn(?string $state): bool => filled($state))
+                        ->minLength(8)
+                        ->maxLength(255),
 
-            SpatieMediaLibraryFileUpload::make('avatar')
-                ->label('Foto profilo')
-                ->collection('avatar')
-                ->image()
-                ->maxSize(2048),
-
-            Textarea::make('bio')
-                ->label('Bio')
-                ->rows(3)
+                    TextInput::make('password_confirmation')
+                        ->label('Conferma password')
+                        ->password()
+                        ->required(fn(string $operation): bool => $operation === 'create')
+                        ->dehydrated(false)
+                        ->maxLength(255),
+                ])
+                ->columns(2)
                 ->columnSpanFull(),
 
-            Toggle::make('receive_email_notifications')
-                ->label('Ricevi notifiche email')
-                ->helperText('Invia una email per ogni nuovo appuntamento assegnato a questo membro.')
-                ->default(true),
+            Section::make('Impostazioni')
+                ->schema([
+                    Select::make('services')
+                        ->label('Servizi erogati')
+                        ->relationship(
+                            name: 'services',
+                            titleAttribute: 'name',
+                            modifyQueryUsing: fn(Builder $query): Builder => $query->where('active', true)->orderBy('name'),
+                        )
+                        ->multiple()
+                        ->preload()
+                        ->searchable()
+                        ->helperText('Seleziona almeno un servizio per rendere lo staff prenotabile dal portale clienti.')
+                        ->columnSpanFull(),
+
+                    ColorPicker::make('calendar_color')
+                        ->label('Colore calendario')
+                        ->default(fn() => collect([
+                            '#3B82F6',
+                            '#10B981',
+                            '#F59E0B',
+                            '#EF4444',
+                            '#8B5CF6',
+                            '#EC4899',
+                            '#14B8A6',
+                            '#F97316',
+                        ])->random()),
+
+                    Toggle::make('receive_email_notifications')
+                        ->label('Ricevi notifiche email')
+                        ->helperText('Invia una email per ogni nuovo appuntamento assegnato a questo membro.')
+                        ->default(true),
+                ])
+                ->columns(2)
+                ->columnSpanFull(),
 
             Section::make('Permessi pannello admin')
                 ->schema([
