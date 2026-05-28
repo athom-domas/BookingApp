@@ -299,7 +299,10 @@ class AppointmentResource extends Resource
                         && (auth()->user()?->isAdmin() || auth()->user()?->can('appointments.payments'))
                     ),
                 EditAction::make()
-                    ->hidden(fn(Appointment $record) => ! auth()->user()?->isAdmin() && in_array($record->status, ['completed', 'cancelled'])),
+                    ->hidden(fn(Appointment $record) =>
+                        ! auth()->user()?->isAdmin()
+                        && (! auth()->user()?->can('appointments.edit') || in_array($record->status, ['completed', 'cancelled']))
+                    ),
                 DeleteAction::make()
                     ->hidden(fn() => auth()->user()?->isStaff() && ! auth()->user()?->can('appointments.delete')),
             ])

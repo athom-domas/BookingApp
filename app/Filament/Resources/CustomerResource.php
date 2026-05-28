@@ -162,10 +162,12 @@ class CustomerResource extends Resource
             ->actions([
                 EditAction::make()
                     ->label('Scheda cliente'),
-                DeleteAction::make(),
+                DeleteAction::make()
+                    ->hidden(fn() => ! auth()->user()?->isAdmin() && ! auth()->user()?->can('customers.delete')),
             ])
             ->bulkActions([
-                DeleteBulkAction::make(),
+                DeleteBulkAction::make()
+                    ->hidden(fn() => ! auth()->user()?->isAdmin() && ! auth()->user()?->can('customers.delete')),
             ]);
     }
 

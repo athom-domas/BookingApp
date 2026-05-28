@@ -14,7 +14,7 @@ class ListAppointments extends ListRecords
     {
         return [
             CreateAction::make()
-                ->hidden(fn () => auth()->user()?->isStaff()),
+                ->hidden(fn () => auth()->user()?->isStaff() && ! auth()->user()?->can('appointments.create')),
         ];
     }
 

@@ -54,18 +54,23 @@ class InsightStatsWidget extends StatsOverviewWidget
 
         [$topServiceName, $topServiceCount] = $this->topService($fromDt, $toDt);
 
-        return [
-            Stat::make('Incasso medio', '€ ' . number_format($avgRevenue, 2, ',', '.'))
-                ->description('per appuntamento pagato'),
+        $stats = [];
 
-            Stat::make('Clienti unici', $uniqueCustomers),
+        $user = auth()->user();
+        if ($user?->isAdmin() || $user?->can('reports.view_revenue')) {
+            $stats[] = Stat::make('Incasso medio', '€ ' . number_format($avgRevenue, 2, ',', '.'))
+                ->description('per appuntamento pagato');
+        }
 
-            Stat::make('Servizio più richiesto', $topServiceName)
-                ->description($topServiceCount . ' prenotazioni'),
+        $stats[] = Stat::make('Clienti unici', $uniqueCustomers);
 
-            Stat::make('Appuntamenti in attesa', $pendingCount)
-                ->color($pendingCount > 0 ? 'warning' : 'success'),
-        ];
+        $stats[] = Stat::make('Servizio più richiesto', $topServiceName)
+            ->description($topServiceCount . ' prenotazioni');
+
+        $stats[] = Stat::make('Appuntamenti in attesa', $pendingCount)
+            ->color($pendingCount > 0 ? 'warning' : 'success');
+
+        return $stats;
     }
 
     private function topService(Carbon $fromDt, Carbon $toDt): array
