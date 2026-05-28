@@ -7,6 +7,7 @@ use App\Models\Business;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 
@@ -18,6 +19,10 @@ class DatabaseSeeder extends Seeder
 
         foreach (['admin', 'staff', 'customer', 'super_admin'] as $role) {
             Role::firstOrCreate(['name' => $role, 'guard_name' => 'web']);
+        }
+
+        foreach (['appointments.view_all', 'appointments.create', 'customers.view', 'payments.manage', 'reports.view'] as $perm) {
+            Permission::firstOrCreate(['name' => $perm, 'guard_name' => 'web']);
         }
 
         $superAdmin = User::updateOrCreate(
