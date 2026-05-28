@@ -138,6 +138,27 @@ class AppointmentCalendarWidget extends FullCalendarWidget
         return false;
     }
 
+    private function authorizeAppointmentEdit(Action $action): bool
+    {
+        $user          = auth()->user();
+        $appointmentId = $action->getArguments()['appointmentId'] ?? null;
+
+        if ($user->isAdmin()) {
+            return true;
+        }
+
+        if ($user->isStaff() && $appointmentId && $user->can('appointments.edit')) {
+            if ($user->can('appointments.view_all')) {
+                return Appointment::where('id', $appointmentId)->exists();
+            }
+            return Appointment::where('id', $appointmentId)
+                ->where('staff_id', $user->id)
+                ->exists();
+        }
+
+        return false;
+    }
+
     private function staffColor(Appointment $appointment): string
     {
         if ($appointment->staff?->calendar_color) {
@@ -260,7 +281,7 @@ class AppointmentCalendarWidget extends FullCalendarWidget
                         : ''
                 ),
             ])
-            ->authorize(fn(Action $action) => $this->authorizeAppointmentAccess($action))
+            ->authorize(fn(Action $action) => $this->authorizeAppointmentEdit($action))
             ->action(function (array $data, Action $action): void {
                 $appointmentId = $data['appointment_id'] ?? $action->getArguments()['appointmentId'];
 
