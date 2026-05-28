@@ -22,7 +22,17 @@
                     @foreach ($appointments as $appointment)
                         <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/40 transition-colors duration-100">
                             <td class="px-5 py-4 font-semibold text-gray-950 dark:text-gray-50">{{ $appointment->services_label }}</td>
-                            <td class="px-5 py-4 text-gray-600 dark:text-gray-400">{{ $appointment->staff->name }}</td>
+                            <td class="px-5 py-4">
+                                <div class="flex items-center gap-2">
+                                    @php $avatarUrl = $appointment->staff->getFirstMediaUrl('avatar', 'thumb'); @endphp
+                                    @if ($avatarUrl)
+                                        <img src="{{ $avatarUrl }}" alt="{{ $appointment->staff->name }}" class="w-7 h-7 rounded-full object-cover shrink-0">
+                                    @else
+                                        <span class="inline-flex w-7 h-7 rounded-full bg-gray-100 dark:bg-gray-800 items-center justify-center text-xs font-semibold text-gray-500 dark:text-gray-400 shrink-0">{{ strtoupper(mb_substr($appointment->staff->name, 0, 1)) }}</span>
+                                    @endif
+                                    <span class="text-gray-600 dark:text-gray-400">{{ $appointment->staff->name }}</span>
+                                </div>
+                            </td>
                             <td class="px-5 py-4 tabular-nums text-gray-600 dark:text-gray-400">{{ $appointment->scheduled_date->format('d/m/Y H:i') }}</td>
                             <td class="px-5 py-4">
                                 @include('portal.appointments.partials.status-badge', ['status' => $appointment->status])

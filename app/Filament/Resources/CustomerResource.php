@@ -83,26 +83,31 @@ class CustomerResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->schema([
-            TextInput::make('name')
-                ->label('Nome')
-                ->required()
-                ->maxLength(255),
+            Section::make('Dati account')
+                ->schema([
+                    TextInput::make('name')
+                        ->label('Nome')
+                        ->required()
+                        ->maxLength(255),
 
-            TextInput::make('email')
-                ->label('Email')
-                ->email()
-                ->required()
-                ->unique(User::class, 'email', ignoreRecord: true)
-                ->maxLength(255),
+                    TextInput::make('email')
+                        ->label('Email')
+                        ->email()
+                        ->required()
+                        ->unique(User::class, 'email', ignoreRecord: true)
+                        ->maxLength(255),
 
-            TextInput::make('password')
-                ->label('Password')
-                ->password()
-                ->required()
-                ->dehydrated(fn(?string $state): bool => filled($state))
-                ->minLength(8)
-                ->maxLength(255)
-                ->visibleOn('create'),
+                    TextInput::make('password')
+                        ->label('Password')
+                        ->password()
+                        ->required()
+                        ->dehydrated(fn(?string $state): bool => filled($state))
+                        ->minLength(8)
+                        ->maxLength(255)
+                        ->visibleOn('create'),
+                ])
+                ->columns(2)
+                ->columnSpanFull(),
 
             Textarea::make('internal_notes')
                 ->label('Note interne')

@@ -65,6 +65,7 @@
         $staffJson = $staff->map(fn ($m) => [
             'id'          => $m->id,
             'name'        => $m->name,
+            'avatar_url'  => $m->getFirstMediaUrl('avatar', 'thumb'),
             'service_ids' => $m->services->pluck('id')->values()->all(),
         ])->values()->all();
     @endphp
@@ -207,7 +208,15 @@
                                     ? 'opt-selected border-transparent'
                                     : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 hover:bg-gray-50 dark:hover:border-gray-600 dark:hover:bg-gray-800'"
                             >
-                                <p class="text-sm font-semibold text-gray-900 dark:text-gray-100" x-text="member.name"></p>
+                                <div class="flex items-center gap-3">
+                                    <template x-if="member.avatar_url">
+                                        <img :src="member.avatar_url" :alt="member.name" class="w-10 h-10 rounded-full object-cover shrink-0">
+                                    </template>
+                                    <template x-if="!member.avatar_url">
+                                        <span class="inline-flex w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 items-center justify-center text-sm font-semibold text-gray-500 dark:text-gray-400 shrink-0" x-text="member.name.charAt(0).toUpperCase()"></span>
+                                    </template>
+                                    <span class="text-sm font-semibold text-gray-900 dark:text-gray-100" x-text="member.name"></span>
+                                </div>
                             </button>
                         </template>
 

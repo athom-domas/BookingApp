@@ -17,6 +17,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
@@ -74,99 +75,109 @@ class AppointmentResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->schema([
-            Select::make('user_id')
-                ->label('Cliente')
-                ->relationship('user', 'name', fn($query) => $query->role('customer'))
-                ->required()
-                ->searchable()
-                ->disabled(fn($record) => $record !== null),
+            Section::make('Dettagli prenotazione')
+                ->schema([
+                    Select::make('user_id')
+                        ->label('Cliente')
+                        ->relationship('user', 'name', fn($query) => $query->role('customer'))
+                        ->required()
+                        ->searchable()
+                        ->disabled(fn($record) => $record !== null),
 
-            Select::make('service_ids')
-                ->label('Servizi')
-                ->options(fn() => Service::active()->orderBy('name')->pluck('name', 'id')->all())
-                ->multiple()
-                ->searchable()
-                ->required()
-                ->disabled(fn($record) => $record !== null),
+                    Select::make('service_ids')
+                        ->label('Servizi')
+                        ->options(fn() => Service::active()->orderBy('name')->pluck('name', 'id')->all())
+                        ->multiple()
+                        ->searchable()
+                        ->required()
+                        ->disabled(fn($record) => $record !== null),
 
-            Select::make('staff_id')
-                ->label('Staff')
-                ->relationship('staff', 'name', fn($query) => $query->role('staff'))
-                ->required()
-                ->searchable()
-                ->default(fn() => auth()->user()?->isStaff() ? auth()->id() : null)
-                ->hidden(fn($record) => auth()->user()?->isStaff() && $record === null)
-                ->disabled(
-                    fn($record) =>
-                    $record?->status === 'completed'
-                        || $record?->status === 'cancelled'
-                        || (! auth()->user()?->isAdmin() && $record !== null)
-                ),
+                    Select::make('staff_id')
+                        ->label('Staff')
+                        ->relationship('staff', 'name', fn($query) => $query->role('staff'))
+                        ->required()
+                        ->searchable()
+                        ->default(fn() => auth()->user()?->isStaff() ? auth()->id() : null)
+                        ->hidden(fn($record) => auth()->user()?->isStaff() && $record === null)
+                        ->disabled(
+                            fn($record) =>
+                            $record?->status === 'completed'
+                                || $record?->status === 'cancelled'
+                                || (! auth()->user()?->isAdmin() && $record !== null)
+                        ),
 
-            DateTimePicker::make('scheduled_date')
-                ->label('Data e ora')
-                ->required()
-                ->disabled(
-                    fn($record) =>
-                    $record?->status === 'completed'
-                        || (! auth()->user()?->isAdmin()
-                            && $record !== null
-                            && ! auth()->user()?->can('appointments.edit'))
-                ),
+                    DateTimePicker::make('scheduled_date')
+                        ->label('Data e ora')
+                        ->required()
+                        ->disabled(
+                            fn($record) =>
+                            $record?->status === 'completed'
+                                || (! auth()->user()?->isAdmin()
+                                    && $record !== null
+                                    && ! auth()->user()?->can('appointments.edit'))
+                        ),
 
-            Textarea::make('notes')
-                ->label('Note')
-                ->rows(3)
-                ->columnSpanFull()
-                ->disabled(
-                    fn($record) =>
-                    $record?->status === 'completed'
-                        || (! auth()->user()?->isAdmin()
-                            && $record !== null
-                            && ! auth()->user()?->can('appointments.edit'))
-                ),
-
-            Select::make('status')
-                ->label('Stato')
-                ->options([
-                    'pending'   => 'In attesa',
-                    'confirmed' => 'Confermato',
-                    'cancelled' => 'Annullato',
-                    'completed' => 'Completato',
+                    Textarea::make('notes')
+                        ->label('Note')
+                        ->rows(3)
+                        ->columnSpanFull()
+                        ->disabled(
+                            fn($record) =>
+                            $record?->status === 'completed'
+                                || (! auth()->user()?->isAdmin()
+                                    && $record !== null
+                                    && ! auth()->user()?->can('appointments.edit'))
+                        ),
                 ])
-                ->required()
-                ->live()
-                ->default('pending')
-                ->disabled(
-                    fn($record) => ($record?->status === 'completed' && $record?->payment?->status !== 'refunded')
-                        || (! auth()->user()?->isAdmin() && $record?->status === 'cancelled')
-                ),
+                ->columns(2)
+                ->columnSpanFull(),
 
-            Hidden::make('has_completed_payment')
-                ->dehydrated(false),
+            Section::make('Stato e pagamento')
+                ->schema([
+                    Select::make('status')
+                        ->label('Stato')
+                        ->options([
+                            'pending'   => 'In attesa',
+                            'confirmed' => 'Confermato',
+                            'cancelled' => 'Annullato',
+                            'completed' => 'Completato',
+                        ])
+                        ->required()
+                        ->live()
+                        ->default('pending')
+                        ->disabled(
+                            fn($record) => ($record?->status === 'completed' && $record?->payment?->status !== 'refunded')
+                                || (! auth()->user()?->isAdmin() && $record?->status === 'cancelled')
+                        ),
 
-            Select::make('payment_method')
-                ->label('Metodo di pagamento')
-                ->options(['cash' => 'Contanti', 'pos' => 'POS (carta)'])
-                ->required()
-                ->hidden(
-                    fn(Get $get, string $operation) =>
-                    $operation !== 'edit'
-                        || $get('status') !== 'completed'
-                        || (bool) $get('has_completed_payment')
-                ),
+                    Hidden::make('has_completed_payment')
+                        ->dehydrated(false),
 
-            TextInput::make('payment_amount')
-                ->label('Importo (€)')
-                ->numeric()
-                ->minValue(0.01)
-                ->required()
-                ->hidden(
-                    fn(Get $get, string $operation) =>
-                    $operation !== 'edit'
-                        || $get('status') !== 'completed'
-                        || (bool) $get('has_completed_payment')
-                ),
+                    Select::make('payment_method')
+                        ->label('Metodo di pagamento')
+                        ->options(['cash' => 'Contanti', 'pos' => 'POS (carta)'])
+                        ->required()
+                        ->hidden(
+                            fn(Get $get, string $operation) =>
+                            $operation !== 'edit'
+                                || $get('status') !== 'completed'
+                                || (bool) $get('has_completed_payment')
+                        ),
+
+                    TextInput::make('payment_amount')
+                        ->label('Importo (€)')
+                        ->numeric()
+                        ->minValue(0.01)
+                        ->required()
+                        ->hidden(
+                            fn(Get $get, string $operation) =>
+                            $operation !== 'edit'
+                                || $get('status') !== 'completed'
+                                || (bool) $get('has_completed_payment')
+                        ),
+                ])
+                ->columns(2)
+                ->columnSpanFull(),
         ]);
     }
 

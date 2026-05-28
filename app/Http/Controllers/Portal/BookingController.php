@@ -55,7 +55,7 @@ class BookingController extends Controller
 
         $staff = User::whereHas('roles', fn ($q) => $q->where('name', 'staff')->where('guard_name', 'web'))
             ->whereHas('services', fn ($q) => $q->active())
-            ->with(['services' => fn ($q) => $q->active()->select('services.id', 'services.name')])
+            ->with(['services' => fn ($q) => $q->active()->select('services.id', 'services.name'), 'media'])
             ->orderBy('name')
             ->get();
 

@@ -11,6 +11,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
@@ -34,53 +35,63 @@ class ServiceResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->schema([
-            TextInput::make('name')
-                ->label('Nome')
-                ->required()
-                ->unique(Service::class, 'name', ignoreRecord: true)
-                ->maxLength(255),
+            Section::make('Informazioni')
+                ->schema([
+                    TextInput::make('name')
+                        ->label('Nome')
+                        ->required()
+                        ->unique(Service::class, 'name', ignoreRecord: true)
+                        ->maxLength(255),
 
-            Textarea::make('description')
-                ->label('Descrizione')
-                ->rows(3)
+                    Textarea::make('description')
+                        ->label('Descrizione')
+                        ->rows(3)
+                        ->columnSpanFull(),
+
+                    TextInput::make('duration_minutes')
+                        ->label('Durata (minuti)')
+                        ->required()
+                        ->numeric()
+                        ->minValue(1)
+                        ->integer(),
+
+                    TextInput::make('price')
+                        ->label('Prezzo (€)')
+                        ->required()
+                        ->numeric()
+                        ->minValue(0.01)
+                        ->step(0.01),
+                ])
+                ->columns(2)
                 ->columnSpanFull(),
 
-            TextInput::make('duration_minutes')
-                ->label('Durata (minuti)')
-                ->required()
-                ->numeric()
-                ->minValue(1)
-                ->integer(),
+            Section::make('Impostazioni')
+                ->schema([
+                    Toggle::make('active')
+                        ->label('Attivo')
+                        ->default(true),
 
-            TextInput::make('price')
-                ->label('Prezzo (€)')
-                ->required()
-                ->numeric()
-                ->minValue(0.01)
-                ->step(0.01),
-
-            Toggle::make('active')
-                ->label('Attivo')
-                ->default(true),
-
-            Toggle::make('featured')
-                ->label('In evidenza')
-                ->helperText('Mostrato in primo piano nella pagina del salone. Massimo 4 servizi.')
-                ->live()
-                ->afterStateUpdated(function (bool $state, $set, $record): void {
-                    if (! $state) return;
-                    $count = Service::where('featured', true)
-                        ->when($record?->id, fn ($q, $id) => $q->where('id', '!=', $id))
-                        ->count();
-                    if ($count >= 4) {
-                        $set('featured', false);
-                        \Filament\Notifications\Notification::make()
-                            ->danger()
-                            ->title('Limite raggiunto')
-                            ->body('Puoi selezionare al massimo 4 servizi in evidenza.')
-                            ->send();
-                    }
-                }),
+                    Toggle::make('featured')
+                        ->label('In evidenza')
+                        ->helperText('Mostrato in primo piano nella pagina del salone. Massimo 4 servizi.')
+                        ->live()
+                        ->afterStateUpdated(function (bool $state, $set, $record): void {
+                            if (! $state) return;
+                            $count = Service::where('featured', true)
+                                ->when($record?->id, fn ($q, $id) => $q->where('id', '!=', $id))
+                                ->count();
+                            if ($count >= 4) {
+                                $set('featured', false);
+                                \Filament\Notifications\Notification::make()
+                                    ->danger()
+                                    ->title('Limite raggiunto')
+                                    ->body('Puoi selezionare al massimo 4 servizi in evidenza.')
+                                    ->send();
+                            }
+                        }),
+                ])
+                ->columns(2)
+                ->columnSpanFull(),
         ]);
     }
 

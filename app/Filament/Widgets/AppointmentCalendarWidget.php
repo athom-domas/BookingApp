@@ -12,6 +12,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Html;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Livewire\Attributes\On;
@@ -241,45 +242,50 @@ class AppointmentCalendarWidget extends FullCalendarWidget
                         ? '<p class="text-sm font-medium text-success-600 dark:text-success-400 -mt-1 mb-1">✓ Presenza confermata via email</p>'
                         : ''
                 ),
-                Select::make('status')
-                    ->label('Stato')
-                    ->options([
-                        'pending'   => 'In attesa',
-                        'confirmed' => 'Confermato',
-                        'completed' => 'Completato',
-                        'cancelled' => 'Annullato',
+                Section::make('Aggiorna prenotazione')
+                    ->schema([
+                        Select::make('status')
+                            ->label('Stato')
+                            ->options([
+                                'pending'   => 'In attesa',
+                                'confirmed' => 'Confermato',
+                                'completed' => 'Completato',
+                                'cancelled' => 'Annullato',
+                            ])
+                            ->in(['pending', 'confirmed', 'completed', 'cancelled'])
+                            ->required()
+                            ->rules(fn(Get $get): array => [
+                                function (string $attribute, mixed $value, \Closure $fail) use ($get): void {
+                                    if (
+                                        $value === 'completed'
+                                        && ! (bool) $get('has_completed_payment')
+                                        && empty($get('payment_method'))
+                                    ) {
+                                        $fail('Per completare è necessario registrare un pagamento.');
+                                    }
+                                },
+                            ])
+                            ->columnSpanFull(),
+                        Select::make('payment_method')
+                            ->label('Metodo di pagamento')
+                            ->options([
+                                'cash' => 'Contanti',
+                                'pos'  => 'POS (carta)',
+                            ])
+                            ->hidden(fn(Get $get): bool => (bool) $get('has_completed_payment')),
+                        TextInput::make('payment_amount')
+                            ->label('Importo (€)')
+                            ->numeric()
+                            ->rules(['nullable', 'numeric', 'min:0.01'])
+                            ->required(fn(Get $get): bool => filled($get('payment_method')))
+                            ->hidden(fn(Get $get): bool => (bool) $get('has_completed_payment')),
+                        Html::make(
+                            fn(Get $get): string => (bool) $get('has_completed_payment')
+                                ? '<p class="text-sm font-medium text-success-600 dark:text-success-400">✓ Pagamento già registrato</p>'
+                                : ''
+                        ),
                     ])
-                    ->in(['pending', 'confirmed', 'completed', 'cancelled'])
-                    ->required()
-                    ->rules(fn(Get $get): array => [
-                        function (string $attribute, mixed $value, \Closure $fail) use ($get): void {
-                            if (
-                                $value === 'completed'
-                                && ! (bool) $get('has_completed_payment')
-                                && empty($get('payment_method'))
-                            ) {
-                                $fail('Per completare è necessario registrare un pagamento.');
-                            }
-                        },
-                    ]),
-                Select::make('payment_method')
-                    ->label('Metodo di pagamento')
-                    ->options([
-                        'cash' => 'Contanti',
-                        'pos'  => 'POS (carta)',
-                    ])
-                    ->hidden(fn(Get $get): bool => (bool) $get('has_completed_payment')),
-                TextInput::make('payment_amount')
-                    ->label('Importo (€)')
-                    ->numeric()
-                    ->rules(['nullable', 'numeric', 'min:0.01'])
-                    ->required(fn(Get $get): bool => filled($get('payment_method')))
-                    ->hidden(fn(Get $get): bool => (bool) $get('has_completed_payment')),
-                Html::make(
-                    fn(Get $get): string => (bool) $get('has_completed_payment')
-                        ? '<p class="text-sm font-medium text-success-600 dark:text-success-400">✓ Pagamento già registrato</p>'
-                        : ''
-                ),
+                    ->columns(2),
             ])
             ->authorize(fn(Action $action) => $this->authorizeAppointmentEdit($action))
             ->action(function (array $data, Action $action): void {

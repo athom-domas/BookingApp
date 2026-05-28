@@ -77,7 +77,7 @@ class AppointmentCalendar extends Page implements HasForms
             ->multiple()
             ->live();
 
-        return $schema->schema($fields)->columns(2);
+        return $schema->schema($fields)->columns(4);
     }
 
     public function updatedFilterStaff(): void

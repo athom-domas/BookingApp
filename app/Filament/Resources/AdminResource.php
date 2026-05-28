@@ -9,6 +9,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
@@ -73,57 +74,73 @@ class AdminResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->schema([
-            TextInput::make('name')
-                ->label('Nome')
-                ->required()
-                ->maxLength(255),
+            Section::make('Dati personali')
+                ->schema([
+                    TextInput::make('name')
+                        ->label('Nome')
+                        ->required()
+                        ->maxLength(255),
 
-            TextInput::make('email')
-                ->label('Email')
-                ->email()
-                ->required()
-                ->unique(User::class, 'email', ignoreRecord: true)
-                ->maxLength(255),
-
-            TextInput::make('password')
-                ->label('Password')
-                ->password()
-                ->confirmed()
-                ->required(fn(string $operation): bool => $operation === 'create')
-                ->dehydrated(fn(?string $state): bool => filled($state))
-                ->minLength(8)
-                ->maxLength(255),
-
-            TextInput::make('password_confirmation')
-                ->label('Conferma password')
-                ->password()
-                ->required(fn(string $operation): bool => $operation === 'create')
-                ->dehydrated(false)
-                ->maxLength(255),
-
-            Toggle::make('works_as_staff')
-                ->label('Lavora anche come staff')
-                ->helperText('Quando attivo, questo admin appare come personale prenotabile dai clienti.')
-                ->live(),
-
-            Select::make('services')
-                ->label('Servizi erogati')
-                ->relationship(
-                    name: 'services',
-                    titleAttribute: 'name',
-                    modifyQueryUsing: fn(Builder $query): Builder => $query->where('active', true)->orderBy('name'),
-                )
-                ->multiple()
-                ->preload()
-                ->searchable()
-                ->visible(fn(Get $get): bool => (bool) $get('works_as_staff'))
-                ->helperText('Seleziona almeno un servizio per rendere lo staff prenotabile dal portale clienti.')
+                    TextInput::make('email')
+                        ->label('Email')
+                        ->email()
+                        ->required()
+                        ->unique(User::class, 'email', ignoreRecord: true)
+                        ->maxLength(255),
+                ])
+                ->columns(2)
                 ->columnSpanFull(),
 
-            Toggle::make('receive_email_notifications')
-                ->label('Ricevi notifiche email')
-                ->helperText('Invia una email per ogni nuova prenotazione ricevuta nel sistema.')
-                ->default(true),
+            Section::make('Account')
+                ->schema([
+                    TextInput::make('password')
+                        ->label('Password')
+                        ->password()
+                        ->confirmed()
+                        ->required(fn(string $operation): bool => $operation === 'create')
+                        ->dehydrated(fn(?string $state): bool => filled($state))
+                        ->minLength(8)
+                        ->maxLength(255),
+
+                    TextInput::make('password_confirmation')
+                        ->label('Conferma password')
+                        ->password()
+                        ->required(fn(string $operation): bool => $operation === 'create')
+                        ->dehydrated(false)
+                        ->maxLength(255),
+                ])
+                ->columns(2)
+                ->columnSpanFull(),
+
+            Section::make('Impostazioni')
+                ->schema([
+                    Toggle::make('works_as_staff')
+                        ->label('Lavora anche come staff')
+                        ->helperText('Quando attivo, questo admin appare come personale prenotabile dai clienti.')
+                        ->live()
+                        ->columnSpanFull(),
+
+                    Select::make('services')
+                        ->label('Servizi erogati')
+                        ->relationship(
+                            name: 'services',
+                            titleAttribute: 'name',
+                            modifyQueryUsing: fn(Builder $query): Builder => $query->where('active', true)->orderBy('name'),
+                        )
+                        ->multiple()
+                        ->preload()
+                        ->searchable()
+                        ->visible(fn(Get $get): bool => (bool) $get('works_as_staff'))
+                        ->helperText('Seleziona almeno un servizio per rendere lo staff prenotabile dal portale clienti.')
+                        ->columnSpanFull(),
+
+                    Toggle::make('receive_email_notifications')
+                        ->label('Ricevi notifiche email')
+                        ->helperText('Invia una email per ogni nuova prenotazione ricevuta nel sistema.')
+                        ->default(true),
+                ])
+                ->columns(2)
+                ->columnSpanFull(),
         ]);
     }
 

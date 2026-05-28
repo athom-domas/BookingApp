@@ -17,7 +17,15 @@
             <dl class="mt-8 grid gap-6 sm:grid-cols-2 border-t border-gray-100 dark:border-gray-800 pt-8">
                 <div>
                     <dt class="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">Staff</dt>
-                    <dd class="mt-1.5 text-base text-gray-950 dark:text-gray-50">{{ $appointment->staff->name }}</dd>
+                    <dd class="mt-1.5 flex items-center gap-3">
+                        @php $avatarUrl = $appointment->staff->getFirstMediaUrl('avatar', 'thumb'); @endphp
+                        @if ($avatarUrl)
+                            <img src="{{ $avatarUrl }}" alt="{{ $appointment->staff->name }}" class="w-10 h-10 rounded-full object-cover shrink-0">
+                        @else
+                            <span class="inline-flex w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 items-center justify-center text-sm font-semibold text-gray-600 dark:text-gray-300 shrink-0">{{ strtoupper(mb_substr($appointment->staff->name, 0, 1)) }}</span>
+                        @endif
+                        <span class="text-base text-gray-950 dark:text-gray-50">{{ $appointment->staff->name }}</span>
+                    </dd>
                 </div>
                 <div>
                     <dt class="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">Durata</dt>
