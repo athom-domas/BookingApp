@@ -38,12 +38,15 @@ class AppointmentResource extends Resource
 
     public static function canEdit($record): bool
     {
-        if (auth()->user()?->isAdmin()) {
+        $user = auth()->user();
+        if ($user?->isAdmin()) {
             return true;
         }
 
-        if (auth()->user()?->isStaff()) {
-            return $record->staff_id === auth()->id()
+        if ($user?->isStaff() && $user->can('appointments.edit')) {
+            $owned  = $record->staff_id === $user->id;
+            $canAny = $user->can('appointments.view_all');
+            return ($owned || $canAny)
                 && ! in_array($record->status, ['completed', 'cancelled']);
         }
 
@@ -52,7 +55,14 @@ class AppointmentResource extends Resource
 
     public static function canDelete($record): bool
     {
-        return ! auth()->user()?->isStaff();
+        $user = auth()->user();
+        if ($user?->isAdmin()) {
+            return true;
+        }
+        if ($user?->isStaff()) {
+            return $user->can('appointments.delete');
+        }
+        return false;
     }
 
     public static function canCreate(): bool
@@ -84,26 +94,36 @@ class AppointmentResource extends Resource
                 ->relationship('staff', 'name', fn($query) => $query->role('staff'))
                 ->required()
                 ->searchable()
-                ->disabled(fn($record) =>
+                ->default(fn() => auth()->user()?->isStaff() ? auth()->id() : null)
+                ->hidden(fn($record) => auth()->user()?->isStaff() && $record === null)
+                ->disabled(
+                    fn($record) =>
                     $record?->status === 'completed'
-                    || (! auth()->user()?->isAdmin() && (auth()->user()?->isStaff() || $record?->status === 'cancelled'))
+                        || $record?->status === 'cancelled'
+                        || (! auth()->user()?->isAdmin() && $record !== null)
                 ),
 
             DateTimePicker::make('scheduled_date')
                 ->label('Data e ora')
                 ->required()
-                ->disabled(fn($record) =>
+                ->disabled(
+                    fn($record) =>
                     $record?->status === 'completed'
-                    || (! auth()->user()?->isAdmin() && $record !== null)
+                        || (! auth()->user()?->isAdmin()
+                            && $record !== null
+                            && ! auth()->user()?->can('appointments.edit'))
                 ),
 
             Textarea::make('notes')
                 ->label('Note')
                 ->rows(3)
                 ->columnSpanFull()
-                ->disabled(fn($record) =>
+                ->disabled(
+                    fn($record) =>
                     $record?->status === 'completed'
-                    || (! auth()->user()?->isAdmin() && $record !== null)
+                        || (! auth()->user()?->isAdmin()
+                            && $record !== null
+                            && ! auth()->user()?->can('appointments.edit'))
                 ),
 
             Select::make('status')
@@ -117,9 +137,9 @@ class AppointmentResource extends Resource
                 ->required()
                 ->live()
                 ->default('pending')
-                ->disabled(fn($record) =>
-                    ($record?->status === 'completed' && $record?->payment?->status !== 'refunded')
-                    || (! auth()->user()?->isAdmin() && $record?->status === 'cancelled')
+                ->disabled(
+                    fn($record) => ($record?->status === 'completed' && $record?->payment?->status !== 'refunded')
+                        || (! auth()->user()?->isAdmin() && $record?->status === 'cancelled')
                 ),
 
             Hidden::make('has_completed_payment')
@@ -155,11 +175,11 @@ class AppointmentResource extends Resource
         $user       = auth()->user();
         $isStaff    = $user?->isStaff() ?? false;
         $hasViewAll = $isStaff && ($user?->can('appointments.view_all') ?? false);
+        $canDelete  = ! $isStaff || ($user?->can('appointments.delete') ?? false);
 
         return $table
             ->modifyQueryUsing(
-                fn(Builder $query) =>
-                ($isStaff && ! $hasViewAll) ? $query->where('staff_id', $user->id) : $query
+                fn(Builder $query) => ($isStaff && ! $hasViewAll) ? $query->where('staff_id', $user->id) : $query
             )
             ->defaultSort('scheduled_date', 'desc')
             ->columns([
@@ -273,14 +293,18 @@ class AppointmentResource extends Resource
                         }
                     })
                     ->successNotificationTitle('Pagamento registrato con successo')
-                    ->visible(fn(Appointment $record): bool => ! in_array($record->status, ['pending', 'completed', 'cancelled']) && (! $record->payment || $record->payment->status !== 'completed')),
+                    ->visible(fn(Appointment $record): bool =>
+                        ! in_array($record->status, ['pending', 'completed', 'cancelled'])
+                        && (! $record->payment || $record->payment->status !== 'completed')
+                        && (auth()->user()?->isAdmin() || auth()->user()?->can('appointments.payments'))
+                    ),
                 EditAction::make()
                     ->hidden(fn(Appointment $record) => ! auth()->user()?->isAdmin() && in_array($record->status, ['completed', 'cancelled'])),
                 DeleteAction::make()
-                    ->hidden(fn() => auth()->user()?->isStaff()),
+                    ->hidden(fn() => auth()->user()?->isStaff() && ! auth()->user()?->can('appointments.delete')),
             ])
             ->bulkActions([
-                DeleteBulkAction::make()->hidden($isStaff),
+                DeleteBulkAction::make()->hidden(! $canDelete),
             ]);
     }
 
