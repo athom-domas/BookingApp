@@ -9,22 +9,16 @@ class SystemSettingSeeder extends Seeder
 {
     public function run(): void
     {
-        $setting = SystemSetting::find(1);
+        $defaults = [
+            'slot_generation_weeks'    => 4,
+            'slot_granularity_minutes' => 10,
+            'timezone'                 => 'Europe/Rome',
+        ];
 
-        if ($setting) {
-            $setting->update([
-                'slot_generation_weeks'    => 4,
-                'slot_granularity_minutes' => 10,
-                'timezone'                 => 'Europe/Rome',
-            ]);
-        } else {
-            $setting = new SystemSetting([
-                'slot_generation_weeks'    => 4,
-                'slot_granularity_minutes' => 10,
-                'timezone'                 => 'Europe/Rome',
-            ]);
-            $setting->id = 1;
-            $setting->save();
-        }
+        $setting = SystemSetting::first();
+
+        $setting
+            ? $setting->update($defaults)
+            : SystemSetting::create($defaults);
     }
 }

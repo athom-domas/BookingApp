@@ -18,38 +18,89 @@ class CurrentMonthSeeder extends Seeder
     private const AFTERNOON_SLOTS = ['16:00', '16:30', '17:00', '17:30', '18:00', '18:30', '19:00', '19:30', '20:00'];
     private const WORK_DAYS       = [Carbon::TUESDAY, Carbon::WEDNESDAY, Carbon::THURSDAY, Carbon::FRIDAY, Carbon::SATURDAY];
 
-    private const STAFF_SERVICES = [
-        'marco'   => ['taglio', 'taglio_barba', 'barba'],
-        'andrea'  => ['taglio', 'taglio_barba', 'rasatura', 'barba'],
-        'filippo' => ['taglio', 'taglio_barba', 'rasatura', 'barba', 'colore'],
-    ];
-
-    public function run(): void
+    public function run(string $salonKey = 'rossini'): void
     {
-        $staff     = $this->seedStaff();
-        $customers = $this->seedCustomers();
-        $services  = $this->seedServices();
+        $config = $this->getConfig($salonKey);
 
-        $this->attachServicesToStaff($services, $staff);
+        $staff     = $this->seedStaff($config);
+        $customers = $this->seedCustomers($config);
+        $services  = $this->seedServices($config);
+
+        $this->attachServicesToStaff($services, $staff, $config);
         $this->seedAvailabilityRules($staff);
         $this->seedPreferences($customers, $staff);
-        $this->seedCurrentMonthAppointments($customers, $staff, $services);
+        $this->seedCurrentMonthAppointments($customers, $staff, $services, $config);
+    }
+
+    private function getConfig(string $salonKey): array
+    {
+        return match ($salonKey) {
+            'chic' => [
+                'staff' => [
+                    'sofia' => ['email' => 'sofia@chic.test', 'name' => 'Sofia Ricci'],
+                    'elena' => ['email' => 'elena@chic.test', 'name' => 'Elena Bruno'],
+                ],
+                'customers' => [
+                    'chiara'     => ['email' => 'chiara@chic.test',     'name' => 'Chiara Moreno'],
+                    'francesca'  => ['email' => 'francesca@chic.test',  'name' => 'Francesca De Rosa'],
+                    'valentina'  => ['email' => 'valentina@chic.test',  'name' => 'Valentina Fabbri'],
+                    'serena'     => ['email' => 'serena@chic.test',     'name' => 'Serena Longo'],
+                    'giulia'     => ['email' => 'giulia@chic.test',     'name' => 'Giulia Amato'],
+                    'martina'    => ['email' => 'martina@chic.test',    'name' => 'Martina Pellegrini'],
+                ],
+                'services' => [
+                    'piega'        => ['name' => 'Piega',           'description' => 'Piega su capelli lavati.',                              'duration_minutes' => 45, 'price' => 30.00, 'active' => true],
+                    'colore'       => ['name' => 'Colore / Tinta',  'description' => 'Colorazione con prodotti professionali.',                'duration_minutes' => 90, 'price' => 80.00, 'active' => true],
+                    'taglio_donna' => ['name' => 'Taglio donna',    'description' => 'Taglio personalizzato con consulenza stilistica.',       'duration_minutes' => 60, 'price' => 45.00, 'active' => true],
+                    'trattamento'  => ['name' => 'Trattamento',     'description' => 'Trattamento idratante o ristrutturante in profondità.', 'duration_minutes' => 60, 'price' => 60.00, 'active' => true],
+                ],
+                'staffServices' => [
+                    'sofia' => ['piega', 'taglio_donna', 'trattamento'],
+                    'elena' => ['piega', 'colore', 'taglio_donna', 'trattamento'],
+                ],
+            ],
+            default => [
+                'staff' => [
+                    'marco'   => ['email' => 'marco@rossini.test',   'name' => 'Marco Russo'],
+                    'andrea'  => ['email' => 'andrea@rossini.test',  'name' => 'Andrea Conti'],
+                    'filippo' => ['email' => 'filippo@rossini.test', 'name' => 'Filippo Mancini'],
+                ],
+                'customers' => [
+                    'giovanni'   => ['email' => 'giovanni@rossini.test',   'name' => 'Giovanni Esposito'],
+                    'alessandro' => ['email' => 'alessandro@rossini.test', 'name' => 'Alessandro Romano'],
+                    'matteo'     => ['email' => 'matteo@rossini.test',     'name' => 'Matteo Ricci'],
+                    'davide'     => ['email' => 'davide@rossini.test',     'name' => 'Davide Gallo'],
+                    'simone'     => ['email' => 'simone@rossini.test',     'name' => 'Simone Marino'],
+                    'luca'       => ['email' => 'luca@rossini.test',       'name' => 'Luca Ferraro'],
+                    'antonio'    => ['email' => 'antonio@rossini.test',    'name' => 'Antonio De Luca'],
+                    'giuseppe'   => ['email' => 'giuseppe@rossini.test',   'name' => 'Giuseppe Lombardi'],
+                    'roberto'    => ['email' => 'roberto@rossini.test',    'name' => 'Roberto Moretti'],
+                    'stefano'    => ['email' => 'stefano@rossini.test',    'name' => 'Stefano Vitali'],
+                ],
+                'services' => [
+                    'taglio'       => ['name' => 'Taglio capelli',       'description' => 'Taglio classico o moderno con finishing.',                              'duration_minutes' => 30, 'price' => 18.00, 'active' => true],
+                    'taglio_barba' => ['name' => 'Taglio + Barba',       'description' => 'Taglio capelli con cura e rifinitura della barba.',                     'duration_minutes' => 50, 'price' => 28.00, 'active' => true],
+                    'rasatura'     => ['name' => 'Rasatura tradizionale', 'description' => 'Rasatura con rasoio a mano libera e asciugamano caldo.',               'duration_minutes' => 30, 'price' => 15.00, 'active' => true],
+                    'barba'        => ['name' => 'Rimodellamento barba', 'description' => 'Modellatura, rifinitura e trattamento della barba.',                    'duration_minutes' => 20, 'price' => 12.00, 'active' => true],
+                    'colore'       => ['name' => 'Colore / Tinta',       'description' => 'Colorazione capelli con prodotti professionali.',                        'duration_minutes' => 60, 'price' => 40.00, 'active' => true],
+                ],
+                'staffServices' => [
+                    'marco'   => ['taglio', 'taglio_barba', 'barba'],
+                    'andrea'  => ['taglio', 'taglio_barba', 'rasatura', 'barba'],
+                    'filippo' => ['taglio', 'taglio_barba', 'rasatura', 'barba', 'colore'],
+                ],
+            ],
+        };
     }
 
     /** @return array<string, User> */
-    private function seedStaff(): array
+    private function seedStaff(array $config): array
     {
-        $data = [
-            'marco'   => ['email' => 'marco@barbershop.test',   'name' => 'Marco Russo'],
-            'andrea'  => ['email' => 'andrea@barbershop.test',  'name' => 'Andrea Conti'],
-            'filippo' => ['email' => 'filippo@barbershop.test', 'name' => 'Filippo Mancini'],
-        ];
-
         $users = [];
-        foreach ($data as $key => $attrs) {
+        foreach ($config['staff'] as $key => $attrs) {
             $user = User::updateOrCreate(
                 ['email' => $attrs['email']],
-                ['name' => $attrs['name'], 'password' => Hash::make('password')]
+                ['name' => $attrs['name'], 'password' => Hash::make('password'), 'business_id' => app('current_business_id')]
             );
             $user->syncRoles(['staff']);
             $users[$key] = $user;
@@ -59,26 +110,13 @@ class CurrentMonthSeeder extends Seeder
     }
 
     /** @return array<string, User> */
-    private function seedCustomers(): array
+    private function seedCustomers(array $config): array
     {
-        $data = [
-            'giovanni'   => ['email' => 'giovanni@customer.test',   'name' => 'Giovanni Esposito'],
-            'alessandro' => ['email' => 'alessandro@customer.test', 'name' => 'Alessandro Romano'],
-            'matteo'     => ['email' => 'matteo@customer.test',     'name' => 'Matteo Ricci'],
-            'davide'     => ['email' => 'davide@customer.test',     'name' => 'Davide Gallo'],
-            'simone'     => ['email' => 'simone@customer.test',     'name' => 'Simone Marino'],
-            'luca'       => ['email' => 'luca@customer.test',       'name' => 'Luca Ferraro'],
-            'antonio'    => ['email' => 'antonio@customer.test',    'name' => 'Antonio De Luca'],
-            'giuseppe'   => ['email' => 'giuseppe@customer.test',   'name' => 'Giuseppe Lombardi'],
-            'roberto'    => ['email' => 'roberto@customer.test',    'name' => 'Roberto Moretti'],
-            'stefano'    => ['email' => 'stefano@customer.test',    'name' => 'Stefano Vitali'],
-        ];
-
         $users = [];
-        foreach ($data as $key => $attrs) {
+        foreach ($config['customers'] as $key => $attrs) {
             $user = User::updateOrCreate(
                 ['email' => $attrs['email']],
-                ['name' => $attrs['name'], 'password' => Hash::make('password')]
+                ['name' => $attrs['name'], 'password' => Hash::make('password'), 'business_id' => app('current_business_id')]
             );
             $user->syncRoles(['customer']);
             $users[$key] = $user;
@@ -88,34 +126,11 @@ class CurrentMonthSeeder extends Seeder
     }
 
     /** @return array<string, Service> */
-    private function seedServices(): array
+    private function seedServices(array $config): array
     {
-        $definitions = [
-            'taglio' => [
-                'name' => 'Taglio capelli', 'description' => 'Taglio classico o moderno con finishing.',
-                'duration_minutes' => 30, 'price' => 18.00, 'active' => true,
-            ],
-            'taglio_barba' => [
-                'name' => 'Taglio + Barba', 'description' => 'Taglio capelli con cura e rifinitura della barba.',
-                'duration_minutes' => 50, 'price' => 28.00, 'active' => true,
-            ],
-            'rasatura' => [
-                'name' => 'Rasatura tradizionale', 'description' => 'Rasatura con rasoio a mano libera e asciugamano caldo.',
-                'duration_minutes' => 30, 'price' => 15.00, 'active' => true,
-            ],
-            'barba' => [
-                'name' => 'Rimodellamento barba', 'description' => 'Modellatura, rifinitura e trattamento della barba.',
-                'duration_minutes' => 20, 'price' => 12.00, 'active' => true,
-            ],
-            'colore' => [
-                'name' => 'Colore / Tinta', 'description' => 'Colorazione capelli con prodotti professionali.',
-                'duration_minutes' => 60, 'price' => 40.00, 'active' => true,
-            ],
-        ];
-
-        return collect($definitions)
+        return collect($config['services'])
             ->mapWithKeys(fn (array $attrs, string $key) => [
-                $key => Service::updateOrCreate(['name' => $attrs['name']], $attrs),
+                $key => Service::updateOrCreate(['name' => $attrs['name'], 'business_id' => app('current_business_id')], $attrs),
             ])
             ->all();
     }
@@ -124,16 +139,12 @@ class CurrentMonthSeeder extends Seeder
      * @param array<string, Service> $services
      * @param array<string, User>    $staff
      */
-    private function attachServicesToStaff(array $services, array $staff): void
+    private function attachServicesToStaff(array $services, array $staff, array $config): void
     {
-        foreach (['taglio', 'taglio_barba', 'barba'] as $key) {
-            $services[$key]->staff()->syncWithoutDetaching([$staff['marco']->id]);
-        }
-        foreach (['taglio', 'taglio_barba', 'rasatura', 'barba'] as $key) {
-            $services[$key]->staff()->syncWithoutDetaching([$staff['andrea']->id]);
-        }
-        foreach ($services as $service) {
-            $service->staff()->syncWithoutDetaching([$staff['filippo']->id]);
+        foreach ($config['staffServices'] as $staffKey => $serviceKeys) {
+            foreach ($serviceKeys as $svcKey) {
+                $services[$svcKey]->staff()->syncWithoutDetaching([$staff[$staffKey]->id]);
+            }
         }
     }
 
@@ -166,6 +177,9 @@ class CurrentMonthSeeder extends Seeder
             'simone'   => '+39 366 5678901', 'luca'       => '+39 329 6789012',
             'antonio'  => '+39 388 7890123', 'giuseppe'   => '+39 344 8901234',
             'roberto'  => '+39 371 9012345', 'stefano'    => '+39 302 0123456',
+            'chiara'    => '+39 333 1111111', 'francesca'  => '+39 347 2222222',
+            'valentina' => '+39 320 3333333', 'serena'    => '+39 393 4444444',
+            'giulia'    => '+39 366 5555555', 'martina'   => '+39 329 6666666',
         ];
 
         foreach ($customers as $key => $user) {
@@ -188,7 +202,7 @@ class CurrentMonthSeeder extends Seeder
      * @param array<string, User>    $staff
      * @param array<string, Service> $services
      */
-    private function seedCurrentMonthAppointments(array $customers, array $staff, array $services): void
+    private function seedCurrentMonthAppointments(array $customers, array $staff, array $services, array $config): void
     {
         $now        = now();
         $monthStart = $now->copy()->startOfMonth()->startOfDay();
@@ -215,14 +229,13 @@ class CurrentMonthSeeder extends Seeder
 
             foreach (array_keys($staff) as $staffKey) {
                 $staffMember  = $staff[$staffKey];
-                $staffSvcKeys = self::STAFF_SERVICES[$staffKey];
+                $staffSvcKeys = $config['staffServices'][$staffKey];
                 $target       = $this->dInt("n_{$dateStr}_{$staffKey}", $baseCount, $baseCount + 2);
-                $booked       = []; // [[start_min, end_min], ...]
+                $booked       = [];
 
                 for ($attempt = 0; count($booked) < $target && $attempt < count($allSlotsMins) * 2; $attempt++) {
                     $seed = "{$dateStr}_{$staffKey}_{$attempt}";
 
-                    // Slots where at least one staff service fits without overlap or session breach
                     $available = array_values(array_filter(
                         $allSlotsMins,
                         fn ($m) => collect($staffSvcKeys)->contains(
@@ -236,7 +249,6 @@ class CurrentMonthSeeder extends Seeder
 
                     $slotMin = $available[$this->dInt("slot_{$seed}", 0, count($available) - 1)];
 
-                    // Pick a service that actually fits at this slot
                     $fitting = array_values(array_filter(
                         $staffSvcKeys,
                         fn ($k) => $this->slotFits($slotMin, $services[$k]->duration_minutes, $booked)
@@ -280,8 +292,6 @@ class CurrentMonthSeeder extends Seeder
         }
     }
 
-    // Returns true if slotMin + durationMin fits without overlapping existing bookings
-    // and without breaching session boundaries (morning closes 13:00, afternoon 21:00).
     private function slotFits(int $slotMin, int $durationMin, array $booked): bool
     {
         $end = $slotMin + $durationMin;
@@ -326,6 +336,4 @@ class CurrentMonthSeeder extends Seeder
     {
         return $min + (abs(crc32($seed)) % ($max - $min + 1));
     }
-
-
 }
