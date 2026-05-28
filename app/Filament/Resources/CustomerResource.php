@@ -5,6 +5,8 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\CustomerResource\Pages;
 use App\Filament\Resources\CustomerResource\RelationManagers;
 use App\Models\User;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -48,23 +50,26 @@ class CustomerResource extends Resource
 
     public static function canCreate(): bool
     {
-        return false;
+        $user = auth()->user();
+        return ($user?->isAdmin() || ($user?->isStaff() && $user->can('customers.create'))) ?? false;
     }
 
     public static function canEdit(Model $record): bool
     {
         $user = auth()->user();
-        return ($user?->isAdmin() || ($user?->isStaff() && $user->can('customers.view'))) ?? false;
+        return ($user?->isAdmin() || ($user?->isStaff() && $user->can('customers.edit'))) ?? false;
     }
 
     public static function canDelete(Model $record): bool
     {
-        return false;
+        $user = auth()->user();
+        return ($user?->isAdmin() || ($user?->isStaff() && $user->can('customers.delete'))) ?? false;
     }
 
     public static function canDeleteAny(): bool
     {
-        return false;
+        $user = auth()->user();
+        return ($user?->isAdmin() || ($user?->isStaff() && $user->can('customers.delete'))) ?? false;
     }
 
     public static function getEloquentQuery(): Builder
@@ -89,6 +94,14 @@ class CustomerResource extends Resource
                 ->required()
                 ->unique(User::class, 'email', ignoreRecord: true)
                 ->maxLength(255),
+
+            TextInput::make('password')
+                ->label('Password')
+                ->password()
+                ->required()
+                ->minLength(8)
+                ->maxLength(255)
+                ->visibleOn('create'),
 
             Textarea::make('internal_notes')
                 ->label('Note interne')
@@ -148,6 +161,10 @@ class CustomerResource extends Resource
             ->actions([
                 EditAction::make()
                     ->label('Scheda cliente'),
+                DeleteAction::make(),
+            ])
+            ->bulkActions([
+                DeleteBulkAction::make(),
             ]);
     }
 
@@ -162,8 +179,9 @@ class CustomerResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListCustomers::route('/'),
-            'edit' => Pages\EditCustomer::route('/{record}/edit'),
+            'index'  => Pages\ListCustomers::route('/'),
+            'create' => Pages\CreateCustomer::route('/create'),
+            'edit'   => Pages\EditCustomer::route('/{record}/edit'),
         ];
     }
 }
