@@ -12,6 +12,11 @@ class SubdomainMiddleware
 {
     public function handle(Request $request, Closure $next): Response
     {
+        // Keep media URLs consistent with the current request's host so that
+        // Spatie MediaLibrary doesn't generate URLs pointing to APP_URL (which
+        // is static) instead of the actual subdomain being served.
+        config(['filesystems.disks.public.url' => rtrim($request->getSchemeAndHttpHost(), '/') . '/storage']);
+
         $baseDomain = config('app.base_domain');
 
         if (! $baseDomain) {
@@ -44,14 +49,7 @@ class SubdomainMiddleware
             if ($host !== $baseDomain) {
                 abort(404);
             }
-            // Bare base domain (e.g. localhost) — no subdomain, fall back to first active business.
-            $business = Business::withoutGlobalScopes()
-                ->where('status', BusinessStatus::Active)
-                ->orderBy('id')
-                ->first();
-            if ($business) {
-                app()->instance('current_business_id', $business->id);
-            }
+            // Bare base domain (e.g. localhost) — no tenant. Show the landing page.
             return $next($request);
         }
 

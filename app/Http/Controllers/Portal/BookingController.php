@@ -25,6 +25,10 @@ class BookingController extends Controller
 
     public function index(): View
     {
+        if (! app()->bound('current_business_id')) {
+            return view('landing');
+        }
+
         $profile  = SalonProfile::current()->load('media');
         $services = Service::active()->orderByDesc('featured')->orderBy('name')->get();
         $staff    = User::whereHas('roles', fn ($q) => $q->where('name', 'staff')->where('guard_name', 'web'))

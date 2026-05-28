@@ -12,6 +12,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Actions\EditAction;
+use Filament\Actions\Action;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
@@ -75,7 +76,15 @@ class BusinessResource extends Resource
                     }),
                 TextColumn::make('created_at')->label('Creato')->since()->sortable(),
             ])
-            ->actions([EditAction::make()]);
+            ->actions([
+                Action::make('storefront')
+                    ->label('Vetrina')
+                    ->icon('heroicon-o-arrow-top-right-on-square')
+                    ->color('gray')
+                    ->url(fn(Business $record): string => self::storefrontUrl($record))
+                    ->openUrlInNewTab(),
+                EditAction::make(),
+            ]);
     }
 
     public static function getPages(): array
@@ -90,5 +99,14 @@ class BusinessResource extends Resource
     public static function canAccess(): bool
     {
         return auth()->user()?->hasRole('super_admin') ?? false;
+    }
+
+    private static function storefrontUrl(Business $record): string
+    {
+        $baseDomain = config('app.base_domain');
+
+        return $baseDomain
+            ? 'http://' . $record->subdomain . '.' . $baseDomain . '/'
+            : url('/admin/' . $record->subdomain . '/');
     }
 }

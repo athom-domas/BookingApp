@@ -33,9 +33,22 @@ class AuthenticatedSessionController extends Controller
                 ->withErrors(['email' => 'Le credenziali inserite non sono corrette.']);
         }
 
+        $user = Auth::user();
+
+        // Reject users that don't belong to the current business (cross-tenant login attempt).
+        if (
+            $user->business_id !== null &&
+            app()->bound('current_business_id') &&
+            $user->business_id !== (int) app('current_business_id')
+        ) {
+            Auth::logout();
+            return back()
+                ->withInput($request->only('email'))
+                ->withErrors(['email' => 'Le credenziali inserite non sono corrette.']);
+        }
+
         $request->session()->regenerate();
 
-        $user = Auth::user();
         $default = ($user->isAdmin() || $user->isStaff())
             ? '/admin'
             : route('portal.appointments.index');

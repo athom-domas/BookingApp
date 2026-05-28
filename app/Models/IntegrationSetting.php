@@ -30,6 +30,10 @@ class IntegrationSetting extends Model
 
     public static function current(): self
     {
+        if (! app()->bound('current_business_id')) {
+            return new self();
+        }
+
         return self::firstOrCreate(
             ['business_id' => Business::currentId()]
         );

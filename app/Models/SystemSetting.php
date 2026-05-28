@@ -32,6 +32,20 @@ class SystemSetting extends Model
 
     public static function current(): self
     {
+        if (! app()->bound('current_business_id')) {
+            return new self([
+                'slot_generation_weeks'       => 4,
+                'slot_granularity_minutes'    => 15,
+                'timezone'                    => 'Europe/Rome',
+                'booking_max_days_ahead'      => 30,
+                'cancellation_deadline_hours' => 24,
+                'reminder_count'              => 1,
+                'reminder_1_hours'            => 24,
+                'reminder_2_hours'            => 2,
+                'payment_mode'                => 'both',
+            ]);
+        }
+
         return self::firstOrCreate(
             ['business_id' => Business::currentId()],
             [
