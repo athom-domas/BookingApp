@@ -7,12 +7,16 @@ use App\Models\Business;
 use App\Models\User;
 use Filament\Facades\Filament;
 use Livewire\Livewire;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
     Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
     Role::firstOrCreate(['name' => 'staff', 'guard_name' => 'web']);
     Role::firstOrCreate(['name' => 'customer', 'guard_name' => 'web']);
+    foreach (['appointments.edit', 'appointments.view_all'] as $p) {
+        Permission::firstOrCreate(['name' => $p, 'guard_name' => 'web']);
+    }
 
     $this->business = Business::withoutGlobalScopes()->firstOrFail();
     Filament::setTenant($this->business, isQuiet: true);
@@ -21,6 +25,7 @@ beforeEach(function () {
 it('staff can access edit page for their own pending appointment', function () {
     $staff = User::factory()->create(['business_id' => $this->business->id]);
     $staff->assignRole('staff');
+    $staff->givePermissionTo('appointments.edit');
     $customer = User::factory()->create(['business_id' => $this->business->id]);
     $customer->assignRole('customer');
 
@@ -39,6 +44,7 @@ it('staff can access edit page for their own pending appointment', function () {
 it('staff can access edit page for their own confirmed appointment', function () {
     $staff = User::factory()->create(['business_id' => $this->business->id]);
     $staff->assignRole('staff');
+    $staff->givePermissionTo('appointments.edit');
     $customer = User::factory()->create(['business_id' => $this->business->id]);
     $customer->assignRole('customer');
 
@@ -54,9 +60,10 @@ it('staff can access edit page for their own confirmed appointment', function ()
         ->assertOk();
 });
 
-it('staff cannot access edit page for another staff appointment', function () {
+it('staff without view_all cannot access edit page for another staff appointment', function () {
     $staff = User::factory()->create(['business_id' => $this->business->id]);
     $staff->assignRole('staff');
+    $staff->givePermissionTo('appointments.edit');
     $otherStaff = User::factory()->create(['business_id' => $this->business->id]);
     $otherStaff->assignRole('staff');
     $customer = User::factory()->create(['business_id' => $this->business->id]);
@@ -113,6 +120,7 @@ it('staff cannot access edit page for a cancelled appointment', function () {
 it('staff can change status on their own appointment', function () {
     $staff = User::factory()->create(['business_id' => $this->business->id]);
     $staff->assignRole('staff');
+    $staff->givePermissionTo('appointments.edit');
     $customer = User::factory()->create(['business_id' => $this->business->id]);
     $customer->assignRole('customer');
 
