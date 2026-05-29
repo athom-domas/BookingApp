@@ -30,6 +30,13 @@ class SuperAdminPanelProvider extends PanelProvider
                 in: app_path('Filament/SuperAdmin/Resources'),
                 for: 'App\Filament\SuperAdmin\Resources'
             )
+            ->discoverWidgets(
+                in: app_path('Filament/SuperAdmin/Widgets'),
+                for: 'App\Filament\SuperAdmin\Widgets'
+            )
+            ->widgets([
+                \App\Filament\SuperAdmin\Widgets\BillingOverviewWidget::class,
+            ])
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
