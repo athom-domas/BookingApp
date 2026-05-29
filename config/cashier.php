@@ -18,9 +18,9 @@ return [
     |
     */
 
-    'key' => env('STRIPE_KEY'),
+    'key' => env('STRIPE_KEY', env('STRIPE_PUBLIC_KEY')),
 
-    'secret' => env('STRIPE_SECRET'),
+    'secret' => env('STRIPE_SECRET', env('STRIPE_SECRET_KEY')),
 
     /*
     |--------------------------------------------------------------------------
@@ -126,6 +126,8 @@ return [
     */
 
     'logger' => env('CASHIER_LOGGER'),
+
+    'model' => env('CASHIER_MODEL', \App\Models\Business::class),
 
     'price_id' => env('STRIPE_PRICE_ID'),
 
