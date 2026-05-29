@@ -6,6 +6,7 @@ use App\Models\Business;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Illuminate\Support\Facades\Auth;
 
 class BillingPage extends Page
 {
@@ -42,7 +43,7 @@ class BillingPage extends Page
     {
         $business = $this->getBusiness();
 
-        if (! auth()->user()?->isAdmin()) {
+        if (! Auth::user()?->isAdmin()) {
             return [];
         }
 
@@ -72,8 +73,9 @@ class BillingPage extends Page
                     ->modalHeading('Annulla abbonamento')
                     ->modalDescription('L\'abbonamento rimarrà attivo fino alla fine del periodo corrente. Sei sicuro?')
                     ->action(function () use ($business) {
-                        $business->subscription('default')->cancel();
-                        $endsAt = $business->subscription('default')->ends_at?->format('d/m/Y');
+                        $subscription = $business->subscription('default');
+                        $subscription->cancel();
+                        $endsAt = $subscription->fresh()?->ends_at?->format('d/m/Y');
                         Notification::make()
                             ->title("Abbonamento annullato. Accesso garantito fino al {$endsAt}.")
                             ->warning()
