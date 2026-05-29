@@ -18,7 +18,7 @@ class BillingPage extends Page
 
     public function getBusiness(): Business
     {
-        return Business::find(app('current_business_id'));
+        return once(fn () => Business::findOrFail(Business::currentId()));
     }
 
     public function mount(): void
@@ -57,8 +57,8 @@ class BillingPage extends Page
                     ->action(function () use ($business) {
                         $session = $business->newSubscription('default', config('cashier.price_id'))
                             ->checkout([
-                                'success_url' => route('filament.admin.pages.abbonamento') . '?checkout=success',
-                                'cancel_url'  => route('filament.admin.pages.abbonamento') . '?checkout=cancelled',
+                                'success_url' => route('filament.admin.pages.abbonamento', ['tenant' => $business->subdomain]) . '?checkout=success',
+                                'cancel_url'  => route('filament.admin.pages.abbonamento', ['tenant' => $business->subdomain]) . '?checkout=cancelled',
                             ]);
                         $this->redirect($session->url, navigate: false);
                     }),

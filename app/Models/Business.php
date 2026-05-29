@@ -17,6 +17,11 @@ class Business extends Model
     /** @use HasFactory<BusinessFactory> */
     use HasFactory, Billable;
 
+    public function getForeignKey()
+    {
+        return 'business_id';
+    }
+
     protected function casts(): array
     {
         return [
