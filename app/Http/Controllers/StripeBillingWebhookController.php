@@ -10,9 +10,11 @@ use Symfony\Component\HttpFoundation\Response;
 
 class StripeBillingWebhookController extends WebhookController
 {
-    protected function webhookSecret(): string|null
+    public function __construct()
     {
-        return config('cashier.billing_webhook.secret');
+        if (config('cashier.billing_webhook.secret')) {
+            $this->middleware(\App\Http\Middleware\VerifyBillingWebhookSignature::class);
+        }
     }
 
     public function handleInvoicePaymentFailed(array $payload): Response
