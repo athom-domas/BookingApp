@@ -9,6 +9,10 @@
 
         <title>@yield('title', e($salonProfile->name)) - {{ $salonProfile->name }}</title>
 
+        @if($salonProfile->faviconUrl())
+            <link rel="icon" href="{{ $salonProfile->faviconUrl() }}">
+        @endif
+
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
         <style>
@@ -163,9 +167,6 @@
                         @endif
                         @if($salonProfile->address)
                             <span>{{ $salonProfile->address }}</span>
-                        @endif
-                        @if($salonProfile->website)
-                            <a href="{{ $salonProfile->website }}" target="_blank" rel="noopener" class="hover:text-gray-700 dark:hover:text-gray-200">{{ $salonProfile->website }}</a>
                         @endif
                     </div>
                     <div class="flex items-center gap-4">

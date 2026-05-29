@@ -14,7 +14,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 #[Fillable([
     'business_id',
     'name', 'tagline', 'logo_path', 'primary_color',
-    'phone', 'address', 'website',
+    'phone', 'address',
     'description', 'cancellation_policy', 'google_maps_embed',
     'opening_hours',
     'instagram_url', 'facebook_url', 'tiktok_url', 'whatsapp_number',
@@ -49,6 +49,7 @@ class SalonProfile extends Model implements HasMedia
     {
         $this->addMediaCollection('logo')->singleFile()->useDisk('public');
         $this->addMediaCollection('cover')->singleFile()->useDisk('public');
+        $this->addMediaCollection('favicon')->singleFile()->useDisk('public');
         $this->addMediaCollection('gallery')->useDisk('public');
     }
 
@@ -80,5 +81,10 @@ class SalonProfile extends Model implements HasMedia
     public function coverUrl(): ?string
     {
         return $this->getFirstMediaUrl('cover') ?: null;
+    }
+
+    public function faviconUrl(): ?string
+    {
+        return $this->getFirstMediaUrl('favicon') ?: null;
     }
 }

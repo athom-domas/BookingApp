@@ -43,7 +43,7 @@ class SalonProfilePage extends Page
             'primary_color'       => $profile->primary_color,
             'phone'               => $profile->phone,
             'address'             => $profile->address,
-            'website'             => $profile->website,
+
             'description'         => $profile->description,
             'cancellation_policy' => $profile->cancellation_policy,
             'google_maps_embed'   => $profile->google_maps_embed,
@@ -127,6 +127,14 @@ class SalonProfilePage extends Page
                                 ->image()
                                 ->maxSize(5120),
                         ]),
+                        Grid::make(2)->schema([
+                            SpatieMediaLibraryFileUpload::make('favicon')
+                                ->label('Favicon')
+                                ->collection('favicon')
+                                ->image()
+                                ->maxSize(512)
+                                ->helperText('Immagine quadrata (PNG o ICO). Consigliato: 64×64px o 192×192px.'),
+                        ]),
                     ]),
 
                     Tab::make('Descrizione')->schema([
@@ -152,10 +160,7 @@ class SalonProfilePage extends Page
                     Tab::make('Orari')->schema($hoursFields),
 
                     Tab::make('Contatti & Social')->schema([
-                        Grid::make(2)->schema([
-                            TextInput::make('phone')->label('Telefono'),
-                            TextInput::make('website')->label('Sito web')->url(),
-                        ]),
+                        TextInput::make('phone')->label('Telefono'),
                         TextInput::make('address')
                             ->label('Indirizzo')
                             ->columnSpanFull(),
@@ -218,7 +223,7 @@ class SalonProfilePage extends Page
             ],
             $days
         ));
-        $profileData = Arr::except($state, [...$hourKeys, 'logo', 'cover', 'gallery']);
+        $profileData = Arr::except($state, [...$hourKeys, 'logo', 'cover', 'favicon', 'gallery']);
         $profileData['opening_hours'] = $openingHours;
 
         $profile->update($profileData);
