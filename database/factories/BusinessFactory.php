@@ -12,14 +12,20 @@ class BusinessFactory extends Factory
     public function definition(): array
     {
         return [
-            'name'      => fake()->company(),
-            'subdomain' => fake()->unique()->lexify('salon-????'),
-            'status'    => BusinessStatus::Active,
+            'name'          => fake()->company(),
+            'subdomain'     => fake()->unique()->lexify('salon-????'),
+            'status'        => BusinessStatus::Active,
+            'trial_ends_at' => now()->addDays(14),
         ];
     }
 
     public function suspended(): static
     {
         return $this->state(['status' => BusinessStatus::Suspended]);
+    }
+
+    public function trialExpired(): static
+    {
+        return $this->state(['trial_ends_at' => now()->subDay()]);
     }
 }

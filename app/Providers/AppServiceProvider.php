@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Services\PaymentService;
 use Carbon\Carbon;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Cashier\Cashier;
 use Stripe\StripeClient;
 
 class AppServiceProvider extends ServiceProvider
@@ -51,5 +52,6 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Carbon::setLocale('it');
+        Cashier::useCustomerModel(\App\Models\Business::class);
     }
 }

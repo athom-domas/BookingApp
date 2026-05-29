@@ -9,16 +9,20 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Laravel\Cashier\Billable;
 
-#[Fillable(['name', 'subdomain', 'status'])]
+#[Fillable(['name', 'subdomain', 'status', 'trial_ends_at'])]
 class Business extends Model
 {
     /** @use HasFactory<BusinessFactory> */
-    use HasFactory;
+    use HasFactory, Billable;
 
     protected function casts(): array
     {
-        return ['status' => BusinessStatus::class];
+        return [
+            'status'        => BusinessStatus::class,
+            'trial_ends_at' => 'datetime',
+        ];
     }
 
     public static function currentId(): int
@@ -30,10 +34,29 @@ class Business extends Model
         return (int) app('current_business_id');
     }
 
-    public function users(): HasMany        { return $this->hasMany(User::class); }
-    public function services(): HasMany     { return $this->hasMany(Service::class); }
-    public function appointments(): HasMany { return $this->hasMany(Appointment::class); }
-    public function systemSetting(): HasOne { return $this->hasOne(SystemSetting::class); }
-    public function salonProfile(): HasOne  { return $this->hasOne(SalonProfile::class); }
+    public function hasAccess(): bool
+    {
+        return $this->onGenericTrial() || $this->subscribed('default');
+    }
+
+    public function subscriptionStatus(): string
+    {
+        if ($this->subscribed('default') && ! $this->subscription('default')?->onGracePeriod()) {
+            return 'active';
+        }
+        if ($this->subscription('default')?->onGracePeriod()) {
+            return 'grace_period';
+        }
+        if ($this->onGenericTrial()) {
+            return 'trial';
+        }
+        return 'expired';
+    }
+
+    public function users(): HasMany             { return $this->hasMany(User::class); }
+    public function services(): HasMany          { return $this->hasMany(Service::class); }
+    public function appointments(): HasMany      { return $this->hasMany(Appointment::class); }
+    public function systemSetting(): HasOne      { return $this->hasOne(SystemSetting::class); }
+    public function salonProfile(): HasOne       { return $this->hasOne(SalonProfile::class); }
     public function integrationSetting(): HasOne { return $this->hasOne(IntegrationSetting::class); }
 }
