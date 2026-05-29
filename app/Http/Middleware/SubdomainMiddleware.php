@@ -27,6 +27,9 @@ class SubdomainMiddleware
                     abort(503, 'This salon is currently unavailable.');
                 }
                 app()->instance('current_business_id', $tenant->id);
+                if (! $this->isAdminRoute($request) && ! $tenant->hasAccess()) {
+                    return response()->view('errors.subscription-expired', ['business' => $tenant], 503);
+                }
                 return $next($request);
             }
 
@@ -73,6 +76,16 @@ class SubdomainMiddleware
 
         app()->instance('current_business_id', $business->id);
 
+        if (! $this->isAdminRoute($request) && ! $business->hasAccess()) {
+            return response()->view('errors.subscription-expired', ['business' => $business], 503);
+        }
+
         return $next($request);
+    }
+
+    private function isAdminRoute(Request $request): bool
+    {
+        $path = $request->getPathInfo();
+        return str_starts_with($path, '/admin') || str_starts_with($path, '/superadmin');
     }
 }
