@@ -42,8 +42,8 @@ class RevenueChartWidget extends ChartWidget
             'datasets' => [[
                 'label'           => 'Incasso (€)',
                 'data'            => $data,
-                'borderColor'     => '#2563eb',
-                'backgroundColor' => 'rgba(37,99,235,0.1)',
+                'borderColor'     => '#6366f1',
+                'backgroundColor' => 'rgba(99,102,241,0.12)',
                 'fill'            => true,
                 'tension'         => 0.3,
             ]],

@@ -4,16 +4,16 @@ namespace App\Filament\Widgets\Reports;
 
 use App\Models\Appointment;
 use App\Models\Payment;
-use Filament\Widgets\StatsOverviewWidget;
-use Filament\Widgets\StatsOverviewWidget\Stat;
+use Filament\Widgets\Widget;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\On;
 
-class RevenueStatsWidget extends StatsOverviewWidget
+class RevenueStatsWidget extends Widget
 {
-    protected static ?int $sort      = 1;
-    protected static bool $isLazy    = false;
-    protected int | string | array $columnSpan = 'full';
+    protected string $view                      = 'filament.widgets.reports.revenue-stats';
+    protected static ?int $sort                 = 1;
+    protected static bool $isLazy               = false;
+    protected int | string | array $columnSpan  = 'full';
 
     public ?string $dateFrom = null;
     public ?string $dateTo   = null;
@@ -25,7 +25,7 @@ class RevenueStatsWidget extends StatsOverviewWidget
         $this->dateTo   = $dateTo;
     }
 
-    protected function getStats(): array
+    public function getStats(): array
     {
         $from = $this->dateFrom ?? now()->startOfMonth()->toDateString();
         $to   = $this->dateTo   ?? now()->endOfMonth()->toDateString();
@@ -56,19 +56,12 @@ class RevenueStatsWidget extends StatsOverviewWidget
             ->orderByDesc('cnt')
             ->first();
 
-        $topStaffName  = $topStaffRow?->name ?? '-';
-        $topStaffCount = $topStaffRow?->cnt ?? 0;
-
         return [
-            Stat::make('Incasso totale', '€ ' . number_format((float) $totalRevenue, 2, ',', '.')),
-
-            Stat::make('Appuntamenti', $totalAppointments),
-
-            Stat::make('Tasso cancellazione', $cancellationRate . '%')
-                ->color($cancellationRate > 20 ? 'danger' : 'success'),
-
-            Stat::make('Staff più produttivo', $topStaffName)
-                ->description($topStaffCount . ' appuntamenti completati'),
+            'totalRevenue'      => (float) $totalRevenue,
+            'totalAppointments' => (int) $totalAppointments,
+            'cancellationRate'  => $cancellationRate,
+            'topStaffName'      => $topStaffRow?->name ?? '—',
+            'topStaffCount'     => (int) ($topStaffRow?->cnt ?? 0),
         ];
     }
 }

@@ -6,15 +6,16 @@ use App\Models\Appointment;
 use App\Models\Payment;
 use App\Models\Service;
 use Carbon\Carbon;
-use Filament\Widgets\StatsOverviewWidget;
-use Filament\Widgets\StatsOverviewWidget\Stat;
+use Filament\Widgets\Widget;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\On;
 
-class InsightStatsWidget extends StatsOverviewWidget
+class InsightStatsWidget extends Widget
 {
-    protected static ?int $sort      = 2;
-    protected static bool $isLazy    = false;
-    protected int | string | array $columnSpan = 'full';
+    protected string $view                      = 'filament.widgets.reports.insight-stats';
+    protected static ?int $sort                 = 2;
+    protected static bool $isLazy               = false;
+    protected int | string | array $columnSpan  = 'full';
 
     public ?string $dateFrom = null;
     public ?string $dateTo   = null;
@@ -26,7 +27,7 @@ class InsightStatsWidget extends StatsOverviewWidget
         $this->dateTo   = $dateTo;
     }
 
-    protected function getStats(): array
+    public function getStats(): array
     {
         $from   = Carbon::parse($this->dateFrom ?? now()->startOfMonth()->toDateString());
         $to     = Carbon::parse($this->dateTo   ?? now()->endOfMonth()->toDateString());
@@ -41,8 +42,7 @@ class InsightStatsWidget extends StatsOverviewWidget
 
         $paidCount    = (int) ($paidRow->cnt ?? 0);
         $totalRevenue = (float) ($paidRow->total ?? 0);
-
-        $avgRevenue = $paidCount > 0 ? round($totalRevenue / $paidCount, 2) : 0;
+        $avgRevenue   = $paidCount > 0 ? round($totalRevenue / $paidCount, 2) : 0;
 
         $uniqueCustomers = Appointment::whereBetween('scheduled_date', [$fromDt, $toDt])
             ->distinct('user_id')
@@ -54,23 +54,16 @@ class InsightStatsWidget extends StatsOverviewWidget
 
         [$topServiceName, $topServiceCount] = $this->topService($fromDt, $toDt);
 
-        $stats = [];
+        $user = Auth::user();
 
-        $user = auth()->user();
-        if ($user?->isAdmin() || $user?->can('reports.view_revenue')) {
-            $stats[] = Stat::make('Incasso medio', '€ ' . number_format($avgRevenue, 2, ',', '.'))
-                ->description('per appuntamento pagato');
-        }
-
-        $stats[] = Stat::make('Clienti unici', $uniqueCustomers);
-
-        $stats[] = Stat::make('Servizio più richiesto', $topServiceName)
-            ->description($topServiceCount . ' prenotazioni');
-
-        $stats[] = Stat::make('Appuntamenti in attesa', $pendingCount)
-            ->color($pendingCount > 0 ? 'warning' : 'success');
-
-        return $stats;
+        return [
+            'showRevenue'     => $user?->isAdmin() || $user?->can('reports.view_revenue'),
+            'avgRevenue'      => $avgRevenue,
+            'uniqueCustomers' => (int) $uniqueCustomers,
+            'topServiceName'  => $topServiceName,
+            'topServiceCount' => (int) $topServiceCount,
+            'pendingCount'    => (int) $pendingCount,
+        ];
     }
 
     private function topService(Carbon $fromDt, Carbon $toDt): array
@@ -86,7 +79,7 @@ class InsightStatsWidget extends StatsOverviewWidget
         }
 
         if (empty($counts)) {
-            return ['-', 0];
+            return ['—', 0];
         }
 
         arsort($counts);
@@ -94,6 +87,6 @@ class InsightStatsWidget extends StatsOverviewWidget
         $topCount = $counts[$topId];
 
         $names = Service::whereIn('id', [$topId])->pluck('name', 'id');
-        return [$names[$topId] ?? '-', $topCount];
+        return [$names[$topId] ?? '—', $topCount];
     }
 }

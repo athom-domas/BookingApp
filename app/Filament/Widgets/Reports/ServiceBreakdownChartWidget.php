@@ -10,10 +10,10 @@ use Livewire\Attributes\On;
 
 class ServiceBreakdownChartWidget extends ChartWidget
 {
-    protected ?string $heading    = 'Appuntamenti per servizio';
-    protected static bool $isLazy = false;
-    protected static ?int $sort   = 5;
-    protected int | string | array $columnSpan = 'full';
+    protected ?string $heading      = 'Appuntamenti per servizio';
+    protected static bool $isLazy   = false;
+    protected static ?int $sort     = 5;
+    protected int | string | array $columnSpan = 1;
 
     public ?string $dateFrom = null;
     public ?string $dateTo   = null;
@@ -48,11 +48,22 @@ class ServiceBreakdownChartWidget extends ChartWidget
         $labels = array_map(fn ($id) => $serviceNames[$id] ?? "Servizio #$id", $serviceIds);
         $data   = array_values($counts);
 
+        $palette = [
+            'rgba(99,102,241,0.85)',
+            'rgba(244,63,94,0.85)',
+            'rgba(16,185,129,0.85)',
+            'rgba(245,158,11,0.85)',
+            'rgba(139,92,246,0.85)',
+            'rgba(14,165,233,0.85)',
+            'rgba(251,146,60,0.85)',
+        ];
+        $bgColors = array_map(fn ($i) => $palette[$i % count($palette)], range(0, max(0, count($data) - 1)));
+
         return [
             'datasets' => [[
-                'label'           => 'Appuntamenti',
                 'data'            => $data,
-                'backgroundColor' => 'rgba(37,99,235,0.7)',
+                'backgroundColor' => $bgColors,
+                'borderWidth'     => 0,
             ]],
             'labels' => $labels,
         ];
@@ -60,14 +71,16 @@ class ServiceBreakdownChartWidget extends ChartWidget
 
     protected function getType(): string
     {
-        return 'bar';
+        return 'doughnut';
     }
 
     protected function getOptions(): array
     {
         return [
-            'indexAxis' => 'y',
-            'plugins'   => ['legend' => ['display' => false]],
+            'cutout'  => '60%',
+            'plugins' => [
+                'legend' => ['position' => 'right', 'labels' => ['boxWidth' => 10, 'padding' => 10]],
+            ],
         ];
     }
 }
