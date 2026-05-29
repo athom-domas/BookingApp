@@ -13,6 +13,8 @@ use App\Http\Controllers\StripeWebhookController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [BookingController::class, 'index'])->name('booking.index');
+Route::get('/privacy', fn () => view('privacy'))->name('legal.privacy');
+Route::get('/termini', fn () => view('terms'))->name('legal.terms');
 Route::get('/prenota', [BookingController::class, 'create'])->name('booking.create');
 Route::get('/portal/waitlist/create', [WaitlistController::class, 'create'])->name('portal.waitlist.create');
 Route::post('/stripe/webhook', StripeWebhookController::class)->name('stripe.webhook');
