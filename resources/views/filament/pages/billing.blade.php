@@ -75,15 +75,16 @@
                         <p class="text-sm text-green-700 dark:text-green-400 mt-0.5">€29/mese · IVA esclusa · Cancellazione in qualsiasi momento</p>
                     </div>
                 </div>
-                <div class="grid grid-cols-2 sm:grid-cols-{{ $stripeData ? '3' : '2' }} gap-4 pt-4 border-t border-green-200 dark:border-green-800">
+                @php $renewalDate = $stripeData?->current_period_end ? \Carbon\Carbon::createFromTimestamp($stripeData->current_period_end) : null; @endphp
+                <div class="grid grid-cols-2 sm:grid-cols-{{ $renewalDate ? '3' : '2' }} gap-4 pt-4 border-t border-green-200 dark:border-green-800">
                     <div>
                         <p class="text-xs font-medium text-green-600 dark:text-green-500 uppercase tracking-wide">Attivato il</p>
                         <p class="mt-1 text-sm font-semibold text-green-900 dark:text-green-100">{{ $sub->created_at->format('d/m/Y') }}</p>
                     </div>
-                    @if ($stripeData)
+                    @if ($renewalDate)
                     <div>
                         <p class="text-xs font-medium text-green-600 dark:text-green-500 uppercase tracking-wide">Prossimo rinnovo</p>
-                        <p class="mt-1 text-sm font-semibold text-green-900 dark:text-green-100">{{ \Carbon\Carbon::createFromTimestamp($stripeData->current_period_end)->format('d/m/Y') }}</p>
+                        <p class="mt-1 text-sm font-semibold text-green-900 dark:text-green-100">{{ $renewalDate->format('d/m/Y') }}</p>
                     </div>
                     @endif
                     @if ($business->pm_last_four)
@@ -145,7 +146,7 @@
                     </div>
                     @endforeach
 
-                    @if ($sub && $stripeData)
+                    @if ($sub && $stripeData?->current_period_start && $stripeData?->current_period_end)
                     <div class="flex justify-between items-center py-2.5 text-sm">
                         <dt class="text-gray-500 dark:text-gray-400">Periodo attuale</dt>
                         <dd class="font-medium text-gray-900 dark:text-white text-right">
@@ -191,7 +192,7 @@
                     </div>
                 </div>
 
-                @if ($stripeData)
+                @if ($renewalDate)
                 <div class="mt-4 pt-4 border-t border-gray-100 dark:border-white/5 space-y-2.5">
                     <div class="flex justify-between text-sm">
                         <span class="text-gray-500 dark:text-gray-400">Prossima fattura</span>
@@ -199,9 +200,7 @@
                     </div>
                     <div class="flex justify-between text-sm">
                         <span class="text-gray-500 dark:text-gray-400">Data addebito</span>
-                        <span class="font-medium text-gray-900 dark:text-white">
-                            {{ \Carbon\Carbon::createFromTimestamp($stripeData->current_period_end)->format('d/m/Y') }}
-                        </span>
+                        <span class="font-medium text-gray-900 dark:text-white">{{ $renewalDate->format('d/m/Y') }}</span>
                     </div>
                 </div>
                 @endif
