@@ -15,16 +15,16 @@ class CheckSubscription
             return $next($request);
         }
 
+        $business = Business::find(app('current_business_id'));
+
         if ($request->routeIs('filament.admin.pages.abbonamento')) {
             return $next($request);
         }
 
-        $business = Business::find(app('current_business_id'));
-
         if ($business && ! $business->hasAccess()) {
             $user = $request->user();
             if ($user?->isAdmin()) {
-                return redirect()->route('filament.admin.pages.abbonamento');
+                return redirect()->route('filament.admin.pages.abbonamento', ['tenant' => $business->subdomain]);
             }
             abort(403, 'Il tuo account è sospeso. Contatta l\'amministratore del salone.');
         }
