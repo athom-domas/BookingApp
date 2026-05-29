@@ -13,13 +13,15 @@ use App\Http\Controllers\Public\AppointmentActionController;
 use App\Http\Controllers\StripeWebhookController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', [BookingController::class, 'index'])->name('booking.index');
+Route::middleware('storefront.access')->group(function () {
+    Route::get('/', [BookingController::class, 'index'])->name('booking.index');
+    Route::get('/prenota', [BookingController::class, 'create'])->name('booking.create');
+    Route::get('/portal/waitlist/create', [WaitlistController::class, 'create'])->name('portal.waitlist.create');
+});
 Route::get('/privacy', fn () => view('privacy'))->name('legal.privacy');
 Route::get('/termini', fn () => view('terms'))->name('legal.terms');
 Route::get('/contatti', [ContactController::class, 'create'])->name('contact');
 Route::post('/contatti', [ContactController::class, 'store'])->name('contact.store')->middleware('throttle:5,1');
-Route::get('/prenota', [BookingController::class, 'create'])->name('booking.create');
-Route::get('/portal/waitlist/create', [WaitlistController::class, 'create'])->name('portal.waitlist.create');
 Route::post('/stripe/webhook', StripeWebhookController::class)->name('stripe.webhook');
 Route::post('/stripe/billing-webhook', [\App\Http\Controllers\StripeBillingWebhookController::class, 'handleWebhook'])
     ->name('stripe.billing.webhook');

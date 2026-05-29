@@ -22,9 +22,10 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->alias([
-            'tenant.user'        => \App\Http\Middleware\EnsureUserBelongsToCurrentBusiness::class,
-            'tenant.status'      => \App\Http\Middleware\EnforceTenantStatus::class,
-            'check.subscription' => \App\Http\Middleware\CheckSubscription::class,
+            'tenant.user'          => \App\Http\Middleware\EnsureUserBelongsToCurrentBusiness::class,
+            'tenant.status'        => \App\Http\Middleware\EnforceTenantStatus::class,
+            'check.subscription'   => \App\Http\Middleware\CheckSubscription::class,
+            'storefront.access'    => \App\Http\Middleware\CheckStorefrontAccess::class,
         ]);
 
         $middleware->web(append: [
