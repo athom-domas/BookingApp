@@ -13,6 +13,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Actions\EditAction;
 use Filament\Actions\Action;
+use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
@@ -75,8 +76,82 @@ class BusinessResource extends Resource
                         BusinessStatus::Suspended => 'danger',
                     }),
                 TextColumn::make('created_at')->label('Creato')->since()->sortable(),
+
+                TextColumn::make('subscriptionStatus')
+                    ->label('Abbonamento')
+                    ->badge()
+                    ->state(fn (Business $record): string => match ($record->subscriptionStatus()) {
+                        'trial'        => 'Trial',
+                        'active'       => 'Attivo',
+                        'grace_period' => 'Grace period',
+                        'expired'      => 'Scaduto',
+                    })
+                    ->color(fn (string $state): string => match ($state) {
+                        'Trial'        => 'warning',
+                        'Attivo'       => 'success',
+                        'Grace period' => 'warning',
+                        'Scaduto'      => 'danger',
+                        default        => 'gray',
+                    }),
+
+                TextColumn::make('trial_ends_at')
+                    ->label('Fine trial')
+                    ->dateTime('d/m/Y')
+                    ->placeholder('—')
+                    ->sortable()
+                    ->toggleable(),
+
+                TextColumn::make('pm_last_four')
+                    ->label('Pagamento')
+                    ->state(fn (Business $record): string => $record->pm_type
+                        ? ucfirst($record->pm_type) . ' ••••' . $record->pm_last_four
+                        : '—'
+                    )
+                    ->toggleable(),
             ])
             ->actions([
+                Action::make('extendTrial')
+                    ->label('Estendi trial')
+                    ->icon('heroicon-o-clock')
+                    ->color('warning')
+                    ->visible(fn (Business $record): bool => in_array($record->subscriptionStatus(), ['trial', 'expired']))
+                    ->form([
+                        \Filament\Forms\Components\TextInput::make('days')
+                            ->label('Giorni aggiuntivi')
+                            ->numeric()
+                            ->default(14)
+                            ->minValue(1)
+                            ->maxValue(365)
+                            ->required(),
+                    ])
+                    ->action(function (Business $record, array $data): void {
+                        $base = ($record->trial_ends_at && $record->trial_ends_at->isFuture())
+                            ? $record->trial_ends_at
+                            : now();
+                        $record->update(['trial_ends_at' => $base->addDays((int) $data['days'])]);
+
+                        Notification::make()
+                            ->title("Trial esteso di {$data['days']} giorni.")
+                            ->success()
+                            ->send();
+                    }),
+
+                Action::make('cancelSubscriptionNow')
+                    ->label('Cancella abbonamento')
+                    ->icon('heroicon-o-x-circle')
+                    ->color('danger')
+                    ->visible(fn (Business $record): bool => $record->subscriptionStatus() === 'active')
+                    ->requiresConfirmation()
+                    ->modalDescription('L\'accesso verrà revocato immediatamente. Usare solo in casi eccezionali.')
+                    ->action(function (Business $record): void {
+                        $record->subscription('default')->cancelNow();
+
+                        Notification::make()
+                            ->title('Abbonamento cancellato immediatamente.')
+                            ->success()
+                            ->send();
+                    }),
+
                 Action::make('storefront')
                     ->label('Vetrina')
                     ->icon('heroicon-o-arrow-top-right-on-square')

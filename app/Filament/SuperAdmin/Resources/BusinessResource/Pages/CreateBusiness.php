@@ -17,6 +17,7 @@ class CreateBusiness extends CreateRecord
     {
         $this->adminEmail = $data['admin_email'];
         unset($data['admin_email']);
+        $data['trial_ends_at'] = now()->addDays(14);
         return $data;
     }
 
