@@ -21,6 +21,8 @@ Route::post('/contatti', [ContactController::class, 'store'])->name('contact.sto
 Route::get('/prenota', [BookingController::class, 'create'])->name('booking.create');
 Route::get('/portal/waitlist/create', [WaitlistController::class, 'create'])->name('portal.waitlist.create');
 Route::post('/stripe/webhook', StripeWebhookController::class)->name('stripe.webhook');
+Route::post('/stripe/billing-webhook', \App\Http\Controllers\StripeBillingWebhookController::class)
+    ->name('stripe.billing.webhook');
 
 Route::get('/r/waitlist/{entry}/accetta', [\App\Http\Controllers\WaitlistOfferController::class, 'accept'])
     ->name('waitlist.offer.accept')
