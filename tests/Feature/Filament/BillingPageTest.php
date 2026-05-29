@@ -32,6 +32,6 @@ test('billing page renders expired state', function () {
     $this->actingAs($user);
 
     Livewire::test(BillingPage::class)
-        ->assertSee('Accesso scaduto')
+        ->assertSee('Accesso sospeso')
         ->assertSee('Abbonati ora');
 });
