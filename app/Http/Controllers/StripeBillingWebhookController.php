@@ -10,6 +10,11 @@ use Symfony\Component\HttpFoundation\Response;
 
 class StripeBillingWebhookController extends WebhookController
 {
+    protected function webhookSecret(): string|null
+    {
+        return config('cashier.billing_webhook.secret');
+    }
+
     public function handleInvoicePaymentFailed(array $payload): Response
     {
         $customerId = $payload['data']['object']['customer'] ?? null;

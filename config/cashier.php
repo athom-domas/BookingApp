@@ -52,6 +52,11 @@ return [
         'events' => WebhookCommand::DEFAULT_EVENTS,
     ],
 
+    'billing_webhook' => [
+        'secret' => env('STRIPE_BILLING_WEBHOOK_SECRET'),
+        'tolerance' => env('STRIPE_WEBHOOK_TOLERANCE', 300),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Currency

@@ -67,6 +67,7 @@ class BusinessResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn ($query) => $query->with('subscriptions'))
             ->columns([
                 TextColumn::make('name')->label('Nome')->searchable()->sortable(),
                 TextColumn::make('subdomain')->label('Sottodominio'),

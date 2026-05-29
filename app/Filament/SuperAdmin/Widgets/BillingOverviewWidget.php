@@ -24,8 +24,9 @@ class BillingOverviewWidget extends StatsOverviewWidget
 
         $expired = Business::where(function ($q) {
             $q->whereNull('trial_ends_at')->orWhere('trial_ends_at', '<', now());
-        })->whereDoesntHave('subscriptions', fn ($q) => $q->where('stripe_status', 'active'))
-          ->count();
+        })->whereDoesntHave('subscriptions', fn ($q) => $q->whereIn('stripe_status', ['active', 'trialing'])
+            ->where(fn ($sq) => $sq->whereNull('ends_at')->orWhere('ends_at', '>', now()))
+        )->count();
 
         return [
             Stat::make('Trial attivi', $trialActive)

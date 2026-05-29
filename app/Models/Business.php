@@ -46,10 +46,11 @@ class Business extends Model
 
     public function subscriptionStatus(): string
     {
-        if ($this->subscribed('default') && ! $this->subscription('default')?->onGracePeriod()) {
+        $sub = $this->subscription('default');
+        if ($sub && ! $sub->onGracePeriod() && $this->subscribed('default')) {
             return 'active';
         }
-        if ($this->subscription('default')?->onGracePeriod()) {
+        if ($sub?->onGracePeriod()) {
             return 'grace_period';
         }
         if ($this->onGenericTrial()) {
