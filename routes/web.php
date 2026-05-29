@@ -8,6 +8,7 @@ use App\Http\Controllers\Portal\AppointmentController as PortalAppointmentContro
 use App\Http\Controllers\Portal\BookingController;
 use App\Http\Controllers\Portal\SettingsController;
 use App\Http\Controllers\Portal\WaitlistController;
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\Public\AppointmentActionController;
 use App\Http\Controllers\StripeWebhookController;
 use Illuminate\Support\Facades\Route;
@@ -15,6 +16,8 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [BookingController::class, 'index'])->name('booking.index');
 Route::get('/privacy', fn () => view('privacy'))->name('legal.privacy');
 Route::get('/termini', fn () => view('terms'))->name('legal.terms');
+Route::get('/contatti', [ContactController::class, 'create'])->name('contact');
+Route::post('/contatti', [ContactController::class, 'store'])->name('contact.store')->middleware('throttle:5,1');
 Route::get('/prenota', [BookingController::class, 'create'])->name('booking.create');
 Route::get('/portal/waitlist/create', [WaitlistController::class, 'create'])->name('portal.waitlist.create');
 Route::post('/stripe/webhook', StripeWebhookController::class)->name('stripe.webhook');

@@ -17,7 +17,7 @@
         <h2>1. Titolare del trattamento</h2>
         <p>
             Il titolare del trattamento dei dati personali è <strong>GestionalePro</strong> (di seguito "la Società"),
-            raggiungibile all'indirizzo email <a href="mailto:info@example.com">info@example.com</a>.
+            raggiungibile all'indirizzo email <a href="{{ route('contact') }}">modulo di contatto</a>.
         </p>
         <p>
             Per qualsiasi richiesta relativa al trattamento dei tuoi dati personali puoi scrivere a

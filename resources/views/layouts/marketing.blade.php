@@ -35,7 +35,7 @@
         <nav class="hidden md:flex items-center gap-8">
             <a href="{{ url('/') }}#funzionalita" class="text-sm font-medium text-gray-500 hover:text-gray-900 transition">Funzionalità</a>
             <a href="{{ url('/') }}#prezzi" class="text-sm font-medium text-gray-500 hover:text-gray-900 transition">Prezzi</a>
-            <a href="mailto:info@example.com"
+            <a href="{{ route('contact') }}"
                class="shimmer text-sm font-semibold bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition shadow-sm">
                 Inizia Gratis
             </a>
@@ -64,7 +64,7 @@
                class="text-sm font-medium text-gray-700 px-2 py-3 rounded-lg hover:bg-slate-50 transition">Funzionalità</a>
             <a href="{{ url('/') }}#prezzi" @click="open = false"
                class="text-sm font-medium text-gray-700 px-2 py-3 rounded-lg hover:bg-slate-50 transition">Prezzi</a>
-            <a href="mailto:info@example.com"
+            <a href="{{ route('contact') }}"
                class="mt-2 text-sm font-semibold bg-teal-600 text-white px-4 py-3 rounded-xl text-center hover:bg-teal-700 transition">
                 Inizia Gratis
             </a>
@@ -96,8 +96,8 @@
             <div>
                 <h4 class="text-xs font-semibold text-slate-300 uppercase tracking-widest mb-4">Azienda</h4>
                 <ul class="space-y-3 text-sm">
-                    <li><a href="mailto:info@example.com" class="hover:text-white transition">Contatti</a></li>
-                    <li><a href="mailto:info@example.com" class="hover:text-white transition">Supporto</a></li>
+                    <li><a href="{{ route('contact') }}" class="hover:text-white transition">Contatti</a></li>
+                    <li><a href="{{ route('contact') }}" class="hover:text-white transition">Supporto</a></li>
                     <li><a href="{{ route('legal.privacy') }}" class="hover:text-white transition">Privacy Policy</a></li>
                     <li><a href="{{ route('legal.terms') }}" class="hover:text-white transition">Termini di servizio</a></li>
                 </ul>

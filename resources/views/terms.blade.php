@@ -39,7 +39,7 @@
             Per utilizzare il Servizio devi creare un account fornendo informazioni accurate e complete.
             Sei responsabile della riservatezza delle credenziali di accesso e di tutte le attività
             compiute tramite il tuo account. In caso di accesso non autorizzato, notificacelo
-            immediatamente a <a href="mailto:info@example.com">info@example.com</a>.
+            immediatamente tramite il <a href="{{ route('contact') }}">modulo di contatto</a>.
         </p>
         <p>
             Non puoi cedere, trasferire o condividere il tuo account con terzi senza il nostro consenso scritto.
@@ -150,14 +150,14 @@
 
         <h2>12. Contatti</h2>
         <p>
-            Per domande su questi Termini contattaci a
-            <a href="mailto:info@example.com">info@example.com</a>.
+            Per domande su questi Termini contattaci tramite il
+            <a href="{{ route('contact') }}">modulo di contatto</a>.
         </p>
 
     </div>
 
     <div class="mt-16 pt-8 border-t border-gray-100 text-sm text-gray-400">
-        <p>Hai domande? Scrivici a <a href="mailto:info@example.com" class="text-teal-600 hover:underline">info@example.com</a></p>
+        <p>Hai domande? Scrivici a <a href="{{ route('contact') }}" class="text-teal-600 hover:underline">modulo di contatto</a></p>
     </div>
 
 </article>

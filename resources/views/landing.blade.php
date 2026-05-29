@@ -150,7 +150,7 @@
                :class="scrolled ? 'text-gray-500 hover:text-gray-900' : 'text-white/80 hover:text-white'">Funzionalità</a>
             <a href="#prezzi" class="text-sm font-medium transition"
                :class="scrolled ? 'text-gray-500 hover:text-gray-900' : 'text-white/80 hover:text-white'">Prezzi</a>
-            <a href="mailto:info@example.com"
+            <a href="{{ route('contact') }}"
                class="shimmer text-sm font-semibold bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition shadow-sm">
                 Inizia Gratis
             </a>
@@ -180,7 +180,7 @@
                class="text-sm font-medium text-gray-700 px-2 py-3 rounded-lg hover:bg-slate-50 transition">Funzionalità</a>
             <a href="#prezzi" @click="open = false"
                class="text-sm font-medium text-gray-700 px-2 py-3 rounded-lg hover:bg-slate-50 transition">Prezzi</a>
-            <a href="mailto:info@example.com"
+            <a href="{{ route('contact') }}"
                class="mt-2 text-sm font-semibold bg-teal-600 text-white px-4 py-3 rounded-xl text-center hover:bg-teal-700 transition">
                 Inizia Gratis
             </a>
@@ -220,7 +220,7 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
         </p>
 
         <div class="h-ctas flex flex-col sm:flex-row items-center justify-center gap-4">
-            <a href="mailto:info@example.com"
+            <a href="{{ route('contact') }}"
                class="shimmer w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-teal-500 hover:bg-teal-400 text-white font-semibold px-8 py-4 rounded-xl transition text-base shadow-lg shadow-teal-900/30">
                 Richiedi una Demo Gratuita
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -425,7 +425,7 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
                     </li>
                     @endforeach
                 </ul>
-                <a href="mailto:info@example.com"
+                <a href="{{ route('contact') }}"
                    class="shimmer block w-full text-center text-sm font-semibold bg-teal-600 text-white py-3.5 rounded-xl hover:bg-teal-700 transition">
                     Inizia i 14 Giorni Gratis
                 </a>
@@ -528,7 +528,7 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
             Unisciti a 500+ saloni che hanno già scelto GestionalePro.
         </p>
         <div data-r style="--d:2">
-            <a href="mailto:info@example.com"
+            <a href="{{ route('contact') }}"
                class="shimmer inline-flex items-center gap-2 bg-teal-500 hover:bg-teal-400 text-white font-semibold px-8 py-4 rounded-xl transition text-base shadow-lg shadow-teal-900/30">
                 Inizia i 14 Giorni Gratis
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -562,8 +562,8 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
             <div>
                 <h4 class="text-xs font-semibold text-slate-300 uppercase tracking-widest mb-4">Azienda</h4>
                 <ul class="space-y-3 text-sm">
-                    <li><a href="mailto:info@example.com" class="hover:text-white transition">Contatti</a></li>
-                    <li><a href="mailto:info@example.com" class="hover:text-white transition">Supporto</a></li>
+                    <li><a href="{{ route('contact') }}" class="hover:text-white transition">Contatti</a></li>
+                    <li><a href="{{ route('contact') }}" class="hover:text-white transition">Supporto</a></li>
                     <li><a href="{{ route('legal.privacy') }}" class="hover:text-white transition">Privacy Policy</a></li>
                     <li><a href="{{ route('legal.terms') }}" class="hover:text-white transition">Termini di servizio</a></li>
                 </ul>
