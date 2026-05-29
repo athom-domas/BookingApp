@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -18,6 +19,8 @@ return new class extends Migration
             $table->string('pm_expiration')->nullable()->after('pm_last_four');
             $table->timestamp('trial_ends_at')->nullable()->after('pm_expiration');
         });
+
+        DB::table('businesses')->update(['trial_ends_at' => now()->addDays(14)]);
     }
 
     public function down(): void
