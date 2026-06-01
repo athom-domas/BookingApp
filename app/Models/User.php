@@ -56,6 +56,9 @@ class User extends Authenticatable implements FilamentUser, HasMedia, HasTenants
 
     public function getTenants(Panel $panel): Collection
     {
+        if ($this->isAdmin()) {
+            return $this->businesses;
+        }
         return $this->business ? collect([$this->business]) : collect();
     }
 
@@ -64,7 +67,9 @@ class User extends Authenticatable implements FilamentUser, HasMedia, HasTenants
         if ($this->hasRole('super_admin')) {
             return false;
         }
-
+        if ($this->isAdmin()) {
+            return $this->businesses()->where('businesses.id', $tenant->getKey())->exists();
+        }
         return $this->business_id !== null && $this->business_id === $tenant->getKey();
     }
 

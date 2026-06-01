@@ -206,6 +206,7 @@ it('filtra gli eventi per servizio', function () use (&$fetchRange) {
 
 it('la pagina calendario è accessibile a admin', function () {
     $admin = User::factory()->create(['business_id' => $this->business->id])->assignRole('admin');
+    $admin->businesses()->attach($this->business->id);
 
     $this->actingAs($admin)
         ->get("/admin/{$this->business->subdomain}/appointment-calendar")

@@ -105,3 +105,34 @@ it('Business::admins() returns users from pivot', function () {
     expect($b1->fresh()->admins)->toHaveCount(1);
     expect($b1->fresh()->admins->first()->id)->toBe($admin->id);
 });
+
+it('canAccessTenant returns true for admin linked to business via pivot', function () {
+    $b1    = Business::factory()->create();
+    $b2    = Business::factory()->create();
+    $admin = User::factory()->create(['business_id' => $b1->id]);
+    $admin->assignRole('admin');
+    $admin->businesses()->attach([$b1->id, $b2->id]);
+
+    expect($admin->canAccessTenant($b1))->toBeTrue();
+    expect($admin->canAccessTenant($b2))->toBeTrue();
+});
+
+it('canAccessTenant returns false for admin not linked to business', function () {
+    $b1    = Business::factory()->create();
+    $b2    = Business::factory()->create();
+    $admin = User::factory()->create(['business_id' => $b1->id]);
+    $admin->assignRole('admin');
+    $admin->businesses()->attach($b1->id);
+
+    expect($admin->canAccessTenant($b2))->toBeFalse();
+});
+
+it('canAccessTenant uses business_id for staff (not pivot)', function () {
+    $b1    = Business::factory()->create();
+    $b2    = Business::factory()->create();
+    $staff = User::factory()->create(['business_id' => $b1->id]);
+    $staff->assignRole('staff');
+
+    expect($staff->canAccessTenant($b1))->toBeTrue();
+    expect($staff->canAccessTenant($b2))->toBeFalse();
+});

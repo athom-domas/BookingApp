@@ -23,6 +23,7 @@ beforeEach(function () {
 it('admin list shows only admin users', function () {
     $admin = User::factory()->create(['business_id' => $this->business->id]);
     $admin->assignRole('admin');
+    $admin->businesses()->attach($this->business->id);
 
     $staff = User::factory()->create(['email' => 'staff@test.com', 'business_id' => $this->business->id]);
     $staff->assignRole('staff');

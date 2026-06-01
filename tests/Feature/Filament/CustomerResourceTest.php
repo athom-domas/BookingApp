@@ -25,6 +25,7 @@ beforeEach(function () {
 it('shows only registered customers in the customer resource', function () {
     $admin = User::factory()->create(['business_id' => $this->business->id]);
     $admin->assignRole('admin');
+    $admin->businesses()->attach($this->business->id);
     $customer = User::factory()->create(['email' => 'cliente@test.com', 'business_id' => $this->business->id]);
     $customer->assignRole('customer');
     $staff = User::factory()->create(['email' => 'staff@test.com', 'business_id' => $this->business->id]);
@@ -59,6 +60,7 @@ it('admin can write internal notes on a customer', function () {
 it('customer detail page shows linked appointments and payments', function () {
     $admin = User::factory()->create(['business_id' => $this->business->id]);
     $admin->assignRole('admin');
+    $admin->businesses()->attach($this->business->id);
     $customer = User::factory()->create(['business_id' => $this->business->id]);
     $customer->assignRole('customer');
     $staff = User::factory()->create(['name' => 'Operatore Test', 'business_id' => $this->business->id]);
