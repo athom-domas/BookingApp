@@ -1,6 +1,38 @@
-@php $salonProfile = \App\Models\SalonProfile::current(); @endphp
+@php
+$salonProfile = \App\Models\SalonProfile::current();
+
+$_themeClass = match($salonProfile->theme ?? 'dark') {
+    'light'    => 'sf-light',
+    'rose'     => 'sf-rose',
+    'emerald'  => 'sf-emerald',
+    'midnight' => 'sf-midnight',
+    'minimal'  => 'sf-minimal',
+    default    => '',
+};
+
+$_fontUrls = [
+    'classic' => 'https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&display=swap',
+    'modern'  => 'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap',
+    'elegant' => 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Nunito:wght@300;400;500;600&display=swap',
+    'minimal' => 'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap',
+];
+$_fontVars = [
+    'classic' => ["'DM Serif Display', Georgia, serif", "'Inter', sans-serif"],
+    'modern'  => ["'Plus Jakarta Sans', sans-serif",    "'Plus Jakarta Sans', sans-serif"],
+    'elegant' => ["'Cormorant Garamond', Georgia, serif", "'Nunito', sans-serif"],
+    'minimal' => ["'Space Grotesk', sans-serif",        "'Space Grotesk', sans-serif"],
+];
+$_radiusMap = ['sharp' => '0', 'rounded' => '6px', 'pill' => '100px'];
+
+$_pair        = $salonProfile->font_pair    ?? 'classic';
+$_border      = $salonProfile->border_style ?? 'sharp';
+$_fontUrl     = $_fontUrls[$_pair]    ?? $_fontUrls['classic'];
+$_fontDisplay = $_fontVars[$_pair][0] ?? $_fontVars['classic'][0];
+$_fontBody    = $_fontVars[$_pair][1] ?? $_fontVars['classic'][1];
+$_radius      = $_radiusMap[$_border] ?? '0';
+@endphp
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="{{ ($salonProfile->theme ?? 'dark') === 'light' ? 'sf-light' : '' }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="{{ $_themeClass }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -13,7 +45,7 @@
     @endif
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="{{ $_fontUrl }}" rel="stylesheet">
 
     <style>
         /* ── THEME VARIABLES ── */
@@ -43,6 +75,58 @@
             --sf-btn-fg:   #f7f3ec;
             --sf-nav-bg:   rgba(247,243,236,0.96);
         }
+        html.sf-rose {
+            --sf-bg:       #160a0d;
+            --sf-bg-alt:   #1c0d12;
+            --sf-bg-card:  #1f1015;
+            --sf-gold:     #d4847a;
+            --sf-gold-lt:  #f5d0c5;
+            --sf-border:   rgba(212,132,122,0.18);
+            --sf-muted:    #6a3a3a;
+            --sf-body:     #9a6060;
+            --sf-btn-bg:   #d4847a;
+            --sf-btn-fg:   #160a0d;
+            --sf-nav-bg:   rgba(22,10,13,0.95);
+        }
+        html.sf-emerald {
+            --sf-bg:       #061510;
+            --sf-bg-alt:   #091c15;
+            --sf-bg-card:  #0b2018;
+            --sf-gold:     #5eb870;
+            --sf-gold-lt:  #c0eed0;
+            --sf-border:   rgba(94,184,112,0.16);
+            --sf-muted:    #365845;
+            --sf-body:     #528a65;
+            --sf-btn-bg:   #5eb870;
+            --sf-btn-fg:   #061510;
+            --sf-nav-bg:   rgba(6,21,16,0.95);
+        }
+        html.sf-midnight {
+            --sf-bg:       #06081a;
+            --sf-bg-alt:   #0a0d22;
+            --sf-bg-card:  #0d1228;
+            --sf-gold:     #7a96d4;
+            --sf-gold-lt:  #c4d0f5;
+            --sf-border:   rgba(122,150,212,0.16);
+            --sf-muted:    #324070;
+            --sf-body:     #546090;
+            --sf-btn-bg:   #7a96d4;
+            --sf-btn-fg:   #06081a;
+            --sf-nav-bg:   rgba(6,8,26,0.95);
+        }
+        html.sf-minimal {
+            --sf-bg:       #ffffff;
+            --sf-bg-alt:   #f8f8f6;
+            --sf-bg-card:  #fafafa;
+            --sf-gold:     #1a1a1a;
+            --sf-gold-lt:  #111111;
+            --sf-border:   rgba(0,0,0,0.09);
+            --sf-muted:    #aaaaaa;
+            --sf-body:     #666666;
+            --sf-btn-bg:   #111111;
+            --sf-btn-fg:   #ffffff;
+            --sf-nav-bg:   rgba(255,255,255,0.97);
+        }
 
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         [x-cloak] { display: none !important; }
@@ -51,7 +135,7 @@
         body {
             background: var(--sf-bg);
             color: var(--sf-gold-lt);
-            font-family: 'Inter', sans-serif;
+            font-family: var(--sf-font-body);
             font-size: 14px;
             line-height: 1.6;
             -webkit-font-smoothing: antialiased;
@@ -59,7 +143,7 @@
             transition: background 0.3s, color 0.3s;
         }
 
-        .sf-display { font-family: 'DM Serif Display', Georgia, serif; }
+        .sf-display { font-family: var(--sf-font-display); }
 
         /* ── NAV ── */
         #sf-nav {
@@ -73,7 +157,7 @@
             transition: background 0.3s;
         }
         .sf-logo {
-            font-family: 'DM Serif Display', serif;
+            font-family: var(--sf-font-display);
             font-size: 20px; color: var(--sf-gold-lt);
             text-decoration: none; flex-shrink: 0;
             display: flex; align-items: center; gap: 10px;
@@ -95,6 +179,7 @@
             font-size: 10px; letter-spacing: 2.5px; text-transform: uppercase;
             font-weight: 700; padding: 11px 24px; text-decoration: none;
             white-space: nowrap; transition: opacity 0.2s;
+            border-radius: var(--sf-radius);
         }
         .sf-btn:hover { opacity: 0.85; }
         .sf-btn-lg { font-size: 10px; letter-spacing: 2.5px; padding: 14px 36px; }
@@ -103,6 +188,7 @@
             border: 1px solid var(--sf-gold); color: var(--sf-gold);
             font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
             padding: 12px 28px; text-decoration: none; transition: background 0.2s;
+            border-radius: var(--sf-radius);
         }
         .sf-btn-outline:hover { background: rgba(201,169,110,0.08); }
 
@@ -167,7 +253,7 @@
             text-transform: uppercase; margin-bottom: 14px; opacity: 0.85;
         }
         .sf-heading {
-            font-family: 'DM Serif Display', serif;
+            font-family: var(--sf-font-display);
             font-size: clamp(26px, 4vw, 40px);
             color: var(--sf-gold-lt); line-height: 1.1; margin-bottom: 12px;
         }
@@ -190,7 +276,7 @@
             display: flex; justify-content: space-between; align-items: center;
             flex-wrap: wrap; gap: 16px;
         }
-        .sf-footer-logo { font-family: 'DM Serif Display', serif; font-size: 16px; color: var(--sf-gold-lt); text-decoration: none; display: block; margin-bottom: 6px; }
+        .sf-footer-logo { font-family: var(--sf-font-display); font-size: 16px; color: var(--sf-gold-lt); text-decoration: none; display: block; margin-bottom: 6px; }
         .sf-footer-meta { font-size: 11px; color: var(--sf-muted); margin-top: 4px; display: flex; flex-wrap: wrap; gap: 12px; }
         .sf-footer-social { display: flex; gap: 16px; align-items: center; }
         .sf-footer-social a { color: var(--sf-muted); text-decoration: none; line-height: 0; transition: color 0.2s; }
@@ -204,6 +290,19 @@
         @media (max-width: 600px) {
             #sf-footer { padding: 28px 20px; }
             .sf-footer-inner { flex-direction: column; align-items: flex-start; gap: 12px; }
+        }
+        @if($salonProfile->primary_color)
+        :root,html.sf-light,html.sf-rose,html.sf-emerald,html.sf-midnight,html.sf-minimal {
+            --sf-gold:   {{ $salonProfile->primary_color }};
+            --sf-btn-bg: {{ $salonProfile->primary_color }};
+        }
+        @endif
+    </style>
+    <style>
+        :root {
+            --sf-font-display: {{ $_fontDisplay }};
+            --sf-font-body:    {{ $_fontBody }};
+            --sf-radius:       {{ $_radius }};
         }
     </style>
 

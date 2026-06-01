@@ -366,6 +366,7 @@
                             <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Verrai avvisato per il primo operatore libero</p>
                         </button>
                         @foreach($staff as $member)
+                            @php $avatarUrl = $member->getFirstMediaUrl('avatar', 'thumb'); @endphp
                             <button
                                 type="button"
                                 @click="staffId = {{ $member->id }}"
@@ -374,7 +375,14 @@
                                     ? 'opt-selected border-transparent'
                                     : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 hover:bg-gray-50 dark:hover:border-gray-600 dark:hover:bg-gray-800'"
                             >
-                                <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">{{ $member->name }}</p>
+                                <div class="flex items-center gap-3">
+                                    @if($avatarUrl)
+                                        <img src="{{ $avatarUrl }}" alt="{{ $member->name }}" class="w-10 h-10 rounded-full object-cover shrink-0">
+                                    @else
+                                        <span class="inline-flex w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 items-center justify-center text-sm font-semibold text-gray-500 dark:text-gray-400 shrink-0">{{ mb_substr($member->name, 0, 1) }}</span>
+                                    @endif
+                                    <span class="text-sm font-semibold text-gray-900 dark:text-gray-100">{{ $member->name }}</span>
+                                </div>
                             </button>
                         @endforeach
                     </div>

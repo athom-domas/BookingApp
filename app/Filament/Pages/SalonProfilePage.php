@@ -3,13 +3,15 @@
 namespace App\Filament\Pages;
 
 use App\Models\SalonProfile;
+use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Radio;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\Toggle; // kept for possible future use
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\Grid;
@@ -41,6 +43,10 @@ class SalonProfilePage extends Page
             'name'                => $profile->name,
             'tagline'             => $profile->tagline,
             'theme'               => $profile->theme ?? 'dark',
+            'primary_color'       => $profile->primary_color,
+            'font_pair'           => $profile->font_pair   ?? 'classic',
+            'border_style'        => $profile->border_style ?? 'sharp',
+
             'phone'               => $profile->phone,
             'address'             => $profile->address,
 
@@ -51,11 +57,19 @@ class SalonProfilePage extends Page
             'facebook_url'        => $profile->facebook_url,
             'tiktok_url'          => $profile->tiktok_url,
             'whatsapp_number'     => $profile->whatsapp_number,
+
+            'email_greeting'     => $profile->email_greeting,
+            'email_footer_note'  => $profile->email_footer_note,
+            'email_accent_color' => $profile->email_accent_color,
         ];
 
         foreach (['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as $day) {
-            $d = $hours[$day] ?? [];
-            $formData["hours_{$day}_open"]            = $d['open']            ?? false;
+            $d    = $hours[$day] ?? [];
+            // backward compat: old format had 'open' bool, new has 'type' enum
+            $type = $d['type'] ?? ($d['open'] ?? false ? 'split' : 'closed');
+            $formData["hours_{$day}_type"]            = $type;
+            $formData["hours_{$day}_open_time"]       = $d['open_time']       ?? '09:00';
+            $formData["hours_{$day}_close_time"]      = $d['close_time']      ?? '19:00';
             $formData["hours_{$day}_morning_open"]    = $d['morning_open']    ?? '09:00';
             $formData["hours_{$day}_morning_close"]   = $d['morning_close']   ?? '13:00';
             $formData["hours_{$day}_afternoon_open"]  = $d['afternoon_open']  ?? '15:00';
@@ -79,26 +93,53 @@ class SalonProfilePage extends Page
 
         $hoursFields = [];
         foreach ($days as $key => $label) {
-            $hoursFields[] = Grid::make(5)->schema([
-                Toggle::make("hours_{$key}_open")
+            $hoursFields[] = Grid::make(6)->schema([
+                Select::make("hours_{$key}_type")
                     ->label($label)
-                    ->inline(false),
+                    ->options([
+                        'closed'     => 'Chiuso',
+                        'continuous' => 'Orario continuato',
+                        'split'      => 'Spezzato (pausa pranzo)',
+                    ])
+                    ->default('closed')
+                    ->live()
+                    ->columnSpan(2),
+
+                TextInput::make("hours_{$key}_open_time")
+                    ->label('Apertura')
+                    ->placeholder('09:00')
+                    ->visible(fn(Get $get) => $get("hours_{$key}_type") === 'continuous')
+                    ->columnSpan(2),
+
+                TextInput::make("hours_{$key}_close_time")
+                    ->label('Chiusura')
+                    ->placeholder('19:00')
+                    ->visible(fn(Get $get) => $get("hours_{$key}_type") === 'continuous')
+                    ->columnSpan(2),
+
                 TextInput::make("hours_{$key}_morning_open")
                     ->label('Mat. apertura')
                     ->placeholder('09:00')
-                    ->disabled(fn(Get $get) => ! $get("hours_{$key}_open")),
+                    ->visible(fn(Get $get) => $get("hours_{$key}_type") === 'split')
+                    ->columnSpan(1),
+
                 TextInput::make("hours_{$key}_morning_close")
                     ->label('Mat. chiusura')
                     ->placeholder('13:00')
-                    ->disabled(fn(Get $get) => ! $get("hours_{$key}_open")),
+                    ->visible(fn(Get $get) => $get("hours_{$key}_type") === 'split')
+                    ->columnSpan(1),
+
                 TextInput::make("hours_{$key}_afternoon_open")
                     ->label('Pom. apertura')
                     ->placeholder('15:00')
-                    ->disabled(fn(Get $get) => ! $get("hours_{$key}_open")),
+                    ->visible(fn(Get $get) => $get("hours_{$key}_type") === 'split')
+                    ->columnSpan(1),
+
                 TextInput::make("hours_{$key}_afternoon_close")
                     ->label('Pom. chiusura')
                     ->placeholder('19:30')
-                    ->disabled(fn(Get $get) => ! $get("hours_{$key}_open")),
+                    ->visible(fn(Get $get) => $get("hours_{$key}_type") === 'split')
+                    ->columnSpan(1),
             ]);
         }
 
@@ -116,14 +157,23 @@ class SalonProfilePage extends Page
                             TextInput::make('tagline')
                                 ->label('Tagline'),
                         ]),
+                        ColorPicker::make('primary_color')
+                            ->label('Colore accento personalizzato')
+                            ->helperText('Sovrascrive il colore primario del tema. Lascia vuoto per usare il colore predefinito.')
+                            ->columnSpanFull(),
+
                         Radio::make('theme')
                             ->label('Tema della vetrina')
                             ->options([
-                                'dark'  => 'Nero',
-                                'light' => 'Chiaro',
+                                'dark'     => 'Luxury Dark',
+                                'light'    => 'Chiaro Caldo',
+                                'rose'     => 'Rosa & Oro',
+                                'emerald'  => 'Verde Smeraldo',
+                                'midnight' => 'Blu Notte',
+                                'minimal'  => 'Minimal',
                             ])
                             ->default('dark')
-                            ->inline()
+                            ->view('filament.forms.theme-picker')
                             ->columnSpanFull(),
                         Grid::make(2)->schema([
                             SpatieMediaLibraryFileUpload::make('logo')
@@ -145,6 +195,31 @@ class SalonProfilePage extends Page
                                 ->maxSize(512)
                                 ->helperText('Immagine quadrata (PNG o ICO). Consigliato: 64×64px o 192×192px.'),
                         ]),
+                    ]),
+
+                    Tab::make('Stile')->schema([
+                        Radio::make('font_pair')
+                            ->label('Coppia di font')
+                            ->options([
+                                'classic' => 'Classic Luxury',
+                                'modern'  => 'Modern Clean',
+                                'elegant' => 'Elegant Serif',
+                                'minimal' => 'Minimal Sans',
+                            ])
+                            ->default('classic')
+                            ->view('filament.forms.font-picker')
+                            ->columnSpanFull(),
+
+                        Radio::make('border_style')
+                            ->label('Stile bordi e pulsanti')
+                            ->options([
+                                'sharp'   => 'Sharp',
+                                'rounded' => 'Rounded',
+                                'pill'    => 'Pill',
+                            ])
+                            ->default('sharp')
+                            ->view('filament.forms.border-picker')
+                            ->columnSpanFull(),
                     ]),
 
                     Tab::make('Descrizione')->schema([
@@ -191,6 +266,27 @@ class SalonProfilePage extends Page
                         ]),
                     ]),
 
+                    Tab::make('Email')->schema([
+                        Textarea::make('email_greeting')
+                            ->label('Messaggio di benvenuto')
+                            ->placeholder('es. Grazie per aver scelto il nostro salone! Non vediamo l\'ora di vederti.')
+                            ->helperText('Appare come testo introduttivo in tutte le email ai clienti.')
+                            ->rows(3)
+                            ->columnSpanFull(),
+
+                        Textarea::make('email_footer_note')
+                            ->label('Nota nel footer')
+                            ->placeholder('es. Per qualsiasi informazione contattaci al numero...')
+                            ->helperText('Appare in fondo a tutte le email, sotto i dati del salone.')
+                            ->rows(2)
+                            ->columnSpanFull(),
+
+                        ColorPicker::make('email_accent_color')
+                            ->label('Colore header email')
+                            ->helperText('Sfondo dell\'intestazione nelle email. Se non impostato, usa il colore accento del tema.')
+                            ->columnSpanFull(),
+                    ]),
+
                     Tab::make('Anteprima')->schema([
                         Placeholder::make('preview_link')
                             ->label('')
@@ -217,18 +313,25 @@ class SalonProfilePage extends Page
         $days         = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
         $openingHours = [];
         foreach ($days as $day) {
-            $openingHours[$day] = [
-                'open'            => (bool) ($state["hours_{$day}_open"]            ?? false),
-                'morning_open'    => $state["hours_{$day}_morning_open"]    ?? '09:00',
-                'morning_close'   => $state["hours_{$day}_morning_close"]   ?? '13:00',
-                'afternoon_open'  => $state["hours_{$day}_afternoon_open"]  ?? '15:00',
-                'afternoon_close' => $state["hours_{$day}_afternoon_close"] ?? '19:30',
-            ];
+            $type  = $state["hours_{$day}_type"] ?? 'closed';
+            $entry = ['type' => $type];
+            if ($type === 'continuous') {
+                $entry['open_time']  = $state["hours_{$day}_open_time"]  ?? '09:00';
+                $entry['close_time'] = $state["hours_{$day}_close_time"] ?? '19:00';
+            } elseif ($type === 'split') {
+                $entry['morning_open']    = $state["hours_{$day}_morning_open"]    ?? '09:00';
+                $entry['morning_close']   = $state["hours_{$day}_morning_close"]   ?? '13:00';
+                $entry['afternoon_open']  = $state["hours_{$day}_afternoon_open"]  ?? '15:00';
+                $entry['afternoon_close'] = $state["hours_{$day}_afternoon_close"] ?? '19:30';
+            }
+            $openingHours[$day] = $entry;
         }
 
-        $hourKeys    = array_merge(...array_map(
+        $hourKeys = array_merge(...array_map(
             fn($d) => [
-                "hours_{$d}_open",
+                "hours_{$d}_type",
+                "hours_{$d}_open_time",
+                "hours_{$d}_close_time",
                 "hours_{$d}_morning_open",
                 "hours_{$d}_morning_close",
                 "hours_{$d}_afternoon_open",

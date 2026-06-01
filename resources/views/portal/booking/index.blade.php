@@ -323,7 +323,7 @@
                             </div>
                             <a
                                 :href="'{{ route('portal.waitlist.create') }}?' + selectedServiceIds.map(id => 'service_ids[]=' + id).join('&') + (staffId ? '&preferred_staff_id=' + staffId : '')"
-                                class="shrink-0 text-sm font-semibold hover:underline whitespace-nowrap" style="color: var(--color-primary)"
+                                class="sf-accent-link shrink-0 text-sm font-semibold hover:underline whitespace-nowrap"
                             >Lista d'attesa →</a>
                         </div>
                     </div>

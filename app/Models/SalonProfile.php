@@ -14,10 +14,12 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 #[Fillable([
     'business_id',
     'name', 'tagline', 'logo_path', 'primary_color', 'theme',
+    'font_pair', 'border_style', 'bg_texture',
     'phone', 'address',
     'description', 'cancellation_policy', 'google_maps_embed',
     'opening_hours',
     'instagram_url', 'facebook_url', 'tiktok_url', 'whatsapp_number',
+    'email_greeting', 'email_footer_note', 'email_accent_color',
 ])]
 class SalonProfile extends Model implements HasMedia
 {

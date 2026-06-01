@@ -5,7 +5,29 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        @php $salonProfile = \App\Models\SalonProfile::current(); @endphp
+        @php
+            $salonProfile = \App\Models\SalonProfile::current();
+            $_appFontUrls = [
+                'classic' => 'https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&display=swap',
+                'modern'  => 'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap',
+                'elegant' => 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Nunito:wght@300;400;500;600&display=swap',
+                'minimal' => 'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap',
+            ];
+            $_appFontVars = [
+                'classic' => ["'DM Serif Display', Georgia, serif", "'Inter', sans-serif"],
+                'modern'  => ["'Plus Jakarta Sans', sans-serif",    "'Plus Jakarta Sans', sans-serif"],
+                'elegant' => ["'Cormorant Garamond', Georgia, serif", "'Nunito', sans-serif"],
+                'minimal' => ["'Space Grotesk', sans-serif",        "'Space Grotesk', sans-serif"],
+            ];
+            $_appRadiusMap = ['sharp' => '0', 'rounded' => '6px', 'pill' => '100px'];
+            $_appPair        = $salonProfile->font_pair    ?? 'classic';
+            $_appBorder      = $salonProfile->border_style ?? 'sharp';
+            $_appFontUrl     = $_appFontUrls[$_appPair]    ?? $_appFontUrls['classic'];
+            $_appFontDisplay = $_appFontVars[$_appPair][0] ?? $_appFontVars['classic'][0];
+            $_appFontBody    = $_appFontVars[$_appPair][1] ?? $_appFontVars['classic'][1];
+            $_appRadius      = $_appRadiusMap[$_appBorder] ?? '0';
+            $_appPrimary     = $salonProfile->primary_color ?? (($salonProfile->theme ?? 'dark') === 'dark' ? '#c9a96e' : '#1a1008');
+        @endphp
 
         <title>@yield('title', e($salonProfile->name)) - {{ $salonProfile->name }}</title>
 
@@ -14,10 +36,9 @@
         @endif
 
         <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+        <link href="{{ $_appFontUrl }}" rel="stylesheet">
         <style>
-            :root { --color-primary: {{ ($salonProfile->theme ?? 'dark') === 'dark' ? '#c9a96e' : '#1a1008' }}; }
-            .font-display { font-family: 'Playfair Display', Georgia, serif; }
+            :root { --color-primary: {{ $_appPrimary }}; }
             .btn-primary { background-color: var(--color-primary) !important; }
             .btn-primary:hover { filter: brightness(0.9); }
             [x-cloak] { display: none !important; }
@@ -41,6 +62,15 @@
         @vite('resources/css/filament/admin/theme.css')
         @vite('resources/css/app.css')
         @stack('head')
+        <style>
+            :root { --sf-font-display: {{ $_appFontDisplay }}; --sf-font-body: {{ $_appFontBody }}; --sf-radius: {{ $_appRadius }}; }
+            body { font-family: var(--sf-font-body), ui-sans-serif, system-ui, sans-serif; }
+            .font-display, h1, h2, h3 { font-family: var(--sf-font-display); }
+            .btn-primary { border-radius: var(--sf-radius) !important; }
+            .rounded-md[href], button.rounded-md { border-radius: max(var(--sf-radius), 6px); }
+            .sf-accent-link { color: var(--color-primary); }
+            html.dark .sf-accent-link { color: color-mix(in srgb, var(--color-primary) 60%, white 40%); }
+        </style>
     </head>
     <body class="min-h-screen bg-gray-50 dark:bg-gray-950 font-sans text-gray-950 dark:text-gray-50 antialiased">
         <header x-data="{ open: false }" class="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">

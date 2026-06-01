@@ -1,22 +1,44 @@
 @php
     $salon        = \App\Models\SalonProfile::current();
-    $primaryColor = '#1e293b';
+    $primaryColor = $salon->email_accent_color ?? $salon->primary_color ?? '#1e293b';
+
+    $_emailFontUrls = [
+        'classic' => 'https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@400;600&display=swap',
+        'modern'  => 'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap',
+        'elegant' => 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Nunito:wght@400;600&display=swap',
+        'minimal' => 'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600&display=swap',
+    ];
+    $_emailFontVars = [
+        'classic' => ['-apple-system,BlinkMacSystemFont,Inter,sans-serif', "'DM Serif Display',Georgia,serif"],
+        'modern'  => ["'Plus Jakarta Sans',sans-serif",                    "'Plus Jakarta Sans',sans-serif"],
+        'elegant' => ["Nunito,sans-serif",                                  "'Cormorant Garamond',Georgia,serif"],
+        'minimal' => ["'Space Grotesk',sans-serif",                        "'Space Grotesk',sans-serif"],
+    ];
+    $_emailRadiusMap = ['sharp' => '0', 'rounded' => '8px', 'pill' => '100px'];
+
+    $_emailPair    = $salon->font_pair    ?? 'classic';
+    $_emailBorder  = $salon->border_style ?? 'rounded';
+    $_emailFontUrl = $_emailFontUrls[$_emailPair] ?? $_emailFontUrls['classic'];
+    $_emailBody    = $_emailFontVars[$_emailPair][0] ?? $_emailFontVars['classic'][0];
+    $_emailDisplay = $_emailFontVars[$_emailPair][1] ?? $_emailFontVars['classic'][1];
+    $_emailRadius  = $_emailRadiusMap[$_emailBorder] ?? '8px';
 @endphp
 <!DOCTYPE html>
 <html lang="it">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="{{ $_emailFontUrl }}" rel="stylesheet">
     <style>
         * { box-sizing: border-box; }
-        body { margin: 0; padding: 0; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+        body { margin: 0; padding: 0; background-color: #f1f5f9; font-family: {{ $_emailBody }}, -apple-system, BlinkMacSystemFont, sans-serif; }
         .wrapper { padding: 32px 16px; }
         .card { max-width: 560px; margin: 0 auto; background: #ffffff; border-radius: 14px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04); }
         .brand-header { padding: 22px 28px 26px; }
         .brand-top { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
         .brand-logo { width: 32px; height: 32px; border-radius: 5px; object-fit: contain; }
         .brand-name { font-size: 0.82rem; font-weight: 600; color: rgba(255,255,255,0.85); letter-spacing: 0.02em; text-transform: uppercase; }
-        .brand-header h1 { margin: 0; font-size: 1.4rem; font-weight: 800; color: #ffffff; letter-spacing: -0.02em; line-height: 1.2; }
+        .brand-header h1 { margin: 0; font-size: 1.4rem; font-weight: 800; color: #ffffff; letter-spacing: -0.02em; line-height: 1.2; font-family: {{ $_emailDisplay }}; }
         .email-body { padding: 26px 28px 22px; }
         .email-body p { margin: 0 0 14px; color: #374151; font-size: 0.9375rem; line-height: 1.65; }
         .email-body p:last-of-type { margin-bottom: 0; }
@@ -26,7 +48,7 @@
         .detail-label { color: #6b7280; flex-shrink: 0; padding-top: 1px; }
         .detail-value { font-weight: 600; color: #111827; text-align: right; }
         .actions { padding: 16px 28px 26px; display: flex; gap: 10px; }
-        .btn { flex: 1; padding: 12px 16px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 0.875rem; text-align: center; display: block; line-height: 1.3; }
+        .btn { flex: 1; padding: 12px 16px; border-radius: {{ $_emailRadius }}; text-decoration: none; font-weight: 600; font-size: 0.875rem; text-align: center; display: block; line-height: 1.3; }
         .btn-secondary { background: #f3f4f6; color: #374151; }
         .footer-note { padding: 14px 28px; font-size: 0.775rem; color: #9ca3af; border-top: 1px solid #f3f4f6; line-height: 1.55; }
         .salon-info { padding: 12px 28px; font-size: 0.775rem; color: #9ca3af; border-top: 1px solid #f3f4f6; }
@@ -56,6 +78,9 @@
             </div>
 
             <div class="email-body">
+                @if($salon->email_greeting)
+                    <p style="color:#6b7280;font-size:0.875rem;font-style:italic;padding-bottom:16px;margin-bottom:16px;border-bottom:1px solid #f3f4f6;">{{ e($salon->email_greeting) }}</p>
+                @endif
                 @yield('body')
             </div>
 
@@ -65,6 +90,10 @@
 
             @hasSection('footer-note')
                 <div class="footer-note">@yield('footer-note')</div>
+            @endif
+
+            @if($salon->email_footer_note)
+                <div class="footer-note">{{ e($salon->email_footer_note) }}</div>
             @endif
 
             @if($salon->phone || $salon->address)

@@ -27,16 +27,21 @@
         position: absolute; inset: 0;
         background: radial-gradient(ellipse at 50% 40%, rgba(10,8,6,0.25) 0%, rgba(10,8,6,0.65) 60%, rgba(10,8,6,0.88) 100%);
     }
-    html.sf-light .sf-hero-overlay {
-        background: radial-gradient(ellipse at 50% 40%, rgba(247,243,236,0.15) 0%, rgba(247,243,236,0.5) 60%, rgba(247,243,236,0.82) 100%);
-    }
+    html.sf-light .sf-hero-content { color: #ffffff; }
+    html.sf-light .sf-hero-content .sf-hero-eyebrow { color: rgba(255,255,255,0.7); }
+    html.sf-light .sf-hero-content .sf-hero-title { color: #ffffff; }
+    html.sf-light .sf-hero-content .sf-hero-title em { color: rgba(255,255,255,0.8); }
+    html.sf-minimal .sf-hero-content { color: #ffffff; }
+    html.sf-minimal .sf-hero-content .sf-hero-eyebrow { color: rgba(255,255,255,0.6); }
+    html.sf-minimal .sf-hero-content .sf-hero-title { color: #ffffff; }
+    html.sf-minimal .sf-hero-content .sf-hero-title em { color: rgba(255,255,255,0.75); }
     .sf-hero-content { position: relative; z-index: 2; max-width: 600px; padding: 0 24px; }
     .sf-hero-eyebrow {
         font-size: 9px; letter-spacing: 5px; color: var(--sf-gold);
         text-transform: uppercase; margin-bottom: 24px;
     }
     .sf-hero-title {
-        font-family: 'DM Serif Display', serif;
+        font-family: var(--sf-font-display);
         font-size: clamp(44px, 9vw, 80px);
         line-height: 1.0; color: var(--sf-gold-lt); margin-bottom: 8px;
     }
