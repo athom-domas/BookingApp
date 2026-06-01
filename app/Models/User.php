@@ -49,6 +49,11 @@ class User extends Authenticatable implements FilamentUser, HasMedia, HasTenants
         return $this->belongsTo(Business::class);
     }
 
+    public function businesses(): BelongsToMany
+    {
+        return $this->belongsToMany(Business::class);
+    }
+
     public function getTenants(Panel $panel): Collection
     {
         return $this->business ? collect([$this->business]) : collect();

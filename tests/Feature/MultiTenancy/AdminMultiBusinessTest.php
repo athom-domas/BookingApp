@@ -83,3 +83,25 @@ it('backfill query does not insert staff users into business_user pivot', functi
 
     expect(DB::table('business_user')->where('user_id', $staff->id)->exists())->toBeFalse();
 });
+
+it('User::businesses() returns all businesses from pivot', function () {
+    $b1    = Business::factory()->create();
+    $b2    = Business::factory()->create();
+    $admin = User::factory()->create(['business_id' => $b1->id]);
+
+    $admin->businesses()->attach([$b1->id, $b2->id]);
+
+    $businesses = $admin->fresh()->businesses;
+    expect($businesses)->toHaveCount(2);
+    expect($businesses->pluck('id')->toArray())->toContain($b1->id, $b2->id);
+});
+
+it('Business::admins() returns users from pivot', function () {
+    $b1    = Business::factory()->create();
+    $admin = User::factory()->create(['business_id' => $b1->id]);
+
+    $admin->businesses()->attach($b1->id);
+
+    expect($b1->fresh()->admins)->toHaveCount(1);
+    expect($b1->fresh()->admins->first()->id)->toBe($admin->id);
+});

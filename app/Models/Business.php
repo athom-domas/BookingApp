@@ -7,6 +7,7 @@ use Database\Factories\BusinessFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Laravel\Cashier\Billable;
@@ -60,6 +61,7 @@ class Business extends Model
     }
 
     public function users(): HasMany             { return $this->hasMany(User::class); }
+    public function admins(): BelongsToMany      { return $this->belongsToMany(User::class); }
     public function services(): HasMany          { return $this->hasMany(Service::class); }
     public function appointments(): HasMany      { return $this->hasMany(Appointment::class); }
     public function systemSetting(): HasOne      { return $this->hasOne(SystemSetting::class); }
