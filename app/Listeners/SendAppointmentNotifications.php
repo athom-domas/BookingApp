@@ -17,7 +17,9 @@ class SendAppointmentNotifications
     {
         SendAppointmentConfirmation::dispatch($event->appointment);
 
-        $admins = User::role('admin')->where('business_id', $event->appointment->business_id)->get();
+        $admins = User::role('admin')
+            ->whereHas('businesses', fn ($q) => $q->where('businesses.id', $event->appointment->business_id))
+            ->get();
 
         foreach ($admins as $admin) {
             if ($admin->receive_email_notifications) {

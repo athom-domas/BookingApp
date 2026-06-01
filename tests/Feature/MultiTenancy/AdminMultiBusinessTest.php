@@ -136,3 +136,38 @@ it('canAccessTenant uses business_id for staff (not pivot)', function () {
     expect($staff->canAccessTenant($b1))->toBeTrue();
     expect($staff->canAccessTenant($b2))->toBeFalse();
 });
+
+it('admin assigned as secondary to a business appears in pivot-scoped admin query', function () {
+    $b1 = Business::factory()->create();
+    $b2 = Business::factory()->create();
+
+    $primaryAdmin = User::factory()->create(['business_id' => $b1->id]);
+    $primaryAdmin->assignRole('admin');
+    $primaryAdmin->businesses()->attach($b1->id);
+
+    $secondaryAdmin = User::factory()->create(['business_id' => $b2->id]);
+    $secondaryAdmin->assignRole('admin');
+    $secondaryAdmin->businesses()->attach([$b1->id, $b2->id]);
+
+    $admins = User::role('admin')
+        ->whereHas('businesses', fn ($q) => $q->where('businesses.id', $b1->id))
+        ->get();
+
+    expect($admins)->toHaveCount(2);
+    expect($admins->pluck('id')->toArray())->toContain($primaryAdmin->id, $secondaryAdmin->id);
+});
+
+it('admin not linked to business is excluded from pivot-scoped notification query', function () {
+    $b1 = Business::factory()->create();
+    $b2 = Business::factory()->create();
+
+    $admin = User::factory()->create(['business_id' => $b1->id]);
+    $admin->assignRole('admin');
+    $admin->businesses()->attach($b1->id);
+
+    $admins = User::role('admin')
+        ->whereHas('businesses', fn ($q) => $q->where('businesses.id', $b2->id))
+        ->get();
+
+    expect($admins)->toHaveCount(0);
+});
