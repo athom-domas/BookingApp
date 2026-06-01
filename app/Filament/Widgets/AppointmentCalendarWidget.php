@@ -5,6 +5,7 @@ namespace App\Filament\Widgets;
 use App\Exceptions\BookingException;
 use App\Models\Appointment;
 use App\Models\Service;
+use App\Models\User;
 use App\Services\PaymentService;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Hidden;
@@ -37,7 +38,14 @@ class AppointmentCalendarWidget extends FullCalendarWidget
             'headerToolbar' => [
                 'left'   => 'prev,next today',
                 'center' => 'title',
-                'right'  => 'dayGridMonth,timeGridWeek,listWeek',
+                'right'  => 'dayGridMonth,timeGridWeek,resourceTimeGridDay,listWeek',
+            ],
+            'buttonText' => [
+                'dayGridMonth'       => 'Mese',
+                'timeGridWeek'       => 'Settimana',
+                'resourceTimeGridDay' => 'Giorno',
+                'listWeek'           => 'Lista',
+                'today'              => 'Oggi',
             ],
             'locale'           => 'it',
             'eventDisplay'     => 'block',
@@ -45,11 +53,29 @@ class AppointmentCalendarWidget extends FullCalendarWidget
             'displayEventEnd'  => true,
             'eventTimeFormat'  => ['hour' => '2-digit', 'minute' => '2-digit', 'hour12' => false],
             'dayMaxEvents'     => true,
-            'aspectRatio'      => 1.4,
+            'contentHeight'    => 'auto',
             'slotMinTime'      => '07:00:00',
             'slotMaxTime'      => '21:00:00',
             'allDaySlot'       => false,
+            'resources'         => $this->getStaffResources(),
+            'resourceAreaWidth' => '0px',
         ];
+    }
+
+    private function getStaffResources(): array
+    {
+        return User::role(['admin', 'staff'])
+            ->orderBy('name')
+            ->get()
+            ->map(fn(User $u) => [
+                'id'    => (string) $u->id,
+                'title' => $u->name,
+                'extendedProps' => [
+                    'avatar' => $u->getFirstMediaUrl('avatar') ?: null,
+                    'color'  => $u->calendar_color,
+                ],
+            ])
+            ->toArray();
     }
 
     public function fetchEvents(array $fetchInfo): array
@@ -107,6 +133,7 @@ class AppointmentCalendarWidget extends FullCalendarWidget
 
             return [
                 'id'              => $appointment->id,
+                'resourceId'      => (string) $appointment->staff_id,
                 'title'           => $appointment->user->name . ' – ' . $serviceNames,
                 'start'           => $appointment->scheduled_date->toIso8601String(),
                 'end'             => $appointment->scheduled_date->copy()->addMinutes($duration)->toIso8601String(),

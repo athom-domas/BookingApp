@@ -416,8 +416,7 @@
 @if($staff->isNotEmpty())
 <section class="sf-section-alt" id="team">
     <div class="sf-inner">
-        <div class="sf-eyebrow">Il nostro team</div>
-        <h2 class="sf-heading">Maestri del loro <em>mestiere.</em></h2>
+        <h2 class="sf-heading">Il nostro <em>team.</em></h2>
         <div class="sf-rule"></div>
         <div class="sf-team-grid">
             @foreach($staff as $member)

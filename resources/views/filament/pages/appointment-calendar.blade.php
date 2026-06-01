@@ -250,9 +250,88 @@
             color: #9ca3af !important;
         }
 
+        /* ---------- Resource day view: staff column headers ---------- */
+        .fc-resource-col-header {
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            gap: 4px !important;
+            padding: 8px 4px 6px !important;
+        }
+
+        .fc-resource-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .fc-resource-avatar-initials {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #94a3b8;
+            color: #fff;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .dark .fc-resource-avatar-initials {
+            background: #475569;
+        }
+
+        .fc-resource-name {
+            font-size: 0.7rem !important;
+            font-weight: 600 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.06em !important;
+            color: #9ca3af !important;
+            white-space: nowrap !important;
+            max-width: 100px !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }
+
+        /* Reset default cushion padding/alignment when resource header is active */
+        .fc-resource-timegrid-day .fc-col-header-cell-cushion,
+        .fc-resourceTimeGridDay-view .fc-col-header-cell-cushion {
+            padding: 0 !important;
+        }
+
+        /* Giorno/Settimana view: taller time slots so event content is fully visible */
+        .fc-resourceTimeGridDay-view .fc-timegrid-slot,
+        .fc-timeGridWeek-view .fc-timegrid-slot {
+            height: 3.5rem !important;
+        }
+
         /* ---------- Filament section integration ---------- */
         .fi-section:has(.filament-fullcalendar) {
             overflow: hidden;
+        }
+
+        /* ---------- Resource view horizontal scroll (mobile) ---------- */
+        @media (max-width: 767px) {
+            /* FC's own CSS sets overflow:hidden on the harness — override so the scroller's scrollbar is visible */
+            .fc-hscroll-active .fc-scroller-harness {
+                overflow-x: auto !important;
+            }
+            /* Sticky time axis so it stays fixed while staff columns scroll */
+            .fc-hscroll-active .fc-timegrid-slot-label,
+            .fc-hscroll-active .fc-col-header-cell.fc-timegrid-axis {
+                position: sticky !important;
+                left: 0 !important;
+                z-index: 3 !important;
+                background-color: #fff !important;
+            }
+            .dark .fc-hscroll-active .fc-timegrid-slot-label,
+            .dark .fc-hscroll-active .fc-col-header-cell.fc-timegrid-axis {
+                background-color: rgb(17 24 39) !important;
+            }
         }
 
         .filament-fullcalendar .fc-view-harness {
@@ -312,9 +391,159 @@
     </div>
 </x-filament-panels::page>
 
+@php
+    $staffData = \App\Models\User::role(['admin', 'staff'])
+        ->get()
+        ->mapWithKeys(fn($u) => [(string)$u->id => [
+            'name'   => $u->name,
+            'avatar' => $u->getFirstMediaUrl('avatar') ?: null,
+        ]])
+        ->toArray();
+@endphp
+
 @script
 <script>
     (function () {
+        var staffData = @json($staffData);
+        var __resourceLabelSet = false;
+        var __hscrollCleanup = null;
+
+        function buildResourceLabel(resourceId) {
+            var data = staffData[resourceId];
+            if (!data) return null;
+            var wrapper = document.createElement('div');
+            wrapper.className = 'fc-resource-col-header';
+            if (data.avatar) {
+                var img = document.createElement('img');
+                img.src = data.avatar;
+                img.className = 'fc-resource-avatar';
+                img.alt = data.name;
+                wrapper.appendChild(img);
+            } else {
+                var initials = data.name.split(' ').map(function(w) { return w[0] || ''; }).slice(0, 2).join('').toUpperCase();
+                var circle = document.createElement('div');
+                circle.className = 'fc-resource-avatar-initials';
+                circle.textContent = initials;
+                wrapper.appendChild(circle);
+            }
+            var nameEl = document.createElement('span');
+            nameEl.className = 'fc-resource-name';
+            nameEl.textContent = data.name;
+            wrapper.appendChild(nameEl);
+            return wrapper;
+        }
+
+        function getCalendar() {
+            var el = document.querySelector('.filament-fullcalendar');
+            if (!el) return null;
+            var d = Alpine.$data(el);
+            return (d && d.calendar) ? d.calendar : null;
+        }
+
+        function enableHScroll(viewType) {
+            if (__hscrollCleanup) { __hscrollCleanup(); __hscrollCleanup = null; }
+
+            var calEl = document.querySelector('.filament-fullcalendar');
+            if (!calEl) return;
+
+            calEl.classList.add('fc-hscroll-active');
+
+            var axisW, colW, totalW, cellSelector;
+            if (viewType === 'resourceTimeGridDay') {
+                axisW = 60; colW = 120;
+                totalW = axisW + Object.keys(staffData).length * colW;
+                cellSelector = '[data-resource-id]';
+            } else if (viewType === 'timeGridWeek') {
+                axisW = 60; colW = 80;
+                totalW = axisW + 7 * colW;
+                cellSelector = '[data-date]';
+            } else {
+                axisW = 0; colW = 75; // dayGridMonth: no time axis
+                totalW = 7 * colW;
+                cellSelector = '[data-date]';
+            }
+
+            // Override FC's inline overflow-x:hidden on all scrollers
+            calEl.querySelectorAll('.fc-scroller').forEach(function(s) {
+                s.style.setProperty('overflow-x', 'auto', 'important');
+            });
+
+            // Force each inner table to be at least totalW wide
+            calEl.querySelectorAll('.fc-scroller table').forEach(function(t) {
+                t.style.setProperty('min-width', totalW + 'px', 'important');
+            });
+
+            // Set column widths via <col> elements (FC controls layout through these)
+            calEl.querySelectorAll('.fc-scroller colgroup').forEach(function(cg) {
+                cg.querySelectorAll('col').forEach(function(col, i) {
+                    col.style.setProperty('width', (i === 0 ? axisW : colW) + 'px', 'important');
+                });
+            });
+
+            // Belt-and-suspenders: min-width on day/resource cells
+            calEl.querySelectorAll(cellSelector).forEach(function(cell) {
+                cell.style.setProperty('min-width', colW + 'px', 'important');
+            });
+
+            // Sync horizontal scroll between header and body scrollers
+            var headerScroller = calEl.querySelector('.fc-scrollgrid-section-header .fc-scroller');
+            var bodyScroller   = calEl.querySelector('.fc-scrollgrid-section-body .fc-scroller');
+
+            if (headerScroller && bodyScroller) {
+                var syncing = false;
+
+                function onBodyScroll() {
+                    if (syncing) return;
+                    syncing = true;
+                    headerScroller.scrollLeft = bodyScroller.scrollLeft;
+                    syncing = false;
+                }
+
+                function onHeaderScroll() {
+                    if (syncing) return;
+                    syncing = true;
+                    bodyScroller.scrollLeft = headerScroller.scrollLeft;
+                    syncing = false;
+                }
+
+                bodyScroller.addEventListener('scroll', onBodyScroll);
+                headerScroller.addEventListener('scroll', onHeaderScroll);
+
+                __hscrollCleanup = function() {
+                    bodyScroller.removeEventListener('scroll', onBodyScroll);
+                    headerScroller.removeEventListener('scroll', onHeaderScroll);
+                };
+            }
+        }
+
+        function disableHScroll() {
+            if (__hscrollCleanup) { __hscrollCleanup(); __hscrollCleanup = null; }
+            var calEl = document.querySelector('.filament-fullcalendar');
+            if (calEl) calEl.classList.remove('fc-hscroll-active');
+        }
+
+        function setupResourceLabelContent() {
+            if (__resourceLabelSet) return;
+            var fc = getCalendar();
+            if (!fc) return;
+            __resourceLabelSet = true;
+
+            fc.setOption('resourceLabelContent', function(arg) {
+                var node = buildResourceLabel(arg.resource.id);
+                return node ? { domNodes: [node] } : { html: '<span>' + arg.resource.title + '</span>' };
+            });
+
+            fc.on('datesSet', function(info) {
+                var vt = info.view.type;
+                var needsHScroll = vt === 'resourceTimeGridDay' || vt === 'timeGridWeek' || vt === 'dayGridMonth';
+                if (window.innerWidth < 768 && needsHScroll) {
+                    setTimeout(function() { enableHScroll(vt); }, 100);
+                } else {
+                    disableHScroll();
+                }
+            });
+        }
+
         function switchCalendarView() {
             const view = window.innerWidth < 768 ? 'listWeek' : 'dayGridMonth';
             window.dispatchEvent(new CustomEvent('filament-fullcalendar--view', { detail: { view } }));
@@ -335,6 +564,7 @@
                         if (toolbar) {
                             __fcViewSet = true;
                             switchCalendarView();
+                            setupResourceLabelContent();
                         }
                     }
 
@@ -361,7 +591,19 @@
 
         window.addEventListener('resize', function () {
             clearTimeout(__fcResizeTimer);
-            __fcResizeTimer = setTimeout(switchCalendarView, 200);
+            __fcResizeTimer = setTimeout(function() {
+                switchCalendarView();
+                var fc = getCalendar();
+                if (fc && fc.view) {
+                    var vt = fc.view.type;
+                    var needsHScroll = vt === 'resourceTimeGridDay' || vt === 'timeGridWeek' || vt === 'dayGridMonth';
+                    if (window.innerWidth < 768 && needsHScroll) {
+                        enableHScroll(vt);
+                    } else {
+                        disableHScroll();
+                    }
+                }
+            }, 200);
         });
 
         function setupPopover(popover) {

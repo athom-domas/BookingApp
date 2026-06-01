@@ -88,7 +88,9 @@ class AdminPanelProvider extends PanelProvider
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([])
             ->plugins([
-                FilamentFullCalendarPlugin::make(),
+                FilamentFullCalendarPlugin::make()
+                    ->plugins(['resource', 'resourceTimeGrid'])
+                    ->schedulerLicenseKey('CC-Attribution-NonCommercial-NoDerivatives'),
             ])
             ->userMenuItems([
                 Action::make('portal')
