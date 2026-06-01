@@ -143,6 +143,8 @@ it('SendCancellationNotification emails customer and admin', function () {
         'staff_id' => $staff->id,
     ]);
 
+    $admin->businesses()->attach($appointment->business_id);
+
     $mockNotification = $this->mock(NotificationService::class);
     $mockNotification->shouldNotReceive('sendSms');
 
