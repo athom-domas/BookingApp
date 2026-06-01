@@ -163,6 +163,13 @@ class BusinessResource extends Resource
             ]);
     }
 
+    public static function getRelationManagers(): array
+    {
+        return [
+            \App\Filament\SuperAdmin\Resources\BusinessResource\RelationManagers\BusinessAdminsRelationManager::class,
+        ];
+    }
+
     public static function getPages(): array
     {
         return [
