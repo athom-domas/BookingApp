@@ -6,6 +6,7 @@ use App\Http\Middleware\SubdomainMiddleware;
 use App\Models\Business;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Spatie\Permission\Models\Role;
 use Symfony\Component\HttpFoundation\Response;
 
 beforeEach(function () {
@@ -90,5 +91,42 @@ it('EnsureUserBelongsToCurrentBusiness blocks user from wrong business', functio
     $request->setUserResolver(fn() => $user);
 
     expect(fn() => (new EnsureUserBelongsToCurrentBusiness())->handle($request, fn() => new Response()))
+        ->toThrow(\Symfony\Component\HttpKernel\Exception\HttpException::class);
+});
+
+it('EnsureUserBelongsToCurrentBusiness allows admin linked to business via pivot', function () {
+    Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+    $b1    = Business::factory()->create();
+    $b2    = Business::factory()->create();
+    $admin = User::factory()->create(['business_id' => $b1->id]);
+    $admin->assignRole('admin');
+    $admin->businesses()->attach($b2->id);
+    app()->instance('current_business_id', $b2->id);
+
+    $request = Request::create('/portal');
+    $request->setUserResolver(fn () => $admin);
+
+    $called = false;
+    (new EnsureUserBelongsToCurrentBusiness())->handle($request, function () use (&$called) {
+        $called = true;
+        return new Response();
+    });
+
+    expect($called)->toBeTrue();
+});
+
+it('EnsureUserBelongsToCurrentBusiness blocks admin not linked via pivot', function () {
+    Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+    $b1    = Business::factory()->create();
+    $b2    = Business::factory()->create();
+    $admin = User::factory()->create(['business_id' => $b1->id]);
+    $admin->assignRole('admin');
+    $admin->businesses()->attach($b1->id);
+    app()->instance('current_business_id', $b2->id);
+
+    $request = Request::create('/portal');
+    $request->setUserResolver(fn () => $admin);
+
+    expect(fn () => (new EnsureUserBelongsToCurrentBusiness())->handle($request, fn () => new Response()))
         ->toThrow(\Symfony\Component\HttpKernel\Exception\HttpException::class);
 });

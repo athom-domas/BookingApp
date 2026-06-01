@@ -13,8 +13,16 @@ class EnsureUserBelongsToCurrentBusiness
     {
         $user = $request->user();
 
-        if ($user && $user->business_id !== Business::currentId()) {
-            abort(403);
+        if ($user) {
+            $currentId = Business::currentId();
+
+            if ($user->isAdmin()) {
+                if (! $user->businesses()->where('businesses.id', $currentId)->exists()) {
+                    abort(403);
+                }
+            } elseif ($user->business_id !== $currentId) {
+                abort(403);
+            }
         }
 
         return $next($request);
