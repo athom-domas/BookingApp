@@ -13,7 +13,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 #[Fillable([
     'business_id',
-    'name', 'tagline', 'logo_path', 'primary_color',
+    'name', 'tagline', 'logo_path', 'primary_color', 'theme',
     'phone', 'address',
     'description', 'cancellation_policy', 'google_maps_embed',
     'opening_hours',

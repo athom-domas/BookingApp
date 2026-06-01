@@ -3,8 +3,8 @@
 namespace App\Filament\Pages;
 
 use App\Models\SalonProfile;
-use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\Textarea;
@@ -40,7 +40,7 @@ class SalonProfilePage extends Page
         $formData = [
             'name'                => $profile->name,
             'tagline'             => $profile->tagline,
-            'primary_color'       => $profile->primary_color,
+            'theme'               => $profile->theme ?? 'dark',
             'phone'               => $profile->phone,
             'address'             => $profile->address,
 
@@ -68,8 +68,12 @@ class SalonProfilePage extends Page
     public function form(Schema $schema): Schema
     {
         $days = [
-            'mon' => 'Lunedì',   'tue' => 'Martedì',  'wed' => 'Mercoledì',
-            'thu' => 'Giovedì',  'fri' => 'Venerdì',  'sat' => 'Sabato',
+            'mon' => 'Lunedì',
+            'tue' => 'Martedì',
+            'wed' => 'Mercoledì',
+            'thu' => 'Giovedì',
+            'fri' => 'Venerdì',
+            'sat' => 'Sabato',
             'sun' => 'Domenica',
         ];
 
@@ -82,19 +86,19 @@ class SalonProfilePage extends Page
                 TextInput::make("hours_{$key}_morning_open")
                     ->label('Mat. apertura')
                     ->placeholder('09:00')
-                    ->disabled(fn (Get $get) => ! $get("hours_{$key}_open")),
+                    ->disabled(fn(Get $get) => ! $get("hours_{$key}_open")),
                 TextInput::make("hours_{$key}_morning_close")
                     ->label('Mat. chiusura')
                     ->placeholder('13:00')
-                    ->disabled(fn (Get $get) => ! $get("hours_{$key}_open")),
+                    ->disabled(fn(Get $get) => ! $get("hours_{$key}_open")),
                 TextInput::make("hours_{$key}_afternoon_open")
                     ->label('Pom. apertura')
                     ->placeholder('15:00')
-                    ->disabled(fn (Get $get) => ! $get("hours_{$key}_open")),
+                    ->disabled(fn(Get $get) => ! $get("hours_{$key}_open")),
                 TextInput::make("hours_{$key}_afternoon_close")
                     ->label('Pom. chiusura')
                     ->placeholder('19:30')
-                    ->disabled(fn (Get $get) => ! $get("hours_{$key}_open")),
+                    ->disabled(fn(Get $get) => ! $get("hours_{$key}_open")),
             ]);
         }
 
@@ -111,10 +115,16 @@ class SalonProfilePage extends Page
                                 ->required(),
                             TextInput::make('tagline')
                                 ->label('Tagline'),
-                            ColorPicker::make('primary_color')
-                                ->label('Colore primario')
-                                ->required(),
                         ]),
+                        Radio::make('theme')
+                            ->label('Tema della vetrina')
+                            ->options([
+                                'dark'  => 'Nero',
+                                'light' => 'Chiaro',
+                            ])
+                            ->default('dark')
+                            ->inline()
+                            ->columnSpanFull(),
                         Grid::make(2)->schema([
                             SpatieMediaLibraryFileUpload::make('logo')
                                 ->label('Logo')
@@ -217,9 +227,12 @@ class SalonProfilePage extends Page
         }
 
         $hourKeys    = array_merge(...array_map(
-            fn ($d) => [
-                "hours_{$d}_open", "hours_{$d}_morning_open", "hours_{$d}_morning_close",
-                "hours_{$d}_afternoon_open", "hours_{$d}_afternoon_close",
+            fn($d) => [
+                "hours_{$d}_open",
+                "hours_{$d}_morning_open",
+                "hours_{$d}_morning_close",
+                "hours_{$d}_afternoon_open",
+                "hours_{$d}_afternoon_close",
             ],
             $days
         ));

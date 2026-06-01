@@ -47,7 +47,6 @@ it('admin can update the salon profile', function () {
         ->set('data.primary_color', '#123456')
         ->set('data.phone', '+39 02 999999')
         ->set('data.address', 'Via Test 1')
-        ->set('data.website', 'https://test.it')
         ->call('save')
         ->assertHasNoFormErrors();
 
@@ -56,7 +55,6 @@ it('admin can update the salon profile', function () {
     expect($profile->primary_color)->toBe('#123456');
     expect($profile->phone)->toBe('+39 02 999999');
     expect($profile->address)->toBe('Via Test 1');
-    expect($profile->website)->toBe('https://test.it');
 });
 
 it('non-admin cannot access the salon profile page', function () {

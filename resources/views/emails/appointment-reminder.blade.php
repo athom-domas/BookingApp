@@ -25,9 +25,6 @@
 @endsection
 
 @section('actions')
-    @php
-        $btnColor = '#' . ltrim(preg_replace('/[^#0-9a-fA-F]/', '', \App\Models\SalonProfile::current()->primary_color ?? '#2563eb'), '#');
-    @endphp
-    <a href="{{ $confirmUrl }}" class="btn" style="background-color: {{ $btnColor }}; color: #ffffff;">✓ Conferma presenza</a>
+    <a href="{{ $confirmUrl }}" class="btn" style="background-color:#1e293b;color:#ffffff;">✓ Conferma presenza</a>
     <a href="{{ $cancelUrl }}" class="btn btn-secondary">Disdici</a>
 @endsection

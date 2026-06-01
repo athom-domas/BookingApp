@@ -1,6 +1,6 @@
 @php
     $salon        = \App\Models\SalonProfile::current();
-    $primaryColor = '#' . ltrim(preg_replace('/[^#0-9a-fA-F]/', '', $salon->primary_color ?? '#2563eb'), '#');
+    $primaryColor = '#1e293b';
 @endphp
 <!DOCTYPE html>
 <html lang="it">
@@ -67,11 +67,10 @@
                 <div class="footer-note">@yield('footer-note')</div>
             @endif
 
-            @if($salon->phone || $salon->address || $salon->website)
+            @if($salon->phone || $salon->address)
                 <div class="salon-info">
                     @if($salon->phone)<span>{{ e($salon->phone) }}</span>@endif
                     @if($salon->address)<span>{{ e($salon->address) }}</span>@endif
-                    @if($salon->website)<span>{{ e($salon->website) }}</span>@endif
                 </div>
             @endif
         </div>

@@ -40,8 +40,7 @@ class AdminPanelProvider extends PanelProvider
             PanelsRenderHook::HEAD_END,
             function (): HtmlString {
                 try {
-                    $hex = preg_replace('/[^#0-9a-fA-F]/', '', \App\Models\SalonProfile::current()->primary_color ?? '#2563eb');
-                    $palette = Color::hex($hex);
+                    $palette = Color::hex('#334155');
                     $vars = implode('', array_map(
                         fn($shade, $value) => "--primary-{$shade}:{$value};",
                         array_keys($palette),

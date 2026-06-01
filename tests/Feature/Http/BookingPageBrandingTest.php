@@ -18,7 +18,6 @@ it('booking page shows contact footer when fields are set', function () {
     SalonProfile::current()->update([
         'phone'   => '+39 02 999999',
         'address' => 'Via Roma 1',
-        'website' => 'https://salone.it',
     ]);
 
     $this->get('/')

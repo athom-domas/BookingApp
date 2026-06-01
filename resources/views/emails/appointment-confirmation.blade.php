@@ -27,10 +27,7 @@
 @endsection
 
 @section('actions')
-    @php
-        $btnColor = '#' . ltrim(preg_replace('/[^#0-9a-fA-F]/', '', \App\Models\SalonProfile::current()->primary_color ?? '#2563eb'), '#');
-    @endphp
-    <a href="{{ url('/portal/appointments') }}" class="btn" style="background-color: {{ $btnColor }}; color: #ffffff;">I miei appuntamenti</a>
+    <a href="{{ url('/portal/appointments') }}" class="btn" style="background-color:#1e293b;color:#ffffff;">I miei appuntamenti</a>
 @endsection
 
 @section('footer-note')

@@ -49,7 +49,6 @@ class SalonProfileSeeder extends Seeder
                 'primary_color' => '#c084a0',
                 'phone'         => '+39 02 9876 5432',
                 'address'       => 'Corso Buenos Aires 42, 20124 Milano',
-                'website'       => 'https://chicbeautystudio.it',
                 'description'   => '<p><strong>Chic Beauty Studio</strong> è il tuo rifugio di bellezza nel cuore di Milano. Specializzate in colorazione e styling, le nostre professioniste ti guidano verso il look che hai sempre desiderato.</p><p>Dall\'highlights alle tinte personalizzate, dalla piega perfetta al taglio su misura: ogni servizio è pensato per valorizzare la tua unicità.</p>',
                 'cancellation_policy' => '<p>Le prenotazioni possono essere cancellate fino a <strong>24 ore prima</strong> dell\'appuntamento.</p>',
                 'google_maps_embed'   => null,
@@ -75,7 +74,6 @@ class SalonProfileSeeder extends Seeder
             'primary_color' => '#1d1d1d',
             'phone'         => '+39 02 8765 4321',
             'address'       => 'Via Brera 14, 20121 Milano',
-            'website'       => 'https://rossinibarbershop.it',
             'description'   => '<p>Da oltre 15 anni, <strong>Rossini Barbershop</strong> è il punto di riferimento per chi vuole un taglio impeccabile nel cuore di Milano. Il nostro team di professionisti unisce tecniche tradizionali da barbiere con le tendenze più moderne, per un risultato che valorizza ogni tipo di capello e barba.</p><p>Ogni visita è un momento di cura dedicato a te: dalla rasatura con rasoio a mano libera all\'asciugamano caldo, fino alla modellatura della barba più complessa. Niente fretta, solo qualità.</p>',
             'cancellation_policy' => '<p>Le prenotazioni possono essere cancellate fino a <strong>24 ore prima</strong> dell\'appuntamento. Passata questa finestra, la cancellazione non è più possibile tramite il portale — per emergenze contattaci direttamente al telefono (<a href="tel:+390287654321">+390287654321</a>).</p><p>Se hai pagato online al momento della prenotazione, il rimborso viene elaborato automaticamente sul metodo di pagamento originale non appena la cancellazione viene confermata. I tempi di accredito dipendono dalla tua banca (di solito 3–5 giorni lavorativi). Nessun rimborso è previsto per cancellazioni effettuate a meno di 24 ore dall\'appuntamento.</p>',
             'google_maps_embed'   => 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2797.849513706764!2d9.1846!3d45.4720!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x4786c6aef34c60a5%3A0x8a79d3e0a4c84fa9!2sVia+Brera%2C+14%2C+20121+Milano!5e0!3m2!1sit!2sit!4v1700000000000',
@@ -124,7 +122,7 @@ class SalonProfileSeeder extends Seeder
             ['author_name' => 'Matteo C.',    'rating' => 5, 'body' => 'Taglio perfetto come sempre. Marco è un artista, sa esattamente cosa vuoi anche quando non riesci a spiegarlo bene. Ambiente curato e rilassante. Ci torno ogni tre settimane.', 'sort_order' => 1],
             ['author_name' => 'Luca F.',      'rating' => 5, 'body' => 'Finalmente un posto serio a Milano. Barba impeccabile, rasatura con il rasoio a mano libera fenomenale. Asciugamano caldo e prodotti di qualità. Non andrò mai più da nessun altro.', 'sort_order' => 2],
             ['author_name' => 'Davide R.',    'rating' => 5, 'body' => 'Ho provato tanti barbieri ma Rossini è un altro livello. Andrea è preciso, veloce e sa il fatto suo. Staff gentile e professionale. Prezzi più che onesti per la qualità offerta.', 'sort_order' => 3],
-            ['author_name' => 'Alessandro M.','rating' => 4, 'body' => 'Ottimo barbiere, ottima location nel cuore di Brera. Ho preso la barba rimodellata da Filippo e sono uscito soddisfatissimo. Unico neo: a volte l\'attesa è un po\' lunga, ma ne vale assolutamente la pena.', 'sort_order' => 4],
+            ['author_name' => 'Alessandro M.', 'rating' => 4, 'body' => 'Ottimo barbiere, ottima location nel cuore di Brera. Ho preso la barba rimodellata da Filippo e sono uscito soddisfatissimo. Unico neo: a volte l\'attesa è un po\' lunga, ma ne vale assolutamente la pena.', 'sort_order' => 4],
             ['author_name' => 'Simone B.',    'rating' => 5, 'body' => 'Il migliore in zona senza dubbio. Sistema di prenotazione online comodissimo, staff puntuale e preciso. Non ci sono più scuse per non presentarsi con un taglio decente. 5 stelle meritatissime.', 'sort_order' => 5],
         ];
 

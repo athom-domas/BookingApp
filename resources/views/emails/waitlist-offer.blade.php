@@ -24,10 +24,7 @@
 @endsection
 
 @section('actions')
-    @php
-        $btnColor = '#' . ltrim(preg_replace('/[^#0-9a-fA-F]/', '', \App\Models\SalonProfile::current()->primary_color ?? '#1d1d1d'), '#');
-    @endphp
-    <a href="{{ $offerUrl }}" class="btn" style="background-color: {{ $btnColor }}; color: #ffffff;">Prenota ora</a>
+    <a href="{{ $offerUrl }}" class="btn" style="background-color:#1e293b;color:#ffffff;">Prenota ora</a>
 @endsection
 
 @section('footer-note')

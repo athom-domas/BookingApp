@@ -16,7 +16,7 @@
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
         <style>
-            :root { --color-primary: {{ preg_replace('/[^#0-9a-fA-F]/', '', $salonProfile->primary_color) }}; }
+            :root { --color-primary: {{ ($salonProfile->theme ?? 'dark') === 'dark' ? '#c9a96e' : '#1a1008' }}; }
             .font-display { font-family: 'Playfair Display', Georgia, serif; }
             .btn-primary { background-color: var(--color-primary) !important; }
             .btn-primary:hover { filter: brightness(0.9); }
@@ -24,10 +24,16 @@
         </style>
 
         <script>
-            if (localStorage.theme === 'dark' ||
-                (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                document.documentElement.classList.add('dark')
-            }
+            (function() {
+                var salonTheme = @json($salonProfile->theme ?? 'dark');
+                if (localStorage.salonTheme !== salonTheme) {
+                    localStorage.salonTheme = salonTheme;
+                    localStorage.removeItem('theme');
+                }
+                if (localStorage.theme === 'dark' || (!('theme' in localStorage) && salonTheme === 'dark')) {
+                    document.documentElement.classList.add('dark');
+                }
+            })();
         </script>
 
         @fonts

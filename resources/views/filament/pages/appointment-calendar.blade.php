@@ -1,9 +1,6 @@
 <x-filament-panels::page>
-    @php
-        $primaryHex = preg_replace('/[^#0-9a-fA-F]/', '', \App\Models\SalonProfile::current()->primary_color ?? '#1d1d1d');
-    @endphp
     <style>
-        :root { --color-primary: {{ $primaryHex }}; }
+        :root { --color-primary: #334155; }
 
         /* ---------- Buttons ---------- */
         .fc .fc-button-primary {
