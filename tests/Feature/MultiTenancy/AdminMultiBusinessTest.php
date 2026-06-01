@@ -171,3 +171,12 @@ it('admin not linked to business is excluded from pivot-scoped notification quer
 
     expect($admins)->toHaveCount(0);
 });
+
+it('BusinessProvisioningService attaches new admin to pivot', function () {
+    $business = Business::factory()->create();
+    app()->instance('current_business_id', $business->id);
+
+    $admin = (new \App\Services\BusinessProvisioningService())->provision($business, 'newadmin@test.com');
+
+    expect($admin->businesses()->where('businesses.id', $business->id)->exists())->toBeTrue();
+});

@@ -27,6 +27,7 @@ class BusinessProvisioningService
                 'must_change_password' => true,
             ]);
             $admin->assignRole('admin');
+            $admin->businesses()->attach($business->id);
             $admin->plainPassword = $tempPassword;
 
             SystemSetting::create([

@@ -15,5 +15,6 @@ class RolesAndUsersSeeder extends Seeder
             ['name' => $adminName, 'password' => Hash::make('password'), 'business_id' => app('current_business_id')]
         );
         $admin->syncRoles(['admin']);
+        $admin->businesses()->syncWithoutDetaching([app('current_business_id')]);
     }
 }
