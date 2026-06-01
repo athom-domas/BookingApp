@@ -1,7 +1,6 @@
 import Alpine from 'alpinejs';
 import { bookingWizard } from './booking-wizard.js';
 
-window.Alpine = Alpine;
 window.bookingWizard = bookingWizard;
 
 const ready = (callback) => {
@@ -14,12 +13,7 @@ const ready = (callback) => {
 };
 
 ready(() => {
-    // @filamentScripts injects an inline sync script setting window.filamentData.
-    // On those pages Livewire starts Alpine — calling Alpine.start() again
-    // causes "Livewire is not defined" in Filament's schemas.js.
-    if (typeof window.filamentData === 'undefined') {
-        Alpine.start();
-    }
+    Alpine.start();
 
     const stripeForm = document.querySelector('[data-stripe-payment]');
 

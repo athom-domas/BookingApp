@@ -338,7 +338,6 @@
     </script>
 
     @stack('scripts')
-    @filamentScripts
     @vite('resources/js/app.js')
 </body>
 </html>
