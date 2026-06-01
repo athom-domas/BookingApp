@@ -6,6 +6,7 @@ use App\Filament\Resources\AdminResource\Pages;
 use App\Models\User;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
@@ -118,6 +119,14 @@ class AdminResource extends Resource
                         ->label('Lavora anche come staff')
                         ->helperText('Quando attivo, questo admin appare come personale prenotabile dai clienti.')
                         ->live()
+                        ->columnSpanFull(),
+
+                    SpatieMediaLibraryFileUpload::make('avatar')
+                        ->label('Foto profilo')
+                        ->collection('avatar')
+                        ->image()
+                        ->maxSize(2048)
+                        ->visible(fn(Get $get): bool => (bool) $get('works_as_staff'))
                         ->columnSpanFull(),
 
                     Select::make('services')
