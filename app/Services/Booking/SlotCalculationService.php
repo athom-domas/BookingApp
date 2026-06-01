@@ -75,6 +75,7 @@ class SlotCalculationService
         string $preference = 'any'
     ): Collection {
         $query = User::whereHas('roles', fn ($q) => $q->where('name', 'staff'))
+            ->where('business_id', app('current_business_id'))
             ->when(
                 $preference === 'specific' && $specificStaffId,
                 fn ($q) => $q->where('id', $specificStaffId)

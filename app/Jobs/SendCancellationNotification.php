@@ -35,7 +35,7 @@ class SendCancellationNotification implements ShouldQueue
         }
 
         $payment = $appointment->payment;
-        $admins  = User::role('admin')->get();
+        $admins  = User::role('admin')->where('business_id', $this->appointment->business_id)->get();
         foreach ($admins as $admin) {
             if ($admin->receive_email_notifications) {
                 Mail::send(new AdminCancellationNotificationMail($appointment, $admin, $payment));

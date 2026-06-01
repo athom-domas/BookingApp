@@ -30,6 +30,8 @@
     <a href="{{ url('/portal/appointments') }}" class="btn" style="background-color:#1e293b;color:#ffffff;">I miei appuntamenti</a>
 @endsection
 
+@if(\App\Models\SystemSetting::getReminderCount() > 0)
 @section('footer-note')
     Riceverai un promemoria prima del tuo appuntamento.
 @endsection
+@endif

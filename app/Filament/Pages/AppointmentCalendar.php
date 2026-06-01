@@ -39,13 +39,14 @@ class AppointmentCalendar extends Page implements HasForms
 
     public function filtersForm(Schema $schema): Schema
     {
-        $user   = Filament::auth()->user();
-        $fields = [];
+        $user       = Filament::auth()->user();
+        $businessId = $user?->business_id;
+        $fields     = [];
 
         if ($user?->isAdmin() || ($user?->isStaff() && $user->can('appointments.view_all'))) {
             $fields[] = Select::make('filterStaff')
                 ->label('Staff')
-                ->options(fn() => User::role('staff')->orderBy('name')->pluck('name', 'id'))
+                ->options(fn() => User::role('staff')->where('business_id', $businessId)->orderBy('name')->pluck('name', 'id'))
                 ->placeholder('Tutti')
                 ->multiple()
                 ->live();
@@ -72,7 +73,7 @@ class AppointmentCalendar extends Page implements HasForms
 
         $fields[] = Select::make('filterCustomer')
             ->label('Cliente')
-            ->options(fn() => User::role('customer')->orderBy('name')->pluck('name', 'id'))
+            ->options(fn() => User::role('customer')->where('business_id', $businessId)->orderBy('name')->pluck('name', 'id'))
             ->placeholder('Tutti')
             ->multiple()
             ->live();

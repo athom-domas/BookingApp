@@ -15,6 +15,7 @@ use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Html;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
+use Filament\Facades\Filament;
 use Filament\Schemas\Schema;
 use Livewire\Attributes\On;
 use Saade\FilamentFullCalendar\Widgets\FullCalendarWidget;
@@ -65,6 +66,7 @@ class AppointmentCalendarWidget extends FullCalendarWidget
     private function getStaffResources(): array
     {
         return User::role(['admin', 'staff'])
+            ->where('business_id', auth()->user()->business_id)
             ->orderBy('name')
             ->get()
             ->map(fn(User $u) => [
@@ -84,7 +86,7 @@ class AppointmentCalendarWidget extends FullCalendarWidget
             ->with(['user', 'staff'])
             ->whereBetween('scheduled_date', [$fetchInfo['start'], $fetchInfo['end']]);
 
-        $user = auth()->user();
+        $user = Filament::auth()->user();
 
         if ($user->isAdmin()) {
             if (!empty($this->filterStaff)) {

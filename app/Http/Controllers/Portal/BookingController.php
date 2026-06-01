@@ -32,6 +32,7 @@ class BookingController extends Controller
         $profile  = SalonProfile::current()->load('media');
         $services = Service::active()->orderByDesc('featured')->orderBy('name')->get();
         $staff    = User::whereHas('roles', fn ($q) => $q->where('name', 'staff')->where('guard_name', 'web'))
+            ->where('business_id', app('current_business_id'))
             ->with('media')
             ->where(fn ($q) => $q
                 ->whereNotNull('bio')
@@ -45,15 +46,19 @@ class BookingController extends Controller
 
     public function create(): View
     {
+        $businessId = app('current_business_id');
+
         $services = Service::active()
             ->with(['staff' => fn ($q) => $q
                 ->whereHas('roles', fn ($r) => $r->where('name', 'staff')->where('guard_name', 'web'))
+                ->where('business_id', $businessId)
                 ->orderBy('name')])
             ->orderByDesc('featured')
             ->orderBy('name')
             ->get();
 
         $staff = User::whereHas('roles', fn ($q) => $q->where('name', 'staff')->where('guard_name', 'web'))
+            ->where('business_id', $businessId)
             ->whereHas('services', fn ($q) => $q->active())
             ->with(['services' => fn ($q) => $q->active()->select('services.id', 'services.name'), 'media'])
             ->orderBy('name')

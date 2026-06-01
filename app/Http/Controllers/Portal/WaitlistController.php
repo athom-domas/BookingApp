@@ -16,7 +16,7 @@ class WaitlistController extends Controller
     public function create(Request $request): View
     {
         $services            = Service::active()->get();
-        $staff               = User::role('staff')->get();
+        $staff               = User::role('staff')->where('business_id', app('current_business_id'))->get();
         $prefilledServiceIds = array_map('intval', (array) $request->query('service_ids', []));
         $prefilledStaffId    = $request->query('preferred_staff_id') ? (int) $request->query('preferred_staff_id') : null;
         $prefilledDays       = array_values(array_filter((array) $request->query('preferred_days', [])));

@@ -24,6 +24,7 @@ class CustomerSearch extends Component
         }
 
         $customers = User::role('customer')
+            ->where('business_id', auth()->user()->business_id)
             ->where(function ($q) {
                 $q->where('name', 'like', '%' . $this->query . '%')
                   ->orWhere('email', 'like', '%' . $this->query . '%');
