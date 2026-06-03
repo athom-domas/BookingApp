@@ -30,3 +30,20 @@ it('casts slot_generation_weeks to integer', function () {
 
     expect(SystemSetting::current()->slot_generation_weeks)->toBe(8);
 });
+
+it('isReviewsEnabled returns true by default', function () {
+    expect(SystemSetting::isReviewsEnabled())->toBeTrue();
+});
+
+it('isReviewsEnabled returns false when disabled', function () {
+    SystemSetting::current()->update(['reviews_enabled' => false]);
+
+    expect(SystemSetting::isReviewsEnabled())->toBeFalse();
+});
+
+it('isReviewsEnabled returns true when re-enabled', function () {
+    SystemSetting::current()->update(['reviews_enabled' => false]);
+    SystemSetting::current()->update(['reviews_enabled' => true]);
+
+    expect(SystemSetting::isReviewsEnabled())->toBeTrue();
+});

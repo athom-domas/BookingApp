@@ -12,6 +12,7 @@ use App\Models\Business;
     'slot_generation_weeks', 'slot_granularity_minutes', 'timezone',
     'booking_max_days_ahead', 'cancellation_deadline_hours',
     'reminder_count', 'reminder_1_hours', 'reminder_2_hours', 'payment_mode',
+    'reviews_enabled',
 ])]
 class SystemSetting extends Model
 {
@@ -27,6 +28,7 @@ class SystemSetting extends Model
             'reminder_count'              => 'integer',
             'reminder_1_hours'            => 'integer',
             'reminder_2_hours'            => 'integer',
+            'reviews_enabled'             => 'boolean',
         ];
     }
 
@@ -43,6 +45,7 @@ class SystemSetting extends Model
                 'reminder_1_hours'            => 24,
                 'reminder_2_hours'            => 2,
                 'payment_mode'                => 'both',
+                'reviews_enabled'             => true,
             ]);
         }
 
@@ -58,8 +61,14 @@ class SystemSetting extends Model
                 'reminder_1_hours'            => 24,
                 'reminder_2_hours'            => 2,
                 'payment_mode'                => 'both',
+                'reviews_enabled'             => true,
             ]
         );
+    }
+
+    public static function isReviewsEnabled(): bool
+    {
+        return self::current()->reviews_enabled ?? true;
     }
 
     public static function getSlotGranularity(): int

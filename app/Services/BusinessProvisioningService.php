@@ -57,6 +57,7 @@ class BusinessProvisioningService
             'reminder_1_hours'            => 24,
             'reminder_2_hours'            => 2,
             'payment_mode'                => 'both',
+            'reviews_enabled'             => true,
         ]);
 
         SalonProfile::create([
