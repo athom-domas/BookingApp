@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Models\SystemSetting;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\Section;
@@ -34,6 +35,7 @@ class SystemSettings extends Page
             'reminder_1_hours'            => $setting->reminder_1_hours,
             'reminder_2_hours'            => $setting->reminder_2_hours,
             'payment_mode'                => $setting->payment_mode ?? 'both',
+            'reviews_enabled'             => $setting->reviews_enabled ?? true,
         ]);
     }
 
@@ -113,6 +115,14 @@ class SystemSettings extends Page
                                 'in_salon'  => 'Solo in salone',
                             ])
                             ->required(),
+                    ]),
+
+                Section::make('Sito web')
+                    ->schema([
+                        Toggle::make('reviews_enabled')
+                            ->label('Mostra sezione recensioni')
+                            ->helperText('Se disattivato, la sezione recensioni non compare sul sito del salone')
+                            ->default(true),
                     ]),
             ])
             ->statePath('data');
