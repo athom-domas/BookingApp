@@ -2,6 +2,7 @@
 
 use App\Models\SalonProfile;
 use App\Models\SalonReview;
+use App\Models\SystemSetting;
 use App\Models\User;
 use Spatie\Permission\Models\Role;
 
@@ -37,4 +38,15 @@ it('homepage passes only staff with bio or avatar', function () {
     $response = $this->get('/');
 
     $response->assertViewHas('staff', fn ($staff) => $staff->contains($staffWithBio));
+});
+
+it('homepage passes empty reviews when reviews section is disabled', function () {
+    Role::firstOrCreate(['name' => 'staff', 'guard_name' => 'web']);
+
+    SalonReview::factory()->create(['is_published' => true]);
+    SystemSetting::current()->update(['reviews_enabled' => false]);
+
+    $response = $this->get('/');
+
+    $response->assertViewHas('reviews', fn ($reviews) => $reviews->isEmpty());
 });

@@ -39,7 +39,9 @@ class BookingController extends Controller
                 ->orWhereHas('media', fn ($m) => $m->where('collection_name', 'avatar'))
             )
             ->get();
-        $reviews = SalonReview::published()->ordered()->get();
+        $reviews = SystemSetting::isReviewsEnabled()
+            ? SalonReview::published()->ordered()->get()
+            : collect();
 
         return view('welcome', compact('profile', 'services', 'staff', 'reviews'));
     }
