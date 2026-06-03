@@ -30,39 +30,52 @@ class BusinessProvisioningService
             $admin->businesses()->attach($business->id);
             $admin->plainPassword = $tempPassword;
 
-            SystemSetting::create([
-                'business_id'                 => $business->id,
-                'slot_generation_weeks'       => 4,
-                'slot_granularity_minutes'    => 15,
-                'timezone'                    => 'Europe/Rome',
-                'booking_max_days_ahead'      => 30,
-                'cancellation_deadline_hours' => 24,
-                'reminder_count'              => 1,
-                'reminder_1_hours'            => 24,
-                'reminder_2_hours'            => 2,
-                'payment_mode'                => 'both',
-            ]);
-
-            SalonProfile::create([
-                'business_id'   => $business->id,
-                'name'          => $business->name,
-                'primary_color' => '#1d1d1d',
-            ]);
-
-            IntegrationSetting::create(['business_id' => $business->id]);
-
-            foreach (['Taglio', 'Piega', 'Colore'] as $i => $name) {
-                Service::create([
-                    'business_id'      => $business->id,
-                    'name'             => $name,
-                    'duration_minutes' => 30,
-                    'price'            => 20.00,
-                    'active'           => true,
-                    'featured'         => $i === 0,
-                ]);
-            }
+            $this->createInfrastructure($business);
 
             return $admin;
         });
+    }
+
+    public function provisionWithExistingAdmin(Business $business, User $existingAdmin): void
+    {
+        DB::transaction(function () use ($business, $existingAdmin) {
+            $existingAdmin->businesses()->syncWithoutDetaching([$business->id]);
+            $this->createInfrastructure($business);
+        });
+    }
+
+    private function createInfrastructure(Business $business): void
+    {
+        SystemSetting::create([
+            'business_id'                 => $business->id,
+            'slot_generation_weeks'       => 4,
+            'slot_granularity_minutes'    => 15,
+            'timezone'                    => 'Europe/Rome',
+            'booking_max_days_ahead'      => 30,
+            'cancellation_deadline_hours' => 24,
+            'reminder_count'              => 1,
+            'reminder_1_hours'            => 24,
+            'reminder_2_hours'            => 2,
+            'payment_mode'                => 'both',
+        ]);
+
+        SalonProfile::create([
+            'business_id'   => $business->id,
+            'name'          => $business->name,
+            'primary_color' => '#1d1d1d',
+        ]);
+
+        IntegrationSetting::create(['business_id' => $business->id]);
+
+        foreach (['Taglio', 'Piega', 'Colore'] as $i => $name) {
+            Service::create([
+                'business_id'      => $business->id,
+                'name'             => $name,
+                'duration_minutes' => 30,
+                'price'            => 20.00,
+                'active'           => true,
+                'featured'         => $i === 0,
+            ]);
+        }
     }
 }

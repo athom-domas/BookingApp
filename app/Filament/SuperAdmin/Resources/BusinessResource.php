@@ -7,12 +7,17 @@ use App\Filament\SuperAdmin\Resources\BusinessResource\Pages\CreateBusiness;
 use App\Filament\SuperAdmin\Resources\BusinessResource\Pages\EditBusiness;
 use App\Filament\SuperAdmin\Resources\BusinessResource\Pages\ListBusinesses;
 use App\Models\Business;
+use App\Models\User;
+use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
-use Filament\Actions\EditAction;
 use Filament\Actions\Action;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -24,53 +29,98 @@ class BusinessResource extends Resource
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-building-storefront';
 
     private const RESERVED = [
-        'superadmin', 'admin', 'api', 'www', 'app',
-        'mail', 'static', 'assets', 'media', 'webhook', 'health',
+        'superadmin',
+        'admin',
+        'api',
+        'www',
+        'app',
+        'mail',
+        'static',
+        'assets',
+        'media',
+        'webhook',
+        'health',
     ];
 
     public static function form(Schema $schema): Schema
     {
         return $schema->schema([
-            TextInput::make('name')
-                ->label('Nome salone')
-                ->required()
-                ->maxLength(255),
+            Section::make('Informazioni salone')
+                ->schema([
+                    TextInput::make('name')
+                        ->label('Nome salone')
+                        ->required()
+                        ->maxLength(255),
 
-            TextInput::make('subdomain')
-                ->label('Sottodominio')
-                ->required()
-                ->maxLength(63)
-                ->helperText('Solo lettere minuscole, numeri e trattini.')
-                ->rules([
-                    'alpha_dash',
-                    fn() => function ($attribute, $value, $fail) {
-                        if (in_array(strtolower((string) $value), self::RESERVED)) {
-                            $fail("Il sottodominio '{$value}' è riservato.");
-                        }
-                    },
-                ]),
+                    TextInput::make('subdomain')
+                        ->label('Sottodominio')
+                        ->required()
+                        ->maxLength(63)
+                        ->helperText('Solo lettere minuscole, numeri e trattini.')
+                        ->rules([
+                            'alpha_dash',
+                            fn() => function ($attribute, $value, $fail) {
+                                if (in_array(strtolower((string) $value), self::RESERVED)) {
+                                    $fail("Il sottodominio '{$value}' è riservato.");
+                                }
+                            },
+                        ]),
 
-            TextInput::make('admin_email')
-                ->label('Email admin iniziale')
-                ->email()
-                ->required()
-                ->visibleOn('create'),
+                    Select::make('status')
+                        ->label('Stato')
+                        ->options(['active' => 'Attivo', 'suspended' => 'Sospeso'])
+                        ->required()
+                        ->visibleOn('edit'),
+                ])
+                ->columns(2)
+                ->columnSpanFull(),
 
-            Select::make('status')
-                ->label('Stato')
-                ->options(['active' => 'Attivo', 'suspended' => 'Sospeso'])
-                ->required()
-                ->visibleOn('edit'),
+            Section::make('Admin iniziale')
+                ->schema([
+                    Radio::make('admin_type')
+                        ->label('')
+                        ->options(['new' => 'Nuovo admin', 'existing' => 'Admin esistente'])
+                        ->default('new')
+                        ->live()
+                        ->inline()
+                        ->columnSpanFull(),
+
+                    TextInput::make('admin_email')
+                        ->label('Email')
+                        ->email()
+                        ->required()
+                        ->unique('users', 'email')
+                        ->hidden(fn(Get $get) => $get('admin_type') !== 'new')
+                        ->columnSpanFull(),
+
+                    Select::make('admin_existing_id')
+                        ->label('Seleziona admin')
+                        ->options(fn() => User::role('admin')
+                            ->get()
+                            ->mapWithKeys(fn(User $u) => [$u->id => "{$u->name} ({$u->email})"]))
+                        ->searchable()
+                        ->required()
+                        ->hidden(fn(Get $get) => $get('admin_type') !== 'existing')
+                        ->columnSpanFull(),
+                ])
+                ->visibleOn('create')
+                ->columnSpanFull(),
         ]);
     }
 
     public static function table(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn ($query) => $query->with('subscriptions'))
+            ->modifyQueryUsing(fn($query) => $query->with(['subscriptions', 'admins']))
             ->columns([
                 TextColumn::make('name')->label('Nome')->searchable()->sortable(),
-                TextColumn::make('subdomain')->label('Sottodominio'),
+                TextColumn::make('first_admin')
+                    ->label('Admin')
+                    ->state(fn(Business $record): string => $record->admins->first()?->email ?? '—')
+                    ->searchable(query: fn($query, string $search) => $query->orWhereHas(
+                        'admins',
+                        fn($q) => $q->where('users.email', 'like', "%{$search}%")
+                    )),
                 TextColumn::make('status')->label('Stato')->badge()
                     ->color(fn(BusinessStatus $state) => match ($state) {
                         BusinessStatus::Active    => 'success',
@@ -81,13 +131,13 @@ class BusinessResource extends Resource
                 TextColumn::make('subscriptionStatus')
                     ->label('Abbonamento')
                     ->badge()
-                    ->state(fn (Business $record): string => match ($record->subscriptionStatus()) {
+                    ->state(fn(Business $record): string => match ($record->subscriptionStatus()) {
                         'trial'        => 'Trial',
                         'active'       => 'Attivo',
                         'grace_period' => 'Grace period',
                         'expired'      => 'Scaduto',
                     })
-                    ->color(fn (string $state): string => match ($state) {
+                    ->color(fn(string $state): string => match ($state) {
                         'Trial'        => 'warning',
                         'Attivo'       => 'success',
                         'Grace period' => 'warning',
@@ -104,9 +154,10 @@ class BusinessResource extends Resource
 
                 TextColumn::make('pm_last_four')
                     ->label('Pagamento')
-                    ->state(fn (Business $record): string => $record->pm_type
-                        ? ucfirst($record->pm_type) . ' ••••' . $record->pm_last_four
-                        : '—'
+                    ->state(
+                        fn(Business $record): string => $record->pm_type
+                            ? ucfirst($record->pm_type) . ' ••••' . $record->pm_last_four
+                            : '—'
                     )
                     ->toggleable(),
             ])
@@ -115,7 +166,7 @@ class BusinessResource extends Resource
                     ->label('Estendi trial')
                     ->icon('heroicon-o-clock')
                     ->color('warning')
-                    ->visible(fn (Business $record): bool => in_array($record->subscriptionStatus(), ['trial', 'expired']))
+                    ->visible(fn(Business $record): bool => in_array($record->subscriptionStatus(), ['trial', 'expired']))
                     ->form([
                         \Filament\Forms\Components\TextInput::make('days')
                             ->label('Giorni aggiuntivi')
@@ -141,7 +192,7 @@ class BusinessResource extends Resource
                     ->label('Cancella abbonamento')
                     ->icon('heroicon-o-x-circle')
                     ->color('danger')
-                    ->visible(fn (Business $record): bool => $record->subscriptionStatus() === 'active')
+                    ->visible(fn(Business $record): bool => $record->subscriptionStatus() === 'active')
                     ->requiresConfirmation()
                     ->modalDescription('L\'accesso verrà revocato immediatamente. Usare solo in casi eccezionali.')
                     ->action(function (Business $record): void {
@@ -160,10 +211,13 @@ class BusinessResource extends Resource
                     ->url(fn(Business $record): string => self::storefrontUrl($record))
                     ->openUrlInNewTab(),
                 EditAction::make(),
+                DeleteAction::make()
+                    ->requiresConfirmation()
+                    ->modalDescription('Tutti i dati del salone (appuntamenti, utenti, impostazioni) verranno eliminati definitivamente.'),
             ]);
     }
 
-    public static function getRelationManagers(): array
+    public static function getRelations(): array
     {
         return [
             \App\Filament\SuperAdmin\Resources\BusinessResource\RelationManagers\BusinessAdminsRelationManager::class,
