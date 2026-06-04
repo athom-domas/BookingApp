@@ -406,8 +406,8 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
                         {{ $t['initial'] }}
                     </div>
                     <div>
-                        <p class="text-sm font-semibold text-gray-900">{{ $t['name'] }}</p>
-                        <p class="text-xs text-gray-400">{{ $t['role'] }}</p>
+                        <p class="text-sm font-semibold text-ink">{{ $t['name'] }}</p>
+                        <p class="text-xs text-ink-muted">{{ $t['role'] }}</p>
                     </div>
                 </div>
             </article>
@@ -436,7 +436,7 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
                 <button @click="active === {{ $idx }} ? active = null : active = {{ $idx }}"
                         class="w-full flex items-center justify-between px-6 py-5 text-left font-medium text-ink hover:bg-cream-dark transition-colors text-sm">
                     <span>{{ $faq['q'] }}</span>
-                    <svg class="w-4 h-4 text-gray-400 shrink-0 transition-transform duration-200"
+                    <svg class="w-4 h-4 text-ink-muted shrink-0 transition-transform duration-200"
                          :class="active === {{ $idx }} ? 'rotate-180' : ''"
                          fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
@@ -470,7 +470,7 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
         </p>
         <div data-r style="--d:2">
             <a href="{{ route('contact') }}"
-               class="shimmer inline-flex items-center gap-2 bg-teal-500 hover:bg-teal-400 text-white font-semibold px-8 py-4 rounded-xl transition text-base shadow-lg shadow-teal-900/30">
+               class="shimmer inline-flex items-center gap-2 bg-terra hover:bg-terra/85 text-white font-semibold px-8 py-4 rounded-xl transition text-base shadow-lg shadow-ink/30">
                 Inizia i 14 Giorni Gratis
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
@@ -513,8 +513,8 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
         <div class="border-t border-[#2D2420] pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-ink-muted/70">
             <span>© {{ date('Y') }} GestionalePro. Tutti i diritti riservati.</span>
             <div class="flex gap-5">
-                <a href="{{ route('legal.privacy') }}" class="hover:text-slate-300 transition">Privacy Policy</a>
-                <a href="{{ route('legal.terms') }}" class="hover:text-slate-300 transition">Termini di servizio</a>
+                <a href="{{ route('legal.privacy') }}" class="hover:text-white/90 transition">Privacy Policy</a>
+                <a href="{{ route('legal.terms') }}" class="hover:text-white/90 transition">Termini di servizio</a>
             </div>
         </div>
     </div>
