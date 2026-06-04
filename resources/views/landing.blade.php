@@ -341,26 +341,26 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
 
 
 {{-- PRICING --}}
-<section id="prezzi" class="py-24 px-6 bg-slate-50 scroll-mt-16">
+<section id="prezzi" class="py-24 px-6 bg-cream-dark scroll-mt-16">
     <div class="max-w-4xl mx-auto text-center">
         <p class="eyebrow justify-center" data-r style="--d:0">Prezzi</p>
-        <h2 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-4" data-r style="--d:1">Prezzo semplice e trasparente</h2>
-        <p class="text-gray-500 mb-2" data-r style="--d:2">Nessun costo di setup. Cancelli quando vuoi. I primi 14 giorni sono gratis.</p>
-        <p class="text-xs text-gray-400 mb-12" data-r style="--d:3">Prezzi IVA esclusa</p>
+        <h2 class="font-display text-4xl sm:text-5xl font-semibold text-ink mb-4" data-r style="--d:1">Prezzo semplice e trasparente</h2>
+        <p class="text-ink-muted mb-2" data-r style="--d:2">Nessun costo di setup. Cancelli quando vuoi. I primi 14 giorni sono gratis.</p>
+        <p class="text-xs text-ink-muted/60 mb-12" data-r style="--d:3">Prezzi IVA esclusa</p>
 
         <div class="max-w-sm mx-auto" data-r style="--d:2">
-            <div class="float-card bg-white rounded-2xl p-8 border border-gray-200 shadow-xl shadow-slate-200/70 flex flex-col">
+            <div class="bg-cream rounded-2xl p-8 border border-warm-border shadow-xl shadow-ink/8 flex flex-col">
                 <div class="mb-6 text-left">
-                    <h3 class="font-bold text-gray-900 text-lg mb-1">Piano completo</h3>
+                    <h3 class="font-bold text-ink text-lg mb-1">Piano completo</h3>
                     <div class="flex items-end gap-1 mt-2">
-                        <span class="text-5xl font-bold text-gray-900">€29</span>
-                        <span class="text-gray-400 text-sm mb-2">/mese</span>
+                        <span class="font-display text-6xl font-semibold text-ink">€29</span>
+                        <span class="text-ink-muted text-sm mb-2">/mese</span>
                     </div>
-                    <p class="text-xs text-gray-400 mt-1.5">Per saloni di ogni dimensione</p>
+                    <p class="text-xs text-ink-muted mt-1.5">Per saloni di ogni dimensione</p>
                 </div>
                 <ul class="space-y-3 mb-8 flex-1 text-left">
                     @foreach(['Operatori illimitati','Prenotazioni online illimitate','Promemoria email automatici','Pagamenti online e in salone','Lista d\'attesa intelligente','Report e statistiche','Supporto 7 giorni su 7'] as $feat)
-                    <li class="flex items-center gap-2.5 text-sm text-gray-600">
+                    <li class="flex items-center gap-2.5 text-sm text-ink-muted">
                         <svg class="w-4 h-4 text-green-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
                         </svg>
@@ -369,7 +369,7 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
                     @endforeach
                 </ul>
                 <a href="{{ route('contact') }}"
-                   class="shimmer block w-full text-center text-sm font-semibold bg-teal-600 text-white py-3.5 rounded-xl hover:bg-teal-700 transition">
+                   class="shimmer block w-full text-center text-sm font-semibold bg-terra text-white py-3.5 rounded-xl hover:bg-terra/90 transition">
                     Inizia i 14 Giorni Gratis
                 </a>
             </div>
@@ -379,11 +379,11 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
 
 
 {{-- TESTIMONIALS --}}
-<section class="py-24 px-6 bg-white">
+<section class="py-24 px-6 bg-cream">
     <div class="max-w-6xl mx-auto">
         <div class="text-center mb-16">
             <p class="eyebrow" data-r style="--d:0">Recensioni</p>
-            <h2 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-4" data-r style="--d:1">Cosa dicono i nostri clienti</h2>
+            <h2 class="font-display text-4xl sm:text-5xl font-semibold text-ink mb-4" data-r style="--d:1">Cosa dicono i nostri clienti</h2>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             @foreach([
@@ -391,7 +391,8 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
                 ['quote'=>'Ho tre colleghi in salone e prima era il caos: turni sbagliati, pagamenti da registrare a mano. Adesso tutto è in ordine e so sempre com\'è andata la settimana.',    'name'=>'Marco Torrisi', 'role'=>'Barbiere, Roma',       'initial'=>'M','color'=>'bg-indigo-500'],
                 ['quote'=>'Le mie clienti prenotano quando vogliono, anche a mezzanotte. Non rispondo più a nessun messaggio per gli appuntamenti. E le prenotazioni sono aumentate.',              'name'=>'Alessia Marino','role'=>'Estetista, Torino',    'initial'=>'A','color'=>'bg-rose-500'],
             ] as $i => $t)
-            <article class="bg-slate-50 rounded-2xl p-8 flex flex-col" data-r style="--d:{{ $i }}">
+            <article class="bg-cream-dark rounded-2xl p-8 flex flex-col" data-r style="--d:{{ $i }}">
+                <div class="font-display text-6xl text-terra/30 leading-none mb-1 select-none">&ldquo;</div>
                 <div class="flex gap-0.5 mb-5">
                     @for($s = 0; $s < 5; $s++)
                     <svg class="w-4 h-4 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
@@ -399,7 +400,7 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
                     </svg>
                     @endfor
                 </div>
-                <p class="text-sm text-gray-600 leading-relaxed mb-6 flex-1">"{{ $t['quote'] }}"</p>
+                <p class="text-sm text-ink-muted leading-relaxed mb-6 flex-1">"{{ $t['quote'] }}"</p>
                 <div class="flex items-center gap-3">
                     <div class="w-9 h-9 rounded-full {{ $t['color'] }} flex items-center justify-center text-white text-sm font-bold shrink-0">
                         {{ $t['initial'] }}
@@ -417,11 +418,11 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
 
 
 {{-- FAQ --}}
-<section class="py-24 px-6 bg-slate-50">
+<section class="py-24 px-6 bg-cream-dark">
     <div class="max-w-2xl mx-auto" x-data="{ active: null }">
         <div class="text-center mb-16">
             <p class="eyebrow" data-r style="--d:0">FAQ</p>
-            <h2 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-4" data-r style="--d:1">Domande frequenti</h2>
+            <h2 class="font-display text-4xl sm:text-5xl font-semibold text-ink mb-4" data-r style="--d:1">Domande frequenti</h2>
         </div>
         <div class="space-y-2">
             @foreach([
@@ -431,9 +432,9 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
                 ['q'=>"C'è supporto in italiano?",                'a'=>'Sì. Il supporto è completamente in italiano, disponibile via email e chat 7 giorni su 7. Il tempo medio di risposta è sotto le 2 ore.'],
                 ['q'=>'Posso cancellare quando voglio?',          'a'=>'Assolutamente. Nessun vincolo contrattuale, nessuna penale. Cancelli con un click dalla dashboard e non ti viene addebitato nulla dal mese successivo.'],
             ] as $idx => $faq)
-            <div class="bg-white rounded-xl border border-gray-200 overflow-hidden" data-r style="--d:{{ $idx }}">
+            <div class="bg-cream rounded-xl border border-warm-border overflow-hidden" data-r style="--d:{{ $idx }}">
                 <button @click="active === {{ $idx }} ? active = null : active = {{ $idx }}"
-                        class="w-full flex items-center justify-between px-6 py-5 text-left font-medium text-gray-900 hover:bg-slate-50 transition-colors text-sm">
+                        class="w-full flex items-center justify-between px-6 py-5 text-left font-medium text-ink hover:bg-cream-dark transition-colors text-sm">
                     <span>{{ $faq['q'] }}</span>
                     <svg class="w-4 h-4 text-gray-400 shrink-0 transition-transform duration-200"
                          :class="active === {{ $idx }} ? 'rotate-180' : ''"
@@ -448,7 +449,7 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
                      x-transition:leave="transition ease-in duration-100"
                      x-transition:leave-start="opacity-100 translate-y-0"
                      x-transition:leave-end="opacity-0 -translate-y-1"
-                     class="px-6 pb-5 text-sm text-gray-500 leading-relaxed border-t border-gray-100 pt-4">
+                     class="px-6 pb-5 text-sm text-ink-muted leading-relaxed border-t border-warm-border pt-4">
                     {{ $faq['a'] }}
                 </div>
             </div>
