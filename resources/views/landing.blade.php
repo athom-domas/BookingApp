@@ -35,7 +35,7 @@
             border-radius: inherit;
             opacity: 0;
             transition: opacity 0.35s;
-            background: radial-gradient(500px circle at var(--mx,50%) var(--my,50%), rgba(13,148,136,0.09), transparent 65%);
+            background: radial-gradient(500px circle at var(--mx,50%) var(--my,50%), rgba(196,113,74,0.09), transparent 65%);
             pointer-events: none;
         }
         .f-card:hover::before { opacity: 1; }
