@@ -7,12 +7,12 @@
 <article class="max-w-3xl mx-auto px-6 py-20">
 
     <header class="mb-12">
-        <p class="text-xs font-semibold text-teal-600 uppercase tracking-widest mb-3">Termini e condizioni</p>
-        <h1 class="text-4xl font-bold text-gray-900 mb-4">Termini di servizio</h1>
-        <p class="text-gray-500">Ultimo aggiornamento: {{ \Carbon\Carbon::now()->format('d/m/Y') }}</p>
+        <p class="text-xs font-semibold text-terra uppercase tracking-widest mb-3">Termini e condizioni</p>
+        <h1 class="font-display text-4xl font-semibold text-ink mb-4">Termini di servizio</h1>
+        <p class="text-ink-muted">Ultimo aggiornamento: {{ \Carbon\Carbon::now()->format('d/m/Y') }}</p>
     </header>
 
-    <div class="prose prose-gray prose-lg max-w-none">
+    <div class="prose prose-stone prose-lg max-w-none">
 
         <h2>1. Accettazione dei termini</h2>
         <p>
@@ -156,8 +156,8 @@
 
     </div>
 
-    <div class="mt-16 pt-8 border-t border-gray-100 text-sm text-gray-400">
-        <p>Hai domande? Scrivici a <a href="{{ route('contact') }}" class="text-teal-600 hover:underline">modulo di contatto</a></p>
+    <div class="mt-16 pt-8 border-t border-warm-border text-sm text-ink-muted/70">
+        <p>Hai domande? Scrivici a <a href="{{ route('contact') }}" class="text-terra hover:underline">modulo di contatto</a></p>
     </div>
 
 </article>
