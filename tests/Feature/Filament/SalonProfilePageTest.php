@@ -22,9 +22,8 @@ it('admin can view the salon profile page', function () {
 
 it('form is pre-filled with current profile', function () {
     SalonProfile::current()->update([
-        'name'          => 'Salone Test',
-        'primary_color' => '#ff0000',
-        'phone'         => '+39 02 111111',
+        'name'  => 'Salone Test',
+        'phone' => '+39 02 111111',
     ]);
 
     $admin = User::factory()->create();
@@ -33,7 +32,6 @@ it('form is pre-filled with current profile', function () {
 
     Livewire::test(SalonProfilePage::class)
         ->assertSet('data.name', 'Salone Test')
-        ->assertSet('data.primary_color', '#ff0000')
         ->assertSet('data.phone', '+39 02 111111');
 });
 
@@ -44,7 +42,6 @@ it('admin can update the salon profile', function () {
 
     Livewire::test(SalonProfilePage::class)
         ->set('data.name', 'Nuovo Nome')
-        ->set('data.primary_color', '#123456')
         ->set('data.phone', '+39 02 999999')
         ->set('data.address', 'Via Test 1')
         ->call('save')
@@ -52,7 +49,6 @@ it('admin can update the salon profile', function () {
 
     $profile = SalonProfile::current();
     expect($profile->name)->toBe('Nuovo Nome');
-    expect($profile->primary_color)->toBe('#123456');
     expect($profile->phone)->toBe('+39 02 999999');
     expect($profile->address)->toBe('Via Test 1');
 });

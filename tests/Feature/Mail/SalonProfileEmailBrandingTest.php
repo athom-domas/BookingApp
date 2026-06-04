@@ -11,7 +11,7 @@ beforeEach(function () {
 });
 
 it('confirmation email contains salon name', function () {
-    SalonProfile::current()->update(['name' => 'Salone Branding Test', 'primary_color' => '#ff5500']);
+    SalonProfile::current()->update(['name' => 'Salone Branding Test']);
 
     $customer = User::factory()->create();
     $customer->assignRole('customer');
@@ -25,7 +25,6 @@ it('confirmation email contains salon name', function () {
     $html = view('emails.appointment-confirmation', ['appointment' => $appointment])->render();
 
     expect($html)->toContain('Salone Branding Test');
-    expect($html)->toContain('#ff5500');
 });
 
 it('admin notification email contains salon name', function () {

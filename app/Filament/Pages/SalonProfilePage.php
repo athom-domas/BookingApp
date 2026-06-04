@@ -43,7 +43,6 @@ class SalonProfilePage extends Page
             'name'                => $profile->name,
             'tagline'             => $profile->tagline,
             'theme'               => $profile->theme ?? 'dark',
-            'primary_color'       => $profile->primary_color,
             'font_pair'           => $profile->font_pair   ?? 'classic',
             'border_style'        => $profile->border_style ?? 'sharp',
 
@@ -157,11 +156,6 @@ class SalonProfilePage extends Page
                             TextInput::make('tagline')
                                 ->label('Tagline'),
                         ]),
-                        ColorPicker::make('primary_color')
-                            ->label('Colore accento personalizzato')
-                            ->helperText('Sovrascrive il colore primario del tema. Lascia vuoto per usare il colore predefinito.')
-                            ->columnSpanFull(),
-
                         Radio::make('theme')
                             ->label('Tema della vetrina')
                             ->options([

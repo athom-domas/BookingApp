@@ -3,9 +3,9 @@
 use App\Models\SalonProfile;
 
 it('booking page shows salon name from profile', function () {
-    SalonProfile::current()->update(['name' => 'Test Salone', 'primary_color' => '#abcdef']);
+    SalonProfile::current()->update(['name' => 'Test Salone']);
 
-    $this->get('/')->assertSee('Test Salone')->assertSee('#abcdef');
+    $this->get('/')->assertSee('Test Salone');
 });
 
 it('booking page shows fallback logo when no logo is set', function () {

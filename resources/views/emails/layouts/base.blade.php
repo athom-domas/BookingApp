@@ -1,6 +1,6 @@
 @php
     $salon        = \App\Models\SalonProfile::current();
-    $primaryColor = $salon->email_accent_color ?? $salon->primary_color ?? '#1e293b';
+    $primaryColor = $salon->email_accent_color ?? '#1e293b';
 
     $_emailFontUrls = [
         'classic' => 'https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@400;600&display=swap',

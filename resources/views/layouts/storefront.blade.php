@@ -291,12 +291,7 @@ $_radius      = $_radiusMap[$_border] ?? '0';
             #sf-footer { padding: 28px 20px; }
             .sf-footer-inner { flex-direction: column; align-items: flex-start; gap: 12px; }
         }
-        @if($salonProfile->primary_color)
-        :root,html.sf-light,html.sf-rose,html.sf-emerald,html.sf-midnight,html.sf-minimal {
-            --sf-gold:   {{ $salonProfile->primary_color }};
-            --sf-btn-bg: {{ $salonProfile->primary_color }};
-        }
-        @endif
+
     </style>
     <style>
         :root {

@@ -26,7 +26,7 @@
             $_appFontDisplay = $_appFontVars[$_appPair][0] ?? $_appFontVars['classic'][0];
             $_appFontBody    = $_appFontVars[$_appPair][1] ?? $_appFontVars['classic'][1];
             $_appRadius      = $_appRadiusMap[$_appBorder] ?? '0';
-            $_appPrimary     = $salonProfile->primary_color ?? (($salonProfile->theme ?? 'dark') === 'dark' ? '#c9a96e' : '#1a1008');
+            $_appPrimary     = ($salonProfile->theme ?? 'dark') === 'dark' ? '#c9a96e' : '#1a1008';
         @endphp
 
         <title>@yield('title', e($salonProfile->name)) - {{ $salonProfile->name }}</title>

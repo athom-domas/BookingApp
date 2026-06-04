@@ -13,7 +13,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 #[Fillable([
     'business_id',
-    'name', 'tagline', 'logo_path', 'primary_color', 'theme',
+    'name', 'tagline', 'logo_path', 'theme',
     'font_pair', 'border_style', 'bg_texture',
     'phone', 'address',
     'description', 'cancellation_policy', 'google_maps_embed',
@@ -35,14 +35,13 @@ class SalonProfile extends Model implements HasMedia
     public static function current(): self
     {
         if (! app()->bound('current_business_id')) {
-            return new self(['name' => config('app.name', 'Booking App'), 'primary_color' => '#1d1d1d']);
+            return new self(['name' => config('app.name', 'Booking App')]);
         }
 
         return self::firstOrCreate(
             ['business_id' => Business::currentId()],
             [
-                'name'          => 'Il mio salone',
-                'primary_color' => '#1d1d1d',
+                'name' => 'Il mio salone',
             ]
         );
     }

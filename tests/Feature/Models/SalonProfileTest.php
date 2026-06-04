@@ -11,7 +11,6 @@ it('creates a default row when none exists', function () {
     expect(SalonProfile::count())->toBe(1);
     expect($profile->id)->toBe(1);
     expect($profile->name)->toBe('Il mio salone');
-    expect($profile->primary_color)->toBe('#1d1d1d');
     expect($profile->logo_path)->toBeNull();
 });
 

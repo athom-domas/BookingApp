@@ -44,9 +44,8 @@ class SalonProfileSeeder extends Seeder
     {
         if ($salonKey === 'chic') {
             return [
-                'name'          => 'Chic Beauty Studio',
-                'tagline'       => 'Bellezza su misura, ogni giorno',
-                'primary_color' => '#c084a0',
+                'name'    => 'Chic Beauty Studio',
+                'tagline' => 'Bellezza su misura, ogni giorno',
                 'phone'         => '+39 02 9876 5432',
                 'address'       => 'Corso Buenos Aires 42, 20124 Milano',
                 'description'   => '<p><strong>Chic Beauty Studio</strong> è il tuo rifugio di bellezza nel cuore di Milano. Specializzate in colorazione e styling, le nostre professioniste ti guidano verso il look che hai sempre desiderato.</p><p>Dall\'highlights alle tinte personalizzate, dalla piega perfetta al taglio su misura: ogni servizio è pensato per valorizzare la tua unicità.</p>',
@@ -69,9 +68,8 @@ class SalonProfileSeeder extends Seeder
         }
 
         return [
-            'name'          => 'Rossini Barbershop',
-            'tagline'       => "L'arte del taglio perfetto dal 2008",
-            'primary_color' => '#1d1d1d',
+            'name'    => 'Rossini Barbershop',
+            'tagline' => "L'arte del taglio perfetto dal 2008",
             'phone'         => '+39 02 8765 4321',
             'address'       => 'Via Brera 14, 20121 Milano',
             'description'   => '<p>Da oltre 15 anni, <strong>Rossini Barbershop</strong> è il punto di riferimento per chi vuole un taglio impeccabile nel cuore di Milano. Il nostro team di professionisti unisce tecniche tradizionali da barbiere con le tendenze più moderne, per un risultato che valorizza ogni tipo di capello e barba.</p><p>Ogni visita è un momento di cura dedicato a te: dalla rasatura con rasoio a mano libera all\'asciugamano caldo, fino alla modellatura della barba più complessa. Niente fretta, solo qualità.</p>',

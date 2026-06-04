@@ -61,9 +61,8 @@ class BusinessProvisioningService
         ]);
 
         SalonProfile::create([
-            'business_id'   => $business->id,
-            'name'          => $business->name,
-            'primary_color' => '#1d1d1d',
+            'business_id' => $business->id,
+            'name'        => $business->name,
         ]);
 
         IntegrationSetting::create(['business_id' => $business->id]);
