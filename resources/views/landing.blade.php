@@ -190,39 +190,74 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
                 Una piattaforma completa, progettata per farti risparmiare tempo ogni giorno.
             </p>
         </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            @php $features = [
-                ['path' => 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
-                 'title' => 'Prenotazioni Online 24/7',
-                 'desc'  => 'I clienti prenotano dal telefono in qualsiasi momento. Nessuna telefonata, nessun messaggio da gestire.'],
-                ['path' => 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z',
-                 'title' => 'Gestione Staff e Turni',
-                 'desc'  => 'Ogni operatore con il proprio calendario, servizi assegnati e disponibilità personalizzata.'],
-                ['path' => 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z',
-                 'title' => 'Pagamenti Integrati',
-                 'desc'  => 'Stripe, POS o contanti: incassa online o in salone. Ogni transazione tracciata in automatico.'],
-                ['path' => 'M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9',
-                 'title' => 'Promemoria Automatici',
-                 'desc'  => 'Email, SMS e WhatsApp prima dell\'appuntamento. I no-show si riducono drasticamente.'],
-                ['path' => 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',
-                 'title' => 'Lista d\'Attesa Intelligente',
-                 'desc'  => 'Slot liberati? Il sistema avvisa i clienti in attesa e gestisce le sostituzioni in autonomia.'],
-                ['path' => 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
-                 'title' => 'Report e Statistiche',
-                 'desc'  => 'Incassi, servizi più richiesti e performance dello staff in tempo reale, sempre aggiornati.'],
-            ]; @endphp
-            @foreach ($features as $i => $f)
-            <div class="f-card bg-cream rounded-2xl p-7 border border-warm-border shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
-                 data-r style="--d:{{ $i }}">
-                <div class="w-11 h-11 bg-terra-light rounded-xl flex items-center justify-center mb-5">
-                    <svg class="w-5 h-5 text-terra" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="{{ $f['path'] }}"/>
+        <div class="feat-bento">
+
+            {{-- F1: Prenotazioni 24/7 — wide (2 col) — core value proposition --}}
+            <div class="f-card feat-wide bg-cream rounded-2xl p-8 lg:p-10 border border-warm-border shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5" data-r style="--d:0">
+                <div class="w-12 h-12 bg-terra-light rounded-xl flex items-center justify-center mb-6">
+                    <svg class="w-6 h-6 text-terra" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                     </svg>
                 </div>
-                <h3 class="font-semibold text-ink mb-2">{{ $f['title'] }}</h3>
-                <p class="text-sm text-ink-muted leading-relaxed">{{ $f['desc'] }}</p>
+                <h3 class="text-lg font-semibold text-ink mb-2">Prenotazioni Online 24/7</h3>
+                <p class="text-sm text-ink-muted leading-relaxed max-w-lg">I clienti prenotano dal telefono in qualsiasi momento. Nessuna telefonata, nessun messaggio da gestire.</p>
             </div>
-            @endforeach
+
+            {{-- F2: Gestione Staff — standard --}}
+            <div class="f-card bg-cream rounded-2xl p-7 border border-warm-border shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5" data-r style="--d:1">
+                <div class="w-11 h-11 bg-terra-light rounded-xl flex items-center justify-center mb-5">
+                    <svg class="w-5 h-5 text-terra" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                </div>
+                <h3 class="font-semibold text-ink mb-2">Gestione Staff e Turni</h3>
+                <p class="text-sm text-ink-muted leading-relaxed">Ogni operatore con il proprio calendario, servizi assegnati e disponibilità personalizzata.</p>
+            </div>
+
+            {{-- F3: Pagamenti — standard --}}
+            <div class="f-card bg-cream rounded-2xl p-7 border border-warm-border shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5" data-r style="--d:2">
+                <div class="w-11 h-11 bg-terra-light rounded-xl flex items-center justify-center mb-5">
+                    <svg class="w-5 h-5 text-terra" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                    </svg>
+                </div>
+                <h3 class="font-semibold text-ink mb-2">Pagamenti Integrati</h3>
+                <p class="text-sm text-ink-muted leading-relaxed">Stripe, POS o contanti: incassa online o in salone. Ogni transazione tracciata in automatico.</p>
+            </div>
+
+            {{-- F4: Promemoria Automatici — wide (2 col) — key differentiator --}}
+            <div class="f-card feat-wide bg-cream rounded-2xl p-8 lg:p-10 border border-warm-border shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5" data-r style="--d:3">
+                <div class="w-12 h-12 bg-terra-light rounded-xl flex items-center justify-center mb-6">
+                    <svg class="w-6 h-6 text-terra" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-ink mb-2">Promemoria Automatici</h3>
+                <p class="text-sm text-ink-muted leading-relaxed max-w-lg">Email, SMS e WhatsApp prima dell'appuntamento. I no-show si riducono drasticamente.</p>
+            </div>
+
+            {{-- F5: Lista d'Attesa — standard --}}
+            <div class="f-card bg-cream rounded-2xl p-7 border border-warm-border shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5" data-r style="--d:4">
+                <div class="w-11 h-11 bg-terra-light rounded-xl flex items-center justify-center mb-5">
+                    <svg class="w-5 h-5 text-terra" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <h3 class="font-semibold text-ink mb-2">Lista d'Attesa Intelligente</h3>
+                <p class="text-sm text-ink-muted leading-relaxed">Slot liberati? Il sistema avvisa i clienti in attesa e gestisce le sostituzioni in autonomia.</p>
+            </div>
+
+            {{-- F6: Report e Statistiche — wide (2 col) --}}
+            <div class="f-card feat-wide bg-cream rounded-2xl p-8 lg:p-10 border border-warm-border shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5" data-r style="--d:5">
+                <div class="w-12 h-12 bg-terra-light rounded-xl flex items-center justify-center mb-6">
+                    <svg class="w-6 h-6 text-terra" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-ink mb-2">Report e Statistiche</h3>
+                <p class="text-sm text-ink-muted leading-relaxed max-w-lg">Incassi, servizi più richiesti e performance dello staff in tempo reale, sempre aggiornati.</p>
+            </div>
+
         </div>
     </div>
 </section>
