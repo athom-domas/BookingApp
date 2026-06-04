@@ -118,5 +118,8 @@
 </footer>
 
 @stack('scripts')
+<!-- impeccable-live-start -->
+<script src="http://localhost:8400/live.js"></script>
+<!-- impeccable-live-end -->
 </body>
 </html>

@@ -79,12 +79,12 @@
             <span class="text-xs font-medium text-terra-light tracking-wide">Software gestionale per saloni</span>
         </div>
 
-        <h1 class="h-title font-display text-6xl sm:text-7xl lg:text-8xl font-semibold text-white leading-[1.05] mb-6">
+        <h1 class="h-title font-display text-6xl sm:text-7xl lg:text-8xl font-semibold text-white leading-[1.05] mb-6 text-balance">
             Porta il tuo salone a un livello più
-            <span class="text-grad"> professionale</span>
+            <span class="text-terra"> professionale</span>
         </h1>
 
-        <p class="h-sub text-lg sm:text-xl text-slate-300 max-w-2xl mx-auto mb-10 leading-relaxed">
+        <p class="h-sub text-lg sm:text-xl text-white/70 max-w-2xl mx-auto mb-10 leading-relaxed">
 Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gestione completa dello staff, senza complicare il lavoro quotidiano.
         </p>
 
@@ -97,7 +97,7 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
                 </svg>
             </a>
             <a href="#come-funziona"
-               class="inline-flex items-center gap-1.5 text-sm font-medium text-slate-300 hover:text-white transition">
+               class="inline-flex items-center gap-1.5 text-sm font-medium text-white/70 hover:text-white transition">
                 Scopri come funziona
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
@@ -105,7 +105,7 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
             </a>
         </div>
 
-        <p class="h-fine mt-6 text-xs text-slate-400">
+        <p class="h-fine mt-6 text-xs text-white/50">
             Nessuna carta di credito richiesta &middot; 14 giorni gratuiti &middot; Cancelli quando vuoi
         </p>
     </div>
@@ -146,7 +146,7 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
     <div class="max-w-5xl mx-auto">
         <div class="text-center mb-16">
             <p class="eyebrow" data-r style="--d:0">Il problema</p>
-            <h2 class="font-display text-4xl sm:text-5xl font-semibold text-ink mb-4" data-r style="--d:1">
+            <h2 class="font-display text-4xl sm:text-5xl font-semibold text-ink mb-4 text-balance" data-r style="--d:1">
                 Ancora usi carta, WhatsApp<br class="hidden sm:block"> e fogli Excel per gestire il salone?
             </h2>
             <p class="text-ink-muted max-w-xl mx-auto" data-r style="--d:2">
@@ -185,7 +185,7 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
     <div class="max-w-6xl mx-auto">
         <div class="text-center mb-16">
             <p class="eyebrow" data-r style="--d:0">Funzionalità</p>
-            <h2 class="font-display text-4xl sm:text-5xl font-semibold text-ink mb-4" data-r style="--d:1">
+            <h2 class="font-display text-4xl sm:text-5xl font-semibold text-ink mb-4 text-balance" data-r style="--d:1">
                 Tutto quello che serve per gestire il tuo salone
             </h2>
             <p class="text-ink-muted max-w-xl mx-auto" data-r style="--d:2">
@@ -235,7 +235,7 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
     <div class="max-w-4xl mx-auto">
         <div class="text-center mb-16">
             <p class="eyebrow" data-r style="--d:0">Come funziona</p>
-            <h2 class="font-display text-4xl sm:text-5xl font-semibold text-ink mb-4" data-r style="--d:1">
+            <h2 class="font-display text-4xl sm:text-5xl font-semibold text-ink mb-4 text-balance" data-r style="--d:1">
                 Attivo in 5 minuti. Nessuna installazione.
             </h2>
             <p class="text-ink-muted" data-r style="--d:2">Bastano tre passi per portare il tuo salone online.</p>
@@ -267,7 +267,7 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
 <section id="prezzi" class="py-24 px-6 bg-cream-dark scroll-mt-16">
     <div class="max-w-4xl mx-auto text-center">
         <p class="eyebrow justify-center" data-r style="--d:0">Prezzi</p>
-        <h2 class="font-display text-4xl sm:text-5xl font-semibold text-ink mb-4" data-r style="--d:1">Prezzo semplice e trasparente</h2>
+        <h2 class="font-display text-4xl sm:text-5xl font-semibold text-ink mb-4 text-balance" data-r style="--d:1">Prezzo semplice e trasparente</h2>
         <p class="text-ink-muted mb-2" data-r style="--d:2">Nessun costo di setup. Cancelli quando vuoi. I primi 14 giorni sono gratis.</p>
         <p class="text-xs text-ink-muted/60 mb-12" data-r style="--d:3">Prezzi IVA esclusa</p>
 
@@ -306,11 +306,11 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
     <div class="max-w-6xl mx-auto">
         <div class="text-center mb-16">
             <p class="eyebrow" data-r style="--d:0">Recensioni</p>
-            <h2 class="font-display text-4xl sm:text-5xl font-semibold text-ink mb-4" data-r style="--d:1">Cosa dicono i nostri clienti</h2>
+            <h2 class="font-display text-4xl sm:text-5xl font-semibold text-ink mb-4 text-balance" data-r style="--d:1">Cosa dicono i nostri clienti</h2>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             @foreach([
-                ['quote'=>'Prima passavo mezz\'ora ogni mattina a confermare appuntamenti su WhatsApp. Adesso arrivano i clienti e basta. I promemoria pensano a tutto, io non devo fare niente.','name'=>'Giulia Rossi',  'role'=>'Parrucchiera, Milano','initial'=>'G','color'=>'bg-teal-500'],
+                ['quote'=>'Prima passavo mezz\'ora ogni mattina a confermare appuntamenti su WhatsApp. Adesso arrivano i clienti e basta. I promemoria pensano a tutto, io non devo fare niente.','name'=>'Giulia Rossi',  'role'=>'Parrucchiera, Milano','initial'=>'G','color'=>'bg-terra'],
                 ['quote'=>'Ho tre colleghi in salone e prima era il caos: turni sbagliati, pagamenti da registrare a mano. Adesso tutto è in ordine e so sempre com\'è andata la settimana.',    'name'=>'Marco Torrisi', 'role'=>'Barbiere, Roma',       'initial'=>'M','color'=>'bg-indigo-500'],
                 ['quote'=>'Le mie clienti prenotano quando vogliono, anche a mezzanotte. Non rispondo più a nessun messaggio per gli appuntamenti. E le prenotazioni sono aumentate.',              'name'=>'Alessia Marino','role'=>'Estetista, Torino',    'initial'=>'A','color'=>'bg-rose-500'],
             ] as $i => $t)
@@ -345,7 +345,7 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
     <div class="max-w-2xl mx-auto" x-data="{ active: null }">
         <div class="text-center mb-16">
             <p class="eyebrow" data-r style="--d:0">FAQ</p>
-            <h2 class="font-display text-4xl sm:text-5xl font-semibold text-ink mb-4" data-r style="--d:1">Domande frequenti</h2>
+            <h2 class="font-display text-4xl sm:text-5xl font-semibold text-ink mb-4 text-balance" data-r style="--d:1">Domande frequenti</h2>
         </div>
         <div class="space-y-2">
             @foreach([
@@ -385,10 +385,10 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
 {{-- CTA FINALE --}}
 <section class="bg-ink relative overflow-hidden py-24 px-6 text-center">
     <div class="relative z-10 max-w-2xl mx-auto">
-        <h2 class="font-display text-4xl sm:text-5xl font-semibold text-white mb-4" data-r style="--d:0">
+        <h2 class="font-display text-4xl sm:text-5xl font-semibold text-white mb-4 text-balance" data-r style="--d:0">
             Il tuo salone merita di più. Inizia oggi.
         </h2>
-        <p class="text-slate-300 mb-8 text-lg leading-relaxed" data-r style="--d:1">
+        <p class="text-white/70 mb-8 text-lg leading-relaxed" data-r style="--d:1">
             Unisciti a 500+ saloni che hanno già scelto GestionalePro.
         </p>
         <div data-r style="--d:2">
@@ -399,7 +399,7 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
                 </svg>
             </a>
-            <p class="mt-4 text-xs text-slate-500">Nessuna carta di credito &middot; Cancelli quando vuoi</p>
+            <p class="mt-4 text-xs text-white/50">Nessuna carta di credito &middot; Cancelli quando vuoi</p>
         </div>
     </div>
 </section>
@@ -448,7 +448,7 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
     // Barra progresso scroll
     var bar = document.getElementById('spb');
     window.addEventListener('scroll', function () {
-        bar.style.width = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight) * 100) + '%';
+        bar.style.transform = 'scaleX(' + (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) + ')';
     }, { passive: true });
 
     // Scroll reveal

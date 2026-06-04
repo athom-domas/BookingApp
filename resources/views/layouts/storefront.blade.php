@@ -438,5 +438,8 @@ $_radius      = $_radiusMap[$_border] ?? '0';
 
     @stack('scripts')
     @vite('resources/js/app.js')
+<!-- impeccable-live-start -->
+<script src="http://localhost:8400/live.js"></script>
+<!-- impeccable-live-end -->
 </body>
 </html>

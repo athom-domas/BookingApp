@@ -103,10 +103,12 @@
     top: 0;
     left: 0;
     height: 2px;
-    width: 0%;
+    width: 100%;
     background: linear-gradient(to right, #C4714A, #1C1410);
     z-index: 200;
-    transition: width 0.08s linear;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.08s linear;
 }
 
 // ── Eyebrow labels ────────────────────────────────────────────────────────────
@@ -133,17 +135,32 @@
     }
 }
 
-// ── Testo gradiente ───────────────────────────────────────────────────────────
-
-.text-grad {
-    background: linear-gradient(120deg, #C4714A, #8B4513);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-}
-
 // ── Scroll offset per header fisso ───────────────────────────────────────────
 
 html {
     scroll-padding-top: 80px;
+}
+
+// ── Reduced motion ────────────────────────────────────────────────────────────
+
+@media (prefers-reduced-motion: reduce) {
+    .h-badge, .h-title, .h-sub, .h-ctas, .h-fine {
+        animation: none;
+        opacity: 1;
+        transform: none;
+    }
+
+    [data-r] {
+        transition: none;
+        opacity: 1;
+        transform: none;
+    }
+
+    .shimmer::after {
+        display: none;
+    }
+
+    #spb {
+        transition: none;
+    }
 }
