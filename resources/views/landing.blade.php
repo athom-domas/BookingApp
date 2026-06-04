@@ -349,7 +349,7 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
         <p class="text-xs text-ink-muted/60 mb-12" data-r style="--d:3">Prezzi IVA esclusa</p>
 
         <div class="max-w-sm mx-auto" data-r style="--d:2">
-            <div class="bg-cream rounded-2xl p-8 border border-warm-border shadow-xl shadow-ink/8 flex flex-col">
+            <div class="bg-cream rounded-2xl p-8 border border-warm-border shadow-xl shadow-ink/10 flex flex-col">
                 <div class="mb-6 text-left">
                     <h3 class="font-bold text-ink text-lg mb-1">Piano completo</h3>
                     <div class="flex items-end gap-1 mt-2">
@@ -510,7 +510,7 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
                 </ul>
             </div>
         </div>
-        <div class="border-t border-[#2D2420] pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-ink-muted/70">
+        <div class="border-t border-white/10 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-ink-muted/70">
             <span>© {{ date('Y') }} GestionalePro. Tutti i diritti riservati.</span>
             <div class="flex gap-5">
                 <a href="{{ route('legal.privacy') }}" class="hover:text-white/90 transition">Privacy Policy</a>
