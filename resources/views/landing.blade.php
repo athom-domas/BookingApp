@@ -151,29 +151,17 @@
 
 
 {{-- HERO --}}
-<section class="hero-gradient relative overflow-hidden min-h-[680px] flex items-center pt-16 pb-32 px-6">
-    {{-- Dot grid --}}
-    <div class="dot-grid absolute inset-0 pointer-events-none"></div>
-
-    {{-- Blob 1 --}}
-    <div class="blob absolute -top-40 -right-40 w-[520px] h-[520px] rounded-full pointer-events-none"
-         style="background:radial-gradient(circle,rgba(13,148,136,0.2) 0%,transparent 70%)"></div>
-    {{-- Blob 2 --}}
-    <div class="blob blob-2 absolute -bottom-24 -left-24 w-[380px] h-[380px] rounded-full pointer-events-none"
-         style="background:radial-gradient(circle,rgba(99,102,241,0.13) 0%,transparent 70%)"></div>
-    {{-- Blob 3 --}}
-    <div class="blob blob-3 absolute top-1/3 left-1/3 w-[260px] h-[260px] rounded-full pointer-events-none"
-         style="background:radial-gradient(circle,rgba(20,184,166,0.08) 0%,transparent 70%)"></div>
+<section class="bg-ink relative overflow-hidden min-h-[680px] flex items-center pt-16 pb-24 px-6">
 
     <div class="relative z-10 max-w-4xl mx-auto text-center">
-        <div class="h-badge inline-flex items-center gap-2 bg-teal-900/60 border border-teal-700/40 rounded-full px-4 py-1.5 mb-8">
-            <span class="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse"></span>
-            <span class="text-xs font-medium text-teal-300 tracking-wide">Software gestionale per saloni</span>
+        <div class="h-badge inline-flex items-center gap-2 bg-terra/15 border border-terra/25 rounded-full px-4 py-1.5 mb-8">
+            <span class="w-1.5 h-1.5 rounded-full bg-terra animate-pulse"></span>
+            <span class="text-xs font-medium text-[#F2DDD3] tracking-wide">Software gestionale per saloni</span>
         </div>
 
-        <h1 class="h-title text-5xl sm:text-6xl font-bold text-white leading-tight mb-6 tracking-tight">
-            Porta il tuo salone a un livello più <br class="hidden sm:block">
-            <span class="text-grad">professionale</span>
+        <h1 class="h-title font-display text-6xl sm:text-7xl lg:text-8xl font-semibold text-white leading-[1.05] mb-6">
+            Porta il tuo salone a un livello più
+            <span class="text-grad"> professionale</span>
         </h1>
 
         <p class="h-sub text-lg sm:text-xl text-slate-300 max-w-2xl mx-auto mb-10 leading-relaxed">
@@ -182,7 +170,7 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
 
         <div class="h-ctas flex flex-col sm:flex-row items-center justify-center gap-4">
             <a href="{{ route('contact') }}"
-               class="shimmer w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-teal-500 hover:bg-teal-400 text-white font-semibold px-8 py-4 rounded-xl transition text-base shadow-lg shadow-teal-900/30">
+               class="shimmer w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-terra hover:bg-terra/85 text-white font-semibold px-8 py-4 rounded-xl transition text-base shadow-lg shadow-ink/30">
                 Richiedi una Demo Gratuita
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
@@ -202,12 +190,6 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
         </p>
     </div>
 
-    {{-- Wave divider --}}
-    <div class="absolute bottom-0 left-0 right-0 pointer-events-none">
-        <svg viewBox="0 0 1440 56" class="w-full" preserveAspectRatio="none">
-            <path d="M0,56 C240,18 480,48 720,28 C960,8 1200,42 1440,18 L1440,56 Z" fill="#f8fafc"/>
-        </svg>
-    </div>
 </section>
 
 
