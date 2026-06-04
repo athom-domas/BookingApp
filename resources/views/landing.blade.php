@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>GestionalePro · Software prenotazioni per saloni e centri estetici</title>
     <meta name="description" content="Gestisci prenotazioni, staff e pagamenti del tuo salone in un'unica piattaforma. 14 giorni gratis, nessuna carta richiesta.">
+    <script>if(location.hash)history.replaceState(null,'',location.pathname)</script>
     @vite(['resources/css/app.css', 'resources/scss/landing.scss', 'resources/js/app.js'])
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -27,9 +28,9 @@
         </a>
 
         <nav class="hidden md:flex items-center gap-8">
-            <a href="#funzionalita" class="text-sm font-medium transition"
+            <a href="#funzionalita" @click.prevent="scrollToSection('funzionalita')" class="text-sm font-medium transition"
                :class="scrolled ? 'text-ink-muted hover:text-ink' : 'text-white/80 hover:text-white'">Funzionalità</a>
-            <a href="#prezzi" class="text-sm font-medium transition"
+            <a href="#prezzi" @click.prevent="scrollToSection('prezzi')" class="text-sm font-medium transition"
                :class="scrolled ? 'text-ink-muted hover:text-ink' : 'text-white/80 hover:text-white'">Prezzi</a>
             <a href="{{ route('contact') }}"
                class="shimmer text-sm font-semibold bg-terra text-white px-4 py-2 rounded-lg hover:bg-terra/90 transition shadow-sm">
@@ -37,34 +38,47 @@
             </a>
         </nav>
 
-        <button @click="open = !open" class="md:hidden p-2 rounded-md transition"
+        <button @click="open = !open" class="md:hidden p-2 rounded-md transition relative w-9 h-9 flex items-center justify-center"
                 :class="scrolled ? 'text-ink' : 'text-white'">
-            <svg x-show="!open" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg x-show="!open"
+                 x-transition:enter="transition ease-out duration-150"
+                 x-transition:enter-start="opacity-0 rotate-90"
+                 x-transition:enter-end="opacity-100 rotate-0"
+                 x-transition:leave="transition ease-in duration-100"
+                 x-transition:leave-start="opacity-100 rotate-0"
+                 x-transition:leave-end="opacity-0 -rotate-90"
+                 class="w-5 h-5 absolute" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
             </svg>
-            <svg x-show="open" x-cloak class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg x-show="open" x-cloak
+                 x-transition:enter="transition ease-out duration-150"
+                 x-transition:enter-start="opacity-0 -rotate-90"
+                 x-transition:enter-end="opacity-100 rotate-0"
+                 x-transition:leave="transition ease-in duration-100"
+                 x-transition:leave-start="opacity-100 rotate-0"
+                 x-transition:leave-end="opacity-0 rotate-90"
+                 class="w-5 h-5 absolute" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
             </svg>
         </button>
     </div>
 
-    <div x-show="open" x-cloak
-         x-transition:enter="transition ease-out duration-200"
-         x-transition:enter-start="-translate-y-2"
-         x-transition:enter-end="translate-y-0"
-         x-transition:leave="transition ease-in duration-150"
-         x-transition:leave-start="translate-y-0"
-         x-transition:leave-end="-translate-y-2"
-         class="md:hidden bg-cream border-b border-warm-border shadow-lg">
-        <div class="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-1">
-            <a href="#funzionalita" @click="open = false"
-               class="text-sm font-medium text-ink px-2 py-3 rounded-lg hover:bg-cream-dark transition">Funzionalità</a>
-            <a href="#prezzi" @click="open = false"
-               class="text-sm font-medium text-ink px-2 py-3 rounded-lg hover:bg-cream-dark transition">Prezzi</a>
-            <a href="{{ route('contact') }}"
-               class="mt-2 text-sm font-semibold bg-terra text-white px-4 py-3 rounded-xl text-center hover:bg-terra/90 transition">
-                Inizia Gratis
-            </a>
+    <div class="md:hidden nav-drawer"
+         :style="open ? 'grid-template-rows: 1fr' : 'grid-template-rows: 0fr'">
+        <div class="overflow-hidden">
+            <div class="nav-drawer-content bg-cream border-b border-warm-border shadow-lg"
+                 :class="open ? 'opacity-100' : 'opacity-0'">
+                <div class="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-1">
+                    <a href="#funzionalita" @click.prevent="scrollToSection('funzionalita'); open = false"
+                       class="text-sm font-medium text-ink px-2 py-3 rounded-lg hover:bg-cream-dark transition">Funzionalità</a>
+                    <a href="#prezzi" @click.prevent="scrollToSection('prezzi'); open = false"
+                       class="text-sm font-medium text-ink px-2 py-3 rounded-lg hover:bg-cream-dark transition">Prezzi</a>
+                    <a href="{{ route('contact') }}"
+                       class="mt-2 text-sm font-semibold bg-terra text-white px-4 py-3 rounded-xl text-center hover:bg-terra/90 transition">
+                        Inizia Gratis
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 </header>
@@ -96,7 +110,7 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
                 </svg>
             </a>
-            <a href="#come-funziona"
+            <a href="#come-funziona" @click.prevent="scrollToSection('come-funziona')"
                class="inline-flex items-center gap-1.5 text-sm font-medium text-white/70 hover:text-white transition">
                 Scopri come funziona
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -153,27 +167,25 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
             </p>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            @foreach([
-                ['path' => 'M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
-                 'title' => 'Clienti che si dimenticano',
-                 'desc'  => 'Perdi tempo a richiamare e inviare messaggi a mano. I no-show ti costano soldi ogni settimana.'],
-                ['path' => 'M9 14l6-6m-5.5.5h.01m4.99 5h.01M3 10h18M7 15h1m4 0h1M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
-                 'title' => 'Incassi difficili da tracciare',
-                 'desc'  => 'Contanti, carte, bonifici: a fine mese non sai mai quanto hai incassato davvero e dove.'],
-                ['path' => 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
-                 'title' => 'Staff e turni da coordinare',
-                 'desc'  => 'Ogni operatore con orari diversi. Senza un sistema unico, le sovrapposizioni sono inevitabili.'],
-            ] as $i => $p)
-            <div class="bg-cream-dark rounded-2xl p-8 border border-warm-border" data-r style="--d:{{ $i }}">
-                <div class="w-11 h-11 bg-red-50 rounded-xl flex items-center justify-center mb-5">
-                    <svg class="w-5 h-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="{{ $p['path'] }}"/>
-                    </svg>
-                </div>
-                <h3 class="font-semibold text-ink mb-2">{{ $p['title'] }}</h3>
-                <p class="text-sm text-ink-muted leading-relaxed">{{ $p['desc'] }}</p>
+
+            <div class="bg-cream-dark rounded-2xl p-8 border border-warm-border" data-r style="--d:0">
+                <div class="font-display text-[3.5rem] font-semibold italic text-terra leading-none mb-4">01</div>
+                <h3 class="font-semibold text-ink mb-2">Clienti che si dimenticano</h3>
+                <p class="text-sm text-ink-muted leading-relaxed">Perdi tempo a richiamare e inviare messaggi a mano. I no-show ti costano soldi ogni settimana.</p>
             </div>
-            @endforeach
+
+            <div class="bg-cream-dark rounded-2xl p-8 border border-warm-border" data-r style="--d:1">
+                <div class="font-display text-[3.5rem] font-semibold italic text-terra leading-none mb-4">02</div>
+                <h3 class="font-semibold text-ink mb-2">Incassi difficili da tracciare</h3>
+                <p class="text-sm text-ink-muted leading-relaxed">Contanti, carte, bonifici: a fine mese non sai mai quanto hai incassato davvero e dove.</p>
+            </div>
+
+            <div class="bg-cream-dark rounded-2xl p-8 border border-warm-border" data-r style="--d:2">
+                <div class="font-display text-[3.5rem] font-semibold italic text-terra leading-none mb-4">03</div>
+                <h3 class="font-semibold text-ink mb-2">Staff e turni da coordinare</h3>
+                <p class="text-sm text-ink-muted leading-relaxed">Ogni operatore con orari diversi. Senza un sistema unico, le sovrapposizioni sono inevitabili.</p>
+            </div>
+
         </div>
     </div>
 </section>
@@ -181,83 +193,65 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
 
 {{-- FEATURES --}}
 <section id="funzionalita" class="py-24 px-6 bg-cream-dark scroll-mt-16">
-    <div class="max-w-6xl mx-auto">
-        <div class="text-center mb-16">
-            <h2 class="font-display text-4xl sm:text-5xl font-semibold text-ink mb-4 text-balance" data-r style="--d:0">
-                Tutto quello che serve per gestire il tuo salone
-            </h2>
-            <p class="text-ink-muted max-w-xl mx-auto" data-r style="--d:1">
-                Una piattaforma completa, progettata per farti risparmiare tempo ogni giorno.
-            </p>
+    <div class="max-w-5xl mx-auto">
+        <div class="text-center mb-20">
+            <h2 class="font-display text-4xl sm:text-5xl font-semibold text-ink mb-4 text-balance" data-r style="--d:0">Tutto quello che serve per gestire il tuo salone</h2>
+            <p class="text-ink-muted max-w-xl mx-auto" data-r style="--d:1">Una piattaforma completa, progettata per farti risparmiare tempo ogni giorno.</p>
         </div>
-        <div class="feat-bento">
-
-            {{-- F1: Prenotazioni 24/7 — wide (2 col) — core value proposition --}}
-            <div class="f-card feat-wide bg-cream rounded-2xl p-8 lg:p-10 border border-warm-border shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5" data-r style="--d:0">
-                <div class="w-12 h-12 bg-terra-light rounded-xl flex items-center justify-center mb-6">
-                    <svg class="w-6 h-6 text-terra" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                    </svg>
+        <div class="flex flex-col gap-10" data-r style="--d:2">
+            {{-- Pair 1 --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
+                <div>
+                    <div class="w-10 h-10 rounded-full bg-terra-light flex items-center justify-center mb-4">
+                        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#C4714A" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    </div>
+                    <p class="font-semibold text-ink mb-1.5">Prenotazioni Online 24/7</p>
+                    <p class="text-sm text-ink-muted leading-relaxed">I clienti prenotano dal telefono in qualsiasi momento. Nessuna telefonata, nessun messaggio da gestire.</p>
                 </div>
-                <h3 class="text-lg font-semibold text-ink mb-2">Prenotazioni Online 24/7</h3>
-                <p class="text-sm text-ink-muted leading-relaxed max-w-lg">I clienti prenotano dal telefono in qualsiasi momento. Nessuna telefonata, nessun messaggio da gestire.</p>
-            </div>
-
-            {{-- F2: Gestione Staff — standard --}}
-            <div class="f-card bg-cream rounded-2xl p-7 border border-warm-border shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5" data-r style="--d:1">
-                <div class="w-11 h-11 bg-terra-light rounded-xl flex items-center justify-center mb-5">
-                    <svg class="w-5 h-5 text-terra" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
-                    </svg>
+                <div>
+                    <div class="w-10 h-10 rounded-full bg-terra-light flex items-center justify-center mb-4">
+                        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#C4714A" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    </div>
+                    <p class="font-semibold text-ink mb-1.5">Gestione Staff e Turni</p>
+                    <p class="text-sm text-ink-muted leading-relaxed">Ogni operatore con il proprio calendario, servizi assegnati e disponibilità personalizzata.</p>
                 </div>
-                <h3 class="font-semibold text-ink mb-2">Gestione Staff e Turni</h3>
-                <p class="text-sm text-ink-muted leading-relaxed">Ogni operatore con il proprio calendario, servizi assegnati e disponibilità personalizzata.</p>
             </div>
-
-            {{-- F3: Pagamenti — standard --}}
-            <div class="f-card bg-cream rounded-2xl p-7 border border-warm-border shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5" data-r style="--d:2">
-                <div class="w-11 h-11 bg-terra-light rounded-xl flex items-center justify-center mb-5">
-                    <svg class="w-5 h-5 text-terra" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
-                    </svg>
+            <hr class="border-t border-warm-border">
+            {{-- Pair 2 --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
+                <div>
+                    <div class="w-10 h-10 rounded-full bg-terra-light flex items-center justify-center mb-4">
+                        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#C4714A" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                    </div>
+                    <p class="font-semibold text-ink mb-1.5">Pagamenti Integrati</p>
+                    <p class="text-sm text-ink-muted leading-relaxed">Stripe, POS o contanti: incassa online o in salone. Ogni transazione tracciata in automatico.</p>
                 </div>
-                <h3 class="font-semibold text-ink mb-2">Pagamenti Integrati</h3>
-                <p class="text-sm text-ink-muted leading-relaxed">Stripe, POS o contanti: incassa online o in salone. Ogni transazione tracciata in automatico.</p>
-            </div>
-
-            {{-- F4: Promemoria Automatici — wide (2 col) — key differentiator --}}
-            <div class="f-card feat-wide bg-cream rounded-2xl p-8 lg:p-10 border border-warm-border shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5" data-r style="--d:3">
-                <div class="w-12 h-12 bg-terra-light rounded-xl flex items-center justify-center mb-6">
-                    <svg class="w-6 h-6 text-terra" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-                    </svg>
+                <div>
+                    <div class="w-10 h-10 rounded-full bg-terra-light flex items-center justify-center mb-4">
+                        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#C4714A" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                    </div>
+                    <p class="font-semibold text-ink mb-1.5">Promemoria Automatici</p>
+                    <p class="text-sm text-ink-muted leading-relaxed">Email, SMS e WhatsApp prima dell'appuntamento. I no-show si riducono drasticamente.</p>
                 </div>
-                <h3 class="text-lg font-semibold text-ink mb-2">Promemoria Automatici</h3>
-                <p class="text-sm text-ink-muted leading-relaxed max-w-lg">Email, SMS e WhatsApp prima dell'appuntamento. I no-show si riducono drasticamente.</p>
             </div>
-
-            {{-- F5: Lista d'Attesa — standard --}}
-            <div class="f-card bg-cream rounded-2xl p-7 border border-warm-border shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5" data-r style="--d:4">
-                <div class="w-11 h-11 bg-terra-light rounded-xl flex items-center justify-center mb-5">
-                    <svg class="w-5 h-5 text-terra" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
+            <hr class="border-t border-warm-border">
+            {{-- Pair 3 --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
+                <div>
+                    <div class="w-10 h-10 rounded-full bg-terra-light flex items-center justify-center mb-4">
+                        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#C4714A" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <p class="font-semibold text-ink mb-1.5">Lista d'Attesa Intelligente</p>
+                    <p class="text-sm text-ink-muted leading-relaxed">Slot liberati? Il sistema avvisa i clienti in attesa e gestisce le sostituzioni in autonomia.</p>
                 </div>
-                <h3 class="font-semibold text-ink mb-2">Lista d'Attesa Intelligente</h3>
-                <p class="text-sm text-ink-muted leading-relaxed">Slot liberati? Il sistema avvisa i clienti in attesa e gestisce le sostituzioni in autonomia.</p>
-            </div>
-
-            {{-- F6: Report e Statistiche — wide (2 col) --}}
-            <div class="f-card feat-wide bg-cream rounded-2xl p-8 lg:p-10 border border-warm-border shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5" data-r style="--d:5">
-                <div class="w-12 h-12 bg-terra-light rounded-xl flex items-center justify-center mb-6">
-                    <svg class="w-6 h-6 text-terra" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                    </svg>
+                <div>
+                    <div class="w-10 h-10 rounded-full bg-terra-light flex items-center justify-center mb-4">
+                        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#C4714A" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                    </div>
+                    <p class="font-semibold text-ink mb-1.5">Report e Statistiche</p>
+                    <p class="text-sm text-ink-muted leading-relaxed">Incassi, servizi più richiesti e performance dello staff in tempo reale, sempre aggiornati.</p>
                 </div>
-                <h3 class="text-lg font-semibold text-ink mb-2">Report e Statistiche</h3>
-                <p class="text-sm text-ink-muted leading-relaxed max-w-lg">Incassi, servizi più richiesti e performance dello staff in tempo reale, sempre aggiornati.</p>
             </div>
-
         </div>
     </div>
 </section>
@@ -511,15 +505,13 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                     </svg>
                 </button>
-                <div x-show="active === {{ $idx }}"
-                     x-transition:enter="transition ease-out duration-200"
-                     x-transition:enter-start="opacity-0 -translate-y-1"
-                     x-transition:enter-end="opacity-100 translate-y-0"
-                     x-transition:leave="transition ease-in duration-100"
-                     x-transition:leave-start="opacity-100 translate-y-0"
-                     x-transition:leave-end="opacity-0 -translate-y-1"
-                     class="px-6 pb-5 text-sm text-ink-muted leading-relaxed border-t border-warm-border pt-4">
-                    {{ $faq['a'] }}
+                <div class="faq-body grid"
+                     :style="active === {{ $idx }} ? 'grid-template-rows: 1fr' : 'grid-template-rows: 0fr'">
+                    <div class="overflow-hidden">
+                        <div class="px-6 pb-5 pt-4 text-sm text-ink-muted leading-relaxed border-t border-warm-border">
+                            {{ $faq['a'] }}
+                        </div>
+                    </div>
                 </div>
             </div>
             @endforeach
@@ -564,9 +556,9 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
             <div>
                 <h4 class="text-xs font-semibold text-white/70 uppercase tracking-widest mb-4">Prodotto</h4>
                 <ul class="space-y-3 text-sm">
-                    <li><a href="#funzionalita" class="hover:text-white transition">Funzionalità</a></li>
-                    <li><a href="#prezzi" class="hover:text-white transition">Prezzi</a></li>
-                    <li><a href="#come-funziona" class="hover:text-white transition">Come funziona</a></li>
+                    <li><a href="#funzionalita" @click.prevent="scrollToSection('funzionalita')" class="hover:text-white transition">Funzionalità</a></li>
+                    <li><a href="#prezzi" @click.prevent="scrollToSection('prezzi')" class="hover:text-white transition">Prezzi</a></li>
+                    <li><a href="#come-funziona" @click.prevent="scrollToSection('come-funziona')" class="hover:text-white transition">Come funziona</a></li>
                 </ul>
             </div>
             <div>

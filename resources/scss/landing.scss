@@ -160,6 +160,25 @@
     }
 }
 
+// ── Mobile nav drawer ────────────────────────────────────────────────────────
+
+.nav-drawer {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.nav-drawer-content {
+    transition: opacity 0.2s ease 0.05s;
+}
+
+// ── FAQ accordion (height animate) ───────────────────────────────────────────
+
+.faq-body {
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
 // ── Scroll offset per header fisso ───────────────────────────────────────────
 
 html {
@@ -186,6 +205,15 @@ html {
     }
 
     #spb {
+        transition: none;
+    }
+
+    .faq-body {
+        transition: none;
+    }
+
+    .nav-drawer,
+    .nav-drawer-content {
         transition: none;
     }
 }

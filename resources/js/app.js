@@ -3,6 +3,10 @@ import { bookingWizard } from './booking-wizard.js';
 
 window.bookingWizard = bookingWizard;
 
+window.scrollToSection = function (id) {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+};
+
 const ready = (callback) => {
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', callback);
