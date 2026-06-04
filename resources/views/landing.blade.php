@@ -103,8 +103,7 @@
     <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
         <a href="{{ url('/') }}" class="font-bold text-lg tracking-tight transition-colors"
            :class="scrolled ? 'text-ink' : 'text-white'">
-            Gestionale<span class="font-normal transition-colors"
-                            :class="scrolled ? 'text-terra' : 'text-terra'">Pro</span>
+            Gestionale<span class="font-normal text-terra">Pro</span>
         </a>
 
         <nav class="hidden md:flex items-center gap-8">
@@ -119,7 +118,7 @@
         </nav>
 
         <button @click="open = !open" class="md:hidden p-2 rounded-md transition"
-                :class="scrolled ? 'text-gray-700' : 'text-white'">
+                :class="scrolled ? 'text-ink' : 'text-white'">
             <svg x-show="!open" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
             </svg>
@@ -136,12 +135,12 @@
          x-transition:leave="transition ease-in duration-150"
          x-transition:leave-start="translate-y-0"
          x-transition:leave-end="-translate-y-2"
-         class="md:hidden bg-white border-b border-gray-100 shadow-lg">
+         class="md:hidden bg-cream border-b border-warm-border shadow-lg">
         <div class="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-1">
             <a href="#funzionalita" @click="open = false"
-               class="text-sm font-medium text-gray-700 px-2 py-3 rounded-lg hover:bg-slate-50 transition">Funzionalità</a>
+               class="text-sm font-medium text-ink px-2 py-3 rounded-lg hover:bg-cream-dark transition">Funzionalità</a>
             <a href="#prezzi" @click="open = false"
-               class="text-sm font-medium text-gray-700 px-2 py-3 rounded-lg hover:bg-slate-50 transition">Prezzi</a>
+               class="text-sm font-medium text-ink px-2 py-3 rounded-lg hover:bg-cream-dark transition">Prezzi</a>
             <a href="{{ route('contact') }}"
                class="mt-2 text-sm font-semibold bg-terra text-white px-4 py-3 rounded-xl text-center hover:bg-terra/90 transition">
                 Inizia Gratis
