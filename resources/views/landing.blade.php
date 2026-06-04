@@ -114,24 +114,27 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
 
 
 {{-- TRUST BAR --}}
-<section class="bg-cream-dark border-b border-warm-border py-10 px-6">
+<section class="bg-cream-dark border-b border-warm-border py-8 px-6">
     <div class="max-w-4xl mx-auto">
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-            <div class="flex flex-col items-center gap-1.5" data-r style="--d:0">
-                <span class="text-2xl font-bold text-terra" data-counter="500" data-suffix="+">500+</span>
-                <span class="text-xs text-ink-muted font-medium">Saloni attivi</span>
+        <div class="grid grid-cols-2 sm:flex sm:items-center sm:justify-center gap-6 sm:gap-0 text-center">
+            <div class="flex flex-col items-center gap-1.5 sm:flex-1 sm:px-5" data-r style="--d:0">
+                <span class="font-display text-[clamp(2rem,4vw,3rem)] font-semibold leading-none text-terra" data-counter="500" data-suffix="+">500+</span>
+                <span class="text-xs font-medium text-ink-muted leading-snug">Saloni attivi</span>
             </div>
-            <div class="flex flex-col items-center gap-1.5" data-r style="--d:1">
-                <span class="text-2xl font-bold text-terra" data-counter="100" data-suffix="k+">100k+</span>
-                <span class="text-xs text-ink-muted font-medium">Clienti gestiti al mese</span>
+            <div class="hidden sm:block w-px h-9 bg-warm-border shrink-0" aria-hidden="true"></div>
+            <div class="flex flex-col items-center gap-1.5 sm:flex-1 sm:px-5" data-r style="--d:1">
+                <span class="font-display text-[clamp(2rem,4vw,3rem)] font-semibold leading-none text-terra" data-counter="100" data-suffix="k+">100k+</span>
+                <span class="text-xs font-medium text-ink-muted leading-snug">Clienti gestiti al mese</span>
             </div>
-            <div class="flex flex-col items-center gap-1.5" data-r style="--d:2">
-                <span class="text-2xl font-bold text-terra">7/7</span>
-                <span class="text-xs text-ink-muted font-medium">Giorni di supporto</span>
+            <div class="hidden sm:block w-px h-9 bg-warm-border shrink-0" aria-hidden="true"></div>
+            <div class="flex flex-col items-center gap-1.5 sm:flex-1 sm:px-5" data-r style="--d:2">
+                <span class="font-display text-[clamp(2rem,4vw,3rem)] font-semibold leading-none text-terra">7/7</span>
+                <span class="text-xs font-medium text-ink-muted leading-snug">Giorni di supporto</span>
             </div>
-            <div class="flex flex-col items-center gap-1.5" data-r style="--d:3">
-                <span class="text-2xl font-bold text-terra">GDPR</span>
-                <span class="text-xs text-ink-muted font-medium">Compliant &amp; Pagamenti sicuri</span>
+            <div class="hidden sm:block w-px h-9 bg-warm-border shrink-0" aria-hidden="true"></div>
+            <div class="flex flex-col items-center gap-1.5 sm:flex-1 sm:px-5" data-r style="--d:3">
+                <span class="font-display text-[clamp(2rem,4vw,3rem)] font-semibold leading-none text-terra">GDPR</span>
+                <span class="text-xs font-medium text-ink-muted leading-snug">Compliant &amp; Pagamenti sicuri</span>
             </div>
         </div>
     </div>
@@ -488,5 +491,8 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
 })();
 </script>
 
+<!-- impeccable-live-start -->
+<script src="http://localhost:8400/live.js"></script>
+<!-- impeccable-live-end -->
 </body>
 </html>
