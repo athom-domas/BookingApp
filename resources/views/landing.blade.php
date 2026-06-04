@@ -5,90 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>GestionalePro · Software prenotazioni per saloni e centri estetici</title>
     <meta name="description" content="Gestisci prenotazioni, staff e pagamenti del tuo salone in un'unica piattaforma. 14 giorni gratis, nessuna carta richiesta.">
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/css/landing.scss', 'resources/js/app.js'])
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
-    <style>
-        [x-cloak] { display: none !important; }
-
-        /* ── Entrata hero (auto-play) ── */
-        @keyframes fadeUp   { from { opacity:0; transform:translateY(26px); } to { opacity:1; transform:translateY(0); } }
-        @keyframes fadeDown { from { opacity:0; transform:translateY(-14px); } to { opacity:1; transform:translateY(0); } }
-        .h-badge { animation: fadeDown 0.7s cubic-bezier(.22,1,.36,1) 0.10s both; }
-        .h-title { animation: fadeUp  0.8s cubic-bezier(.22,1,.36,1) 0.25s both; }
-        .h-sub   { animation: fadeUp  0.8s cubic-bezier(.22,1,.36,1) 0.40s both; }
-        .h-ctas  { animation: fadeUp  0.8s cubic-bezier(.22,1,.36,1) 0.55s both; }
-        .h-fine  { animation: fadeUp  0.6s ease                       0.72s both; }
-
-        /* ── Scroll reveal ── */
-        [data-r] {
-            opacity: 0;
-            transform: translateY(22px);
-            transition: opacity 0.65s ease, transform 0.65s ease;
-            transition-delay: calc(var(--d, 0) * 110ms);
-        }
-        [data-r].on { opacity: 1; transform: translateY(0); }
-
-        /* ── Feature card spotlight ── */
-        .f-card { position: relative; isolation: isolate; }
-        .f-card::before {
-            content: '';
-            position: absolute; inset: 0;
-            border-radius: inherit;
-            opacity: 0;
-            transition: opacity 0.35s;
-            background: radial-gradient(500px circle at var(--mx,50%) var(--my,50%), rgba(196,113,74,0.09), transparent 65%);
-            pointer-events: none;
-        }
-        .f-card:hover::before { opacity: 1; }
-        .f-card > * { position: relative; z-index: 1; }
-
-        /* ── Shimmer su bottoni ── */
-        .shimmer { position: relative; overflow: hidden; }
-        .shimmer::after {
-            content: '';
-            position: absolute; inset: 0;
-            background: linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.22) 50%, transparent 70%);
-            transform: translateX(-100%) skewX(-15deg);
-        }
-        .shimmer:hover::after { animation: shine 0.6s ease forwards; }
-        @keyframes shine { to { transform: translateX(150%) skewX(-15deg); } }
-
-        /* ── Barra progresso scroll ── */
-        #spb {
-            position: fixed; top: 0; left: 0;
-            height: 2px; width: 0%;
-            background: linear-gradient(to right, #C4714A, #1C1410);
-            z-index: 200;
-            transition: width 0.08s linear;
-        }
-
-        /* ── Eyebrow labels ── */
-        .eyebrow {
-            display: inline-flex; align-items: center; gap: 0.5rem;
-            font-size: 0.68rem; font-weight: 700;
-            letter-spacing: 0.14em; text-transform: uppercase;
-            color: var(--eb-color, #C4714A);
-            margin-bottom: 0.875rem;
-        }
-        .eyebrow::before {
-            content: ''; display: block;
-            width: 1.75rem; height: 2px;
-            background: currentColor; border-radius: 2px; flex-shrink: 0;
-        }
-
-        /* ── Testo gradiente ── */
-        .text-grad {
-            background: linear-gradient(120deg, #C4714A, #8B4513);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        /* ── Scroll offset per header fisso ── */
-        html { scroll-padding-top: 80px; }
-    </style>
 </head>
 <body class="bg-cream text-ink antialiased">
 

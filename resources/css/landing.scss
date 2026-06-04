@@ -1,0 +1,149 @@
+// Landing page — stili specifici
+// Animazioni, componenti UI e override globali per landing.blade.php
+
+[x-cloak] {
+    display: none !important;
+}
+
+// ── Entrata hero (auto-play) ──────────────────────────────────────────────────
+
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(26px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-14px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.h-badge { animation: fadeDown 0.7s cubic-bezier(.22, 1, .36, 1) 0.10s both; }
+.h-title { animation: fadeUp  0.8s cubic-bezier(.22, 1, .36, 1) 0.25s both; }
+.h-sub   { animation: fadeUp  0.8s cubic-bezier(.22, 1, .36, 1) 0.40s both; }
+.h-ctas  { animation: fadeUp  0.8s cubic-bezier(.22, 1, .36, 1) 0.55s both; }
+.h-fine  { animation: fadeUp  0.6s ease                          0.72s both; }
+
+// ── Scroll reveal ─────────────────────────────────────────────────────────────
+
+[data-r] {
+    opacity: 0;
+    transform: translateY(22px);
+    transition: opacity 0.65s ease, transform 0.65s ease;
+    transition-delay: calc(var(--d, 0) * 110ms);
+
+    &.on {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+// ── Feature card spotlight ────────────────────────────────────────────────────
+
+.f-card {
+    position: relative;
+    isolation: isolate;
+
+    &::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        opacity: 0;
+        transition: opacity 0.35s;
+        background: radial-gradient(
+            500px circle at var(--mx, 50%) var(--my, 50%),
+            rgba(196, 113, 74, 0.09),
+            transparent 65%
+        );
+        pointer-events: none;
+    }
+
+    &:hover::before {
+        opacity: 1;
+    }
+
+    > * {
+        position: relative;
+        z-index: 1;
+    }
+}
+
+// ── Shimmer su bottoni ────────────────────────────────────────────────────────
+
+@keyframes shine {
+    to { transform: translateX(150%) skewX(-15deg); }
+}
+
+.shimmer {
+    position: relative;
+    overflow: hidden;
+
+    &::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+            110deg,
+            transparent 30%,
+            rgba(255, 255, 255, 0.22) 50%,
+            transparent 70%
+        );
+        transform: translateX(-100%) skewX(-15deg);
+    }
+
+    &:hover::after {
+        animation: shine 0.6s ease forwards;
+    }
+}
+
+// ── Barra progresso scroll ────────────────────────────────────────────────────
+
+#spb {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 2px;
+    width: 0%;
+    background: linear-gradient(to right, #C4714A, #1C1410);
+    z-index: 200;
+    transition: width 0.08s linear;
+}
+
+// ── Eyebrow labels ────────────────────────────────────────────────────────────
+
+.eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--eb-color, #C4714A);
+    margin-bottom: 0.875rem;
+
+    &::before {
+        content: '';
+        display: block;
+        width: 1.75rem;
+        height: 2px;
+        background: currentColor;
+        border-radius: 2px;
+        flex-shrink: 0;
+    }
+}
+
+// ── Testo gradiente ───────────────────────────────────────────────────────────
+
+.text-grad {
+    background: linear-gradient(120deg, #C4714A, #8B4513);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+// ── Scroll offset per header fisso ───────────────────────────────────────────
+
+html {
+    scroll-padding-top: 80px;
+}
