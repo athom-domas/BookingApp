@@ -258,14 +258,14 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
 
 
 {{-- FEATURES --}}
-<section id="funzionalita" class="py-24 px-6 bg-slate-50 scroll-mt-16">
+<section id="funzionalita" class="py-24 px-6 bg-cream-dark scroll-mt-16">
     <div class="max-w-6xl mx-auto">
         <div class="text-center mb-16">
             <p class="eyebrow" data-r style="--d:0">Funzionalità</p>
-            <h2 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-4" data-r style="--d:1">
+            <h2 class="font-display text-4xl sm:text-5xl font-semibold text-ink mb-4" data-r style="--d:1">
                 Tutto quello che serve per gestire il tuo salone
             </h2>
-            <p class="text-gray-500 max-w-xl mx-auto" data-r style="--d:2">
+            <p class="text-ink-muted max-w-xl mx-auto" data-r style="--d:2">
                 Una piattaforma completa, progettata per farti risparmiare tempo ogni giorno.
             </p>
         </div>
@@ -291,15 +291,15 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
                  'desc'  => 'Incassi, servizi più richiesti e performance dello staff in tempo reale, sempre aggiornati.'],
             ]; @endphp
             @foreach ($features as $i => $f)
-            <div class="f-card bg-white rounded-2xl p-7 border border-gray-100 shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+            <div class="f-card bg-cream rounded-2xl p-7 border border-warm-border shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
                  data-r style="--d:{{ $i }}">
-                <div class="w-11 h-11 bg-teal-50 rounded-xl flex items-center justify-center mb-5">
-                    <svg class="w-5 h-5 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div class="w-11 h-11 bg-terra-light rounded-xl flex items-center justify-center mb-5">
+                    <svg class="w-5 h-5 text-terra" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="{{ $f['path'] }}"/>
                     </svg>
                 </div>
-                <h3 class="font-semibold text-gray-900 mb-2">{{ $f['title'] }}</h3>
-                <p class="text-sm text-gray-500 leading-relaxed">{{ $f['desc'] }}</p>
+                <h3 class="font-semibold text-ink mb-2">{{ $f['title'] }}</h3>
+                <p class="text-sm text-ink-muted leading-relaxed">{{ $f['desc'] }}</p>
             </div>
             @endforeach
         </div>
@@ -308,19 +308,19 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
 
 
 {{-- HOW IT WORKS --}}
-<section id="come-funziona" class="py-24 px-6 bg-white scroll-mt-16">
+<section id="come-funziona" class="py-24 px-6 bg-cream scroll-mt-16">
     <div class="max-w-4xl mx-auto">
         <div class="text-center mb-16">
             <p class="eyebrow" data-r style="--d:0">Come funziona</p>
-            <h2 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-4" data-r style="--d:1">
+            <h2 class="font-display text-4xl sm:text-5xl font-semibold text-ink mb-4" data-r style="--d:1">
                 Attivo in 5 minuti. Nessuna installazione.
             </h2>
-            <p class="text-gray-500" data-r style="--d:2">Bastano tre passi per portare il tuo salone online.</p>
+            <p class="text-ink-muted" data-r style="--d:2">Bastano tre passi per portare il tuo salone online.</p>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-6 relative">
             {{-- Connettore tratteggiato desktop --}}
             <div class="hidden md:block absolute top-7 left-[calc(16.7%+1.5rem)] right-[calc(16.7%+1.5rem)] h-px"
-                 style="background:repeating-linear-gradient(to right,#0d9488 0,#0d9488 6px,transparent 6px,transparent 14px)"></div>
+                 style="background:repeating-linear-gradient(to right,#C4714A 0,#C4714A 6px,transparent 6px,transparent 14px)"></div>
 
             @foreach([
                 ['n'=>'01','title'=>'Registra il tuo salone',      'desc'=>'Crea il profilo, aggiungi i servizi e configura gli orari in meno di 5 minuti.'],
@@ -328,11 +328,11 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
                 ['n'=>'03','title'=>'Gestisci tutto dal pannello',  'desc'=>'Appuntamenti, pagamenti, staff e statistiche in un\'unica schermata sempre aggiornata.'],
             ] as $i => $s)
             <div class="flex flex-col items-center text-center relative" data-r style="--d:{{ $i + 2 }}">
-                <div class="w-14 h-14 rounded-full bg-teal-600 text-white flex items-center justify-center text-lg font-bold mb-5 shadow-lg shadow-teal-100 relative z-10">
+                <div class="w-14 h-14 rounded-full bg-terra text-white flex items-center justify-center text-lg font-bold mb-5 shadow-lg shadow-terra/20 relative z-10">
                     {{ $s['n'] }}
                 </div>
-                <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ $s['title'] }}</h3>
-                <p class="text-sm text-gray-500 leading-relaxed max-w-xs">{{ $s['desc'] }}</p>
+                <h3 class="text-lg font-semibold text-ink mb-2">{{ $s['title'] }}</h3>
+                <p class="text-sm text-ink-muted leading-relaxed max-w-xs">{{ $s['desc'] }}</p>
             </div>
             @endforeach
         </div>
