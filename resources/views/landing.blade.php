@@ -194,24 +194,24 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
 
 
 {{-- TRUST BAR --}}
-<section class="bg-slate-50 border-b border-gray-100 py-10 px-6">
+<section class="bg-cream-dark border-b border-warm-border py-10 px-6">
     <div class="max-w-4xl mx-auto">
         <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
             <div class="flex flex-col items-center gap-1.5" data-r style="--d:0">
-                <span class="text-2xl font-bold text-teal-600" data-counter="500" data-suffix="+">500+</span>
-                <span class="text-xs text-gray-500 font-medium">Saloni attivi</span>
+                <span class="text-2xl font-bold text-terra" data-counter="500" data-suffix="+">500+</span>
+                <span class="text-xs text-ink-muted font-medium">Saloni attivi</span>
             </div>
             <div class="flex flex-col items-center gap-1.5" data-r style="--d:1">
-                <span class="text-2xl font-bold text-teal-600" data-counter="100" data-suffix="k+">100k+</span>
-                <span class="text-xs text-gray-500 font-medium">Clienti gestiti al mese</span>
+                <span class="text-2xl font-bold text-terra" data-counter="100" data-suffix="k+">100k+</span>
+                <span class="text-xs text-ink-muted font-medium">Clienti gestiti al mese</span>
             </div>
             <div class="flex flex-col items-center gap-1.5" data-r style="--d:2">
-                <span class="text-2xl font-bold text-teal-600">7/7</span>
-                <span class="text-xs text-gray-500 font-medium">Giorni di supporto</span>
+                <span class="text-2xl font-bold text-terra">7/7</span>
+                <span class="text-xs text-ink-muted font-medium">Giorni di supporto</span>
             </div>
             <div class="flex flex-col items-center gap-1.5" data-r style="--d:3">
-                <span class="text-2xl font-bold text-teal-600">GDPR</span>
-                <span class="text-xs text-gray-500 font-medium">Compliant &amp; Pagamenti sicuri</span>
+                <span class="text-2xl font-bold text-terra">GDPR</span>
+                <span class="text-xs text-ink-muted font-medium">Compliant &amp; Pagamenti sicuri</span>
             </div>
         </div>
     </div>
@@ -219,14 +219,14 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
 
 
 {{-- PROBLEM --}}
-<section class="py-24 px-6 bg-white">
+<section class="py-24 px-6 bg-cream">
     <div class="max-w-5xl mx-auto">
         <div class="text-center mb-16">
             <p class="eyebrow" data-r style="--d:0">Il problema</p>
-            <h2 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-4" data-r style="--d:1">
+            <h2 class="font-display text-4xl sm:text-5xl font-semibold text-ink mb-4" data-r style="--d:1">
                 Ancora usi carta, WhatsApp<br class="hidden sm:block"> e fogli Excel per gestire il salone?
             </h2>
-            <p class="text-gray-500 max-w-xl mx-auto" data-r style="--d:2">
+            <p class="text-ink-muted max-w-xl mx-auto" data-r style="--d:2">
                 Ogni giorno perdi ore preziose su problemi che si risolvono in automatico.
             </p>
         </div>
@@ -242,14 +242,14 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
                  'title' => 'Staff e turni da coordinare',
                  'desc'  => 'Ogni operatore con orari diversi. Senza un sistema unico, le sovrapposizioni sono inevitabili.'],
             ] as $i => $p)
-            <div class="bg-slate-50 rounded-2xl p-8 border border-slate-100" data-r style="--d:{{ $i }}">
+            <div class="bg-cream-dark rounded-2xl p-8 border border-warm-border" data-r style="--d:{{ $i }}">
                 <div class="w-11 h-11 bg-red-50 rounded-xl flex items-center justify-center mb-5">
                     <svg class="w-5 h-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="{{ $p['path'] }}"/>
                     </svg>
                 </div>
-                <h3 class="font-semibold text-gray-900 mb-2">{{ $p['title'] }}</h3>
-                <p class="text-sm text-gray-500 leading-relaxed">{{ $p['desc'] }}</p>
+                <h3 class="font-semibold text-ink mb-2">{{ $p['title'] }}</h3>
+                <p class="text-sm text-ink-muted leading-relaxed">{{ $p['desc'] }}</p>
             </div>
             @endforeach
         </div>
