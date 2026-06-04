@@ -1,0 +1,180 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-06-04T00:00:00Z",
+  "title": "Design System: GestionalePro",
+  "extensions": {
+    "colorMeta": {
+      "terra-bruciata": {
+        "role": "primary",
+        "displayName": "Terra Bruciata",
+        "canonical": "oklch(57% 0.135 42)",
+        "tonalRamp": ["#3d1f0f", "#5a2e18", "#7a4128", "#9e5838", "#c4714a", "#d49070", "#e3b49a", "#f2ddd3", "#faf5f2"]
+      },
+      "terra-chiara": {
+        "role": "primary-tint",
+        "displayName": "Terra Chiara",
+        "canonical": "oklch(90% 0.030 42)",
+        "tonalRamp": ["#6b3020", "#8f4530", "#b45e44", "#c47158", "#d99077", "#e8b4a0", "#f0ccbc", "#f2ddd3", "#faf5f2"]
+      },
+      "inchiostro-di-noce": {
+        "role": "neutral-dark",
+        "displayName": "Inchiostro di Noce",
+        "canonical": "oklch(11% 0.025 40)",
+        "tonalRamp": ["#1c1410", "#2d2420", "#40342e", "#5a4a42", "#7a6a60", "#a09088", "#c8bcb4", "#e5d8cf", "#faf7f2"]
+      },
+      "cenere-calda": {
+        "role": "neutral-muted",
+        "displayName": "Cenere Calda",
+        "canonical": "oklch(47% 0.020 50)",
+        "tonalRamp": ["#1c1410", "#2d2420", "#40342e", "#58473f", "#7a6a60", "#9e9089", "#c2b8b2", "#e0d8d2", "#f5f0ec"]
+      },
+      "lino-grezzo": {
+        "role": "neutral-bg",
+        "displayName": "Lino Grezzo",
+        "canonical": "oklch(97% 0.010 70)",
+        "tonalRamp": ["#1c1410", "#3d3028", "#6a5848", "#9e8878", "#c8b4a4", "#e0cfc2", "#f0e8e0", "#f7f2ec", "#faf7f2"]
+      },
+      "lino-scuro": {
+        "role": "neutral-surface",
+        "displayName": "Lino Scuro",
+        "canonical": "oklch(93% 0.015 65)",
+        "tonalRamp": ["#1c1410", "#3d3028", "#6a5848", "#9e8878", "#c0a898", "#d8c4b8", "#e8dcd2", "#f2ebe3", "#f9f5f0"]
+      },
+      "orlo-caldo": {
+        "role": "neutral-border",
+        "displayName": "Orlo Caldo",
+        "canonical": "oklch(86% 0.018 55)",
+        "tonalRamp": ["#2d2420", "#4a3c34", "#6e5c50", "#98807a", "#b89c94", "#ccb8b0", "#dccdc8", "#e5d8cf", "#f5eeea"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Hero H1 e titoli standalone sulle superfici brand. Mai nel pannello admin." },
+      "headline": { "displayName": "Headline", "purpose": "H2 di sezione su landing e pagine marketing." },
+      "title": { "displayName": "Title", "purpose": "Titoli di card e sezioni nell'app operativa. Instrument Sans puro." },
+      "body": { "displayName": "Body", "purpose": "Paragrafi. Max 65-75ch. Mai sotto 15px." },
+      "label": { "displayName": "Label", "purpose": "Etichette form, testi bottone, voci nav, stat captions." },
+      "fine": { "displayName": "Fine", "purpose": "Fine print, date, timestamp, note legali. Min 12px." }
+    },
+    "shadows": [
+      {
+        "name": "elevated-cta",
+        "value": "0 20px 50px rgba(28, 20, 16, 0.10)",
+        "purpose": "Pricing card e modal. Una sola volta per schermata. Warm shadow."
+      },
+      {
+        "name": "hover-lift",
+        "value": "0 4px 16px rgba(28, 20, 16, 0.08)",
+        "purpose": "Feature card hover. Solo risposta allo stato."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out-quart",
+        "value": "cubic-bezier(0.22, 1, 0.36, 1)",
+        "purpose": "Entrate hero (fadeUp, fadeDown). Movimenti verso l'utente."
+      },
+      {
+        "name": "ease-standard",
+        "value": "ease",
+        "purpose": "Transizioni di stato (hover, scroll reveal). Generica ma corretta."
+      },
+      {
+        "name": "shimmer-sweep",
+        "value": "translateX(-100%) skewX(-15deg) → translateX(150%) skewX(-15deg) in 0.6s ease",
+        "purpose": "Bottoni primari hover: sweep di luce bianca da sx a dx."
+      }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "xl", "value": "1280px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Azione principale. Terra Bruciata. Shimmer al hover.",
+      "html": "<button class=\"ds-btn-primary\">Richiedi Demo Gratuita <svg class=\"ds-btn-arrow\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M17 8l4 4m0 0l-4 4m4-4H3\"/></svg></button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; gap: 8px; background: #C4714A; color: #FAF7F2; font-family: 'Instrument Sans', ui-sans-serif, sans-serif; font-size: 0.875rem; font-weight: 600; padding: 14px 32px; border-radius: 12px; border: none; cursor: pointer; position: relative; overflow: hidden; transition: background 0.2s ease; } .ds-btn-primary::after { content: ''; position: absolute; inset: 0; background: linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.22) 50%, transparent 70%); transform: translateX(-100%) skewX(-15deg); } .ds-btn-primary:hover { background: #b86440; } .ds-btn-primary:hover::after { animation: ds-shine 0.6s ease forwards; } .ds-btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 2px #FAF7F2, 0 0 0 4px rgba(196,113,74,0.5); } .ds-btn-arrow { width: 16px; height: 16px; } @keyframes ds-shine { to { transform: translateX(150%) skewX(-15deg); } } @media (prefers-reduced-motion: reduce) { .ds-btn-primary::after { display: none; } }"
+    },
+    {
+      "name": "Input Field",
+      "kind": "input",
+      "refersTo": "input-default",
+      "description": "Campo di testo base. Bordo caldo, focus terracotta.",
+      "html": "<div class=\"ds-field\"><label class=\"ds-field-label\" for=\"ds-input\">Nome e cognome <span class=\"ds-required\">*</span></label><input class=\"ds-input\" id=\"ds-input\" type=\"text\" placeholder=\"Mario Rossi\"></div>",
+      "css": ".ds-field { display: flex; flex-direction: column; gap: 6px; } .ds-field-label { font-family: 'Instrument Sans', ui-sans-serif, sans-serif; font-size: 0.875rem; font-weight: 600; color: #1C1410; } .ds-required { color: #ef4444; } .ds-input { width: 100%; padding: 10px 16px; background: #FAF7F2; border: 1px solid #E5D8CF; border-radius: 12px; font-family: 'Instrument Sans', ui-sans-serif, sans-serif; font-size: 0.875rem; color: #1C1410; outline: none; transition: border-color 0.15s ease, box-shadow 0.15s ease; } .ds-input::placeholder { color: #7A6A60; } .ds-input:focus { border-color: #C4714A; box-shadow: 0 0 0 3px rgba(196,113,74,0.15); } .ds-input:focus-visible { outline: none; }"
+    },
+    {
+      "name": "Feature Card",
+      "kind": "card",
+      "refersTo": "card-feature",
+      "description": "Card con spotlight terracotta al mousemove. Le 6 feature della landing.",
+      "html": "<div class=\"ds-feature-card\" onmousemove=\"this.style.setProperty('--mx', (event.clientX - this.getBoundingClientRect().left) + 'px'); this.style.setProperty('--my', (event.clientY - this.getBoundingClientRect().top) + 'px')\"><div class=\"ds-feature-icon\"><svg fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.5\" d=\"M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z\"/></svg></div><h3 class=\"ds-feature-title\">Prenotazioni Online 24/7</h3><p class=\"ds-feature-body\">I clienti prenotano dal telefono in qualsiasi momento. Nessuna telefonata da gestire.</p></div>",
+      "css": ".ds-feature-card { position: relative; isolation: isolate; background: #FAF7F2; border-radius: 16px; padding: 28px; border: 1px solid #E5D8CF; box-shadow: none; transition: box-shadow 0.2s ease, transform 0.2s ease; cursor: default; } .ds-feature-card::before { content: ''; position: absolute; inset: 0; border-radius: inherit; opacity: 0; transition: opacity 0.35s; background: radial-gradient(500px circle at var(--mx, 50%) var(--my, 50%), rgba(196,113,74,0.09), transparent 65%); pointer-events: none; } .ds-feature-card:hover { box-shadow: 0 4px 16px rgba(28,20,16,0.08); transform: translateY(-2px); } .ds-feature-card:hover::before { opacity: 1; } .ds-feature-card > * { position: relative; z-index: 1; } .ds-feature-icon { width: 44px; height: 44px; background: #F2DDD3; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; } .ds-feature-icon svg { width: 20px; height: 20px; color: #C4714A; } .ds-feature-title { font-family: 'Instrument Sans', ui-sans-serif, sans-serif; font-size: 1rem; font-weight: 600; color: #1C1410; margin: 0 0 8px; } .ds-feature-body { font-family: 'Instrument Sans', ui-sans-serif, sans-serif; font-size: 0.875rem; color: #7A6A60; line-height: 1.6; margin: 0; } @media (prefers-reduced-motion: reduce) { .ds-feature-card { transition: none; } }"
+    },
+    {
+      "name": "Navigation — Scrolled",
+      "kind": "nav",
+      "refersTo": "navigation",
+      "description": "Header fisso dopo lo scroll. Sfondo crema, bordo caldo.",
+      "html": "<header class=\"ds-nav\"><div class=\"ds-nav-inner\"><a class=\"ds-nav-logo\" href=\"/\">Gestionale<span class=\"ds-nav-logo-accent\">Pro</span></a><nav class=\"ds-nav-links\"><a class=\"ds-nav-link\" href=\"#funzionalita\">Funzionalità</a><a class=\"ds-nav-link\" href=\"#prezzi\">Prezzi</a><a class=\"ds-nav-cta\" href=\"/contact\">Inizia Gratis</a></nav></div></header>",
+      "css": ".ds-nav { background: rgba(250,247,242,0.95); backdrop-filter: blur(4px); border-bottom: 1px solid #E5D8CF; box-shadow: none; } .ds-nav-inner { max-width: 1152px; margin: 0 auto; padding: 0 24px; height: 64px; display: flex; align-items: center; justify-content: space-between; } .ds-nav-logo { font-family: 'Instrument Sans', ui-sans-serif, sans-serif; font-size: 1.125rem; font-weight: 700; color: #1C1410; text-decoration: none; letter-spacing: -0.02em; } .ds-nav-logo-accent { color: #C4714A; font-weight: 400; } .ds-nav-links { display: flex; align-items: center; gap: 32px; } .ds-nav-link { font-family: 'Instrument Sans', ui-sans-serif, sans-serif; font-size: 0.875rem; font-weight: 500; color: #7A6A60; text-decoration: none; transition: color 0.15s ease; } .ds-nav-link:hover { color: #1C1410; } .ds-nav-cta { font-family: 'Instrument Sans', ui-sans-serif, sans-serif; font-size: 0.875rem; font-weight: 600; background: #C4714A; color: #FAF7F2; padding: 8px 16px; border-radius: 8px; text-decoration: none; transition: background 0.15s ease; } .ds-nav-cta:hover { background: #b86440; }"
+    },
+    {
+      "name": "Hero Section",
+      "kind": "custom",
+      "refersTo": "hero",
+      "description": "Hero su sfondo Inchiostro di Noce. H1 in Cormorant display. Badge terracotta.",
+      "html": "<section class=\"ds-hero\"><div class=\"ds-hero-content\"><div class=\"ds-hero-badge\"><span class=\"ds-hero-badge-dot\"></span><span>Software gestionale per saloni</span></div><h1 class=\"ds-hero-title\">Porta il tuo salone a un livello più <span class=\"ds-hero-accent\">professionale</span></h1><p class=\"ds-hero-sub\">Prenotazioni online, pagamenti digitali, promemoria automatici e gestione completa dello staff.</p><a class=\"ds-hero-cta\" href=\"/contact\">Richiedi una Demo Gratuita</a></div></section>",
+      "css": ".ds-hero { background: #1C1410; min-height: 680px; display: flex; align-items: center; padding: 80px 24px 96px; } .ds-hero-content { max-width: 896px; margin: 0 auto; text-align: center; } .ds-hero-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(196,113,74,0.15); border: 1px solid rgba(196,113,74,0.25); border-radius: 9999px; padding: 6px 16px; margin-bottom: 32px; font-family: 'Instrument Sans', ui-sans-serif, sans-serif; font-size: 0.75rem; font-weight: 500; color: #F2DDD3; letter-spacing: 0.02em; } .ds-hero-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: #C4714A; } .ds-hero-title { font-family: 'Cormorant Garamond', Georgia, serif; font-size: clamp(2.5rem, 7vw, 5rem); font-weight: 600; color: #ffffff; line-height: 1.05; letter-spacing: -0.01em; margin: 0 0 24px; text-wrap: balance; } .ds-hero-accent { color: #C4714A; } .ds-hero-sub { font-family: 'Instrument Sans', ui-sans-serif, sans-serif; font-size: 1.125rem; color: rgba(255,255,255,0.7); max-width: 600px; margin: 0 auto 40px; line-height: 1.7; } .ds-hero-cta { display: inline-flex; align-items: center; gap: 8px; background: #C4714A; color: #FAF7F2; font-family: 'Instrument Sans', ui-sans-serif, sans-serif; font-size: 1rem; font-weight: 600; padding: 16px 32px; border-radius: 12px; text-decoration: none; transition: background 0.2s ease; } .ds-hero-cta:hover { background: #b86440; } @media (prefers-reduced-motion: reduce) { .ds-hero-cta { transition: none; } }"
+    }
+  ],
+  "narrative": {
+    "northStar": "L'Atelier Italiano",
+    "overview": "GestionalePro è lo strumento professionale di chi gestisce un mestiere con le mani. Il sistema visivo deve riflettere questa realtà: caldo senza essere decorativo, preciso senza essere freddo, italiano senza essere pittoresco. Come l'interno di una buona bottega, tutto ha una posizione, tutto ha uno scopo, niente è lì per fare scena.\n\nLa palette ruota attorno a Terra Bruciata come accento, Inchiostro di Noce come struttura, e Lino Grezzo come superficie. Il display serif (Cormorant Garamond) porta personalità e identità solo nei titoli; Instrument Sans gestisce tutto il resto con pulizia chirurgica. La proporzione è intenzionale: Cormorant è il volto del brand, Instrument Sans è la voce operativa.\n\nIl sistema rifiuta esplicitamente: l'estetica SaaS generica 2024 (gradienti teal, blob animati, card grid uniformi, eyebrow su ogni sezione); l'impersonalità enterprise di Salesforce o HubSpot; la vacuità lifestyle di Fresha/Treatwell; e l'eccesso estetico dei brand luxury fashion.",
+    "keyCharacteristics": [
+      "Serif display usato raramente, con peso — mai decorativamente",
+      "Terracotta come accento, non come sfondo; presente su ≤15% di ogni schermata",
+      "Sezioni alternate Lino Grezzo / Lino Scuro, non bianco/grigio freddo",
+      "Dark surfaces (Inchiostro di Noce) riservate a hero e CTA finale",
+      "Zero animazioni decorative; il movimento serve l'azione",
+      "Bordi caldi (Orlo Caldo) ovunque, mai gray-100 neutro"
+    ],
+    "rules": [
+      { "name": "The Terra Bruciata Rule", "body": "Terra Bruciata è l'unico accento. Appare su ≤15% di qualsiasi schermata. Se copre più superficie, il design è diventato uniforme.", "section": "colors" },
+      { "name": "The Warm-Only Rule", "body": "Nessun token freddo (gray, slate, zinc, blue) sopravvive in nessuna superficie.", "section": "colors" },
+      { "name": "The No-Gradient-Text Rule", "body": "background-clip: text con gradient è vietato. Testo solido unico colore.", "section": "colors" },
+      { "name": "The Serif-Ceiling Rule", "body": "Cormorant non appare mai su schermi dell'app. Vive sulle superfici brand: landing, marketing, legal.", "section": "typography" },
+      { "name": "The Balance Rule", "body": "Ogni H1–H3 deve dichiarare text-wrap: balance. Ogni paragrafo lungo text-wrap: pretty.", "section": "typography" },
+      { "name": "The Flat-by-Default Rule", "body": "Le ombre appaiono solo come risposta allo stato. Una pagina senza ombre è corretta.", "section": "elevation" },
+      { "name": "The Warm-Shadow Rule", "body": "Quando un'ombra è necessaria, usa rgba(28, 20, 16, X) — non rgba(0,0,0,X).", "section": "elevation" }
+    ],
+    "dos": [
+      "Do usare Terra Bruciata come accento singolo e controllato (≤15% di superficie per schermata)",
+      "Do alternare Lino Grezzo e Lino Scuro tra sezioni. No bianchi puri o grigi freddi",
+      "Do riservare Cormorant Garamond agli H1/H2 delle superfici brand. Nell'app solo Instrument Sans",
+      "Do verificare il contrasto: body text su Lino Grezzo deve essere Inchiostro o Cenere Calda",
+      "Do usare text-wrap: balance su H1–H3 e text-wrap: pretty sui paragrafi",
+      "Do usare rgba(28, 20, 16, X) come colore ombra, non rgba(0,0,0,X)",
+      "Do usare bordi Orlo Caldo su tutti i container, input e divisori",
+      "Do aggiungere prefers-reduced-motion a ogni animazione"
+    ],
+    "donts": [
+      "Don't usare gradienti animati (gradPulse, hero gradients). Rimossi intenzionalmente.",
+      "Don't usare blob decorativi (blobMove). Rimossi. Non reintrodurre.",
+      "Don't usare float animations (cardFloat). Rimossi. Non reintrodurre.",
+      "Don't aggiungere eyebrow labels su ogni sezione come default template",
+      "Don't mettere card in griglie uniformi con la stessa struttura ripetuta identica",
+      "Don't usare gradient-text (background-clip: text con gradient)",
+      "Don't usare teal, blu-indigo, slate-900 come colori principali",
+      "Don't imitare Fresha/Treatwell (consumer marketplace, colori vivaci pop)",
+      "Don't imitare Salesforce/HubSpot (densità enterprise, layout tabellare ovunque)",
+      "Don't costruire superfici luxury-fashion incompatibili con un'app operativa",
+      "Don't costruire qualcosa che sembra generato dall'AI: se qualcuno può dirlo con sicurezza, è fallito"
+    ]
+  }
+}
