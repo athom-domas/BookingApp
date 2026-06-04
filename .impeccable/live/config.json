@@ -1,0 +1,11 @@
+{
+  "files": [
+    "resources/views/landing.blade.php",
+    "resources/views/layouts/marketing.blade.php",
+    "resources/views/layouts/app.blade.php",
+    "resources/views/layouts/storefront.blade.php"
+  ],
+  "insertBefore": "</body>",
+  "commentSyntax": "html",
+  "cspChecked": true
+}
