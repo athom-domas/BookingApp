@@ -145,11 +145,10 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
 <section class="py-24 px-6 bg-cream">
     <div class="max-w-5xl mx-auto">
         <div class="text-center mb-16">
-            <p class="eyebrow" data-r style="--d:0">Il problema</p>
-            <h2 class="font-display text-4xl sm:text-5xl font-semibold text-ink mb-4 text-balance" data-r style="--d:1">
+            <h2 class="font-display text-4xl sm:text-5xl font-semibold text-ink mb-4 text-balance" data-r style="--d:0">
                 Ancora usi carta, WhatsApp<br class="hidden sm:block"> e fogli Excel per gestire il salone?
             </h2>
-            <p class="text-ink-muted max-w-xl mx-auto" data-r style="--d:2">
+            <p class="text-ink-muted max-w-xl mx-auto" data-r style="--d:1">
                 Ogni giorno perdi ore preziose su problemi che si risolvono in automatico.
             </p>
         </div>
@@ -184,11 +183,10 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
 <section id="funzionalita" class="py-24 px-6 bg-cream-dark scroll-mt-16">
     <div class="max-w-6xl mx-auto">
         <div class="text-center mb-16">
-            <p class="eyebrow" data-r style="--d:0">Funzionalità</p>
-            <h2 class="font-display text-4xl sm:text-5xl font-semibold text-ink mb-4 text-balance" data-r style="--d:1">
+            <h2 class="font-display text-4xl sm:text-5xl font-semibold text-ink mb-4 text-balance" data-r style="--d:0">
                 Tutto quello che serve per gestire il tuo salone
             </h2>
-            <p class="text-ink-muted max-w-xl mx-auto" data-r style="--d:2">
+            <p class="text-ink-muted max-w-xl mx-auto" data-r style="--d:1">
                 Una piattaforma completa, progettata per farti risparmiare tempo ogni giorno.
             </p>
         </div>
@@ -234,11 +232,10 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
 <section id="come-funziona" class="py-24 px-6 bg-cream scroll-mt-16">
     <div class="max-w-4xl mx-auto">
         <div class="text-center mb-16">
-            <p class="eyebrow" data-r style="--d:0">Come funziona</p>
-            <h2 class="font-display text-4xl sm:text-5xl font-semibold text-ink mb-4 text-balance" data-r style="--d:1">
+            <h2 class="font-display text-4xl sm:text-5xl font-semibold text-ink mb-4 text-balance" data-r style="--d:0">
                 Attivo in 5 minuti. Nessuna installazione.
             </h2>
-            <p class="text-ink-muted" data-r style="--d:2">Bastano tre passi per portare il tuo salone online.</p>
+            <p class="text-ink-muted" data-r style="--d:1">Bastano tre passi per portare il tuo salone online.</p>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-6 relative">
             {{-- Connettore tratteggiato desktop --}}
@@ -266,10 +263,9 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
 {{-- PRICING --}}
 <section id="prezzi" class="py-24 px-6 bg-cream-dark scroll-mt-16">
     <div class="max-w-4xl mx-auto text-center">
-        <p class="eyebrow justify-center" data-r style="--d:0">Prezzi</p>
-        <h2 class="font-display text-4xl sm:text-5xl font-semibold text-ink mb-4 text-balance" data-r style="--d:1">Prezzo semplice e trasparente</h2>
-        <p class="text-ink-muted mb-2" data-r style="--d:2">Nessun costo di setup. Cancelli quando vuoi. I primi 14 giorni sono gratis.</p>
-        <p class="text-xs text-ink-muted/60 mb-12" data-r style="--d:3">Prezzi IVA esclusa</p>
+        <h2 class="font-display text-4xl sm:text-5xl font-semibold text-ink mb-4 text-balance" data-r style="--d:0">Prezzo semplice e trasparente</h2>
+        <p class="text-ink-muted mb-2" data-r style="--d:1">Nessun costo di setup. Cancelli quando vuoi. I primi 14 giorni sono gratis.</p>
+        <p class="text-xs text-ink-muted/60 mb-12" data-r style="--d:2">Prezzi IVA esclusa</p>
 
         <div class="max-w-sm mx-auto" data-r style="--d:2">
             <div class="bg-cream rounded-2xl p-8 border border-warm-border shadow-xl shadow-ink/10 flex flex-col">
@@ -305,8 +301,7 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
 <section class="py-24 px-6 bg-cream">
     <div class="max-w-6xl mx-auto">
         <div class="text-center mb-16">
-            <p class="eyebrow" data-r style="--d:0">Recensioni</p>
-            <h2 class="font-display text-4xl sm:text-5xl font-semibold text-ink mb-4 text-balance" data-r style="--d:1">Cosa dicono i nostri clienti</h2>
+            <h2 class="font-display text-4xl sm:text-5xl font-semibold text-ink mb-4 text-balance" data-r style="--d:0">Cosa dicono i nostri clienti</h2>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             @foreach([
@@ -344,8 +339,7 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
 <section class="py-24 px-6 bg-cream-dark">
     <div class="max-w-2xl mx-auto" x-data="{ active: null }">
         <div class="text-center mb-16">
-            <p class="eyebrow" data-r style="--d:0">FAQ</p>
-            <h2 class="font-display text-4xl sm:text-5xl font-semibold text-ink mb-4 text-balance" data-r style="--d:1">Domande frequenti</h2>
+            <h2 class="font-display text-4xl sm:text-5xl font-semibold text-ink mb-4 text-balance" data-r style="--d:0">Domande frequenti</h2>
         </div>
         <div class="space-y-2">
             @foreach([
