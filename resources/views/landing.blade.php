@@ -9,40 +9,6 @@
     <style>
         [x-cloak] { display: none !important; }
 
-        /* ── Hero gradient animato ── */
-        .hero-gradient {
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 45%, #134e4a 80%, #0d9488 100%);
-            background-size: 220% 220%;
-            animation: gradPulse 12s ease infinite;
-        }
-        @keyframes gradPulse {
-            0%, 100% { background-position: 0% 50%; }
-            50%       { background-position: 100% 50%; }
-        }
-
-        /* ── CTA gradient (variante) ── */
-        .cta-gradient {
-            background: linear-gradient(135deg, #134e4a 0%, #0f172a 55%, #1e1b4b 100%);
-            background-size: 200% 200%;
-            animation: gradPulse 14s ease infinite;
-        }
-
-        /* ── Dot grid overlay ── */
-        .dot-grid {
-            background-image: radial-gradient(rgba(255,255,255,0.065) 1px, transparent 1px);
-            background-size: 28px 28px;
-        }
-
-        /* ── Blob decorativi ── */
-        @keyframes blobMove {
-            0%, 100% { transform: translate(0,0) scale(1); }
-            33%       { transform: translate(20px,-14px) scale(1.04); }
-            66%       { transform: translate(-14px,10px) scale(0.97); }
-        }
-        .blob   { animation: blobMove 8s ease-in-out infinite; }
-        .blob-2 { animation-delay: 2.5s; }
-        .blob-3 { animation-delay: 4.8s; }
-
         /* ── Entrata hero (auto-play) ── */
         @keyframes fadeUp   { from { opacity:0; transform:translateY(26px); } to { opacity:1; transform:translateY(0); } }
         @keyframes fadeDown { from { opacity:0; transform:translateY(-14px); } to { opacity:1; transform:translateY(0); } }
@@ -75,13 +41,6 @@
         .f-card:hover::before { opacity: 1; }
         .f-card > * { position: relative; z-index: 1; }
 
-        /* ── Pricing card float ── */
-        @keyframes cardFloat {
-            0%,100% { transform: translateY(0); }
-            50%      { transform: translateY(-8px); }
-        }
-        .float-card { animation: cardFloat 4.5s ease-in-out infinite; }
-
         /* ── Shimmer su bottoni ── */
         .shimmer { position: relative; overflow: hidden; }
         .shimmer::after {
@@ -97,7 +56,7 @@
         #spb {
             position: fixed; top: 0; left: 0;
             height: 2px; width: 0%;
-            background: linear-gradient(to right, #0d9488, #818cf8);
+            background: linear-gradient(to right, #C4714A, #1C1410);
             z-index: 200;
             transition: width 0.08s linear;
         }
@@ -107,7 +66,7 @@
             display: inline-flex; align-items: center; gap: 0.5rem;
             font-size: 0.68rem; font-weight: 700;
             letter-spacing: 0.14em; text-transform: uppercase;
-            color: var(--eb-color, #0d9488);
+            color: var(--eb-color, #C4714A);
             margin-bottom: 0.875rem;
         }
         .eyebrow::before {
@@ -118,7 +77,7 @@
 
         /* ── Testo gradiente ── */
         .text-grad {
-            background: linear-gradient(120deg, #2dd4bf, #818cf8);
+            background: linear-gradient(120deg, #C4714A, #8B4513);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
