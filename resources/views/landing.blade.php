@@ -156,7 +156,7 @@
     <div class="relative z-10 max-w-4xl mx-auto text-center">
         <div class="h-badge inline-flex items-center gap-2 bg-terra/15 border border-terra/25 rounded-full px-4 py-1.5 mb-8">
             <span class="w-1.5 h-1.5 rounded-full bg-terra animate-pulse"></span>
-            <span class="text-xs font-medium text-[#F2DDD3] tracking-wide">Software gestionale per saloni</span>
+            <span class="text-xs font-medium text-terra-light tracking-wide">Software gestionale per saloni</span>
         </div>
 
         <h1 class="h-title font-display text-6xl sm:text-7xl lg:text-8xl font-semibold text-white leading-[1.05] mb-6">
