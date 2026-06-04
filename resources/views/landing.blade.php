@@ -460,12 +460,9 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
 
 
 {{-- CTA FINALE --}}
-<section class="cta-gradient relative overflow-hidden py-24 px-6 text-center">
-    <div class="dot-grid absolute inset-0 pointer-events-none"></div>
-    <div class="blob absolute -top-32 -right-32 w-96 h-96 rounded-full pointer-events-none"
-         style="background:radial-gradient(circle,rgba(13,148,136,0.15) 0%,transparent 70%)"></div>
+<section class="bg-ink relative overflow-hidden py-24 px-6 text-center">
     <div class="relative z-10 max-w-2xl mx-auto">
-        <h2 class="text-3xl sm:text-4xl font-bold text-white mb-4" data-r style="--d:0">
+        <h2 class="font-display text-4xl sm:text-5xl font-semibold text-white mb-4" data-r style="--d:0">
             Il tuo salone merita di più. Inizia oggi.
         </h2>
         <p class="text-slate-300 mb-8 text-lg leading-relaxed" data-r style="--d:1">
@@ -486,17 +483,17 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
 
 
 {{-- FOOTER --}}
-<footer class="bg-slate-900 text-slate-400 py-16 px-6">
+<footer class="bg-ink text-ink-muted py-16 px-6">
     <div class="max-w-6xl mx-auto">
         <div class="grid grid-cols-2 md:grid-cols-3 gap-10 mb-12">
             <div class="col-span-2 md:col-span-1">
                 <div class="font-bold text-lg text-white tracking-tight mb-3">
-                    Gestionale<span class="text-teal-400 font-normal">Pro</span>
+                    Gestionale<span class="text-terra font-normal">Pro</span>
                 </div>
                 <p class="text-sm leading-relaxed">Software di gestione per saloni, barbieri e centri estetici italiani.</p>
             </div>
             <div>
-                <h4 class="text-xs font-semibold text-slate-300 uppercase tracking-widest mb-4">Prodotto</h4>
+                <h4 class="text-xs font-semibold text-white/70 uppercase tracking-widest mb-4">Prodotto</h4>
                 <ul class="space-y-3 text-sm">
                     <li><a href="#funzionalita" class="hover:text-white transition">Funzionalità</a></li>
                     <li><a href="#prezzi" class="hover:text-white transition">Prezzi</a></li>
@@ -504,7 +501,7 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
                 </ul>
             </div>
             <div>
-                <h4 class="text-xs font-semibold text-slate-300 uppercase tracking-widest mb-4">Azienda</h4>
+                <h4 class="text-xs font-semibold text-white/70 uppercase tracking-widest mb-4">Azienda</h4>
                 <ul class="space-y-3 text-sm">
                     <li><a href="{{ route('contact') }}" class="hover:text-white transition">Contatti</a></li>
                     <li><a href="{{ route('contact') }}" class="hover:text-white transition">Supporto</a></li>
@@ -513,7 +510,7 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
                 </ul>
             </div>
         </div>
-        <div class="border-t border-slate-800 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
+        <div class="border-t border-[#2D2420] pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-ink-muted/70">
             <span>© {{ date('Y') }} GestionalePro. Tutti i diritti riservati.</span>
             <div class="flex gap-5">
                 <a href="{{ route('legal.privacy') }}" class="hover:text-slate-300 transition">Privacy Policy</a>
