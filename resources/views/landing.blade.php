@@ -6,6 +6,9 @@
     <title>GestionalePro · Software prenotazioni per saloni e centri estetici</title>
     <meta name="description" content="Gestisci prenotazioni, staff e pagamenti del tuo salone in un'unica piattaforma. 14 giorni gratis, nessuna carta richiesta.">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
     <style>
         [x-cloak] { display: none !important; }
 
@@ -87,7 +90,7 @@
         html { scroll-padding-top: 80px; }
     </style>
 </head>
-<body class="bg-white text-gray-900 antialiased">
+<body class="bg-cream text-ink antialiased">
 
 <div id="spb"></div>
 
@@ -95,22 +98,22 @@
 <header x-data="{ open: false, scrolled: false }"
         @scroll.window="scrolled = window.scrollY > 56"
         class="fixed top-0 inset-x-0 z-50 transition-all duration-300"
-        :class="scrolled ? 'bg-white/95 backdrop-blur-sm shadow-sm border-b border-gray-100' : 'bg-transparent'">
+        :class="scrolled ? 'bg-cream/95 backdrop-blur-sm shadow-sm border-b border-warm-border' : 'bg-transparent'">
 
     <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
         <a href="{{ url('/') }}" class="font-bold text-lg tracking-tight transition-colors"
-           :class="scrolled ? 'text-gray-900' : 'text-white'">
+           :class="scrolled ? 'text-ink' : 'text-white'">
             Gestionale<span class="font-normal transition-colors"
-                            :class="scrolled ? 'text-teal-600' : 'text-teal-400'">Pro</span>
+                            :class="scrolled ? 'text-terra' : 'text-terra'">Pro</span>
         </a>
 
         <nav class="hidden md:flex items-center gap-8">
             <a href="#funzionalita" class="text-sm font-medium transition"
-               :class="scrolled ? 'text-gray-500 hover:text-gray-900' : 'text-white/80 hover:text-white'">Funzionalità</a>
+               :class="scrolled ? 'text-ink-muted hover:text-ink' : 'text-white/80 hover:text-white'">Funzionalità</a>
             <a href="#prezzi" class="text-sm font-medium transition"
-               :class="scrolled ? 'text-gray-500 hover:text-gray-900' : 'text-white/80 hover:text-white'">Prezzi</a>
+               :class="scrolled ? 'text-ink-muted hover:text-ink' : 'text-white/80 hover:text-white'">Prezzi</a>
             <a href="{{ route('contact') }}"
-               class="shimmer text-sm font-semibold bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition shadow-sm">
+               class="shimmer text-sm font-semibold bg-terra text-white px-4 py-2 rounded-lg hover:bg-terra/90 transition shadow-sm">
                 Inizia Gratis
             </a>
         </nav>
@@ -140,7 +143,7 @@
             <a href="#prezzi" @click="open = false"
                class="text-sm font-medium text-gray-700 px-2 py-3 rounded-lg hover:bg-slate-50 transition">Prezzi</a>
             <a href="{{ route('contact') }}"
-               class="mt-2 text-sm font-semibold bg-teal-600 text-white px-4 py-3 rounded-xl text-center hover:bg-teal-700 transition">
+               class="mt-2 text-sm font-semibold bg-terra text-white px-4 py-3 rounded-xl text-center hover:bg-terra/90 transition">
                 Inizia Gratis
             </a>
         </div>
