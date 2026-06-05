@@ -80,3 +80,34 @@ it('storna l accredito di un appuntamento', function () {
     expect(LoyaltyAccount::where('user_id', $this->customer->id)->first()->points)->toBe(0)
         ->and(LoyaltyTransaction::where('appointment_id', $this->appointment->id)->where('type', 'reverse')->first()->points)->toBe(-50);
 });
+
+it('non ripristina i punti riscattati quando un appuntamento riscattato viene stornato', function () {
+    SystemSetting::current()->update([
+        'loyalty_enabled'           => true,
+        'loyalty_points_per_euro'   => 1,
+        'loyalty_reward_threshold'  => 100,
+        'loyalty_reward_percentage' => 10,
+    ]);
+    $account = LoyaltyAccount::create(['user_id' => $this->customer->id, 'points' => 100]);
+
+    $this->service->redeem($this->appointment);
+    $this->service->accrue($this->appointment, 90.0);
+    expect($account->fresh()->points)->toBe(90);
+
+    $this->service->reverse($this->appointment);
+
+    expect($account->fresh()->points)->toBe(0);
+});
+
+it('non riscatta due volte per lo stesso appuntamento', function () {
+    SystemSetting::current()->update([
+        'loyalty_enabled'           => true,
+        'loyalty_reward_threshold'  => 100,
+        'loyalty_reward_percentage' => 10,
+    ]);
+    $account = LoyaltyAccount::create(['user_id' => $this->customer->id, 'points' => 250]);
+
+    expect($this->service->redeem($this->appointment))->toBe(10)
+        ->and($this->service->redeem($this->appointment))->toBe(0)
+        ->and($account->fresh()->points)->toBe(150);
+});

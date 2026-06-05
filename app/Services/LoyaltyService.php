@@ -29,7 +29,10 @@ class LoyaltyService
         }
 
         DB::transaction(function () use ($appointment, $points) {
-            $account = LoyaltyAccount::firstOrCreate(['user_id' => $appointment->user_id]);
+            $account = LoyaltyAccount::firstOrCreate([
+                'user_id'     => $appointment->user_id,
+                'business_id' => $appointment->business_id,
+            ]);
             LoyaltyTransaction::create([
                 'loyalty_account_id' => $account->id,
                 'appointment_id'     => $appointment->id,
@@ -44,6 +47,13 @@ class LoyaltyService
     public function redeem(Appointment $appointment): int
     {
         if (! SystemSetting::isLoyaltyEnabled()) {
+            return 0;
+        }
+
+        $alreadyRedeemed = LoyaltyTransaction::where('appointment_id', $appointment->id)
+            ->where('type', 'redeem')
+            ->exists();
+        if ($alreadyRedeemed) {
             return 0;
         }
 
@@ -69,6 +79,7 @@ class LoyaltyService
 
     public function reverse(Appointment $appointment): void
     {
+        // Storna solo l'accredito: un voucher già riscattato resta consumato.
         $earn = LoyaltyTransaction::where('appointment_id', $appointment->id)
             ->where('type', 'earn')
             ->first();
