@@ -44,7 +44,10 @@ class LoyaltyService
                 $account->increment('points', $points);
             });
         } catch (\Illuminate\Database\QueryException $e) {
-            // earn già registrato da un processo concorrente: no-op idempotente
+            // Solo la violazione del vincolo unico (earn concorrente) è un no-op idempotente.
+            if ($e->getCode() !== '23000') {
+                throw $e;
+            }
         }
     }
 
