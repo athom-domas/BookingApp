@@ -7,6 +7,7 @@ use App\Models\Appointment;
 use App\Models\LoyaltyAccount;
 use App\Models\Service;
 use App\Models\SystemSetting;
+use App\Services\LoyaltyService;
 use App\Services\PaymentService;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
@@ -308,16 +309,32 @@ class AppointmentResource extends Resource
                             ->numeric()
                             ->minValue(0.01)
                             ->required(),
+                        Toggle::make('apply_loyalty_discount')
+                            ->label(fn (): string => 'Applica sconto fedeltà ' . SystemSetting::getLoyaltyRewardPercentage() . '% (−' . SystemSetting::getLoyaltyRewardThreshold() . ' punti)')
+                            ->default(false)
+                            ->visible(fn (Appointment $record): bool =>
+                                SystemSetting::isLoyaltyEnabled()
+                                && (LoyaltyAccount::where('user_id', $record->user_id)->value('points') ?? 0) >= SystemSetting::getLoyaltyRewardThreshold()
+                            ),
                     ])
                     ->fillForm(fn(Appointment $record): array => [
                         'amount' => $record->final_price,
                     ])
                     ->action(function (Appointment $record, array $data): void {
+                        $amount = (float) $data['amount'];
+
+                        if (! empty($data['apply_loyalty_discount'])) {
+                            $percentage = app(LoyaltyService::class)->redeem($record);
+                            if ($percentage > 0) {
+                                $amount = round($amount * (1 - $percentage / 100), 2);
+                            }
+                        }
+
                         try {
                             app(PaymentService::class)->recordInPersonPayment(
                                 $record->id,
                                 $data['method'],
-                                (float) $data['amount']
+                                $amount
                             );
                         } catch (\App\Exceptions\BookingException $e) {
                             Notification::make()
