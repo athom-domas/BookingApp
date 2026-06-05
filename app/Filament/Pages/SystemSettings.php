@@ -36,6 +36,10 @@ class SystemSettings extends Page
             'reminder_2_hours'            => $setting->reminder_2_hours,
             'payment_mode'                => $setting->payment_mode ?? 'both',
             'reviews_enabled'             => $setting->reviews_enabled ?? true,
+            'loyalty_enabled'             => $setting->loyalty_enabled ?? false,
+            'loyalty_points_per_euro'     => $setting->loyalty_points_per_euro ?? 1,
+            'loyalty_reward_threshold'    => $setting->loyalty_reward_threshold ?? 100,
+            'loyalty_reward_percentage'   => $setting->loyalty_reward_percentage ?? 10,
         ]);
     }
 
@@ -123,6 +127,44 @@ class SystemSettings extends Page
                             ->label('Mostra sezione recensioni')
                             ->helperText('Se disattivato, la sezione recensioni non compare sul sito del salone')
                             ->default(true),
+                    ]),
+
+                Section::make('Fedeltà')
+                    ->columns(2)
+                    ->schema([
+                        Toggle::make('loyalty_enabled')
+                            ->label('Abilita programma fedeltà')
+                            ->helperText('I clienti accumulano punti sulla spesa e sbloccano uno sconto')
+                            ->live()
+                            ->columnSpanFull(),
+
+                        TextInput::make('loyalty_points_per_euro')
+                            ->label('Punti per euro speso')
+                            ->helperText('Punti accreditati per ogni euro di spesa')
+                            ->integer()
+                            ->minValue(1)
+                            ->required()
+                            ->suffix('punti/€')
+                            ->visible(fn (Get $get): bool => (bool) $get('loyalty_enabled')),
+
+                        TextInput::make('loyalty_reward_threshold')
+                            ->label('Punti per lo sconto')
+                            ->helperText('Punti necessari al cliente per sbloccare lo sconto')
+                            ->integer()
+                            ->minValue(1)
+                            ->required()
+                            ->suffix('punti')
+                            ->visible(fn (Get $get): bool => (bool) $get('loyalty_enabled')),
+
+                        TextInput::make('loyalty_reward_percentage')
+                            ->label('Sconto sbloccato')
+                            ->helperText('Percentuale di sconto sbloccata al raggiungimento della soglia')
+                            ->integer()
+                            ->minValue(1)
+                            ->maxValue(100)
+                            ->required()
+                            ->suffix('%')
+                            ->visible(fn (Get $get): bool => (bool) $get('loyalty_enabled')),
                     ]),
             ])
             ->statePath('data');
