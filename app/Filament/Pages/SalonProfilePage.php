@@ -42,23 +42,24 @@ class SalonProfilePage extends Page
         $formData = [
             'name'                => $profile->name,
             'tagline'             => $profile->tagline,
-            'theme'               => $profile->theme ?? 'dark',
-            'font_pair'           => $profile->font_pair   ?? 'classic',
+            'theme'               => $profile->theme             ?? 'luxury',
+            'theme_mode'          => $profile->theme_mode        ?? 'light',
+            'hero_image_preset'   => $profile->hero_image_preset ?? '',
+            'font_pair'           => $profile->font_pair  ?? 'classic',
             'border_style'        => $profile->border_style ?? 'sharp',
 
             'phone'               => $profile->phone,
             'address'             => $profile->address,
 
             'description'         => $profile->description,
-            'cancellation_policy' => $profile->cancellation_policy,
             'google_maps_embed'   => $profile->google_maps_embed,
             'instagram_url'       => $profile->instagram_url,
             'facebook_url'        => $profile->facebook_url,
             'tiktok_url'          => $profile->tiktok_url,
             'whatsapp_number'     => $profile->whatsapp_number,
 
-            'email_greeting'     => $profile->email_greeting,
-            'email_footer_note'  => $profile->email_footer_note,
+            'email_greeting'     => $profile->email_greeting     ?? "Ciao {nome},\nhai un nuovo appuntamento confermato.",
+            'email_footer_note'  => $profile->email_footer_note  ?? 'Puoi gestire l\'appuntamento dall\'area riservata.',
             'email_accent_color' => $profile->email_accent_color,
         ];
 
@@ -157,17 +158,27 @@ class SalonProfilePage extends Page
                                 ->label('Tagline'),
                         ]),
                         Radio::make('theme')
-                            ->label('Tema della vetrina')
+                            ->label('Famiglia di colori')
                             ->options([
-                                'dark'     => 'Luxury Dark',
-                                'light'    => 'Chiaro Caldo',
-                                'rose'     => 'Rosa & Oro',
-                                'emerald'  => 'Verde Smeraldo',
-                                'midnight' => 'Blu Notte',
-                                'minimal'  => 'Minimal',
+                                'luxury'     => 'Luxury',
+                                'rosa'       => 'Rosa',
+                                'verde'      => 'Verde',
+                                'notte'      => 'Notte',
+                                'minimal'    => 'Minimal',
+                                'viola'      => 'Viola',
+                                'terracotta' => 'Terracotta',
+                                'acqua'      => 'Acqua',
+                                'cipria'     => 'Cipria',
                             ])
-                            ->default('dark')
+                            ->default('luxury')
                             ->view('filament.forms.theme-picker')
+                            ->columnSpanFull(),
+                        Radio::make('theme_mode')
+                            ->label('Modalità predefinita')
+                            ->options(['light' => 'Chiaro', 'dark' => 'Scuro'])
+                            ->default('light')
+                            ->inline()
+                            ->helperText('Il cliente può cambiare la modalità con il toggle sul sito.')
                             ->columnSpanFull(),
                         Grid::make(2)->schema([
                             SpatieMediaLibraryFileUpload::make('logo')
@@ -176,11 +187,23 @@ class SalonProfilePage extends Page
                                 ->image()
                                 ->maxSize(2048),
                             SpatieMediaLibraryFileUpload::make('cover')
-                                ->label('Immagine di copertina')
+                                ->label('Immagine hero (carica la tua)')
                                 ->collection('cover')
                                 ->image()
-                                ->maxSize(5120),
+                                ->maxSize(5120)
+                                ->helperText('Ha priorità sulle immagini predefinite.'),
                         ]),
+                        Radio::make('hero_image_preset')
+                            ->label('Oppure scegli un\'immagine predefinita')
+                            ->options(
+                                array_merge(
+                                    ['' => 'Nessuna'],
+                                    array_map(fn($p) => $p['label'], \App\Models\SalonProfile::heroPresets())
+                                )
+                            )
+                            ->dehydrateStateUsing(fn($state) => $state ?: null)
+                            ->view('filament.forms.hero-preset-picker')
+                            ->columnSpanFull(),
                         Grid::make(2)->schema([
                             SpatieMediaLibraryFileUpload::make('favicon')
                                 ->label('Favicon')
@@ -219,9 +242,6 @@ class SalonProfilePage extends Page
                     Tab::make('Descrizione')->schema([
                         RichEditor::make('description')
                             ->label('Chi siamo')
-                            ->columnSpanFull(),
-                        RichEditor::make('cancellation_policy')
-                            ->label('Politica di cancellazione')
                             ->columnSpanFull(),
                     ]),
 
@@ -276,8 +296,8 @@ class SalonProfilePage extends Page
                             ->columnSpanFull(),
 
                         ColorPicker::make('email_accent_color')
-                            ->label('Colore header email')
-                            ->helperText('Sfondo dell\'intestazione nelle email. Se non impostato, usa il colore accento del tema.')
+                            ->label('Colore header email (override)')
+                            ->helperText('Lascia vuoto per usare automaticamente il colore del tema selezionato. Imposta solo se vuoi un colore diverso.')
                             ->columnSpanFull(),
                     ]),
 

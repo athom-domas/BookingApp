@@ -3,8 +3,7 @@
 @section('title')Promemoria appuntamento @endsection
 
 @section('body')
-    <p>Ciao <strong>{{ $appointment->user->name }}</strong>,</p>
-    <p>ti ricordiamo che hai un appuntamento tra 2 giorni.</p>
+    <p>ti ricordiamo che hai un appuntamento tra poco.</p>
 
     <div class="detail-card">
         <div class="detail-row">

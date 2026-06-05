@@ -26,7 +26,20 @@
             $_appFontDisplay = $_appFontVars[$_appPair][0] ?? $_appFontVars['classic'][0];
             $_appFontBody    = $_appFontVars[$_appPair][1] ?? $_appFontVars['classic'][1];
             $_appRadius      = $_appRadiusMap[$_appBorder] ?? '0';
-            $_appPrimary     = ($salonProfile->theme ?? 'dark') === 'dark' ? '#c9a96e' : '#1a1008';
+            $_accentMap = [
+                'luxury'     => ['light' => '#7a5c38', 'dark' => '#c9a96e'],
+                'rosa'       => ['light' => '#9e4858', 'dark' => '#d4847a'],
+                'verde'      => ['light' => '#4a7040', 'dark' => '#5eb870'],
+                'notte'      => ['light' => '#3a50a0', 'dark' => '#7a96d4'],
+                'minimal'    => ['light' => '#1a1a1a', 'dark' => '#d4d4d4'],
+                'viola'      => ['light' => '#6a38a8', 'dark' => '#c090d8'],
+                'terracotta' => ['light' => '#b85a20', 'dark' => '#d4784a'],
+                'acqua'      => ['light' => '#1a8880', 'dark' => '#5adad0'],
+                'cipria'     => ['light' => '#c87860', 'dark' => '#e09888'],
+            ];
+            $_appFamily  = $salonProfile->theme      ?? 'luxury';
+            $_appMode    = $salonProfile->theme_mode ?? 'light';
+            $_appPrimary = $_accentMap[$_appFamily][$_appMode] ?? '#7a5c38';
         @endphp
 
         <title>@yield('title', e($salonProfile->name)) - {{ $salonProfile->name }}</title>
@@ -46,21 +59,16 @@
 
         <script>
             (function() {
-                var salonTheme = @json($salonProfile->theme ?? 'dark');
-                if (localStorage.salonTheme !== salonTheme) {
-                    localStorage.salonTheme = salonTheme;
-                    localStorage.removeItem('theme');
-                }
-                if (localStorage.theme === 'dark' || (!('theme' in localStorage) && salonTheme === 'dark')) {
-                    document.documentElement.classList.add('dark');
-                }
+                var def  = @json($salonProfile->theme_mode ?? 'light');
+                var mode = localStorage.getItem('sf-mode') || def;
+                if (mode === 'dark') document.documentElement.classList.add('dark');
             })();
         </script>
 
         @fonts
         @filamentStyles
-        @vite('resources/css/filament/admin/theme.css')
-        @vite('resources/css/app.css')
+        @vite('resources/scss/filament/admin/theme.scss')
+        @vite('resources/scss/app.scss')
         @stack('head')
         <style>
             :root { --sf-font-display: {{ $_appFontDisplay }}; --sf-font-body: {{ $_appFontBody }}; --sf-radius: {{ $_appRadius }}; }
@@ -105,7 +113,7 @@
                     <button
                         @click="
                             document.documentElement.classList.toggle('dark');
-                            localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light'
+                            localStorage.setItem('sf-mode', document.documentElement.classList.contains('dark') ? 'dark' : 'light')
                         "
                         class="rounded-md p-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-950 dark:hover:text-gray-50"
                         aria-label="Cambia tema"
@@ -124,7 +132,7 @@
                     <button
                         @click="
                             document.documentElement.classList.toggle('dark');
-                            localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light'
+                            localStorage.setItem('sf-mode', document.documentElement.classList.contains('dark') ? 'dark' : 'light')
                         "
                         class="rounded-md p-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
                         aria-label="Cambia tema"
@@ -236,8 +244,5 @@
 
         @stack('scripts')
         @vite('resources/js/app.js')
-    <!-- impeccable-live-start -->
-<script src="http://localhost:8400/live.js"></script>
-<!-- impeccable-live-end -->
-</body>
+    </body>
 </html>

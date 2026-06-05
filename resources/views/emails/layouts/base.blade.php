@@ -1,6 +1,20 @@
 @php
-    $salon        = \App\Models\SalonProfile::current();
-    $primaryColor = $salon->email_accent_color ?? '#1e293b';
+    $salon = \App\Models\SalonProfile::current();
+
+    $_emailThemeColors = [
+        'luxury'     => '#7a5c38',
+        'rosa'       => '#9e4858',
+        'verde'      => '#3a5c32',
+        'notte'      => '#2c4090',
+        'minimal'    => '#1a1a1a',
+        'viola'      => '#5a2898',
+        'terracotta' => '#963a10',
+        'acqua'      => '#166060',
+        'cipria'     => '#7a4030',
+    ];
+    $_emailFamily = $salon->theme ?? 'luxury';
+    $primaryColor = $salon->email_accent_color
+        ?: ($_emailThemeColors[$_emailFamily] ?? '#1e293b');
 
     $_emailFontUrls = [
         'classic' => 'https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@400;600&display=swap',
@@ -22,6 +36,18 @@
     $_emailBody    = $_emailFontVars[$_emailPair][0] ?? $_emailFontVars['classic'][0];
     $_emailDisplay = $_emailFontVars[$_emailPair][1] ?? $_emailFontVars['classic'][1];
     $_emailRadius  = $_emailRadiusMap[$_emailBorder] ?? '8px';
+
+    // Resolve customer first name from whichever variable the child view provides
+    $_rawName = isset($appointment) ? ($appointment->user->name ?? '')
+              : (isset($recipient) ? ($recipient->name ?? '') : '');
+    $_firstName = $_rawName ? explode(' ', trim($_rawName))[0] : '';
+
+    $_greeting = $salon->email_greeting ?: 'Ciao {nome},';
+    if ($_firstName) {
+        $_greeting = str_replace('{nome}', e($_firstName), $_greeting);
+    } else {
+        $_greeting = str_replace('{nome}', '', trim($_greeting, ' ,')) ?: '';
+    }
 @endphp
 <!DOCTYPE html>
 <html lang="it">
@@ -78,8 +104,8 @@
             </div>
 
             <div class="email-body">
-                @if($salon->email_greeting)
-                    <p style="color:#6b7280;font-size:0.875rem;font-style:italic;padding-bottom:16px;margin-bottom:16px;border-bottom:1px solid #f3f4f6;">{{ e($salon->email_greeting) }}</p>
+                @if($_greeting)
+                    <p style="color:#111827;font-size:1rem;font-weight:500;padding-bottom:16px;margin-bottom:16px;border-bottom:1px solid #f3f4f6;">{!! nl2br(e($_greeting)) !!}</p>
                 @endif
                 @yield('body')
             </div>
@@ -93,7 +119,11 @@
             @endif
 
             @if($salon->email_footer_note)
-                <div class="footer-note">{{ e($salon->email_footer_note) }}</div>
+                @php
+                    $_footerNote = $salon->email_footer_note;
+                    if ($_firstName) $_footerNote = str_replace('{nome}', e($_firstName), $_footerNote);
+                @endphp
+                <div class="footer-note">{!! nl2br(e($_footerNote)) !!}</div>
             @endif
 
             @if($salon->phone || $salon->address)

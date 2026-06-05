@@ -1,14 +1,11 @@
 @php
 $salonProfile = \App\Models\SalonProfile::current();
 
-$_themeClass = match($salonProfile->theme ?? 'dark') {
-    'light'    => 'sf-light',
-    'rose'     => 'sf-rose',
-    'emerald'  => 'sf-emerald',
-    'midnight' => 'sf-midnight',
-    'minimal'  => 'sf-minimal',
-    default    => '',
-};
+$_family      = in_array($salonProfile->theme ?? '', ['luxury','rosa','verde','notte','minimal','viola','terracotta','acqua','cipria'])
+    ? $salonProfile->theme
+    : 'luxury';
+$_themeClass  = 'sf-' . $_family;
+$_defaultMode = $salonProfile->theme_mode ?? 'light';
 
 $_fontUrls = [
     'classic' => 'https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&display=swap',
@@ -32,7 +29,7 @@ $_fontBody    = $_fontVars[$_pair][1] ?? $_fontVars['classic'][1];
 $_radius      = $_radiusMap[$_border] ?? '0';
 @endphp
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="{{ $_themeClass }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="{{ $_themeClass }}" data-default-mode="{{ $_defaultMode }}" style="--sf-font-display:{{ $_fontDisplay }};--sf-font-body:{{ $_fontBody }};--sf-radius:{{ $_radius }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -47,266 +44,21 @@ $_radius      = $_radiusMap[$_border] ?? '0';
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="{{ $_fontUrl }}" rel="stylesheet">
 
-    <style>
-        /* ── THEME VARIABLES ── */
-        :root {
-            --sf-bg:       #0d0b08;
-            --sf-bg-alt:   #100e0b;
-            --sf-bg-card:  #131008;
-            --sf-gold:     #c9a96e;
-            --sf-gold-lt:  #e8d5a3;
-            --sf-border:   rgba(201,169,110,0.15);
-            --sf-muted:    #555;
-            --sf-body:     #888;
-            --sf-btn-bg:   #c9a96e;
-            --sf-btn-fg:   #0a0806;
-            --sf-nav-bg:   rgba(13,11,8,0.94);
-        }
-        html.sf-light {
-            --sf-bg:       #f7f3ec;
-            --sf-bg-alt:   #f2ece2;
-            --sf-bg-card:  #fffdf8;
-            --sf-gold:     #a08060;
-            --sf-gold-lt:  #1a1008;
-            --sf-border:   rgba(160,128,96,0.22);
-            --sf-muted:    #9c8a6e;
-            --sf-body:     #6a5a48;
-            --sf-btn-bg:   #1a1008;
-            --sf-btn-fg:   #f7f3ec;
-            --sf-nav-bg:   rgba(247,243,236,0.96);
-        }
-        html.sf-rose {
-            --sf-bg:       #160a0d;
-            --sf-bg-alt:   #1c0d12;
-            --sf-bg-card:  #1f1015;
-            --sf-gold:     #d4847a;
-            --sf-gold-lt:  #f5d0c5;
-            --sf-border:   rgba(212,132,122,0.18);
-            --sf-muted:    #6a3a3a;
-            --sf-body:     #9a6060;
-            --sf-btn-bg:   #d4847a;
-            --sf-btn-fg:   #160a0d;
-            --sf-nav-bg:   rgba(22,10,13,0.95);
-        }
-        html.sf-emerald {
-            --sf-bg:       #061510;
-            --sf-bg-alt:   #091c15;
-            --sf-bg-card:  #0b2018;
-            --sf-gold:     #5eb870;
-            --sf-gold-lt:  #c0eed0;
-            --sf-border:   rgba(94,184,112,0.16);
-            --sf-muted:    #365845;
-            --sf-body:     #528a65;
-            --sf-btn-bg:   #5eb870;
-            --sf-btn-fg:   #061510;
-            --sf-nav-bg:   rgba(6,21,16,0.95);
-        }
-        html.sf-midnight {
-            --sf-bg:       #06081a;
-            --sf-bg-alt:   #0a0d22;
-            --sf-bg-card:  #0d1228;
-            --sf-gold:     #7a96d4;
-            --sf-gold-lt:  #c4d0f5;
-            --sf-border:   rgba(122,150,212,0.16);
-            --sf-muted:    #324070;
-            --sf-body:     #546090;
-            --sf-btn-bg:   #7a96d4;
-            --sf-btn-fg:   #06081a;
-            --sf-nav-bg:   rgba(6,8,26,0.95);
-        }
-        html.sf-minimal {
-            --sf-bg:       #ffffff;
-            --sf-bg-alt:   #f8f8f6;
-            --sf-bg-card:  #fafafa;
-            --sf-gold:     #1a1a1a;
-            --sf-gold-lt:  #111111;
-            --sf-border:   rgba(0,0,0,0.09);
-            --sf-muted:    #aaaaaa;
-            --sf-body:     #666666;
-            --sf-btn-bg:   #111111;
-            --sf-btn-fg:   #ffffff;
-            --sf-nav-bg:   rgba(255,255,255,0.97);
-        }
-
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        [x-cloak] { display: none !important; }
-        html { scroll-behavior: smooth; }
-
-        body {
-            background: var(--sf-bg);
-            color: var(--sf-gold-lt);
-            font-family: var(--sf-font-body);
-            font-size: 14px;
-            line-height: 1.6;
-            -webkit-font-smoothing: antialiased;
-            min-height: 100vh;
-            transition: background 0.3s, color 0.3s;
-        }
-
-        .sf-display { font-family: var(--sf-font-display); }
-
-        /* ── NAV ── */
-        #sf-nav {
-            position: sticky; top: 0; z-index: 100;
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 18px 48px;
-            background: var(--sf-nav-bg);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border-bottom: 1px solid var(--sf-border);
-            transition: background 0.3s;
-        }
-        .sf-logo {
-            font-family: var(--sf-font-display);
-            font-size: 20px; color: var(--sf-gold-lt);
-            text-decoration: none; flex-shrink: 0;
-            display: flex; align-items: center; gap: 10px;
-        }
-        .sf-logo img { height: 28px; object-fit: contain; }
-        #sf-nav-links {
-            display: flex; gap: 28px; list-style: none;
-        }
-        #sf-nav-links a {
-            font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
-            color: var(--sf-body); text-decoration: none; transition: color 0.2s;
-        }
-        #sf-nav-links a:hover { color: var(--sf-gold); }
-        .sf-nav-right { display: flex; align-items: center; gap: 12px; }
-
-        .sf-btn {
-            display: inline-block;
-            background: var(--sf-btn-bg); color: var(--sf-btn-fg);
-            font-size: 10px; letter-spacing: 2.5px; text-transform: uppercase;
-            font-weight: 700; padding: 11px 24px; text-decoration: none;
-            white-space: nowrap; transition: opacity 0.2s;
-            border-radius: var(--sf-radius);
-        }
-        .sf-btn:hover { opacity: 0.85; }
-        .sf-btn-lg { font-size: 10px; letter-spacing: 2.5px; padding: 14px 36px; }
-        .sf-btn-outline {
-            display: inline-block;
-            border: 1px solid var(--sf-gold); color: var(--sf-gold);
-            font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
-            padding: 12px 28px; text-decoration: none; transition: background 0.2s;
-            border-radius: var(--sf-radius);
-        }
-        .sf-btn-outline:hover { background: rgba(201,169,110,0.08); }
-
-        .sf-nav-link {
-            font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
-            color: var(--sf-body); text-decoration: none; transition: color 0.2s;
-            white-space: nowrap;
-        }
-        .sf-nav-link:hover { color: var(--sf-gold); }
-        .sf-nav-link--cta {
-            border: 1px solid var(--sf-border); padding: 6px 14px;
-            color: var(--sf-gold-lt);
-        }
-        .sf-nav-link--cta:hover { border-color: var(--sf-gold); color: var(--sf-gold); }
-
-        .sf-hamburger {
-            display: none; flex-direction: column; gap: 5px;
-            cursor: pointer; background: none; border: none; padding: 6px;
-        }
-        .sf-hamburger span { display: block; width: 22px; height: 1.5px; background: var(--sf-gold-lt); }
-
-        /* mobile menu overlay */
-        #sf-mob-menu {
-            display: none; position: fixed; inset: 0; z-index: 101;
-            background: var(--sf-bg); padding: 0 28px 32px;
-            flex-direction: column; overflow-y: auto;
-        }
-        #sf-mob-menu.open { display: flex; }
-        .sf-mob-top {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 18px 0 20px; border-bottom: 1px solid var(--sf-border);
-            margin-bottom: 12px;
-        }
-        .sf-mob-close {
-            background: none; border: none; cursor: pointer;
-            color: var(--sf-gold-lt); font-size: 22px; line-height: 1; padding: 4px;
-        }
-        #sf-mob-menu a {
-            font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
-            color: var(--sf-body); text-decoration: none;
-            padding: 16px 0; border-bottom: 1px solid var(--sf-border); display: block;
-        }
-        #sf-mob-menu a:hover { color: var(--sf-gold); }
-        #sf-mob-menu .sf-mob-cta {
-            margin-top: 24px; display: block; text-align: center;
-        }
-
-        @media (max-width: 820px) {
-            #sf-nav { padding: 14px 20px; }
-            #sf-nav-links { display: none; }
-            .sf-nav-right .sf-btn { display: none; }
-            .sf-nav-right .sf-nav-link { display: none; }
-            .sf-hamburger { display: flex; }
-        }
-
-        /* ── SHARED SECTION STYLES ── */
-        .sf-section { padding: 88px 48px; background: var(--sf-bg); }
-        .sf-section-alt { padding: 88px 48px; background: var(--sf-bg-alt); }
-        .sf-inner { max-width: 1080px; margin: 0 auto; }
-        .sf-eyebrow {
-            font-size: 9px; letter-spacing: 4px; color: var(--sf-gold);
-            text-transform: uppercase; margin-bottom: 14px; opacity: 0.85;
-        }
-        .sf-heading {
-            font-family: var(--sf-font-display);
-            font-size: clamp(26px, 4vw, 40px);
-            color: var(--sf-gold-lt); line-height: 1.1; margin-bottom: 12px;
-        }
-        .sf-heading em { color: var(--sf-gold); font-style: italic; }
-        .sf-rule { width: 28px; height: 1px; background: var(--sf-gold); margin-bottom: 44px; opacity: 0.45; }
-
-        @media (max-width: 768px) {
-            .sf-section, .sf-section-alt { padding: 60px 20px; }
-            .sf-rule { margin-bottom: 32px; }
-        }
-
-        /* ── FOOTER ── */
-        #sf-footer {
-            background: var(--sf-bg);
-            border-top: 1px solid var(--sf-border);
-            padding: 36px 48px;
-        }
-        .sf-footer-inner {
-            max-width: 1080px; margin: 0 auto;
-            display: flex; justify-content: space-between; align-items: center;
-            flex-wrap: wrap; gap: 16px;
-        }
-        .sf-footer-logo { font-family: var(--sf-font-display); font-size: 16px; color: var(--sf-gold-lt); text-decoration: none; display: block; margin-bottom: 6px; }
-        .sf-footer-meta { font-size: 11px; color: var(--sf-muted); margin-top: 4px; display: flex; flex-wrap: wrap; gap: 12px; }
-        .sf-footer-social { display: flex; gap: 16px; align-items: center; }
-        .sf-footer-social a { color: var(--sf-muted); text-decoration: none; line-height: 0; transition: color 0.2s; }
-        .sf-footer-social a:hover { color: var(--sf-gold); }
-        .sf-social-icon { width: 18px; height: 18px; display: block; }
-        .sf-footer-copy { font-size: 10px; letter-spacing: 1px; color: var(--sf-muted); }
-        .sf-footer-legal { display: flex; gap: 12px; margin-top: 4px; }
-        .sf-footer-legal a { font-size: 10px; color: var(--sf-muted); text-decoration: none; }
-        .sf-footer-legal a:hover { color: var(--sf-gold); }
-
-        @media (max-width: 600px) {
-            #sf-footer { padding: 28px 20px; }
-            .sf-footer-inner { flex-direction: column; align-items: flex-start; gap: 12px; }
-        }
-
-    </style>
-    <style>
-        :root {
-            --sf-font-display: {{ $_fontDisplay }};
-            --sf-font-body:    {{ $_fontBody }};
-            --sf-radius:       {{ $_radius }};
-        }
-    </style>
-
+    @vite('resources/scss/storefront.scss')
 
     @fonts
     @filamentStyles
-    @vite('resources/css/filament/admin/theme.css')
-    @vite('resources/css/app.css')
+    @vite('resources/scss/filament/admin/theme.scss')
+    @vite('resources/scss/app.scss')
     @stack('head')
+    <script>
+        (function(){
+            var root = document.documentElement;
+            var def  = root.getAttribute('data-default-mode') || 'light';
+            var mode = localStorage.getItem('sf-mode') || def;
+            if (mode === 'dark') root.classList.add('mode-dark');
+        })();
+    </script>
 </head>
 <body>
 
@@ -336,6 +88,16 @@ $_radius      = $_radiusMap[$_border] ?? '0';
                 <a href="{{ route('register') }}" class="sf-nav-link sf-nav-link--cta">Registrati</a>
             @endauth
 
+            <button id="sf-mode-toggle" class="sf-mode-toggle" aria-label="Cambia modalità">
+                {{-- moon = currently in light mode, click to go dark --}}
+                <svg id="sf-icon-moon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+                </svg>
+                {{-- sun = currently in dark mode, click to go light --}}
+                <svg id="sf-icon-sun" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="display:none">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+                </svg>
+            </button>
             <a href="{{ route('booking.create') }}" class="sf-btn">Prenota ora</a>
             <button class="sf-hamburger" id="sf-hamburger" aria-label="Menu">
                 <span></span><span></span><span></span>
@@ -419,22 +181,7 @@ $_radius      = $_radiusMap[$_border] ?? '0';
         </div>
     </footer>
 
-    <script>
-        (function() {
-            const menu     = document.getElementById('sf-mob-menu');
-            const burger   = document.getElementById('sf-hamburger');
-            const closeBtn = document.getElementById('sf-mob-close');
-
-            burger.addEventListener('click',   () => menu.classList.add('open'));
-            closeBtn.addEventListener('click', () => menu.classList.remove('open'));
-            menu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => menu.classList.remove('open')));
-        })();
-    </script>
-
     @stack('scripts')
-    @vite('resources/js/app.js')
-<!-- impeccable-live-start -->
-<script src="http://localhost:8400/live.js"></script>
-<!-- impeccable-live-end -->
+    @vite(['resources/js/app.js', 'resources/js/storefront.js'])
 </body>
 </html>

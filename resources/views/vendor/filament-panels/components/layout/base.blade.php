@@ -89,7 +89,7 @@
         </style>
 
         @stack('styles')
-        @vite('resources/css/filament/admin/theme.css')
+        @vite('resources/scss/filament/admin/theme.scss')
 
         {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::STYLES_AFTER, scopes: $renderHookScopes) }}
 

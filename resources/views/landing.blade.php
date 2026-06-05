@@ -6,7 +6,7 @@
     <title>GestionalePro · Software prenotazioni per saloni e centri estetici</title>
     <meta name="description" content="Gestisci prenotazioni, staff e pagamenti del tuo salone in un'unica piattaforma. 14 giorni gratis, nessuna carta richiesta.">
     <script>if(location.hash)history.replaceState(null,'',location.pathname)</script>
-    @vite(['resources/css/app.css', 'resources/scss/landing.scss', 'resources/js/app.js'])
+    @vite(['resources/scss/app.scss', 'resources/scss/landing.scss', 'resources/js/app.js'])
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
@@ -629,8 +629,5 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
 })();
 </script>
 
-<!-- impeccable-live-start -->
-<script src="http://localhost:8400/live.js"></script>
-<!-- impeccable-live-end -->
 </body>
 </html>

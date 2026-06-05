@@ -1,3 +1,11 @@
+---
+target: resources/views/welcome.blade.php
+total_score: 27
+p0_count: 0
+p1_count: 2
+timestamp: 2026-06-04T15-21-48Z
+slug: resources-views-welcome-blade-php
+---
 @extends('layouts.storefront')
 
 @section('title', $profile->name)
@@ -5,80 +13,76 @@
 @push('head')
 <style>
 /* ── HERO ─────────────────────────────────────────────────────────────────── */
-.sf-hero {
-    display: flex; align-items: center; justify-content: center;
-    flex-direction: column; text-align: center;
-    padding: 104px 48px; min-height: 400px;
-    background: var(--sf-bg); position: relative; overflow: hidden;
+.sf-hero { overflow: hidden; }
+
+.sf-hero--split {
+    display: flex;
+    align-items: stretch;
+    min-height: 460px;
+    max-height: 560px;
+    background: var(--sf-bg);
+}
+.sf-hero-text {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 80px 72px 80px 48px;
+}
+.sf-hero-cover-wrap {
+    flex: 0 0 44%;
+    overflow: hidden;
+    position: relative;
+}
+.sf-hero-cover-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
-/* No image: dot-grid texture */
-.sf-hero--no-img::before {
-    content: '';
-    position: absolute; inset: 0; pointer-events: none;
-    background-image: radial-gradient(circle, var(--sf-gold) 1px, transparent 1px);
-    background-size: 32px 32px;
-    opacity: 0.07;
+.sf-hero--centered {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 96px 48px;
+    min-height: 380px;
+    background: linear-gradient(160deg, var(--sf-bg) 0%, var(--sf-bg-alt) 100%);
 }
-
-/* With background image */
-.sf-hero--img {
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-}
-.sf-hero--img::before {
-    content: '';
-    position: absolute; inset: 0; pointer-events: none;
-    background: radial-gradient(ellipse at 50% 35%,
-        rgba(0,0,0,0.20) 0%,
-        rgba(0,0,0,0.60) 55%,
-        rgba(0,0,0,0.84) 100%);
-}
-
-.sf-hero-inner {
-    display: flex; flex-direction: column; align-items: center;
-    max-width: 680px; position: relative; z-index: 1;
-}
-
-.sf-hero-ornament {
-    display: flex; align-items: center; gap: 12px; margin: 20px 0;
-}
-.sf-hero-line { width: 48px; height: 1px; background: var(--sf-gold); opacity: 0.55; }
-.sf-hero-dot  { width: 4px; height: 4px; border-radius: 50%; background: var(--sf-gold); opacity: 0.75; }
+.sf-hero--centered .sf-hero-text { align-items: center; max-width: 560px; }
+.sf-hero--centered .sf-hero-tagline { margin-left: auto; margin-right: auto; }
 
 .sf-hero-name {
     font-family: var(--sf-font-display);
-    font-size: clamp(44px, 6.5vw, 82px);
+    font-size: clamp(40px, 5.5vw, 66px);
     color: var(--sf-gold-lt);
-    line-height: 1.02; letter-spacing: -0.02em; text-wrap: balance;
+    line-height: 1.04;
+    margin-bottom: 16px;
+    text-wrap: balance;
 }
 .sf-hero-tagline {
-    font-size: 13px; color: var(--sf-body); line-height: 1.75;
-    max-width: 400px; margin: 0 auto 36px; text-wrap: pretty;
+    font-size: 14px;
+    color: var(--sf-body);
+    line-height: 1.7;
+    max-width: 380px;
+    margin-bottom: 36px;
+    text-wrap: pretty;
 }
 
-/* On image bg: always use light text regardless of theme */
-.sf-hero--img .sf-hero-name    { color: rgba(255,255,255,0.96); }
-.sf-hero--img .sf-hero-tagline { color: rgba(255,255,255,0.65); }
-.sf-hero--img .sf-hero-line    { background: rgba(255,255,255,0.45); opacity: 1; }
-.sf-hero--img .sf-hero-dot     { background: rgba(255,255,255,0.60); opacity: 1; }
-.sf-hero--img .sf-btn {
-    background: rgba(255,255,255,0.15);
-    color: #fff;
-    border: 1px solid rgba(255,255,255,0.45);
-    backdrop-filter: blur(6px);
-}
-.sf-hero--img .sf-btn:hover {
-    background: rgba(255,255,255,0.25);
-    opacity: 1;
-}
-
-@media (max-width: 640px) {
-    .sf-hero { padding: 72px 28px; }
-}
-@media (prefers-reduced-motion: reduce) {
-    .sf-hero--no-img::before { display: none; }
+@media (max-width: 820px) {
+    .sf-hero--split { flex-direction: column; max-height: none; }
+    .sf-hero-text { padding: 48px 20px 44px; }
+    .sf-hero-cover-wrap {
+        flex: none;
+        width: 100%;
+        aspect-ratio: 16/9;
+        order: -1;
+        position: relative;
+    }
+    .sf-hero--centered { padding: 72px 20px; }
 }
 
 /* ── SERVICES ─────────────────────────────────────────────────────────────── */
@@ -213,9 +217,7 @@
 }
 
 /* ── HOURS + CONTACTS ─────────────────────────────────────────────────────── */
-.sf-info-grid { display: grid; gap: 72px; }
-.sf-info-grid--dual   { grid-template-columns: 1fr 1fr; }
-.sf-info-grid--single { grid-template-columns: 1fr; max-width: 520px; }
+.sf-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 72px; }
 
 .sf-hours-list { list-style: none; }
 .sf-hours-item { padding: 13px 0; border-bottom: 1px solid var(--sf-border); }
@@ -302,47 +304,6 @@
 .sf-cta .sf-rule { margin-left: auto; margin-right: auto; }
 .sf-cta p { font-size: 14px; color: var(--sf-body); max-width: 400px; margin: 0 auto 40px; line-height: 1.75; }
 
-/* ── HEADING UTILITIES ────────────────────────────────────────────────────── */
-.sf-heading { text-wrap: balance; }
-.sf-heading--sm { font-size: clamp(22px, 3vw, 30px); }
-.sf-svc-cta { margin-top: 44px; }
-
-/* ── PAGE NAV ─────────────────────────────────────────────────────────────── */
-.sf-page-nav {
-    background: var(--sf-bg-alt);
-    border-bottom: 1px solid var(--sf-border);
-    padding: 0 48px;
-}
-.sf-page-nav-list {
-    list-style: none;
-    display: flex;
-    gap: 0;
-    overflow-x: auto;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-    max-width: 1080px;
-    margin: 0 auto;
-}
-.sf-page-nav-list::-webkit-scrollbar { display: none; }
-.sf-page-nav-link {
-    display: block;
-    padding: 13px 18px;
-    font-size: 10px;
-    letter-spacing: 1.8px;
-    text-transform: uppercase;
-    color: var(--sf-body);
-    text-decoration: none;
-    white-space: nowrap;
-    border-bottom: 1.5px solid transparent;
-    transition: color 0.2s, border-color 0.2s;
-}
-.sf-page-nav-link:hover,
-.sf-page-nav-link.active {
-    color: var(--sf-gold);
-    border-bottom-color: var(--sf-gold);
-}
-@media (max-width: 768px) { .sf-page-nav { padding: 0 20px; } }
-
 /* ── REDUCED MOTION ───────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
     .sf-about-photo img,
@@ -360,56 +321,34 @@
     $days   = ['mon'=>'Lunedì','tue'=>'Martedì','wed'=>'Mercoledì','thu'=>'Giovedì','fri'=>'Venerdì','sat'=>'Sabato','sun'=>'Domenica'];
     $dayMap = ['Mon'=>'mon','Tue'=>'tue','Wed'=>'wed','Thu'=>'thu','Fri'=>'fri','Sat'=>'sat','Sun'=>'sun'];
     $todayKey = $dayMap[now()->format('D')] ?? '';
-    $hasGallerySection = $galleryItems->count() > 3 || ($galleryItems->isNotEmpty() && !$profile->description);
-    $navLinks = array_filter([
-        $services->isNotEmpty()                                  ? ['href' => '#servizi',   'label' => 'Servizi']        : null,
-        $profile->description                                    ? ['href' => '#salone',    'label' => 'Il salone']      : null,
-        $staff->isNotEmpty()                                     ? ['href' => '#team',      'label' => 'Team']           : null,
-        $hasGallerySection                                       ? ['href' => '#galleria',  'label' => 'Galleria']       : null,
-        ($profile->opening_hours || $profile->phone || $profile->address) ? ['href' => '#contatti', 'label' => 'Orari & contatti'] : null,
-        $reviews->isNotEmpty()                                   ? ['href' => '#recensioni','label' => 'Recensioni']     : null,
-    ]);
 @endphp
 
 {{-- 1. HERO --}}
-@php $_heroImg = $profile->heroImageUrl(); @endphp
-<section class="sf-hero {{ $_heroImg ? 'sf-hero--img' : 'sf-hero--no-img' }}"
-    @if($_heroImg) style="background-image:url('{{ $_heroImg }}')" @endif>
-    <div class="sf-hero-inner">
-        <div class="sf-hero-ornament">
-            <span class="sf-hero-line"></span>
-            <span class="sf-hero-dot"></span>
-            <span class="sf-hero-line"></span>
-        </div>
+<section class="sf-hero {{ $profile->coverUrl() ? 'sf-hero--split' : 'sf-hero--centered' }}">
+    <div class="sf-hero-text">
         <h1 class="sf-hero-name">{{ $profile->name }}</h1>
-        <div class="sf-hero-ornament">
-            <span class="sf-hero-line"></span>
-            <span class="sf-hero-dot"></span>
-            <span class="sf-hero-line"></span>
-        </div>
         @if($profile->tagline)
             <p class="sf-hero-tagline">{{ $profile->tagline }}</p>
         @endif
-        <a href="{{ route('booking.create') }}" class="sf-btn sf-btn-lg">Prenota un appuntamento</a>
+        <div>
+            <a href="{{ route('booking.create') }}" class="sf-btn sf-btn-lg">Prenota un appuntamento</a>
+        </div>
     </div>
+    @if($profile->coverUrl())
+        <div class="sf-hero-cover-wrap">
+            <img src="{{ $profile->coverUrl() }}"
+                 alt="{{ $profile->name }}"
+                 class="sf-hero-cover-img"
+                 loading="eager">
+        </div>
+    @endif
 </section>
-
-{{-- PAGE NAV --}}
-@if(count($navLinks) > 2)
-<nav class="sf-page-nav" aria-label="Sezioni della pagina">
-    <ul class="sf-page-nav-list">
-        @foreach($navLinks as $link)
-            <li><a href="{{ $link['href'] }}" class="sf-page-nav-link">{{ $link['label'] }}</a></li>
-        @endforeach
-    </ul>
-</nav>
-@endif
 
 {{-- 2. SERVIZI --}}
 @if($services->isNotEmpty())
 <section class="sf-section-alt" id="servizi">
     <div class="sf-inner">
-        <h2 class="sf-heading">I <em>servizi</em></h2>
+        <h2 class="sf-heading" style="text-wrap:balance">I <em>servizi</em></h2>
         <div class="sf-rule"></div>
         <ul class="sf-svc-list">
             @foreach($services as $service)
@@ -427,7 +366,7 @@
             </li>
             @endforeach
         </ul>
-        <div class="sf-svc-cta">
+        <div style="margin-top:44px">
             <a href="{{ route('booking.create') }}" class="sf-btn">Prenota ora</a>
         </div>
     </div>
@@ -440,7 +379,7 @@
     <div class="sf-inner">
         <div class="sf-about-grid">
             <div>
-                <h2 class="sf-heading">Il <em>salone</em></h2>
+                <h2 class="sf-heading" style="text-wrap:balance">Il <em>salone</em></h2>
                 <div class="sf-rule"></div>
                 <div class="sf-about-text">
                     {!! $profile->description !!}
@@ -464,7 +403,8 @@
 @if($staff->isNotEmpty())
 <section class="sf-section-alt" id="team">
     <div class="sf-inner">
-        <h2 class="sf-heading">Il team</h2>
+        <h2 class="sf-heading" style="text-wrap:balance">Il <em>team</em></h2>
+        <div class="sf-rule"></div>
         <div class="sf-team-grid">
             @foreach($staff as $member)
             @php $avatarUrl = $member->getFirstMediaUrl('avatar', 'thumb'); @endphp
@@ -493,7 +433,8 @@
 @if($galleryItems->count() > 3 || ($galleryItems->isNotEmpty() && !$profile->description))
 <section class="sf-section" id="galleria" x-data="{ lightbox: null }">
     <div class="sf-inner">
-        <h2 class="sf-heading">Galleria</h2>
+        <h2 class="sf-heading" style="text-wrap:balance">Il nostro <em>lavoro</em></h2>
+        <div class="sf-rule"></div>
         <div class="sf-gallery-grid">
             @foreach($galleryItems as $item)
             @php $thumbUrl = $item->getUrl('thumb'); $webUrl = $item->getUrl('web'); @endphp
@@ -520,17 +461,19 @@
 @if($profile->opening_hours || $profile->phone || $profile->address)
 <section class="sf-section-alt" id="contatti">
     <div class="sf-inner">
-        <div class="sf-info-grid {{ $profile->opening_hours ? 'sf-info-grid--dual' : 'sf-info-grid--single' }}">
+        <div class="sf-info-grid">
 
             @if($profile->opening_hours)
             <div>
-                <h2 class="sf-heading sf-heading--sm">Orari di <em>apertura</em></h2>
+                <h2 class="sf-heading" style="font-size:clamp(22px,3vw,30px);text-wrap:balance">
+                    Orari di <em>apertura</em>
+                </h2>
                 <div class="sf-rule"></div>
                 <ul class="sf-hours-list">
                     @foreach($days as $key => $label)
                     @php
                         $day    = $profile->opening_hours[$key] ?? null;
-                        $isOpen = $day && (($day['type'] ?? null) === 'split' || ($day['open'] ?? false));
+                        $isOpen = $day && ($day['open'] ?? false);
                     @endphp
                     <li class="sf-hours-item {{ $key === $todayKey ? 'is-today' : '' }} {{ !$isOpen ? 'is-closed' : '' }}">
                         <div class="sf-hours-day">
@@ -556,7 +499,9 @@
             @endif
 
             <div>
-                <h2 class="sf-heading sf-heading--sm">Dove <em>trovarci</em></h2>
+                <h2 class="sf-heading" style="font-size:clamp(22px,3vw,30px);text-wrap:balance">
+                    Dove <em>trovarci</em>
+                </h2>
                 <div class="sf-rule"></div>
                 <ul class="sf-contact-list">
                     @if($profile->address)
@@ -620,7 +565,8 @@
 @if($reviews->isNotEmpty())
 <section class="sf-section" id="recensioni">
     <div class="sf-inner">
-        <h2 class="sf-heading">Recensioni</h2>
+        <h2 class="sf-heading" style="text-wrap:balance">Le <em>recensioni</em></h2>
+        <div class="sf-rule"></div>
         <div class="sf-reviews-grid">
             @foreach($reviews as $review)
             <div class="sf-review-card">
@@ -640,7 +586,7 @@
 @endif
 
 {{-- 8. POLITICA DI CANCELLAZIONE --}}
-@if(true)
+@if($profile->cancellation_policy)
 <section class="sf-section-alt">
     <div class="sf-inner" style="max-width:720px">
         <div class="sf-accordion" x-data="{ open: false }">
@@ -664,7 +610,7 @@
                  :style="open ? 'grid-template-rows: 1fr' : 'grid-template-rows: 0fr'">
                 <div>
                     <div class="sf-accordion-body">
-                        {!! $profile->cancellationPolicyHtml() !!}
+                        {!! $profile->cancellation_policy !!}
                     </div>
                 </div>
             </div>
@@ -676,43 +622,11 @@
 {{-- 9. CTA --}}
 <section class="sf-section sf-cta">
     <div class="sf-inner">
-        <h2 class="sf-heading">Prenota il tuo <em>appuntamento</em></h2>
+        <h2 class="sf-heading" style="text-wrap:balance">Prenota il tuo <em>appuntamento</em></h2>
         <div class="sf-rule"></div>
         <p>Scegli il servizio, il giorno e l'orario che preferisci. La conferma arriva subito.</p>
         <a href="{{ route('booking.create') }}" class="sf-btn sf-btn-lg">Prenota ora</a>
     </div>
 </section>
-
-@push('scripts')
-<script>
-(function () {
-    var links = document.querySelectorAll('.sf-page-nav-link');
-    if (!links.length) return;
-
-    var linkMap = {};
-    links.forEach(function (a) {
-        var href = a.getAttribute('href');
-        if (href && href.charAt(0) === '#') linkMap[href.slice(1)] = a;
-    });
-
-    var sections = Array.from(document.querySelectorAll('[id]')).filter(function (el) {
-        return linkMap[el.id];
-    });
-    if (!sections.length) return;
-
-    var observer = new IntersectionObserver(function (entries) {
-        entries.forEach(function (entry) {
-            if (entry.isIntersecting) {
-                links.forEach(function (a) { a.classList.remove('active'); });
-                var link = linkMap[entry.target.id];
-                if (link) link.classList.add('active');
-            }
-        });
-    }, { rootMargin: '-15% 0px -75% 0px', threshold: 0 });
-
-    sections.forEach(function (s) { observer.observe(s); });
-})();
-</script>
-@endpush
 
 @endsection

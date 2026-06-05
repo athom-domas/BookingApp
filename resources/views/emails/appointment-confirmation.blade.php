@@ -3,7 +3,6 @@
 @section('title')✓ Appuntamento confermato @endsection
 
 @section('body')
-    <p>Ciao <strong>{{ $appointment->user->name }}</strong>,</p>
     <p>il tuo appuntamento è stato confermato. Ti aspettiamo!</p>
 
     <div class="detail-card">

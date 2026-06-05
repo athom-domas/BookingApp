@@ -3,7 +3,6 @@
 @section('title')Appuntamento disdetto @endsection
 
 @section('body')
-    <p>Ciao <strong>{{ $recipient->name }}</strong>,</p>
     <p>il seguente appuntamento è stato disdetto.</p>
 
     <div class="detail-card">
