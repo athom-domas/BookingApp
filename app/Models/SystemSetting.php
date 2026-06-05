@@ -13,6 +13,7 @@ use App\Models\Business;
     'booking_max_days_ahead', 'cancellation_deadline_hours',
     'reminder_count', 'reminder_1_hours', 'reminder_2_hours', 'payment_mode',
     'reviews_enabled',
+    'loyalty_enabled', 'loyalty_points_per_euro', 'loyalty_reward_threshold', 'loyalty_reward_percentage',
 ])]
 class SystemSetting extends Model
 {
@@ -29,6 +30,10 @@ class SystemSetting extends Model
             'reminder_1_hours'            => 'integer',
             'reminder_2_hours'            => 'integer',
             'reviews_enabled'             => 'boolean',
+            'loyalty_enabled'           => 'boolean',
+            'loyalty_points_per_euro'   => 'integer',
+            'loyalty_reward_threshold'  => 'integer',
+            'loyalty_reward_percentage' => 'integer',
         ];
     }
 
@@ -46,6 +51,10 @@ class SystemSetting extends Model
                 'reminder_2_hours'            => 2,
                 'payment_mode'                => 'both',
                 'reviews_enabled'             => true,
+                'loyalty_enabled'           => false,
+                'loyalty_points_per_euro'   => 1,
+                'loyalty_reward_threshold'  => 100,
+                'loyalty_reward_percentage' => 10,
             ]);
         }
 
@@ -62,6 +71,10 @@ class SystemSetting extends Model
                 'reminder_2_hours'            => 2,
                 'payment_mode'                => 'both',
                 'reviews_enabled'             => true,
+                'loyalty_enabled'           => false,
+                'loyalty_points_per_euro'   => 1,
+                'loyalty_reward_threshold'  => 100,
+                'loyalty_reward_percentage' => 10,
             ]
         );
     }
@@ -109,5 +122,25 @@ class SystemSetting extends Model
     public static function getPaymentMode(): string
     {
         return self::current()->payment_mode ?? 'both';
+    }
+
+    public static function isLoyaltyEnabled(): bool
+    {
+        return self::current()->loyalty_enabled ?? false;
+    }
+
+    public static function getLoyaltyPointsPerEuro(): int
+    {
+        return self::current()->loyalty_points_per_euro ?? 1;
+    }
+
+    public static function getLoyaltyRewardThreshold(): int
+    {
+        return self::current()->loyalty_reward_threshold ?? 100;
+    }
+
+    public static function getLoyaltyRewardPercentage(): int
+    {
+        return self::current()->loyalty_reward_percentage ?? 10;
     }
 }
