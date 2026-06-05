@@ -12,6 +12,10 @@
             <a href="{{ route('booking.create') }}" class="btn-primary inline-block rounded-md px-5 py-2.5 text-sm font-semibold text-center text-white">Nuova prenotazione</a>
         </div>
 
+        @if ($loyaltyEnabled)
+            @include('portal.appointments.partials.loyalty-card')
+        @endif
+
         @if($waitlistEntries->isNotEmpty())
             <div class="space-y-3">
                 <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Lista d'attesa</h2>

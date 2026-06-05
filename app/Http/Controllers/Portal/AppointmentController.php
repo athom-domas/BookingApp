@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Portal;
 use App\Exceptions\BookingException;
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
+use App\Models\LoyaltyAccount;
+use App\Models\SystemSetting;
 use App\Models\WaitlistEntry;
 use App\Services\AppointmentService;
 use App\Services\PaymentService;
@@ -37,10 +39,19 @@ class AppointmentController extends Controller
             ->latest()
             ->get();
 
+        $loyaltyEnabled = SystemSetting::isLoyaltyEnabled();
+        $loyaltyPoints = $loyaltyEnabled
+            ? (LoyaltyAccount::where('user_id', $request->user()->id)->value('points') ?? 0)
+            : 0;
+
         return view('portal.appointments.index', [
             'upcomingAppointments' => $appointments->filter(fn (Appointment $appointment) => $appointment->isUpcoming())->values(),
             'pastAppointments'     => $appointments->filter(fn (Appointment $appointment) => $appointment->isPast())->sortByDesc('scheduled_date')->values(),
             'waitlistEntries'      => $waitlistEntries,
+            'loyaltyEnabled'       => $loyaltyEnabled,
+            'loyaltyPoints'        => (int) $loyaltyPoints,
+            'loyaltyThreshold'     => SystemSetting::getLoyaltyRewardThreshold(),
+            'loyaltyPercentage'    => SystemSetting::getLoyaltyRewardPercentage(),
         ]);
     }
 
