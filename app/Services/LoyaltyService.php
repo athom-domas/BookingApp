@@ -28,20 +28,24 @@ class LoyaltyService
             return;
         }
 
-        DB::transaction(function () use ($appointment, $points) {
-            $account = LoyaltyAccount::firstOrCreate([
-                'user_id'     => $appointment->user_id,
-                'business_id' => $appointment->business_id,
-            ]);
-            LoyaltyTransaction::create([
-                'loyalty_account_id' => $account->id,
-                'appointment_id'     => $appointment->id,
-                'type'               => 'earn',
-                'points'             => $points,
-                'description'        => "Pagamento appuntamento #{$appointment->id}",
-            ]);
-            $account->increment('points', $points);
-        });
+        try {
+            DB::transaction(function () use ($appointment, $points) {
+                $account = LoyaltyAccount::firstOrCreate([
+                    'user_id'     => $appointment->user_id,
+                    'business_id' => $appointment->business_id,
+                ]);
+                LoyaltyTransaction::create([
+                    'loyalty_account_id' => $account->id,
+                    'appointment_id'     => $appointment->id,
+                    'type'               => 'earn',
+                    'points'             => $points,
+                    'description'        => "Pagamento appuntamento #{$appointment->id}",
+                ]);
+                $account->increment('points', $points);
+            });
+        } catch (\Illuminate\Database\QueryException $e) {
+            // earn già registrato da un processo concorrente: no-op idempotente
+        }
     }
 
     public function redeem(Appointment $appointment): int

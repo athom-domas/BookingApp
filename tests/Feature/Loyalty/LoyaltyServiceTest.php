@@ -111,3 +111,31 @@ it('non riscatta due volte per lo stesso appuntamento', function () {
         ->and($this->service->redeem($this->appointment))->toBe(0)
         ->and($account->fresh()->points)->toBe(150);
 });
+
+it('impedisce a livello DB due transazioni dello stesso tipo per un appuntamento', function () {
+    $account = LoyaltyAccount::create(['user_id' => $this->customer->id, 'points' => 0]);
+
+    LoyaltyTransaction::create([
+        'loyalty_account_id' => $account->id,
+        'appointment_id'     => $this->appointment->id,
+        'type'               => 'earn',
+        'points'             => 10,
+    ]);
+
+    expect(fn () => LoyaltyTransaction::create([
+        'loyalty_account_id' => $account->id,
+        'appointment_id'     => $this->appointment->id,
+        'type'               => 'earn',
+        'points'             => 10,
+    ]))->toThrow(\Illuminate\Database\QueryException::class);
+});
+
+it('accrue resta idempotente anche sotto vincolo unico (nessuna eccezione)', function () {
+    SystemSetting::current()->update(['loyalty_enabled' => true, 'loyalty_points_per_euro' => 1]);
+
+    $this->service->accrue($this->appointment, 50.0);
+    $this->service->accrue($this->appointment, 50.0);
+
+    expect(LoyaltyAccount::where('user_id', $this->customer->id)->first()->points)->toBe(50)
+        ->and(LoyaltyTransaction::where('appointment_id', $this->appointment->id)->where('type', 'earn')->count())->toBe(1);
+});
