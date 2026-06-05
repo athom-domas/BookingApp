@@ -40,23 +40,29 @@ class SalonProfilePage extends Page
         $hours   = $profile->opening_hours ?? [];
 
         $formData = [
-            'name'                => $profile->name,
-            'tagline'             => $profile->tagline,
-            'theme'               => $profile->theme             ?? 'luxury',
-            'theme_mode'          => $profile->theme_mode        ?? 'light',
-            'hero_image_preset'   => $profile->hero_image_preset ?? '',
-            'font_pair'           => $profile->font_pair  ?? 'classic',
-            'border_style'        => $profile->border_style ?? 'sharp',
+            'name'                 => $profile->name,
+            'tagline'              => $profile->tagline,
+            'theme'                => $profile->theme             ?? 'luxury',
+            'theme_mode'           => $profile->theme_mode        ?? 'light',
+            'hero_image_preset'    => $profile->hero_image_preset ?? '',
+            'announcement_active'  => (bool) $profile->announcement_active,
+            'announcement_text'    => $profile->announcement_text,
+            'booking_button_label' => $profile->booking_button_label,
+            'meta_description'     => $profile->meta_description,
+            'owner_signature'      => $profile->owner_signature,
+            'font_pair'            => $profile->font_pair  ?? 'classic',
+            'border_style'         => $profile->border_style ?? 'sharp',
 
-            'phone'               => $profile->phone,
-            'address'             => $profile->address,
+            'phone'                => $profile->phone,
+            'address'              => $profile->address,
 
-            'description'         => $profile->description,
-            'google_maps_embed'   => $profile->google_maps_embed,
-            'instagram_url'       => $profile->instagram_url,
-            'facebook_url'        => $profile->facebook_url,
-            'tiktok_url'          => $profile->tiktok_url,
-            'whatsapp_number'     => $profile->whatsapp_number,
+            'description'          => $profile->description,
+            'google_maps_embed'    => $profile->google_maps_embed,
+            'google_review_url'    => $profile->google_review_url,
+            'instagram_url'        => $profile->instagram_url,
+            'facebook_url'         => $profile->facebook_url,
+            'tiktok_url'           => $profile->tiktok_url,
+            'whatsapp_number'      => $profile->whatsapp_number,
 
             'email_greeting'     => $profile->email_greeting     ?? "Ciao {nome},\nhai un nuovo appuntamento confermato.",
             'email_footer_note'  => $profile->email_footer_note  ?? 'Puoi gestire l\'appuntamento dall\'area riservata.',
@@ -157,6 +163,21 @@ class SalonProfilePage extends Page
                             TextInput::make('tagline')
                                 ->label('Tagline'),
                         ]),
+                        TextInput::make('booking_button_label')
+                            ->label('Testo del pulsante "Prenota"')
+                            ->placeholder('Prenota un appuntamento')
+                            ->helperText('Lascia vuoto per usare il testo predefinito.')
+                            ->columnSpanFull(),
+                        Toggle::make('announcement_active')
+                            ->label('Mostra banner avvisi')
+                            ->helperText('Una striscia in cima alla vetrina per ferie, promozioni o comunicazioni.')
+                            ->live(),
+                        TextInput::make('announcement_text')
+                            ->label('Testo dell\'avviso')
+                            ->placeholder('es. Chiusi per ferie dal 10 al 20 agosto')
+                            ->maxLength(160)
+                            ->visible(fn(Get $get) => (bool) $get('announcement_active'))
+                            ->columnSpanFull(),
                         Radio::make('theme')
                             ->label('Famiglia di colori')
                             ->options([
@@ -243,6 +264,12 @@ class SalonProfilePage extends Page
                         RichEditor::make('description')
                             ->label('Chi siamo')
                             ->columnSpanFull(),
+                        TextInput::make('owner_signature')
+                            ->label('Firma del titolare')
+                            ->placeholder('es. Con cura, Giulia e il team')
+                            ->helperText('Una firma breve mostrata in fondo alla sezione "Il salone".')
+                            ->maxLength(120)
+                            ->columnSpanFull(),
                     ]),
 
                     Tab::make('Galleria')->schema([
@@ -278,20 +305,26 @@ class SalonProfilePage extends Page
                                 ->placeholder('39xxxxxxxxxx')
                                 ->helperText('Numero internazionale senza + (es. 39333000000)'),
                         ]),
+                        TextInput::make('google_review_url')
+                            ->label('Link recensione Google')
+                            ->url()
+                            ->placeholder('https://g.page/r/...')
+                            ->helperText('Aggiunge un pulsante "Lascia una recensione" nella sezione recensioni della vetrina.')
+                            ->columnSpanFull(),
                     ]),
 
                     Tab::make('Email')->schema([
                         Textarea::make('email_greeting')
                             ->label('Messaggio di benvenuto')
                             ->placeholder('es. Grazie per aver scelto il nostro salone! Non vediamo l\'ora di vederti.')
-                            ->helperText('Appare come testo introduttivo in tutte le email ai clienti.')
+                            ->helperText('Appare come testo introduttivo in tutte le email ai clienti. Usa {nome} per inserire automaticamente il nome del cliente.')
                             ->rows(3)
                             ->columnSpanFull(),
 
                         Textarea::make('email_footer_note')
                             ->label('Nota nel footer')
                             ->placeholder('es. Per qualsiasi informazione contattaci al numero...')
-                            ->helperText('Appare in fondo a tutte le email, sotto i dati del salone.')
+                            ->helperText('Appare in fondo a tutte le email, sotto i dati del salone. Puoi usare {nome} per il nome del cliente.')
                             ->rows(2)
                             ->columnSpanFull(),
 
@@ -301,7 +334,14 @@ class SalonProfilePage extends Page
                             ->columnSpanFull(),
                     ]),
 
-                    Tab::make('Anteprima')->schema([
+                    Tab::make('Anteprima & Condivisione')->schema([
+                        Textarea::make('meta_description')
+                            ->label('Descrizione per la condivisione')
+                            ->placeholder('es. Parrucchiere e centro estetico nel cuore di Milano. Prenota online.')
+                            ->helperText('Testo che appare quando il link viene condiviso su WhatsApp, Facebook e Instagram. Lascia vuoto per usare automaticamente la tagline o la descrizione.')
+                            ->maxLength(160)
+                            ->rows(2)
+                            ->columnSpanFull(),
                         Placeholder::make('preview_link')
                             ->label('')
                             ->content(function (): HtmlString {

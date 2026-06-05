@@ -37,6 +37,32 @@ $_radius      = $_radiusMap[$_border] ?? '0';
 
     <title>@yield('title', e($salonProfile->name))</title>
 
+    @php
+        $_ogDesc  = $salonProfile->metaDescription();
+        $_ogImage = $salonProfile->heroImageUrl() ?: $salonProfile->logoUrl();
+    @endphp
+    @if($_ogDesc)
+        <meta name="description" content="{{ $_ogDesc }}">
+    @endif
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="@yield('title', e($salonProfile->name))">
+    <meta property="og:site_name" content="{{ e($salonProfile->name) }}">
+    <meta property="og:url" content="{{ url()->current() }}">
+    @if($_ogDesc)
+        <meta property="og:description" content="{{ $_ogDesc }}">
+    @endif
+    @if($_ogImage)
+        <meta property="og:image" content="{{ $_ogImage }}">
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:image" content="{{ $_ogImage }}">
+    @else
+        <meta name="twitter:card" content="summary">
+    @endif
+    <meta name="twitter:title" content="@yield('title', e($salonProfile->name))">
+    @if($_ogDesc)
+        <meta name="twitter:description" content="{{ $_ogDesc }}">
+    @endif
+
     @if($salonProfile->faviconUrl())
         <link rel="icon" href="{{ $salonProfile->faviconUrl() }}">
     @endif
@@ -61,6 +87,10 @@ $_radius      = $_radiusMap[$_border] ?? '0';
     </script>
 </head>
 <body>
+
+    @if($salonProfile->announcement_active && $salonProfile->announcement_text)
+        <div class="sf-announcement" role="status">{{ $salonProfile->announcement_text }}</div>
+    @endif
 
     {{-- NAV --}}
     <nav id="sf-nav">

@@ -135,6 +135,14 @@
 }
 .sf-about-text { font-size: 14px; color: var(--sf-body); line-height: 1.85; }
 .sf-about-text p + p { margin-top: 16px; }
+.sf-about-signature {
+    font-family: var(--sf-font-display);
+    font-size: 19px;
+    color: var(--sf-gold);
+    margin-top: 24px;
+    font-style: italic;
+    line-height: 1.3;
+}
 .sf-about-photos {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -266,6 +274,7 @@
 .sf-review-stars span { color: var(--sf-gold); font-size: 11px; }
 .sf-review-body { font-size: 13px; color: var(--sf-body); line-height: 1.75; margin-bottom: 20px; position: relative; }
 .sf-review-author { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--sf-gold-lt); position: relative; }
+.sf-review-cta { text-align: center; margin-top: 40px; }
 
 @media (max-width: 820px) { .sf-reviews-grid { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 540px) { .sf-reviews-grid { grid-template-columns: 1fr; } }
@@ -367,7 +376,7 @@
         $staff->isNotEmpty()                                     ? ['href' => '#team',      'label' => 'Team']           : null,
         $hasGallerySection                                       ? ['href' => '#galleria',  'label' => 'Galleria']       : null,
         ($profile->opening_hours || $profile->phone || $profile->address) ? ['href' => '#contatti', 'label' => 'Orari & contatti'] : null,
-        $reviews->isNotEmpty()                                   ? ['href' => '#recensioni','label' => 'Recensioni']     : null,
+        ($reviews->isNotEmpty() || $profile->google_review_url)  ? ['href' => '#recensioni','label' => 'Recensioni']     : null,
     ]);
 @endphp
 
@@ -390,7 +399,7 @@
         @if($profile->tagline)
             <p class="sf-hero-tagline">{{ $profile->tagline }}</p>
         @endif
-        <a href="{{ route('booking.create') }}" class="sf-btn sf-btn-lg">Prenota un appuntamento</a>
+        <a href="{{ route('booking.create') }}" class="sf-btn sf-btn-lg">{{ $profile->bookingButtonLabel() }}</a>
     </div>
 </section>
 
@@ -445,6 +454,9 @@
                 <div class="sf-about-text">
                     {!! $profile->description !!}
                 </div>
+                @if($profile->owner_signature)
+                    <p class="sf-about-signature">{{ $profile->owner_signature }}</p>
+                @endif
             </div>
             @if($galleryItems->isNotEmpty())
             <div class="sf-about-photos">
@@ -617,10 +629,11 @@
 @endif
 
 {{-- 7. RECENSIONI --}}
-@if($reviews->isNotEmpty())
+@if($reviews->isNotEmpty() || $profile->google_review_url)
 <section class="sf-section" id="recensioni">
     <div class="sf-inner">
         <h2 class="sf-heading">Recensioni</h2>
+        @if($reviews->isNotEmpty())
         <div class="sf-reviews-grid">
             @foreach($reviews as $review)
             <div class="sf-review-card">
@@ -635,6 +648,12 @@
             </div>
             @endforeach
         </div>
+        @endif
+        @if($profile->google_review_url)
+        <div class="sf-review-cta">
+            <a href="{{ $profile->google_review_url }}" class="sf-btn" target="_blank" rel="noopener">Lascia una recensione su Google</a>
+        </div>
+        @endif
     </div>
 </section>
 @endif

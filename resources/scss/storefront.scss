@@ -199,6 +199,21 @@ body {
 
 .sf-display { font-family: var(--sf-font-display); }
 
+/* ── ANNOUNCEMENT BANNER ── */
+.sf-announcement {
+    background: var(--sf-gold);
+    color: var(--sf-btn-fg);
+    text-align: center;
+    padding: 9px 48px;
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    line-height: 1.5;
+    font-weight: 500;
+}
+@media (max-width: 640px) {
+    .sf-announcement { padding: 9px 20px; font-size: 11px; }
+}
+
 /* ── NAV ── */
 #sf-nav {
     position: sticky; top: 0; z-index: 100;
