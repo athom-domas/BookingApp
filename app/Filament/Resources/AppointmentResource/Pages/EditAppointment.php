@@ -4,6 +4,7 @@ namespace App\Filament\Resources\AppointmentResource\Pages;
 
 use App\Exceptions\BookingException;
 use App\Filament\Resources\AppointmentResource;
+use App\Services\LoyaltyService;
 use App\Services\PaymentService;
 use Filament\Actions\DeleteAction;
 use Filament\Notifications\Notification;
@@ -47,7 +48,7 @@ class EditAppointment extends EditRecord
 
     protected function mutateFormDataBeforeSave(array $data): array
     {
-        unset($data['payment_method'], $data['payment_amount'], $data['has_completed_payment']);
+        unset($data['payment_method'], $data['payment_amount'], $data['has_completed_payment'], $data['apply_loyalty_discount']);
 
         return $data;
     }
@@ -73,11 +74,20 @@ class EditAppointment extends EditRecord
             return;
         }
 
+        $amount = (float) ($data['payment_amount'] ?? 0);
+
+        if (! empty($data['apply_loyalty_discount'])) {
+            $percentage = app(LoyaltyService::class)->redeem($this->record);
+            if ($percentage > 0) {
+                $amount = round($amount * (1 - $percentage / 100), 2);
+            }
+        }
+
         try {
             app(PaymentService::class)->recordInPersonPayment(
                 $this->record->id,
                 $data['payment_method'],
-                (float) ($data['payment_amount'] ?? 0)
+                $amount
             );
         } catch (BookingException $e) {
             Notification::make()

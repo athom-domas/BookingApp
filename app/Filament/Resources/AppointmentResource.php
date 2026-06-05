@@ -4,7 +4,9 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\AppointmentResource\Pages;
 use App\Models\Appointment;
+use App\Models\LoyaltyAccount;
 use App\Models\Service;
+use App\Models\SystemSetting;
 use App\Services\PaymentService;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
@@ -15,6 +17,7 @@ use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
@@ -175,6 +178,28 @@ class AppointmentResource extends Resource
                                 || $get('status') !== 'completed'
                                 || (bool) $get('has_completed_payment')
                         ),
+
+                        Toggle::make('apply_loyalty_discount')
+                            ->label(fn (): string => 'Applica sconto fedeltà ' . SystemSetting::getLoyaltyRewardPercentage() . '% (−' . SystemSetting::getLoyaltyRewardThreshold() . ' punti)')
+                            ->default(false)
+                            ->dehydrated(true)
+                            ->dehydratedWhenHidden(true)
+                            ->visible(function (Get $get, ?Appointment $record): bool {
+                                if (! SystemSetting::isLoyaltyEnabled() || $get('status') !== 'completed') {
+                                    return false;
+                                }
+                                if ((bool) $get('has_completed_payment')) {
+                                    return false;
+                                }
+                                $userId = $get('user_id') ?? $record?->user_id;
+                                if (! $userId) {
+                                    return false;
+                                }
+                                $points = LoyaltyAccount::where('user_id', $userId)->value('points') ?? 0;
+
+                                return $points >= SystemSetting::getLoyaltyRewardThreshold();
+                            })
+                            ->columnSpanFull(),
                 ])
                 ->columns(2)
                 ->columnSpanFull(),
