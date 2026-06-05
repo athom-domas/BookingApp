@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Events\PaymentCompleted;
+use App\Events\PaymentRefunded;
 use App\Exceptions\BookingException;
 use App\Jobs\SendAppointmentConfirmation;
 use App\Models\Appointment;
@@ -101,6 +103,8 @@ class PaymentService
             'stripe_response' => $refund->toArray(),
         ]);
 
+        PaymentRefunded::dispatch($payment);
+
         return $payment->fresh();
     }
 
@@ -140,6 +144,10 @@ class PaymentService
 
         if (! in_array($appointment->status, ['confirmed', 'completed', 'cancelled'])) {
             $appointment->update(['status' => 'confirmed']);
+        }
+
+        if (! $alreadyCompleted) {
+            PaymentCompleted::dispatch($payment);
         }
 
         if (! $alreadyCompleted && $payment->payment_method === 'stripe') {
