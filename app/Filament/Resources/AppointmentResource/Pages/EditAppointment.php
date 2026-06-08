@@ -87,18 +87,27 @@ class EditAppointment extends EditRecord
 
         // payment_amount contiene già l'importo scontato (aggiornato in tempo reale dal toggle via afterStateUpdated).
         // Qui occorre solo scalare i punti; non ricalcolare lo sconto.
-        $amount = (float) ($data['payment_amount'] ?? 0);
+        $amount            = (float) ($data['payment_amount'] ?? 0);
+        $discountPct       = 0;
+        $originalAmount    = (float) ($this->record->final_price ?? $amount);
 
         if (! empty($data['apply_loyalty_discount'])) {
-            app(LoyaltyService::class)->redeem($this->record);
+            $discountPct = app(LoyaltyService::class)->redeem($this->record);
         }
 
         try {
-            app(PaymentService::class)->recordInPersonPayment(
+            $payment = app(PaymentService::class)->recordInPersonPayment(
                 $this->record->id,
                 $data['payment_method'],
                 $amount
             );
+
+            if ($discountPct > 0) {
+                $payment->update([
+                    'loyalty_discount_percentage' => $discountPct,
+                    'loyalty_original_amount'     => $originalAmount,
+                ]);
+            }
         } catch (BookingException $e) {
             Notification::make()
                 ->title($e->getMessage())

@@ -348,18 +348,27 @@ class AppointmentResource extends Resource
                     ])
                     ->action(function (Appointment $record, array $data): void {
                         // amount contiene già l'importo scontato (aggiornato dal toggle via afterStateUpdated).
-                        $amount = (float) $data['amount'];
+                        $amount         = (float) $data['amount'];
+                        $discountPct    = 0;
+                        $originalAmount = (float) ($record->final_price ?? $amount);
 
                         if (! empty($data['apply_loyalty_discount'])) {
-                            app(LoyaltyService::class)->redeem($record);
+                            $discountPct = app(LoyaltyService::class)->redeem($record);
                         }
 
                         try {
-                            app(PaymentService::class)->recordInPersonPayment(
+                            $payment = app(PaymentService::class)->recordInPersonPayment(
                                 $record->id,
                                 $data['method'],
                                 $amount
                             );
+
+                            if ($discountPct > 0) {
+                                $payment->update([
+                                    'loyalty_discount_percentage' => $discountPct,
+                                    'loyalty_original_amount'     => $originalAmount,
+                                ]);
+                            }
                         } catch (\App\Exceptions\BookingException $e) {
                             Notification::make()
                                 ->title($e->getMessage())
