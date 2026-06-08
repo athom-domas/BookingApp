@@ -130,6 +130,36 @@ class PaymentService
         return $payment->fresh();
     }
 
+    public function applyLoyaltyDiscount(Payment $payment, int $percentage, float $originalAmount): void
+    {
+        $discounted = round($originalAmount * (1 - $percentage / 100), 2);
+
+        $this->stripe->paymentIntents->update($payment->stripe_transaction_id, [
+            'amount' => (int) round($discounted * 100),
+        ]);
+
+        $payment->update([
+            'amount'                      => $discounted,
+            'loyalty_discount_percentage' => $percentage,
+            'loyalty_original_amount'     => $originalAmount,
+        ]);
+    }
+
+    public function removeLoyaltyDiscount(Payment $payment): void
+    {
+        $original = (float) $payment->loyalty_original_amount;
+
+        $this->stripe->paymentIntents->update($payment->stripe_transaction_id, [
+            'amount' => (int) round($original * 100),
+        ]);
+
+        $payment->update([
+            'amount'                      => $original,
+            'loyalty_discount_percentage' => null,
+            'loyalty_original_amount'     => null,
+        ]);
+    }
+
     private function markPaymentCompleted(Payment $payment): void
     {
         $alreadyCompleted = $payment->status === 'completed';

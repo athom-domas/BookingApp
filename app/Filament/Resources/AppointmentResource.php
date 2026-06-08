@@ -23,6 +23,7 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\DatePicker;
@@ -157,48 +158,63 @@ class AppointmentResource extends Resource
                     Hidden::make('has_completed_payment')
                         ->dehydrated(false),
 
+                    Hidden::make('loyalty_discount_percentage')
+                        ->dehydrated(false),
+
+                    Hidden::make('customer_loyalty_points')
+                        ->dehydrated(false),
+
                     Select::make('payment_method')
                         ->label('Metodo di pagamento')
                         ->options(['cash' => 'Contanti', 'pos' => 'POS (carta)'])
-                        ->required()
+                        ->required(fn (Get $get) => ! (bool) $get('has_completed_payment'))
+                        ->disabled(fn (Get $get) => (bool) $get('has_completed_payment'))
                         ->hidden(
-                            fn(Get $get, string $operation) =>
-                            $operation !== 'edit'
-                                || $get('status') !== 'completed'
-                                || (bool) $get('has_completed_payment')
+                            fn (Get $get, string $operation) =>
+                            $operation !== 'edit' || $get('status') !== 'completed'
                         ),
 
                     TextInput::make('payment_amount')
                         ->label('Importo (€)')
                         ->numeric()
-                        ->minValue(0.01)
-                        ->required()
+                        ->minValue(fn (Get $get) => (bool) $get('has_completed_payment') ? null : 0.01)
+                        ->required(fn (Get $get) => ! (bool) $get('has_completed_payment'))
+                        ->disabled(fn (Get $get) => (bool) $get('has_completed_payment'))
+                        ->hint(fn (Get $get): ?string =>
+                            $get('loyalty_discount_percentage')
+                                ? 'Sconto fedeltà ' . $get('loyalty_discount_percentage') . '% applicato'
+                                : null
+                        )
+                        ->hintColor('success')
                         ->hidden(
-                            fn(Get $get, string $operation) =>
-                            $operation !== 'edit'
-                                || $get('status') !== 'completed'
-                                || (bool) $get('has_completed_payment')
+                            fn (Get $get, string $operation) =>
+                            $operation !== 'edit' || $get('status') !== 'completed'
                         ),
 
                         Toggle::make('apply_loyalty_discount')
                             ->label(fn (): string => 'Applica sconto fedeltà ' . SystemSetting::getLoyaltyRewardPercentage() . '% (−' . SystemSetting::getLoyaltyRewardThreshold() . ' punti)')
                             ->default(false)
+                            ->live()
                             ->dehydrated(true)
                             ->dehydratedWhenHidden(true)
-                            ->visible(function (Get $get, ?Appointment $record): bool {
+                            ->afterStateUpdated(function (bool $state, Set $set, Get $get, ?Appointment $record): void {
+                                $original = (float) ($record?->final_price ?? $get('payment_amount'));
+                                if ($state) {
+                                    $pct = SystemSetting::getLoyaltyRewardPercentage();
+                                    $set('payment_amount', round($original * (1 - $pct / 100), 2));
+                                } else {
+                                    $set('payment_amount', $original);
+                                }
+                            })
+                            ->visible(function (Get $get): bool {
                                 if (! SystemSetting::isLoyaltyEnabled() || $get('status') !== 'completed') {
                                     return false;
                                 }
                                 if ((bool) $get('has_completed_payment')) {
                                     return false;
                                 }
-                                $userId = $get('user_id') ?? $record?->user_id;
-                                if (! $userId) {
-                                    return false;
-                                }
-                                $points = LoyaltyAccount::where('user_id', $userId)->value('points') ?? 0;
 
-                                return $points >= SystemSetting::getLoyaltyRewardThreshold();
+                                return (int) $get('customer_loyalty_points') >= SystemSetting::getLoyaltyRewardThreshold();
                             })
                             ->columnSpanFull(),
                 ])
@@ -312,6 +328,16 @@ class AppointmentResource extends Resource
                         Toggle::make('apply_loyalty_discount')
                             ->label(fn (): string => 'Applica sconto fedeltà ' . SystemSetting::getLoyaltyRewardPercentage() . '% (−' . SystemSetting::getLoyaltyRewardThreshold() . ' punti)')
                             ->default(false)
+                            ->live()
+                            ->afterStateUpdated(function (bool $state, Set $set, Get $get, Appointment $record): void {
+                                $original = (float) ($record->final_price ?? $get('amount'));
+                                if ($state) {
+                                    $pct = SystemSetting::getLoyaltyRewardPercentage();
+                                    $set('amount', round($original * (1 - $pct / 100), 2));
+                                } else {
+                                    $set('amount', $original);
+                                }
+                            })
                             ->visible(fn (Appointment $record): bool =>
                                 SystemSetting::isLoyaltyEnabled()
                                 && (LoyaltyAccount::where('user_id', $record->user_id)->value('points') ?? 0) >= SystemSetting::getLoyaltyRewardThreshold()
@@ -321,13 +347,11 @@ class AppointmentResource extends Resource
                         'amount' => $record->final_price,
                     ])
                     ->action(function (Appointment $record, array $data): void {
+                        // amount contiene già l'importo scontato (aggiornato dal toggle via afterStateUpdated).
                         $amount = (float) $data['amount'];
 
                         if (! empty($data['apply_loyalty_discount'])) {
-                            $percentage = app(LoyaltyService::class)->redeem($record);
-                            if ($percentage > 0) {
-                                $amount = round($amount * (1 - $percentage / 100), 2);
-                            }
+                            app(LoyaltyService::class)->redeem($record);
                         }
 
                         try {

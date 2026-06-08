@@ -37,18 +37,27 @@ class EditAppointment extends EditRecord
     {
         $payment = $this->record->payment;
 
-        $data['has_completed_payment'] = $payment?->status === 'completed';
-        $data['payment_method']        = $payment?->payment_method;
-        $data['payment_amount']        = $payment?->status === 'completed'
+        $data['has_completed_payment']      = $payment?->status === 'completed';
+        $data['payment_method']             = $payment?->payment_method;
+        $data['payment_amount']             = $payment?->status === 'completed'
             ? $payment->amount
             : $this->record->final_price;
+        $data['loyalty_discount_percentage'] = $payment?->status === 'completed'
+            ? $payment->loyalty_discount_percentage
+            : null;
+
+        // Pre-caricato qui (richiesta HTTP completa) per non fare query DB nei callback
+        // ->visible() che girano durante i live update Livewire senza contesto tenant garantito.
+        $data['customer_loyalty_points'] = (int) (
+            \App\Models\LoyaltyAccount::where('user_id', $this->record->user_id)->value('points') ?? 0
+        );
 
         return $data;
     }
 
     protected function mutateFormDataBeforeSave(array $data): array
     {
-        unset($data['payment_method'], $data['payment_amount'], $data['has_completed_payment'], $data['apply_loyalty_discount']);
+        unset($data['payment_method'], $data['payment_amount'], $data['has_completed_payment'], $data['apply_loyalty_discount'], $data['loyalty_discount_percentage']);
 
         return $data;
     }
@@ -76,13 +85,12 @@ class EditAppointment extends EditRecord
             return;
         }
 
+        // payment_amount contiene già l'importo scontato (aggiornato in tempo reale dal toggle via afterStateUpdated).
+        // Qui occorre solo scalare i punti; non ricalcolare lo sconto.
         $amount = (float) ($data['payment_amount'] ?? 0);
 
         if (! empty($data['apply_loyalty_discount'])) {
-            $percentage = app(LoyaltyService::class)->redeem($this->record);
-            if ($percentage > 0) {
-                $amount = round($amount * (1 - $percentage / 100), 2);
-            }
+            app(LoyaltyService::class)->redeem($this->record);
         }
 
         try {

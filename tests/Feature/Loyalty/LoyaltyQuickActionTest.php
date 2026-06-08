@@ -62,8 +62,9 @@ it('applica lo sconto fedeltà dalla quick-action registra pagamento', function 
 
     $payment = Payment::where('appointment_id', $this->appointment->id)->first();
 
+    // Con accrual alla conferma: 120 (base) + 100 (conferma) = 220 → redeem -100 = 120.
     expect((float) $payment->amount)->toBe(90.0)
-        ->and(LoyaltyAccount::where('user_id', $this->customer->id)->first()->points)->toBe(110)
+        ->and(LoyaltyAccount::where('user_id', $this->customer->id)->first()->points)->toBe(120)
         ->and(LoyaltyTransaction::where('appointment_id', $this->appointment->id)->where('type', 'redeem')->first()->points)->toBe(-100);
 });
 

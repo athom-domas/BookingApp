@@ -32,6 +32,40 @@ it('non raddoppia i punti se il completamento viene rieseguito', function () {
         ->and(LoyaltyTransaction::where('appointment_id', $this->appointment->id)->where('type', 'earn')->count())->toBe(1);
 });
 
+it('accredita i punti quando un appuntamento pending passa a confirmed', function () {
+    $pending = Appointment::factory()->create([
+        'user_id'     => $this->customer->id,
+        'status'      => 'pending',
+        'final_price' => 75,
+    ]);
+
+    $pending->update(['status' => 'confirmed']);
+
+    expect(LoyaltyAccount::where('user_id', $this->customer->id)->first()->points)->toBe(75)
+        ->and(LoyaltyTransaction::where('appointment_id', $pending->id)->where('type', 'earn')->count())->toBe(1);
+});
+
+it('non accredita una seconda volta alla conferma del pagamento se già accreditato alla conferma', function () {
+    $pending = Appointment::factory()->create([
+        'user_id'     => $this->customer->id,
+        'status'      => 'pending',
+        'final_price' => 80,
+    ]);
+    $pending->update(['status' => 'confirmed']);
+
+    // Simula PaymentCompleted (stesso importo)
+    $payment = Payment::factory()->create([
+        'appointment_id' => $pending->id,
+        'user_id'        => $this->customer->id,
+        'amount'         => 80,
+        'status'         => 'completed',
+    ]);
+    \App\Events\PaymentCompleted::dispatch($payment);
+
+    expect(LoyaltyAccount::where('user_id', $this->customer->id)->first()->points)->toBe(80)
+        ->and(LoyaltyTransaction::where('appointment_id', $pending->id)->where('type', 'earn')->count())->toBe(1);
+});
+
 it('storna i punti quando un pagamento completato viene rimborsato', function () {
     app(PaymentService::class)->recordInPersonPayment($this->appointment->id, 'cash', 80.0);
     $payment = Payment::where('appointment_id', $this->appointment->id)->first();

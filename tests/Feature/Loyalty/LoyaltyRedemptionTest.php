@@ -60,10 +60,12 @@ it('applica lo sconto fedeltà e scala i punti al completamento', function () {
 
     $payment = Payment::where('appointment_id', $this->appointment->id)->first();
 
+    // Con accrual alla conferma: observer ha già accreditato 100 punti (final_price) alla creazione.
+    // Saldo: 120 (base) + 100 (conferma) = 220 → redeem -100 = 120. earn tx = 100 (final_price).
     expect((float) $payment->amount)->toBe(90.0)
-        ->and(LoyaltyAccount::where('user_id', $this->customer->id)->first()->points)->toBe(110)
+        ->and(LoyaltyAccount::where('user_id', $this->customer->id)->first()->points)->toBe(120)
         ->and(LoyaltyTransaction::where('appointment_id', $this->appointment->id)->where('type', 'redeem')->first()->points)->toBe(-100)
-        ->and(LoyaltyTransaction::where('appointment_id', $this->appointment->id)->where('type', 'earn')->first()->points)->toBe(90);
+        ->and(LoyaltyTransaction::where('appointment_id', $this->appointment->id)->where('type', 'earn')->first()->points)->toBe(100);
 });
 
 it('non va in errore quando il Select status è disabilitato e assente da getState()', function () {
