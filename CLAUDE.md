@@ -20,14 +20,14 @@ docker-compose run --rm --no-deps app <command>
 ## Common Commands
 
 ```bash
-# Run full test suite (requires mysql — starts automatically)
-docker-compose run --rm app ./vendor/bin/pest
+# Run full test suite — ALWAYS use -e DB_DATABASE=booking_app_test to avoid touching the main DB
+docker-compose run --rm -e DB_DATABASE=booking_app_test app ./vendor/bin/pest
 
 # Run a single test file
-docker-compose run --rm app ./vendor/bin/pest tests/Feature/Models/AppointmentTest.php
+docker-compose run --rm -e DB_DATABASE=booking_app_test app ./vendor/bin/pest tests/Feature/Models/AppointmentTest.php
 
 # Run a specific test by name
-docker-compose run --rm app ./vendor/bin/pest --filter "canBeCancelled"
+docker-compose run --rm -e DB_DATABASE=booking_app_test app ./vendor/bin/pest --filter "canBeCancelled"
 
 # Artisan
 docker-compose run --rm app php artisan migrate
