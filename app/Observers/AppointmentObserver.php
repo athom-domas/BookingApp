@@ -18,11 +18,15 @@ class AppointmentObserver
 
     public function updated(Appointment $appointment): void
     {
-        if (! $appointment->wasChanged('status') || $appointment->status !== 'confirmed') {
+        if (! $appointment->wasChanged('status')) {
             return;
         }
 
-        $this->accrue($appointment);
+        if ($appointment->status === 'confirmed') {
+            $this->accrue($appointment);
+        } elseif ($appointment->status === 'cancelled') {
+            $this->reverse($appointment);
+        }
     }
 
     private function accrue(Appointment $appointment): void
@@ -32,12 +36,19 @@ class AppointmentObserver
             return;
         }
 
-        // In contesti senza middleware tenant (es. job Google Calendar) current_business_id
-        // non è bindato: lo leghiamo dall'appuntamento stesso.
         if (! app()->bound('current_business_id')) {
             app()->instance('current_business_id', $appointment->business_id);
         }
 
         app(LoyaltyService::class)->accrue($appointment, $price);
+    }
+
+    private function reverse(Appointment $appointment): void
+    {
+        if (! app()->bound('current_business_id')) {
+            app()->instance('current_business_id', $appointment->business_id);
+        }
+
+        app(LoyaltyService::class)->reverse($appointment);
     }
 }

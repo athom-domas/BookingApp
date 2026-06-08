@@ -66,6 +66,19 @@ it('non accredita una seconda volta alla conferma del pagamento se già accredit
         ->and(LoyaltyTransaction::where('appointment_id', $pending->id)->where('type', 'earn')->count())->toBe(1);
 });
 
+it('storna i punti quando un appuntamento viene cancellato', function () {
+    $appointment = Appointment::factory()->create([
+        'user_id'     => $this->customer->id,
+        'status'      => 'confirmed',
+        'final_price' => 80,
+    ]);
+
+    $appointment->update(['status' => 'cancelled']);
+
+    expect(LoyaltyAccount::where('user_id', $this->customer->id)->first()->points)->toBe(0)
+        ->and(LoyaltyTransaction::where('appointment_id', $appointment->id)->where('type', 'reverse')->count())->toBe(1);
+});
+
 it('storna i punti quando un pagamento completato viene rimborsato', function () {
     app(PaymentService::class)->recordInPersonPayment($this->appointment->id, 'cash', 80.0);
     $payment = Payment::where('appointment_id', $this->appointment->id)->first();
