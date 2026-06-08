@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Enums\BusinessStatus;
+use App\Models\Appointment;
 use App\Models\Business;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -58,6 +59,8 @@ class DatabaseSeeder extends Seeder
         );
         app()->instance('current_business_id', $b2->id);
         $this->seedBusiness('chic', 'Sara Colombo', 'admin@chic.test');
+
+        Appointment::withoutGlobalScopes()->where('status', 'pending')->delete();
     }
 
     private function seedBusiness(string $salonKey, string $adminName, string $adminEmail): void
