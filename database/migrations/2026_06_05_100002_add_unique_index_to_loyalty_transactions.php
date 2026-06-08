@@ -16,6 +16,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('loyalty_transactions', function (Blueprint $table) {
+            // Aggiunge l'indice semplice che MySQL usa per la FK prima di droppare l'unico composito.
+            $table->index('appointment_id');
             $table->dropUnique(['appointment_id', 'type']);
         });
     }
