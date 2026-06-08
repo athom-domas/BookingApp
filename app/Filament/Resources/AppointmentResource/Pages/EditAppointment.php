@@ -55,9 +55,11 @@ class EditAppointment extends EditRecord
 
     protected function beforeSave(): void
     {
-        $data = $this->form->getState();
+        // $this->data (stato grezzo del form) include sempre tutti i campi;
+        // getState() può ometterne (campi disabilitati/non idratati) e far mancare 'status'.
+        $data = $this->data;
 
-        if ($data['status'] !== 'completed') {
+        if (($data['status'] ?? null) !== 'completed') {
             return;
         }
 

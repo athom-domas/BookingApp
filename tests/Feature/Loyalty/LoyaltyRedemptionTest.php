@@ -66,6 +66,23 @@ it('applica lo sconto fedeltà e scala i punti al completamento', function () {
         ->and(LoyaltyTransaction::where('appointment_id', $this->appointment->id)->where('type', 'earn')->first()->points)->toBe(90);
 });
 
+it('non va in errore quando il Select status è disabilitato e assente da getState()', function () {
+    // Appuntamento già completed con pagamento non rimborsato: il Select status è ->disabled(),
+    // quindi getState() lo omette. beforeSave deve leggere lo stato grezzo senza "Undefined array key status".
+    $this->appointment->update(['status' => 'completed']);
+    Payment::create([
+        'appointment_id' => $this->appointment->id,
+        'user_id'        => $this->customer->id,
+        'amount'         => 100,
+        'status'         => 'completed',
+        'payment_method' => 'cash',
+    ]);
+
+    livewire(EditAppointment::class, ['record' => $this->appointment->id])
+        ->call('save')
+        ->assertHasNoFormErrors();
+});
+
 it('non applica sconto se il toggle è spento', function () {
     livewire(EditAppointment::class, ['record' => $this->appointment->id])
         ->set('data.status', 'completed')
