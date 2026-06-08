@@ -329,7 +329,7 @@ class CurrentMonthSeeder extends Seeder
             return $scheduledDate->lt($now) ? 'completed' : 'confirmed';
         }
 
-        return $this->dInt("st_{$seed}", 0, 9) < 7 ? 'confirmed' : 'pending';
+        return 'confirmed';
     }
 
     private function dInt(string $seed, int $min, int $max): int
