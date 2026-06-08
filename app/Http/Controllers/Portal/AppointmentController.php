@@ -167,8 +167,17 @@ class AppointmentController extends Controller
         $payment = $appointment->payment;
 
         // Riscatta i punti PRIMA di confermare il pagamento, così l'accredito avviene sull'importo netto.
+        // Se redeem() ritorna 0 (es. soglia alzata dall'admin dopo che il cliente aveva applicato lo sconto),
+        // ripristina l'importo originale sul Stripe PI e blocca il pagamento con un avviso.
         if ($payment && $payment->loyalty_discount_percentage !== null) {
-            app(LoyaltyService::class)->redeem($appointment);
+            $redeemed = app(LoyaltyService::class)->redeem($appointment);
+            if ($redeemed === 0) {
+                $this->paymentService->removeLoyaltyDiscount($payment);
+
+                return back()->withErrors([
+                    'payment' => 'Le condizioni del programma fedeltà sono cambiate. Lo sconto è stato rimosso. Verifica il nuovo importo e procedi al pagamento.',
+                ]);
+            }
         }
 
         try {
