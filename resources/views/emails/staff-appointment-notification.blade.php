@@ -2,6 +2,7 @@
 
 @section('title')Nuovo appuntamento @endsection
 @section('badge')Staff @endsection
+@section('skip-greeting') @endsection
 
 @section('body')
     <p>Ciao <strong>{{ $appointment->staff->name }}</strong>,</p>

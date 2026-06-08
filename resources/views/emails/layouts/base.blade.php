@@ -104,8 +104,10 @@
             </div>
 
             <div class="email-body">
-                @if($_greeting)
-                    <p style="color:#111827;font-size:1rem;font-weight:500;padding-bottom:16px;margin-bottom:16px;border-bottom:1px solid #f3f4f6;">{!! nl2br(e($_greeting)) !!}</p>
+                @sectionMissing('skip-greeting')
+                    @if($_greeting)
+                        <p style="color:#111827;font-size:1rem;font-weight:500;padding-bottom:16px;margin-bottom:16px;border-bottom:1px solid #f3f4f6;">{!! nl2br(e($_greeting)) !!}</p>
+                    @endif
                 @endif
                 @yield('body')
             </div>
@@ -118,12 +120,14 @@
                 <div class="footer-note">@yield('footer-note')</div>
             @endif
 
-            @if($salon->email_footer_note)
-                @php
-                    $_footerNote = $salon->email_footer_note;
-                    if ($_firstName) $_footerNote = str_replace('{nome}', e($_firstName), $_footerNote);
-                @endphp
-                <div class="footer-note">{!! nl2br(e($_footerNote)) !!}</div>
+            @sectionMissing('footer-note')
+                @if($salon->email_footer_note)
+                    @php
+                        $_footerNote = $salon->email_footer_note;
+                        if ($_firstName) $_footerNote = str_replace('{nome}', e($_firstName), $_footerNote);
+                    @endphp
+                    <div class="footer-note">{!! nl2br(e($_footerNote)) !!}</div>
+                @endif
             @endif
 
             @if($salon->phone || $salon->address)
