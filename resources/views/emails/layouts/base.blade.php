@@ -104,10 +104,8 @@
             </div>
 
             <div class="email-body">
-                @sectionMissing('skip-greeting')
-                    @if($_greeting)
-                        <p style="color:#111827;font-size:1rem;font-weight:500;padding-bottom:16px;margin-bottom:16px;border-bottom:1px solid #f3f4f6;">{!! nl2br(e($_greeting)) !!}</p>
-                    @endif
+                @if(! $__env->hasSection('skip-greeting') && $_greeting)
+                    <p style="color:#111827;font-size:1rem;font-weight:500;padding-bottom:16px;margin-bottom:16px;border-bottom:1px solid #f3f4f6;">{!! nl2br(e($_greeting)) !!}</p>
                 @endif
                 @yield('body')
             </div>
