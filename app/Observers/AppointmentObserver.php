@@ -50,5 +50,10 @@ class AppointmentObserver
         }
 
         app(LoyaltyService::class)->reverse($appointment);
+
+        $payment = $appointment->payment;
+        if ($payment && $payment->status === 'pending') {
+            app(\App\Services\PaymentService::class)->cancelPendingPayment($payment);
+        }
     }
 }

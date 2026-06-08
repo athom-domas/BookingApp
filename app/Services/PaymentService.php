@@ -95,6 +95,24 @@ class PaymentService
         return $payment->fresh();
     }
 
+    public function cancelPendingPayment(Payment $payment): void
+    {
+        if ($payment->status !== 'pending') {
+            return;
+        }
+
+        if ($payment->payment_method === 'stripe' && $payment->stripe_transaction_id) {
+            try {
+                $this->stripe->paymentIntents->cancel($payment->stripe_transaction_id);
+            } catch (\Throwable) {
+                // PaymentIntent già cancellato o scaduto: nessuna azione necessaria
+            }
+        }
+
+        $payment->update(['status' => 'cancelled']);
+        PaymentRefunded::dispatch($payment);
+    }
+
     public function refundPayment(int $paymentId): Payment
     {
         $payment = Payment::findOrFail($paymentId);

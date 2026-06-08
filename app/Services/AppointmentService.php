@@ -147,10 +147,19 @@ class AppointmentService
             'notes'  => $reason ?? $appointment->notes,
         ]);
 
+        $this->cancelPendingPaymentIfAny($appointment);
         $this->refundIfPaid($appointment);
 
         SendCancellationNotification::dispatch($appointment);
         SyncGoogleCalendar::dispatch($appointment, 'delete');
+    }
+
+    private function cancelPendingPaymentIfAny(Appointment $appointment): void
+    {
+        $payment = $appointment->payment;
+        if ($payment && $payment->status === 'pending') {
+            $this->paymentService->cancelPendingPayment($payment);
+        }
     }
 
     private function refundIfPaid(Appointment $appointment): void
