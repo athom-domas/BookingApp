@@ -2,10 +2,10 @@
 
 namespace App\Services;
 
+use App\Events\AppointmentConfirmed;
 use App\Events\PaymentCompleted;
 use App\Events\PaymentRefunded;
 use App\Exceptions\BookingException;
-use App\Jobs\SendAppointmentConfirmation;
 use App\Models\Appointment;
 use App\Models\Payment;
 use Illuminate\Support\Facades\Log;
@@ -208,7 +208,7 @@ class PaymentService
         }
 
         if (! $alreadyCompleted && $payment->payment_method === 'stripe') {
-            SendAppointmentConfirmation::dispatch($appointment->fresh());
+            AppointmentConfirmed::dispatch($appointment->fresh());
         }
     }
 
