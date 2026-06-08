@@ -49,7 +49,6 @@ class SalonProfileSeeder extends Seeder
                 'phone'         => '+39 02 9876 5432',
                 'address'       => 'Corso Buenos Aires 42, 20124 Milano',
                 'description'   => '<p><strong>Chic Beauty Studio</strong> è il tuo rifugio di bellezza nel cuore di Milano. Specializzate in colorazione e styling, le nostre professioniste ti guidano verso il look che hai sempre desiderato.</p><p>Dall\'highlights alle tinte personalizzate, dalla piega perfetta al taglio su misura: ogni servizio è pensato per valorizzare la tua unicità.</p>',
-                'cancellation_policy' => '<p>Le prenotazioni possono essere cancellate fino a <strong>24 ore prima</strong> dell\'appuntamento.</p>',
                 'google_maps_embed'   => null,
                 'opening_hours' => [
                     'mon' => ['open' => true,  'morning_open' => '09:00', 'morning_close' => '13:00', 'afternoon_open' => '14:30', 'afternoon_close' => '19:00'],
@@ -73,7 +72,6 @@ class SalonProfileSeeder extends Seeder
             'phone'         => '+39 02 8765 4321',
             'address'       => 'Via Brera 14, 20121 Milano',
             'description'   => '<p>Da oltre 15 anni, <strong>Rossini Barbershop</strong> è il punto di riferimento per chi vuole un taglio impeccabile nel cuore di Milano. Il nostro team di professionisti unisce tecniche tradizionali da barbiere con le tendenze più moderne, per un risultato che valorizza ogni tipo di capello e barba.</p><p>Ogni visita è un momento di cura dedicato a te: dalla rasatura con rasoio a mano libera all\'asciugamano caldo, fino alla modellatura della barba più complessa. Niente fretta, solo qualità.</p>',
-            'cancellation_policy' => '<p>Le prenotazioni possono essere cancellate fino a <strong>24 ore prima</strong> dell\'appuntamento. Passata questa finestra, la cancellazione non è più possibile tramite il portale — per emergenze contattaci direttamente al telefono (<a href="tel:+390287654321">+390287654321</a>).</p><p>Se hai pagato online al momento della prenotazione, il rimborso viene elaborato automaticamente sul metodo di pagamento originale non appena la cancellazione viene confermata. I tempi di accredito dipendono dalla tua banca (di solito 3–5 giorni lavorativi). Nessun rimborso è previsto per cancellazioni effettuate a meno di 24 ore dall\'appuntamento.</p>',
             'google_maps_embed'   => 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2797.849513706764!2d9.1846!3d45.4720!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x4786c6aef34c60a5%3A0x8a79d3e0a4c84fa9!2sVia+Brera%2C+14%2C+20121+Milano!5e0!3m2!1sit!2sit!4v1700000000000',
             'opening_hours' => [
                 'mon' => ['open' => false, 'morning_open' => '09:00', 'morning_close' => '13:00', 'afternoon_open' => '15:00', 'afternoon_close' => '19:30'],
