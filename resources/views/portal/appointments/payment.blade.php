@@ -80,24 +80,41 @@
             @endif
         </div>
 
-        <aside class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6 shadow-sm">
-            @if ($stripePublicKey && $clientSecret)
-                <form data-stripe-payment data-public-key="{{ $stripePublicKey }}" data-client-secret="{{ $clientSecret }}" class="space-y-5">
-                    <div id="payment-element" class="min-h-32 rounded-md border border-gray-200 dark:border-gray-700 p-3"></div>
-                    <p class="hidden text-sm text-red-700 dark:text-red-400" data-payment-error></p>
-                    <button type="submit" class="w-full rounded-md bg-blue-700 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-800">
-                        Paga {{ number_format($discountedAmount, 2, ',', '.') }} €
+        <aside class="space-y-4">
+            <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6 shadow-sm">
+                @if ($stripePublicKey && $clientSecret)
+                    <form data-stripe-payment data-public-key="{{ $stripePublicKey }}" data-client-secret="{{ $clientSecret }}" class="space-y-5">
+                        <div id="payment-element" class="min-h-32 rounded-md border border-gray-200 dark:border-gray-700 p-3"></div>
+                        <p class="hidden text-sm text-red-700 dark:text-red-400" data-payment-error></p>
+                        <button type="submit" class="w-full rounded-md bg-blue-700 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-800">
+                            Paga {{ number_format($discountedAmount, 2, ',', '.') }} €
+                        </button>
+                    </form>
+
+                    <form method="POST" action="{{ route('portal.appointments.payment.confirm', $appointment) }}" data-payment-confirm-form class="hidden">
+                        @csrf
+                    </form>
+                @else
+                    <div class="rounded-md border border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-950 p-4 text-sm text-yellow-900 dark:text-yellow-300">
+                        Configurazione Stripe incompleta. Verifica chiave pubblica e client secret del PaymentIntent.
+                    </div>
+                @endif
+            </div>
+
+            <div class="rounded-lg border border-red-100 dark:border-red-900/40 bg-red-50 dark:bg-red-950/30 p-4">
+                <p class="text-sm font-medium text-red-800 dark:text-red-300">Non vuoi procedere?</p>
+                <p class="mt-1 text-sm text-red-600 dark:text-red-400">
+                    Annullando la prenotazione i punti fedeltà pre-accreditati verranno rimossi.
+                </p>
+                <form method="POST" action="{{ route('portal.appointments.cancel', $appointment) }}" class="mt-3"
+                      onsubmit="return confirm('Sei sicuro di voler annullare questa prenotazione?')">
+                    @csrf
+                    <button type="submit"
+                        class="text-sm font-semibold text-red-700 dark:text-red-400 hover:text-red-900 dark:hover:text-red-200 underline underline-offset-2">
+                        Annulla prenotazione
                     </button>
                 </form>
-
-                <form method="POST" action="{{ route('portal.appointments.payment.confirm', $appointment) }}" data-payment-confirm-form class="hidden">
-                    @csrf
-                </form>
-            @else
-                <div class="rounded-md border border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-950 p-4 text-sm text-yellow-900 dark:text-yellow-300">
-                    Configurazione Stripe incompleta. Verifica chiave pubblica e client secret del PaymentIntent.
-                </div>
-            @endif
+            </div>
         </aside>
     </section>
 @endsection

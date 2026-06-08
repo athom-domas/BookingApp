@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Portal;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Portal\StoreBookingRequest;
+use App\Models\Appointment;
 use App\Models\SalonProfile;
 use App\Models\SalonReview;
 use App\Models\Service;
@@ -76,6 +77,12 @@ class BookingController extends Controller
 
     public function store(StoreBookingRequest $request): RedirectResponse
     {
+        if (Appointment::where('user_id', $request->user()->id)->where('status', 'pending')->exists()) {
+            return back()->withInput()->withErrors([
+                'booking' => 'Hai una prenotazione in attesa di pagamento. Completala o annullala prima di prenotarne una nuova.',
+            ]);
+        }
+
         try {
             $appointment = $this->appointmentService->bookDirect([
                 'userId'             => $request->user()->id,

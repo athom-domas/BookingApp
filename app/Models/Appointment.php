@@ -60,6 +60,11 @@ class Appointment extends Model
         return $this->hasOne(Payment::class);
     }
 
+    public function loyaltyEarnTransaction(): HasMany
+    {
+        return $this->hasMany(LoyaltyTransaction::class)->where('type', 'earn');
+    }
+
     public function scopeUpcoming(Builder $query): Builder
     {
         return $query->where('scheduled_date', '>', now());
@@ -87,7 +92,15 @@ class Appointment extends Model
 
     public function canBeCancelled(): bool
     {
-        return in_array($this->status, ['pending', 'confirmed'])
-            && now()->diffInHours($this->scheduled_date, false) >= SystemSetting::getCancellationDeadlineHours();
+        if (! in_array($this->status, ['pending', 'confirmed'])) {
+            return false;
+        }
+
+        // Appuntamenti in attesa di pagamento: nessun addebito, cancellabili sempre.
+        if ($this->status === 'pending') {
+            return true;
+        }
+
+        return now()->diffInHours($this->scheduled_date, false) >= SystemSetting::getCancellationDeadlineHours();
     }
 }
