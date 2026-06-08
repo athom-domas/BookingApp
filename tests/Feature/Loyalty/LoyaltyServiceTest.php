@@ -139,3 +139,38 @@ it('accrue resta idempotente anche sotto vincolo unico (nessuna eccezione)', fun
     expect(LoyaltyAccount::where('user_id', $this->customer->id)->first()->points)->toBe(50)
         ->and(LoyaltyTransaction::where('appointment_id', $this->appointment->id)->where('type', 'earn')->count())->toBe(1);
 });
+
+it('redeem ritorna 0 se loyalty è disattivo', function () {
+    SystemSetting::current()->update(['loyalty_enabled' => false]);
+    LoyaltyAccount::create(['user_id' => $this->customer->id, 'points' => 200]);
+
+    expect($this->service->redeem($this->appointment))->toBe(0);
+});
+
+it('reverse è idempotente', function () {
+    SystemSetting::current()->update(['loyalty_enabled' => true, 'loyalty_points_per_euro' => 1]);
+    $this->service->accrue($this->appointment, 50.0);
+    $this->service->reverse($this->appointment);
+    $this->service->reverse($this->appointment);
+
+    expect(LoyaltyAccount::where('user_id', $this->customer->id)->first()->points)->toBe(0)
+        ->and(LoyaltyTransaction::where('appointment_id', $this->appointment->id)->where('type', 'reverse')->count())->toBe(1);
+});
+
+it('accredita usando il ratio corretto', function () {
+    SystemSetting::current()->update(['loyalty_enabled' => true, 'loyalty_points_per_euro' => 2]);
+    $this->service->accrue($this->appointment, 50.0);
+
+    expect(LoyaltyAccount::where('user_id', $this->customer->id)->first()->points)->toBe(100);
+});
+
+it('isola i punti per business', function () {
+    SystemSetting::current()->update(['loyalty_enabled' => true, 'loyalty_points_per_euro' => 1]);
+    $this->service->accrue($this->appointment, 50.0);
+
+    app()->instance('current_business_id', 999);
+    expect(LoyaltyAccount::where('user_id', $this->customer->id)->exists())->toBeFalse();
+
+    app()->instance('current_business_id', 1);
+    expect(LoyaltyAccount::where('user_id', $this->customer->id)->first()->points)->toBe(50);
+});
