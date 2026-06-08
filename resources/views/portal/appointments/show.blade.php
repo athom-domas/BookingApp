@@ -33,7 +33,17 @@
                 </div>
                 <div>
                     <dt class="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">Importo</dt>
-                    <dd class="mt-1.5 text-base font-semibold tabular-nums text-gray-950 dark:text-gray-50">{{ number_format((float) $appointment->final_price, 2, ',', '.') }} €</dd>
+                    <dd class="mt-1.5 tabular-nums">
+                        @if($appointment->payment?->loyalty_discount_percentage)
+                            <span class="text-sm line-through text-gray-400 dark:text-gray-500 mr-1">{{ number_format((float) $appointment->payment->loyalty_original_amount, 2, ',', '.') }} €</span>
+                            <span class="text-base font-semibold text-gray-950 dark:text-gray-50">{{ number_format((float) $appointment->payment->amount, 2, ',', '.') }} €</span>
+                            <span class="ml-1.5 inline-block rounded-full bg-green-100 dark:bg-green-900/40 px-2 py-0.5 text-xs font-semibold text-green-700 dark:text-green-300">Sconto fedeltà {{ $appointment->payment->loyalty_discount_percentage }}%</span>
+                        @elseif($appointment->payment?->status === 'completed')
+                            <span class="text-base font-semibold text-gray-950 dark:text-gray-50">{{ number_format((float) $appointment->payment->amount, 2, ',', '.') }} €</span>
+                        @else
+                            <span class="text-base font-semibold text-gray-950 dark:text-gray-50">{{ number_format((float) $appointment->final_price, 2, ',', '.') }} €</span>
+                        @endif
+                    </dd>
                 </div>
                 <div>
                     <dt class="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">Pagamento</dt>

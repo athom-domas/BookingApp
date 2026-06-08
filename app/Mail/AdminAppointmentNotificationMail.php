@@ -13,7 +13,10 @@ class AdminAppointmentNotificationMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public function __construct(public readonly Appointment $appointment) {}
+    public function __construct(public readonly Appointment $appointment)
+    {
+        $appointment->loadMissing('payment');
+    }
 
     public function envelope(): Envelope
     {
