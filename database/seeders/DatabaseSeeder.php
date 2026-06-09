@@ -69,5 +69,6 @@ class DatabaseSeeder extends Seeder
         $this->call(SystemSettingSeeder::class);
         $this->call(CurrentMonthSeeder::class, false, ['salonKey' => $salonKey]);
         $this->call(SalonProfileSeeder::class,  false, ['salonKey' => $salonKey]);
+        $this->call(ProductSeeder::class,       false, ['salonKey' => $salonKey]);
     }
 }
