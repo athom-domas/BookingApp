@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\PaymentService;
+use App\Services\ProductOrderService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Stripe\Exception\SignatureVerificationException;
@@ -11,7 +12,10 @@ use UnexpectedValueException;
 
 class StripeWebhookController extends Controller
 {
-    public function __construct(private readonly PaymentService $paymentService) {}
+    public function __construct(
+        private readonly PaymentService $paymentService,
+        private readonly ProductOrderService $productOrderService,
+    ) {}
 
     public function __invoke(Request $request): JsonResponse
     {
@@ -36,7 +40,13 @@ class StripeWebhookController extends Controller
             app()->instance('current_business_id', (int) $businessId);
         }
 
-        $this->paymentService->handleStripeWebhook($event->toArray());
+        $payableType = $event->data->object?->metadata?->payable_type ?? null;
+
+        if ($payableType === 'product_order') {
+            $this->productOrderService->handleStripeWebhook($event->toArray());
+        } else {
+            $this->paymentService->handleStripeWebhook($event->toArray());
+        }
 
         return response()->json(['received' => true]);
     }
