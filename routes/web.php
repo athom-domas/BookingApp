@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Portal\AppointmentController as PortalAppointmentController;
 use App\Http\Controllers\Portal\BookingController;
+use App\Http\Controllers\Portal\ProductController;
 use App\Http\Controllers\Portal\SettingsController;
 use App\Http\Controllers\Portal\WaitlistController;
 use App\Http\Controllers\ContactController;
@@ -71,4 +72,9 @@ Route::middleware(['auth', 'tenant.user', 'tenant.status'])->group(function () {
 
     Route::post('/portal/waitlist', [WaitlistController::class, 'store'])->name('portal.waitlist.store');
     Route::delete('/portal/waitlist/{entry}', [WaitlistController::class, 'destroy'])->name('portal.waitlist.destroy');
+
+    Route::get('/portal/products', [ProductController::class, 'index'])->name('portal.products.index');
+    Route::post('/portal/cart', [ProductController::class, 'cartUpdate'])->name('portal.cart.update');
+    Route::delete('/portal/cart/{productId}', [ProductController::class, 'cartRemove'])->name('portal.cart.remove');
+    Route::get('/portal/products/checkout', [ProductController::class, 'checkout'])->name('portal.products.checkout');
 });
