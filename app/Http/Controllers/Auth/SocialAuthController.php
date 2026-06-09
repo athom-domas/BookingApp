@@ -9,6 +9,8 @@ use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
 use Spatie\Permission\Models\Role;
 use Throwable;
@@ -47,50 +49,52 @@ class SocialAuthController extends Controller
 
         $user = User::where('google_id', $googleUser->getId())->first();
 
-        if ($user) {
-            Auth::login($user, remember: true);
-            $request->session()->regenerate();
-            return $this->redirectToPortal($originalHost);
-        }
+        if (! $user) {
+            $user = User::where('email', $googleUser->getEmail())->first();
 
-        $user = User::where('email', $googleUser->getEmail())->first();
+            if ($user) {
+                if ($user->business_id !== Business::currentId()) {
+                    return $this->redirectToLogin($originalHost, 'Il tuo account è registrato presso un altro salone. Accedi dal sito corretto.');
+                }
+                $user->update(['google_id' => $googleUser->getId()]);
+            } else {
+                try {
+                    $user = User::create([
+                        'name'        => $googleUser->getName(),
+                        'email'       => $googleUser->getEmail(),
+                        'google_id'   => $googleUser->getId(),
+                        'password'    => null,
+                        'business_id' => Business::currentId(),
+                    ]);
+                } catch (UniqueConstraintViolationException) {
+                    return $this->redirectToLogin($originalHost, 'Accesso con Google non riuscito. Riprova.');
+                }
 
-        if ($user) {
-            if ($user->business_id !== Business::currentId()) {
-                return $this->redirectToLogin($originalHost, 'Il tuo account è registrato presso un altro salone. Accedi dal sito corretto.');
+                Role::firstOrCreate(['name' => 'customer', 'guard_name' => 'web']);
+                $user->assignRole('customer');
             }
-
-            $user->update(['google_id' => $googleUser->getId()]);
-            Auth::login($user, remember: true);
-            $request->session()->regenerate();
-            return $this->redirectToPortal($originalHost);
         }
 
-        try {
-            $user = User::create([
-                'name'        => $googleUser->getName(),
-                'email'       => $googleUser->getEmail(),
-                'google_id'   => $googleUser->getId(),
-                'password'    => null,
-                'business_id' => Business::currentId(),
-            ]);
-        } catch (UniqueConstraintViolationException) {
-            return $this->redirectToLogin($originalHost, 'Accesso con Google non riuscito. Riprova.');
-        }
+        $token = Str::random(64);
+        Cache::put('google_auth_' . $token, $user->id, now()->addMinutes(5));
 
-        Role::firstOrCreate(['name' => 'customer', 'guard_name' => 'web']);
-        $user->assignRole('customer');
-
-        Auth::login($user, remember: true);
-        $request->session()->regenerate();
-        return $this->redirectToPortal($originalHost);
+        $host = $originalHost ?? rtrim(config('app.url'), '/');
+        return redirect($host . '/auth/google/exchange?token=' . $token);
     }
 
-    private function redirectToPortal(?string $originalHost): RedirectResponse
+    public function exchange(Request $request): RedirectResponse
     {
-        if ($originalHost) {
-            return redirect(rtrim($originalHost, '/') . '/portal/appointments');
+        $token = (string) $request->query('token', '');
+        $userId = Cache::pull('google_auth_' . $token);
+
+        if (! $userId) {
+            return redirect()->route('login')
+                ->withErrors(['email' => 'Link di accesso scaduto. Riprova con Google.']);
         }
+
+        $user = User::findOrFail($userId);
+        Auth::login($user, remember: true);
+        $request->session()->regenerate();
         return redirect()->intended(route('portal.appointments.index'));
     }
 

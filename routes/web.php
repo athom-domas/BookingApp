@@ -47,6 +47,7 @@ Route::post('/r/{appointment}/disdici', [AppointmentActionController::class, 'pr
 
 Route::get('/auth/google', [SocialAuthController::class, 'redirect'])->name('auth.google')->middleware('guest');
 Route::get('/auth/google/callback', [SocialAuthController::class, 'callback'])->name('auth.google.callback');
+Route::get('/auth/google/exchange', [SocialAuthController::class, 'exchange'])->name('auth.google.exchange');
 
 Route::middleware('guest')->group(function () {
     Route::get('/register', [RegisteredUserController::class, 'create'])->name('register');
