@@ -18,7 +18,9 @@ class ProductOrderService
 
     public function createOrder(int $userId, array $items, string $paymentMethod, ?string $notes = null): ProductOrder
     {
-        return DB::transaction(function () use ($userId, $items, $paymentMethod, $notes) {
+        $lowStockProducts = [];
+
+        $order = DB::transaction(function () use ($userId, $items, $paymentMethod, $notes, &$lowStockProducts) {
             $productIds = array_column($items, 'product_id');
             $products   = Product::whereIn('id', $productIds)->lockForUpdate()->get()->keyBy('id');
 
@@ -54,18 +56,33 @@ class ProductOrderService
                 $product->decrement('stock', $item['quantity']);
                 $product->refresh();
 
-                $this->maybeSendLowStockNotification($product, $previousStock);
+                if ($product->low_stock_threshold !== null
+                    && $previousStock > $product->low_stock_threshold
+                    && $product->stock <= $product->low_stock_threshold) {
+                    $lowStockProducts[] = $product->id;
+                }
             }
 
-            $loaded = $order->load('items.product');
-
-            $notifyUserIds = SystemSetting::getOrderNotifyUserIds();
-            if (! empty($notifyUserIds)) {
-                SendOrderReceivedNotificationJob::dispatch($loaded, $notifyUserIds);
-            }
-
-            return $loaded;
+            return $order->load('items.product');
         });
+
+        // Dispatch notifications after transaction commits
+        $lowStockUserIds = SystemSetting::getLowStockNotifyUserIds();
+        if (! empty($lowStockUserIds) && ! empty($lowStockProducts)) {
+            foreach ($lowStockProducts as $productId) {
+                $product = Product::withoutGlobalScopes()->find($productId);
+                if ($product) {
+                    SendLowStockNotificationJob::dispatch($product, $lowStockUserIds);
+                }
+            }
+        }
+
+        $orderUserIds = SystemSetting::getOrderNotifyUserIds();
+        if (! empty($orderUserIds)) {
+            SendOrderReceivedNotificationJob::dispatch($order, $orderUserIds);
+        }
+
+        return $order;
     }
 
     public function createStripePaymentIntent(ProductOrder $order): string
@@ -144,23 +161,24 @@ class ProductOrderService
                 Product::where('id', $item->product_id)->increment('stock', $item->quantity);
             }
 
-            $locked->update(['status' => 'cancelled', 'payment_status' => 'cancelled']);
+            $refundStatus = 'cancelled';
+
+            if ($locked->payment_status === 'paid' && $locked->stripe_payment_intent_id) {
+                try {
+                    $this->stripe->refunds->create([
+                        'payment_intent' => $locked->stripe_payment_intent_id,
+                    ]);
+                    $refundStatus = 'refunded';
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error('Stripe refund failed', [
+                        'order_id' => $locked->id,
+                        'error'    => $e->getMessage(),
+                    ]);
+                }
+            }
+
+            $locked->update(['status' => 'cancelled', 'payment_status' => $refundStatus]);
         });
     }
 
-    private function maybeSendLowStockNotification(Product $product, int $previousStock): void
-    {
-        if ($product->low_stock_threshold === null) {
-            return;
-        }
-
-        $notifyUserIds = SystemSetting::getLowStockNotifyUserIds();
-        if (empty($notifyUserIds)) {
-            return;
-        }
-
-        if ($previousStock > $product->low_stock_threshold && $product->stock <= $product->low_stock_threshold) {
-            SendLowStockNotificationJob::dispatch($product, $notifyUserIds);
-        }
-    }
 }
