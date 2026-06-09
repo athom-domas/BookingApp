@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisteredUserController;
@@ -43,6 +44,9 @@ Route::get('/r/{appointment}/disdici', [AppointmentActionController::class, 'can
 Route::post('/r/{appointment}/disdici', [AppointmentActionController::class, 'processCancellation'])
     ->name('appointment.public.cancel.post')
     ->middleware('signed');
+
+Route::get('/auth/google', [SocialAuthController::class, 'redirect'])->name('auth.google');
+Route::get('/auth/google/callback', [SocialAuthController::class, 'callback'])->name('auth.google.callback');
 
 Route::middleware('guest')->group(function () {
     Route::get('/register', [RegisteredUserController::class, 'create'])->name('register');
