@@ -13,6 +13,7 @@
         "laravel/cashier": "^16.0",
         "laravel/framework": "^13.7",
         "laravel/sanctum": "^4.0",
+        "laravel/socialite": "^5.27",
         "laravel/tinker": "^3.0",
         "saade/filament-fullcalendar": "^4.0@beta",
         "spatie/laravel-data": "^4.0",
