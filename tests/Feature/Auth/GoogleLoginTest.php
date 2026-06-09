@@ -22,6 +22,7 @@ function mockSocialiteUser(string $id, string $email, string $name): void
     $socialiteUser->shouldReceive('getName')->andReturn($name);
 
     $provider = Mockery::mock(\Laravel\Socialite\Contracts\Provider::class);
+    $provider->shouldReceive('stateless')->andReturnSelf();
     $provider->shouldReceive('user')->andReturn($socialiteUser);
 
     Socialite::shouldReceive('driver')->with('google')->andReturn($provider);
@@ -29,6 +30,8 @@ function mockSocialiteUser(string $id, string $email, string $name): void
 
 it('redirige a Google OAuth', function () {
     $provider = Mockery::mock(\Laravel\Socialite\Contracts\Provider::class);
+    $provider->shouldReceive('stateless')->andReturnSelf();
+    $provider->shouldReceive('with')->andReturnSelf();
     $provider->shouldReceive('redirect')->andReturn(redirect('https://accounts.google.com/o/oauth2/auth'));
 
     Socialite::shouldReceive('driver')->with('google')->andReturn($provider);

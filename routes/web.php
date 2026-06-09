@@ -45,7 +45,7 @@ Route::post('/r/{appointment}/disdici', [AppointmentActionController::class, 'pr
     ->name('appointment.public.cancel.post')
     ->middleware('signed');
 
-Route::get('/auth/google', [SocialAuthController::class, 'redirect'])->name('auth.google');
+Route::get('/auth/google', [SocialAuthController::class, 'redirect'])->name('auth.google')->middleware('guest');
 Route::get('/auth/google/callback', [SocialAuthController::class, 'callback'])->name('auth.google.callback');
 
 Route::middleware('guest')->group(function () {

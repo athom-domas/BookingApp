@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\Business;
 use App\Models\User;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
 use Spatie\Permission\Models\Role;
@@ -15,52 +17,89 @@ class SocialAuthController extends Controller
 {
     public function redirect(): RedirectResponse
     {
-        return Socialite::driver('google')->redirect();
+        $state = base64_encode(json_encode([
+            'b' => Business::currentId(),
+            'h' => request()->getSchemeAndHttpHost(),
+        ]));
+
+        return Socialite::driver('google')
+            ->stateless()
+            ->with(['state' => $state])
+            ->redirect();
     }
 
-    public function callback(): RedirectResponse
+    public function callback(Request $request): RedirectResponse
     {
+        $stateData = json_decode(base64_decode((string) $request->query('state', '')), true) ?? [];
+        $businessId = (int) ($stateData['b'] ?? 0);
+        $originalHost = isset($stateData['h']) && is_string($stateData['h']) ? $stateData['h'] : null;
+
+        if ($businessId > 0 && ! app()->bound('current_business_id')) {
+            app()->instance('current_business_id', $businessId);
+        }
+
         try {
-            $googleUser = Socialite::driver('google')->user();
-        } catch (Throwable) {
-            return redirect()->route('login')
-                ->withErrors(['email' => 'Accesso con Google non riuscito. Riprova.']);
+            $googleUser = Socialite::driver('google')->stateless()->user();
+        } catch (Throwable $e) {
+            logger()->error('Google OAuth callback failed', ['error' => $e->getMessage(), 'class' => get_class($e)]);
+            return $this->redirectToLogin($originalHost, 'Accesso con Google non riuscito. Riprova.');
         }
 
         $user = User::where('google_id', $googleUser->getId())->first();
 
         if ($user) {
             Auth::login($user, remember: true);
-            return redirect()->intended(route('portal.appointments.index'));
+            $request->session()->regenerate();
+            return $this->redirectToPortal($originalHost);
         }
 
         $user = User::where('email', $googleUser->getEmail())->first();
 
         if ($user) {
-            $currentBusinessId = Business::currentId();
-
-            if ($user->business_id !== $currentBusinessId) {
-                return redirect()->route('login')
-                    ->withErrors(['email' => 'Il tuo account è registrato presso un altro salone. Accedi dal sito corretto.']);
+            if ($user->business_id !== Business::currentId()) {
+                return $this->redirectToLogin($originalHost, 'Il tuo account è registrato presso un altro salone. Accedi dal sito corretto.');
             }
 
             $user->update(['google_id' => $googleUser->getId()]);
             Auth::login($user, remember: true);
-            return redirect()->intended(route('portal.appointments.index'));
+            $request->session()->regenerate();
+            return $this->redirectToPortal($originalHost);
         }
 
-        $user = User::create([
-            'name'        => $googleUser->getName(),
-            'email'       => $googleUser->getEmail(),
-            'google_id'   => $googleUser->getId(),
-            'password'    => null,
-            'business_id' => Business::currentId(),
-        ]);
+        try {
+            $user = User::create([
+                'name'        => $googleUser->getName(),
+                'email'       => $googleUser->getEmail(),
+                'google_id'   => $googleUser->getId(),
+                'password'    => null,
+                'business_id' => Business::currentId(),
+            ]);
+        } catch (UniqueConstraintViolationException) {
+            return $this->redirectToLogin($originalHost, 'Accesso con Google non riuscito. Riprova.');
+        }
 
         Role::firstOrCreate(['name' => 'customer', 'guard_name' => 'web']);
         $user->assignRole('customer');
 
         Auth::login($user, remember: true);
+        $request->session()->regenerate();
+        return $this->redirectToPortal($originalHost);
+    }
+
+    private function redirectToPortal(?string $originalHost): RedirectResponse
+    {
+        if ($originalHost) {
+            return redirect(rtrim($originalHost, '/') . '/portal/appointments');
+        }
         return redirect()->intended(route('portal.appointments.index'));
+    }
+
+    private function redirectToLogin(?string $originalHost, string $error): RedirectResponse
+    {
+        if ($originalHost) {
+            return redirect(rtrim($originalHost, '/') . '/login')
+                ->withErrors(['email' => $error]);
+        }
+        return redirect()->route('login')->withErrors(['email' => $error]);
     }
 }
