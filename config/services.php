@@ -50,6 +50,9 @@ return [
     'google' => [
         'credentials' => env('GOOGLE_APPLICATION_CREDENTIALS', '/app/config/google-credentials.json'),
         'calendar_id' => env('GOOGLE_CALENDAR_ID'),
+        'client_id'     => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect'      => env('APP_URL') . '/auth/google/callback',
     ],
 
 ];
