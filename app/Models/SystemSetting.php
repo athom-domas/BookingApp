@@ -14,6 +14,7 @@ use App\Models\Business;
     'reminder_count', 'reminder_1_hours', 'reminder_2_hours', 'payment_mode',
     'reviews_enabled',
     'loyalty_enabled', 'loyalty_points_per_euro', 'loyalty_reward_threshold', 'loyalty_reward_percentage',
+    'low_stock_notify_user_ids',
 ])]
 class SystemSetting extends Model
 {
@@ -34,6 +35,7 @@ class SystemSetting extends Model
             'loyalty_points_per_euro'   => 'integer',
             'loyalty_reward_threshold'  => 'integer',
             'loyalty_reward_percentage' => 'integer',
+            'low_stock_notify_user_ids' => 'array',
         ];
     }
 
@@ -142,5 +144,10 @@ class SystemSetting extends Model
     public static function getLoyaltyRewardPercentage(): int
     {
         return self::current()->loyalty_reward_percentage ?? 10;
+    }
+
+    public static function getLowStockNotifyUserIds(): array
+    {
+        return self::current()->low_stock_notify_user_ids ?? [];
     }
 }
