@@ -62,6 +62,7 @@ class ProductOrderService
 
     public function createStripePaymentIntent(ProductOrder $order): string
     {
+        $order->loadMissing('items');
         $amountCents = (int) round($order->total * 100);
 
         $paymentIntent = $this->stripe->paymentIntents->create([

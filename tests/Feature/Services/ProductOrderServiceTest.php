@@ -47,6 +47,15 @@ it('throws when stock is insufficient', function () {
     ], 'cash'))->toThrow(ProductOrderException::class);
 });
 
+it('throws when product is inactive', function () {
+    $product = Product::factory()->create(['stock' => 10, 'active' => false]);
+    $user    = User::factory()->create();
+
+    expect(fn () => $this->service->createOrder($user->id, [
+        ['product_id' => $product->id, 'quantity' => 1],
+    ], 'cash'))->toThrow(ProductOrderException::class);
+});
+
 it('throws when product does not exist', function () {
     $user = User::factory()->create();
 
