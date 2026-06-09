@@ -10,6 +10,7 @@ return new class extends Migration
     {
         Schema::create('appointment_reminders', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('business_id')->constrained()->cascadeOnDelete();
             $table->foreignId('appointment_id')->constrained()->cascadeOnDelete();
             $table->enum('type', ['email', 'sms']);
             $table->dateTime('scheduled_for');

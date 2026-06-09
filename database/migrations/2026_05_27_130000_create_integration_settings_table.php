@@ -10,10 +10,11 @@ return new class extends Migration
     {
         Schema::create('integration_settings', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('business_id')->constrained()->cascadeOnDelete()->unique();
             $table->string('stripe_public_key')->nullable();
             $table->text('stripe_secret_key')->nullable();
             $table->text('stripe_webhook_secret')->nullable();
-            $table->string('twilio_sid')->nullable();
+            $table->text('twilio_sid')->nullable();
             $table->text('twilio_token')->nullable();
             $table->string('twilio_from')->nullable();
             $table->string('google_calendar_id')->nullable();

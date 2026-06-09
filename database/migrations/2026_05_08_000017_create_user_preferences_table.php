@@ -10,12 +10,10 @@ return new class extends Migration
     {
         Schema::create('user_preferences', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('business_id')->constrained()->cascadeOnDelete();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete()->unique();
-            $table->boolean('receive_email_reminders')->default(true);
-            $table->boolean('receive_sms_reminders')->default(false);
+            $table->enum('notification_channel', ['email', 'sms', 'whatsapp'])->default('email');
             $table->string('phone_number')->nullable();
-            $table->string('timezone')->default('UTC');
-            $table->foreignId('preferred_staff')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
         });
     }

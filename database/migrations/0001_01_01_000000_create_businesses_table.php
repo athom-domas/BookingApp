@@ -2,7 +2,6 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -14,17 +13,13 @@ return new class extends Migration
             $table->string('name');
             $table->string('subdomain')->unique();
             $table->enum('status', ['active', 'suspended'])->default('active');
+            $table->string('stripe_id')->nullable()->index();
+            $table->string('pm_type')->nullable();
+            $table->string('pm_last_four', 4)->nullable();
+            $table->string('pm_expiration')->nullable();
+            $table->timestamp('trial_ends_at')->nullable();
             $table->timestamps();
         });
-
-        DB::table('businesses')->insert([
-            'id'         => 1,
-            'name'       => 'Salone',
-            'subdomain'  => 'salone',
-            'status'     => 'active',
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
     }
 
     public function down(): void

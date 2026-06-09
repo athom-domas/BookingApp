@@ -10,6 +10,7 @@ return new class extends Migration
     {
         Schema::create('salon_reviews', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('business_id')->constrained()->cascadeOnDelete();
             $table->string('author_name');
             $table->text('body');
             $table->tinyInteger('rating')->default(5);

@@ -45,16 +45,17 @@ class DatabaseSeeder extends Seeder
         );
         $superAdmin->syncRoles(['super_admin']);
 
-        // Business 1 — created by migration 150000 as placeholder 'salone'
-        $b1 = Business::withoutGlobalScopes()->orderBy('id')->firstOrFail();
-        $b1->update(['name' => 'Rossini Barbershop']);
+        $b1 = Business::withoutGlobalScopes()->firstOrCreate(
+            ['subdomain' => 'salone'],
+            ['name' => 'Rossini Barbershop', 'status' => BusinessStatus::Active, 'trial_ends_at' => now()->addDays(14)],
+        );
         app()->instance('current_business_id', $b1->id);
         $this->seedBusiness('rossini', 'Luca Ferretti', 'admin@rossini.test');
 
         // Business 2
         $b2 = Business::withoutGlobalScopes()->updateOrCreate(
             ['subdomain' => 'chic'],
-            ['name' => 'Chic Beauty Studio', 'status' => BusinessStatus::Active],
+            ['name' => 'Chic Beauty Studio', 'status' => BusinessStatus::Active, 'trial_ends_at' => now()->addDays(14)],
         );
         app()->instance('current_business_id', $b2->id);
         $this->seedBusiness('chic', 'Sara Colombo', 'admin@chic.test');
