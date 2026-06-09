@@ -1,7 +1,7 @@
 @extends('emails.layouts.base')
 
 @section('title')Scorte basse: {{ $product->name }}@endsection
-@section('badge')Admin@endsection
+@section('badge')Admin @endsection
 
 @section('body')
     <p>Il prodotto <strong>{{ $product->name }}</strong> ha raggiunto la soglia minima di scorte.</p>

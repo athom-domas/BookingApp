@@ -106,7 +106,7 @@ services:
       - MAIL_PORT=1025
       - MAIL_FROM_ADDRESS=${MAIL_FROM_ADDRESS:-noreply@booking.local}
       - MAIL_FROM_NAME=${MAIL_FROM_NAME:-"Booking System"}
-    command: php artisan queue:work --sleep=3 --tries=3 --timeout=60
+    command: sh -c "php artisan view:clear && php artisan queue:work --sleep=3 --tries=3 --timeout=60"
 
   mailpit:
     image: axllent/mailpit:latest

@@ -1,7 +1,7 @@
 @extends('emails.layouts.base')
 
 @section('title')Nuovo ordine prodotti #{{ $order->id }}@endsection
-@section('badge')Admin@endsection
+@section('badge')Admin @endsection
 
 @section('body')
     <div class="detail-card" style="margin-top: 0;">
