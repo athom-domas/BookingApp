@@ -15,6 +15,7 @@ use App\Models\Business;
     'reviews_enabled',
     'loyalty_enabled', 'loyalty_points_per_euro', 'loyalty_reward_threshold', 'loyalty_reward_percentage',
     'low_stock_notify_user_ids',
+    'order_notify_user_ids',
 ])]
 class SystemSetting extends Model
 {
@@ -36,6 +37,7 @@ class SystemSetting extends Model
             'loyalty_reward_threshold'  => 'integer',
             'loyalty_reward_percentage' => 'integer',
             'low_stock_notify_user_ids' => 'array',
+            'order_notify_user_ids'     => 'array',
         ];
     }
 
@@ -149,5 +151,10 @@ class SystemSetting extends Model
     public static function getLowStockNotifyUserIds(): array
     {
         return self::current()->low_stock_notify_user_ids ?? [];
+    }
+
+    public static function getOrderNotifyUserIds(): array
+    {
+        return self::current()->order_notify_user_ids ?? [];
     }
 }

@@ -42,6 +42,7 @@ class SystemSettings extends Page
             'loyalty_reward_threshold'    => $setting->loyalty_reward_threshold ?? 100,
             'loyalty_reward_percentage'   => $setting->loyalty_reward_percentage ?? 10,
             'low_stock_notify_user_ids'   => $setting->low_stock_notify_user_ids ?? [],
+            'order_notify_user_ids'       => $setting->order_notify_user_ids ?? [],
         ]);
     }
 
@@ -174,6 +175,21 @@ class SystemSettings extends Page
                         \Filament\Forms\Components\Select::make('low_stock_notify_user_ids')
                             ->label('Notifica a')
                             ->helperText('Utenti che ricevono un\'email quando le scorte di un prodotto scendono sotto la soglia impostata.')
+                            ->multiple()
+                            ->options(function () {
+                                return \App\Models\User::where('business_id', \App\Models\Business::currentId())
+                                    ->whereHas('roles', fn ($q) => $q->whereIn('name', ['admin', 'staff'])->where('guard_name', 'web'))
+                                    ->orderBy('name')
+                                    ->pluck('name', 'id');
+                            })
+                            ->columnSpanFull(),
+                    ]),
+
+                Section::make('Notifiche ordini ricevuti')
+                    ->schema([
+                        \Filament\Forms\Components\Select::make('order_notify_user_ids')
+                            ->label('Notifica a')
+                            ->helperText('Utenti che ricevono un\'email quando un cliente effettua un ordine prodotti.')
                             ->multiple()
                             ->options(function () {
                                 return \App\Models\User::where('business_id', \App\Models\Business::currentId())

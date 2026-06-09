@@ -12,10 +12,14 @@ use App\Services\ProductOrderService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Stripe\StripeClient;
 
 class ProductController extends Controller
 {
-    public function __construct(private readonly ProductOrderService $service) {}
+    public function __construct(
+        private readonly ProductOrderService $service,
+        private readonly StripeClient $stripe,
+    ) {}
 
     public function index(): View
     {
@@ -151,6 +155,18 @@ class ProductController extends Controller
 
         if ($order->payment_status === 'paid') {
             return redirect()->route('portal.products.confirmation', $order);
+        }
+
+        if ($order->stripe_payment_intent_id) {
+            try {
+                $pi = $this->stripe->paymentIntents->retrieve($order->stripe_payment_intent_id);
+                if ($pi->status === 'succeeded') {
+                    $this->service->confirmStripePayment($order->stripe_payment_intent_id);
+                    return redirect()->route('portal.products.confirmation', $order);
+                }
+            } catch (\Exception $e) {
+                // Stripe API error — fall through
+            }
         }
 
         return redirect()->route('portal.products.payment', $order)

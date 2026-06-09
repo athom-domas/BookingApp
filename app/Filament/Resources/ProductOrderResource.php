@@ -50,6 +50,14 @@ class ProductOrderResource extends Resource
                     TextEntry::make('created_at')->label('Data')->dateTime('d/m/Y H:i'),
                     TextEntry::make('status')->label('Stato')
                         ->badge()
+                        ->formatStateUsing(fn (string $state): string => match ($state) {
+                            'pending'   => 'In attesa di pagamento',
+                            'confirmed' => 'Confermato',
+                            'ready'     => 'Pronto per il ritiro',
+                            'completed' => 'Completato',
+                            'cancelled' => 'Cancellato',
+                            default     => $state,
+                        })
                         ->color(fn (string $state): string => match ($state) {
                             'pending'   => 'warning',
                             'confirmed' => 'info',
@@ -60,7 +68,14 @@ class ProductOrderResource extends Resource
                         }),
                     TextEntry::make('payment_method')->label('Metodo pagamento')
                         ->formatStateUsing(fn ($state) => $state === 'stripe' ? 'Online (Stripe)' : 'In salone (contanti)'),
-                    TextEntry::make('payment_status')->label('Stato pagamento'),
+                    TextEntry::make('payment_status')->label('Stato pagamento')
+                        ->formatStateUsing(fn (string $state): string => match ($state) {
+                            'pending'   => 'In attesa',
+                            'paid'      => 'Pagato',
+                            'cancelled' => 'Cancellato',
+                            'refunded'  => 'Rimborsato',
+                            default     => $state,
+                        }),
                     TextEntry::make('notes')->label('Note')->placeholder('—'),
                 ])
                 ->columns(2),
@@ -88,6 +103,14 @@ class ProductOrderResource extends Resource
                 TextColumn::make('created_at')->label('Data')->dateTime('d/m/Y H:i')->sortable(),
                 TextColumn::make('status')->label('Stato')
                     ->badge()
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'pending'   => 'In attesa',
+                        'confirmed' => 'Confermato',
+                        'ready'     => 'Pronto',
+                        'completed' => 'Completato',
+                        'cancelled' => 'Cancellato',
+                        default     => $state,
+                    })
                     ->color(fn (string $state): string => match ($state) {
                         'pending'   => 'warning',
                         'confirmed' => 'info',

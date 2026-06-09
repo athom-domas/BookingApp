@@ -104,8 +104,7 @@ $_radius      = $_radiusMap[$_border] ?? '0';
         <div class="sf-nav-right">
             {{-- Portal / auth links (desktop) --}}
             @auth
-                <a href="{{ route('portal.appointments.index') }}" class="sf-nav-link">Appuntamenti</a>
-                <a href="{{ route('portal.settings.index') }}" class="sf-nav-link">Impostazioni</a>
+                <a href="{{ route('portal.appointments.index') }}" class="sf-nav-link">Area personale</a>
                 @if(auth()->user()->isAdmin() || auth()->user()->isStaff())
                     <a href="{{ url('/admin') }}" class="sf-nav-link">Admin</a>
                 @endif

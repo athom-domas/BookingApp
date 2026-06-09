@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Exceptions\ProductOrderException;
 use App\Jobs\SendLowStockNotificationJob;
+use App\Jobs\SendOrderReceivedNotificationJob;
 use App\Models\Product;
 use App\Models\ProductOrder;
 use App\Models\ProductOrderItem;
@@ -56,7 +57,14 @@ class ProductOrderService
                 $this->maybeSendLowStockNotification($product, $previousStock);
             }
 
-            return $order->load('items.product');
+            $loaded = $order->load('items.product');
+
+            $notifyUserIds = SystemSetting::getOrderNotifyUserIds();
+            if (! empty($notifyUserIds)) {
+                SendOrderReceivedNotificationJob::dispatch($loaded, $notifyUserIds);
+            }
+
+            return $loaded;
         });
     }
 
