@@ -16,9 +16,13 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(\App\Services\Booking\OperatorScoringService::class);
         $this->app->singleton(\App\Services\Booking\AppointmentService::class);
 
-        $this->app->bind(PaymentService::class, function () {
+        $this->app->bind(StripeClient::class, function () {
             $secret = \App\Models\IntegrationSetting::getStripeSecretKey() ?? config('services.stripe.secret');
-            return new PaymentService(new StripeClient($secret));
+            return new StripeClient($secret);
+        });
+
+        $this->app->bind(PaymentService::class, function ($app) {
+            return new PaymentService($app->make(StripeClient::class));
         });
 
         $this->app->bind(\App\Services\NotificationService::class, function () {
