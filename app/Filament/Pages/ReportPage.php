@@ -4,6 +4,8 @@ namespace App\Filament\Pages;
 
 use App\Filament\Widgets\Reports\AppointmentsByStatusChartWidget;
 use App\Filament\Widgets\Reports\InsightStatsWidget;
+use App\Filament\Widgets\Reports\ProductBreakdownChartWidget;
+use App\Filament\Widgets\Reports\ProductStatsWidget;
 use App\Filament\Widgets\Reports\RevenueChartWidget;
 use App\Filament\Widgets\Reports\RevenueStatsWidget;
 use App\Filament\Widgets\Reports\ServiceBreakdownChartWidget;
@@ -80,6 +82,8 @@ class ReportPage extends Page
             array_unshift($widgets, RevenueStatsWidget::class);
             $widgets[] = RevenueChartWidget::class;
             $widgets[] = StaffPerformanceWidget::class;
+            $widgets[] = ProductStatsWidget::class;
+            $widgets[] = ProductBreakdownChartWidget::class;
         }
 
         return $widgets;
