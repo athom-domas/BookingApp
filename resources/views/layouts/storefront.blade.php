@@ -75,7 +75,7 @@ $_radius      = $_radiusMap[$_border] ?? '0';
     @fonts
     @filamentStyles
     @vite('resources/scss/filament/admin/theme.scss')
-    @vite('resources/scss/app.scss')
+    @vite('resources/css/app.css')
     @stack('head')
     <script>
         (function(){

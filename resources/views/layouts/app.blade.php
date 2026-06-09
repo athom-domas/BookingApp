@@ -68,7 +68,7 @@
         @fonts
         @filamentStyles
         @vite('resources/scss/filament/admin/theme.scss')
-        @vite('resources/scss/app.scss')
+        @vite('resources/css/app.css')
         @stack('head')
         <style>
             :root { --sf-font-display: {{ $_appFontDisplay }}; --sf-font-body: {{ $_appFontBody }}; --sf-radius: {{ $_appRadius }}; }
