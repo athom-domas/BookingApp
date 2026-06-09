@@ -47,15 +47,18 @@ class SocialAuthController extends Controller
             return $this->redirectToLogin($originalHost, 'Accesso con Google non riuscito. Riprova.');
         }
 
-        $user = User::where('google_id', $googleUser->getId())->first();
+        $currentBusinessId = Business::currentId();
+
+        $user = User::where('google_id', $googleUser->getId())
+            ->where('business_id', $currentBusinessId)
+            ->first();
 
         if (! $user) {
-            $user = User::where('email', $googleUser->getEmail())->first();
+            $user = User::where('email', $googleUser->getEmail())
+                ->where('business_id', $currentBusinessId)
+                ->first();
 
             if ($user) {
-                if ($user->business_id !== Business::currentId()) {
-                    return $this->redirectToLogin($originalHost, 'Il tuo account è registrato presso un altro salone. Accedi dal sito corretto.');
-                }
                 $user->update(['google_id' => $googleUser->getId()]);
             } else {
                 try {
@@ -64,7 +67,7 @@ class SocialAuthController extends Controller
                         'email'       => $googleUser->getEmail(),
                         'google_id'   => $googleUser->getId(),
                         'password'    => null,
-                        'business_id' => Business::currentId(),
+                        'business_id' => $currentBusinessId,
                     ]);
                 } catch (UniqueConstraintViolationException) {
                     return $this->redirectToLogin($originalHost, 'Accesso con Google non riuscito. Riprova.');
