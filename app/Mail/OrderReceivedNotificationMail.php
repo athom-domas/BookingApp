@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Models\Business;
 use App\Models\ProductOrder;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
@@ -29,6 +30,20 @@ class OrderReceivedNotificationMail extends Mailable
 
     public function content(): Content
     {
-        return new Content(view: 'emails.order-received-notification');
+        return new Content(
+            view: 'emails.order-received-notification',
+            with: ['adminUrl' => $this->buildUrl('/admin/product-orders/' . $this->order->id)],
+        );
+    }
+
+    private function buildUrl(string $path): string
+    {
+        $business   = Business::withoutGlobalScopes()->find($this->order->business_id);
+        $baseDomain = config('app.base_domain');
+        $scheme     = parse_url(config('app.url'), PHP_URL_SCHEME) ?: 'https';
+
+        return ($business && $baseDomain)
+            ? $scheme . '://' . $business->subdomain . '.' . $baseDomain . $path
+            : url($path);
     }
 }

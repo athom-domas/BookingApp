@@ -28,6 +28,8 @@ class SendOrderReceivedNotificationJob implements ShouldQueue
             return;
         }
 
+        app()->instance('current_business_id', $this->order->business_id);
+
         $order = $this->order->load('items.product', 'user');
         $users = User::whereIn('id', $this->userIds)->get();
 

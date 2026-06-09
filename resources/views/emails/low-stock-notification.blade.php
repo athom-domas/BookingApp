@@ -19,7 +19,7 @@
 @endsection
 
 @section('actions')
-    <a href="{{ url('/admin/products/' . $product->id . '/edit') }}" class="btn" style="background-color:#2563eb; color:#ffffff;">Aggiorna scorte</a>
+    <a href="{{ $adminUrl }}" class="btn" style="background-color:#2563eb; color:#ffffff;">Aggiorna scorte</a>
 @endsection
 
 @section('footer-note')

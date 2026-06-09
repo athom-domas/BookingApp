@@ -39,7 +39,7 @@
 @endsection
 
 @section('actions')
-    <a href="{{ url('/admin/product-orders/' . $order->id) }}" class="btn" style="background-color:#2563eb; color:#ffffff;">Apri ordine</a>
+    <a href="{{ $adminUrl }}" class="btn" style="background-color:#2563eb; color:#ffffff;">Apri ordine</a>
 @endsection
 
 @section('footer-note')

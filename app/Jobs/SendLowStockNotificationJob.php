@@ -28,6 +28,8 @@ class SendLowStockNotificationJob implements ShouldQueue
             return;
         }
 
+        app()->instance('current_business_id', $this->product->business_id);
+
         $users = User::whereIn('id', $this->userIds)->get();
 
         foreach ($users as $user) {

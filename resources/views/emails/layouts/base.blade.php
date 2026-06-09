@@ -1,6 +1,7 @@
 @php
     $salon = \App\Models\SalonProfile::current();
 
+
     $_emailThemeColors = [
         'luxury'     => '#7a5c38',
         'rosa'       => '#9e4858',

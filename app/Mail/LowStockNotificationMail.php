@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Models\Business;
 use App\Models\Product;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
@@ -29,6 +30,20 @@ class LowStockNotificationMail extends Mailable
 
     public function content(): Content
     {
-        return new Content(view: 'emails.low-stock-notification');
+        return new Content(
+            view: 'emails.low-stock-notification',
+            with: ['adminUrl' => $this->buildUrl('/admin/products/' . $this->product->id . '/edit')],
+        );
+    }
+
+    private function buildUrl(string $path): string
+    {
+        $business   = Business::withoutGlobalScopes()->find($this->product->business_id);
+        $baseDomain = config('app.base_domain');
+        $scheme     = parse_url(config('app.url'), PHP_URL_SCHEME) ?: 'https';
+
+        return ($business && $baseDomain)
+            ? $scheme . '://' . $business->subdomain . '.' . $baseDomain . $path
+            : url($path);
     }
 }
