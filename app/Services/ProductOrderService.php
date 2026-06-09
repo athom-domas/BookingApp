@@ -124,13 +124,19 @@ class ProductOrderService
         }
 
         DB::transaction(function () use ($order) {
-            $order->loadMissing('items');
+            $locked = ProductOrder::where('id', $order->id)->lockForUpdate()->first();
 
-            foreach ($order->items as $item) {
+            if (! $locked || ! $locked->isCancellable()) {
+                return;
+            }
+
+            $locked->loadMissing('items');
+
+            foreach ($locked->items as $item) {
                 Product::where('id', $item->product_id)->increment('stock', $item->quantity);
             }
 
-            $order->update(['status' => 'cancelled', 'payment_status' => 'cancelled']);
+            $locked->update(['status' => 'cancelled', 'payment_status' => 'cancelled']);
         });
     }
 

@@ -149,11 +149,12 @@ class ProductController extends Controller
     {
         $order = ProductOrder::where('user_id', $request->user()->id)->findOrFail($orderId);
 
-        if ($order->payment_method === 'stripe' && $order->stripe_payment_intent_id) {
-            $this->service->confirmStripePayment($order->stripe_payment_intent_id);
+        if ($order->payment_status === 'paid') {
+            return redirect()->route('portal.products.confirmation', $order);
         }
 
-        return redirect()->route('portal.products.confirmation', $order);
+        return redirect()->route('portal.products.payment', $order)
+            ->with('status', 'Pagamento in elaborazione. Attendi la conferma.');
     }
 
     public function confirmation(Request $request, int $orderId): View

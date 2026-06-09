@@ -98,6 +98,10 @@ class ProductOrderResource extends Resource
                     }),
                 TextColumn::make('payment_method')->label('Pagamento')
                     ->formatStateUsing(fn ($state) => $state === 'stripe' ? 'Stripe' : 'Contanti'),
+                TextColumn::make('total')
+                    ->label('Totale')
+                    ->getStateUsing(fn (ProductOrder $record): string => number_format($record->load('items')->total, 2, ',', '.') . ' €')
+                    ->sortable(false),
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([

@@ -18,6 +18,7 @@ use Filament\Schemas\Schema;
 use Filament\Tables\Columns\SpatieMediaLibraryImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 
@@ -148,6 +149,9 @@ class ProductResource extends Resource
                     ->trueLabel('Solo attivi')->falseLabel('Solo inattivi'),
                 TernaryFilter::make('in_sale')->label('In vendita')->boolean()
                     ->trueLabel('In vendita')->falseLabel('Non in vendita'),
+                Filter::make('below_threshold')
+                    ->label('Sotto soglia')
+                    ->query(fn (\Illuminate\Database\Eloquent\Builder $query) => $query->belowThreshold()),
             ])
             ->actions([
                 EditAction::make(),
