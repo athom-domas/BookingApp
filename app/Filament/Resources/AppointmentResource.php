@@ -226,7 +226,7 @@ class AppointmentResource extends Resource
     public static function table(Table $table): Table
     {
         $user       = auth()->user();
-        $isStaff    = $user?->isStaff() ?? false;
+        $isStaff    = ($user?->isStaff() && ! $user?->isAdmin()) ?? false;
         $hasViewAll = $isStaff && ($user?->can('appointments.view_all') ?? false);
         $canDelete  = ! $isStaff || ($user?->can('appointments.delete') ?? false);
 

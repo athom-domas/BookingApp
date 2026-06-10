@@ -9,6 +9,7 @@ use App\Models\Appointment;
 use App\Models\AppointmentReminder;
 use App\Models\Service;
 use App\Models\SystemSetting;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -97,7 +98,7 @@ class AppointmentService
                 'staffPreference' => $staffPreference,
             ]);
 
-            $matchingSlot = collect($slots)->first(fn ($s) => $s['start'] === $slotTime);
+            $matchingSlot = collect($slots)->first(fn($s) => $s['start'] === $slotTime);
 
             if (! $matchingSlot) {
                 throw new \RuntimeException('Slot non disponibile.');
@@ -112,6 +113,9 @@ class AppointmentService
                 }
             }
 
+            $businessId = User::find($staffId)?->business_id
+                ?? (app()->bound('current_business_id') ? app('current_business_id') : null);
+
             $appointment = Appointment::create([
                 'user_id'        => $userId,
                 'service_ids'    => $serviceIds,
@@ -120,6 +124,7 @@ class AppointmentService
                 'status'         => $confirmImmediately ? 'confirmed' : 'pending',
                 'final_price'    => $this->calculateTotalPrice($serviceIds),
                 'notes'          => $notes,
+                'business_id'    => $businessId,
             ]);
 
             $reminderCount = SystemSetting::getReminderCount();

@@ -41,7 +41,7 @@ class PendingCompletionNotifications extends Component
             $appointment->end_time = $appointment->scheduled_date->copy()->addMinutes($duration);
 
             return $appointment->end_time->isPast();
-        })->values();
+        })->sortBy('end_time')->values();
     }
 
     #[Computed]
