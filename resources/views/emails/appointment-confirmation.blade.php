@@ -20,7 +20,15 @@
         </div>
         <div class="detail-row">
             <span class="detail-label">Prezzo</span>
-            <span class="detail-value">€{{ number_format($appointment->final_price, 2, ',', '.') }}</span>
+            <span class="detail-value">
+                @if($appointment->payment?->loyalty_discount_percentage)
+                    <span style="text-decoration:line-through;color:#9ca3af;margin-right:4px;">€{{ number_format((float) $appointment->payment->loyalty_original_amount, 2, ',', '.') }}</span>€{{ number_format((float) $appointment->payment->amount, 2, ',', '.') }}<br><span style="font-size:0.75rem;color:#16a34a;font-weight:400;">sconto fedeltà {{ $appointment->payment->loyalty_discount_percentage }}%</span>
+                @elseif($appointment->payment?->status === 'completed')
+                    €{{ number_format((float) $appointment->payment->amount, 2, ',', '.') }}
+                @else
+                    €{{ number_format((float) $appointment->final_price, 2, ',', '.') }}
+                @endif
+            </span>
         </div>
     </div>
 @endsection
