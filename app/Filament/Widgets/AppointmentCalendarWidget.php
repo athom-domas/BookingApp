@@ -22,6 +22,8 @@ use Saade\FilamentFullCalendar\Widgets\FullCalendarWidget;
 
 class AppointmentCalendarWidget extends FullCalendarWidget
 {
+    protected ?string $pollingInterval = null;
+
     public array $filterStaff    = [];
     public array $filterStatus   = [];
     public array $filterService  = [];

@@ -354,7 +354,7 @@
     {{-- Filters --}}
     <div
         x-data="{ open: window.innerWidth >= 768 }"
-        x-on:resize.window.debounce.300ms="open = window.innerWidth >= 768"
+        x-on:resize.window.debounce.300ms="if (window.innerWidth >= 768) open = true"
         class="mb-4"
     >
         <button
@@ -592,7 +592,6 @@
         window.addEventListener('resize', function () {
             clearTimeout(__fcResizeTimer);
             __fcResizeTimer = setTimeout(function() {
-                switchCalendarView();
                 var fc = getCalendar();
                 if (fc && fc.view) {
                     var vt = fc.view.type;
