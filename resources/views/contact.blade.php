@@ -122,7 +122,7 @@
                                     Tipo di richiesta <span class="text-red-400">*</span>
                                 </label>
                                 <select id="subject" name="subject"
-                                        class="w-full px-4 py-2.5 rounded-xl border text-sm transition bg-white
+                                        class="w-full px-4 py-2.5 rounded-xl border text-sm transition
                                                {{ $errors->has('subject') ? 'border-red-300 bg-red-50 focus:ring-red-300' : 'border-warm-border focus:border-terra focus:ring-terra/20' }}
                                                focus:outline-none focus:ring-2">
                                     <option value="" disabled {{ old('subject') ? '' : 'selected' }}>Seleziona…</option>
