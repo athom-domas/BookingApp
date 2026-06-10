@@ -17,7 +17,12 @@ use App\Http\Controllers\StripeWebhookController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('storefront.access')->group(function () {
-    Route::get('/', [BookingController::class, 'index'])->name('booking.index');
+    Route::get('/', function () {
+        if (! app()->bound('current_business_id')) {
+            return view('landing');
+        }
+        return app(BookingController::class)->index();
+    })->name('booking.index');
     Route::get('/prenota', [BookingController::class, 'create'])->name('booking.create');
     Route::get('/portal/waitlist/create', [WaitlistController::class, 'create'])->name('portal.waitlist.create');
 });
