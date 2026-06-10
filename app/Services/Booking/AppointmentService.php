@@ -86,7 +86,7 @@ class AppointmentService
         $notes              = $params['notes'] ?? null;
         $staffPreference    = $staffId ? 'specific' : 'any';
 
-        return DB::transaction(function () use ($userId, $serviceIds, $staffId, $scheduledDate, $confirmImmediately, $notes, $staffPreference) {
+        $appointment = DB::transaction(function () use ($userId, $serviceIds, $staffId, $scheduledDate, $confirmImmediately, $notes, $staffPreference) {
             $date     = $scheduledDate->copy()->startOfDay();
             $slotTime = $scheduledDate->format('H:i');
 
@@ -142,12 +142,14 @@ class AppointmentService
 
             SyncGoogleCalendar::dispatch($appointment, 'create');
 
-            if ($confirmImmediately) {
-                AppointmentConfirmed::dispatch($appointment);
-            }
-
             return $appointment;
         });
+
+        if ($confirmImmediately) {
+            AppointmentConfirmed::dispatch($appointment);
+        }
+
+        return $appointment;
     }
 
     private function pickBestOperator(

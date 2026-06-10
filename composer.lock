@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "815e3e1160c76f4e94eaaef3a0f98b6d",
+    "content-hash": "61a10e9740c610f95f7d1d9b0eeeee39",
     "packages": [
         {
             "name": "blade-ui-kit/blade-heroicons",
@@ -1049,6 +1049,70 @@
                 }
             ],
             "time": "2025-03-06T22:45:56+00:00"
+        },
+        {
+            "name": "fedeisas/laravel-mail-css-inliner",
+            "version": "6.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/fedeisas/laravel-mail-css-inliner.git",
+                "reference": "5282b0ea8a44832c7aaa711426b0bf990384ba58"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/fedeisas/laravel-mail-css-inliner/zipball/5282b0ea8a44832c7aaa711426b0bf990384ba58",
+                "reference": "5282b0ea8a44832c7aaa711426b0bf990384ba58",
+                "shasum": ""
+            },
+            "require": {
+                "ext-dom": "*",
+                "illuminate/mail": "^9.0 || ^10.0 || ^11.0 || ^12.0 || ^13.0",
+                "illuminate/support": "^9.0 || ^10.0 || ^11.0 || ^12.0 || ^13.0",
+                "paragonie/random_compat": "~2.0 || ~9.99",
+                "php": "^8.0.2",
+                "tijsverkoyen/css-to-inline-styles": "~2.2"
+            },
+            "require-dev": {
+                "enlightn/security-checker": "^1.10 || ^2.0",
+                "guzzlehttp/guzzle": "^6.5.8 || ^7.4.5",
+                "guzzlehttp/psr7": "^1.9.1 || ^2.4.5",
+                "phpunit/phpunit": "^9.0",
+                "symfony/mailer": "^6.0 || ^7.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Fedeisas\\LaravelMailCssInliner\\LaravelMailCssInlinerServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Fedeisas\\LaravelMailCssInliner\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Fede Isas",
+                    "email": "fedeisas@hotmail.com"
+                }
+            ],
+            "description": "Inline the CSS of your HTML emails using Laravel",
+            "keywords": [
+                "css",
+                "laravel",
+                "mailer"
+            ],
+            "support": {
+                "issues": "https://github.com/fedeisas/laravel-mail-css-inliner/issues",
+                "source": "https://github.com/fedeisas/laravel-mail-css-inliner/tree/6.0.0"
+            },
+            "time": "2026-02-24T01:24:53+00:00"
         },
         {
             "name": "filament/actions",

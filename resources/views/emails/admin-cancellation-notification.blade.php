@@ -2,6 +2,7 @@
 
 @section('title')Prenotazione cancellata @endsection
 @section('badge')Admin @endsection
+@section('skip-greeting') @endsection
 
 @section('body')
     <p>Il cliente <strong>{{ $appointment->user->name }}</strong> ha cancellato il seguente appuntamento.</p>

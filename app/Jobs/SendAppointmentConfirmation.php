@@ -23,14 +23,13 @@ class SendAppointmentConfirmation implements ShouldQueue
 
         $appointment = $this->appointment->load('user', 'staff');
 
-        Mail::send(new AppointmentConfirmationMail($appointment));
-    }
-
-    public function failed(\Throwable $e): void
-    {
-        \Illuminate\Support\Facades\Log::error('SendAppointmentConfirmation failed', [
-            'appointment_id' => $this->appointment->id,
-            'error'          => $e->getMessage(),
-        ]);
+        try {
+            Mail::send(new AppointmentConfirmationMail($appointment));
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('SendAppointmentConfirmation failed', [
+                'appointment_id' => $this->appointment->id,
+                'error'          => $e->getMessage(),
+            ]);
+        }
     }
 }

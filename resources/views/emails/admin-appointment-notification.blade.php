@@ -2,6 +2,7 @@
 
 @section('title')Nuova prenotazione ricevuta @endsection
 @section('badge')Admin @endsection
+@section('skip-greeting') @endsection
 
 @section('body')
     <div class="detail-card" style="margin-top: 0;">
