@@ -301,7 +301,7 @@
                     </ol>
 
                     <div class="rounded-lg bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800 px-4 py-3 text-xs text-violet-700 dark:text-violet-300">
-                        <strong>Suggerimento:</strong> se un collaboratore va in ferie o ha un'assenza, puoi bloccare singoli giorni aggiungendo una regola di indisponibilità con orario 00:00–00:00 per quel giorno specifico.
+                        <strong>Suggerimento:</strong> se un collaboratore va in ferie o ha un'assenza, usa la sezione <strong>Periodi di assenza</strong> nella pagina <strong>Gestisci Disponibilità</strong> dello staff. Imposta le date di inizio e fine: il collaboratore non sarà prenotabile per quei giorni.
                     </div>
                 </div>
             </div>
