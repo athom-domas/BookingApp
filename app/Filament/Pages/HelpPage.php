@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Pages\IntegrationSettings;
 use App\Models\IntegrationSetting;
 use Filament\Pages\Page;
 
