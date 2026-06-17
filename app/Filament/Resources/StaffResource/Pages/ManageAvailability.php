@@ -4,6 +4,7 @@ namespace App\Filament\Resources\StaffResource\Pages;
 
 use App\Filament\Resources\StaffResource;
 use App\Models\AvailabilityRule;
+use App\Models\StaffBlockout;
 use App\Models\User;
 use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\TimePicker;
@@ -22,6 +23,11 @@ class ManageAvailability extends Page
     public User $record;
 
     public ?array $data = [];
+
+    public array $blockouts = [];
+    public ?string $newStart = null;
+    public ?string $newEnd = null;
+    public ?string $newReason = null;
 
     private static array $dayOrder = [1, 2, 3, 4, 5, 6, 0];
 
@@ -56,6 +62,8 @@ class ManageAvailability extends Page
         }
 
         $this->form->fill(['days' => $days]);
+
+        $this->loadBlockouts();
     }
 
     public function form(Schema $schema): Schema
@@ -121,6 +129,53 @@ class ManageAvailability extends Page
             ->title('Disponibilità salvata')
             ->success()
             ->send();
+    }
+
+    public function loadBlockouts(): void
+    {
+        $this->blockouts = StaffBlockout::where('user_id', $this->record->id)
+            ->where('end_date', '>=', now()->toDateString())
+            ->orderBy('start_date')
+            ->get()
+            ->map(fn ($b) => [
+                'id'         => $b->id,
+                'start_date' => $b->start_date->format('d/m/Y'),
+                'end_date'   => $b->end_date->format('d/m/Y'),
+                'reason'     => $b->reason,
+            ])
+            ->toArray();
+    }
+
+    public function addBlockout(): void
+    {
+        $this->validate([
+            'newStart'  => 'required|date',
+            'newEnd'    => 'required|date|after_or_equal:newStart',
+            'newReason' => 'nullable|string|max:255',
+        ]);
+
+        StaffBlockout::create([
+            'user_id'    => $this->record->id,
+            'start_date' => $this->newStart,
+            'end_date'   => $this->newEnd,
+            'reason'     => $this->newReason ?: null,
+        ]);
+
+        $this->newStart  = null;
+        $this->newEnd    = null;
+        $this->newReason = null;
+
+        $this->loadBlockouts();
+
+        Notification::make()->title('Periodo aggiunto')->success()->send();
+    }
+
+    public function deleteBlockout(int $id): void
+    {
+        StaffBlockout::where('user_id', $this->record->id)->where('id', $id)->delete();
+        $this->loadBlockouts();
+
+        Notification::make()->title('Periodo rimosso')->success()->send();
     }
 
     public function getTitle(): string|\Illuminate\Contracts\Support\Htmlable
