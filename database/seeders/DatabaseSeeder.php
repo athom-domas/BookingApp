@@ -45,31 +45,19 @@ class DatabaseSeeder extends Seeder
         );
         $superAdmin->syncRoles(['super_admin']);
 
-        $b1 = Business::withoutGlobalScopes()->firstOrCreate(
+        $business = Business::withoutGlobalScopes()->firstOrCreate(
             ['subdomain' => 'salone'],
             ['name' => 'Rossini Barbershop', 'status' => BusinessStatus::Active, 'trial_ends_at' => now()->addDays(14)],
         );
-        app()->instance('current_business_id', $b1->id);
-        $this->seedBusiness('rossini', 'Luca Ferretti', 'admin@rossini.test');
+        app()->instance('current_business_id', $business->id);
 
-        // Business 2
-        $b2 = Business::withoutGlobalScopes()->updateOrCreate(
-            ['subdomain' => 'chic'],
-            ['name' => 'Chic Beauty Studio', 'status' => BusinessStatus::Active, 'trial_ends_at' => now()->addDays(14)],
-        );
-        app()->instance('current_business_id', $b2->id);
-        $this->seedBusiness('chic', 'Sara Colombo', 'admin@chic.test');
-    }
-
-    private function seedBusiness(string $salonKey, string $adminName, string $adminEmail): void
-    {
         $this->call(RolesAndUsersSeeder::class, false, [
-            'adminName'  => $adminName,
-            'adminEmail' => $adminEmail,
+            'adminName'  => 'Luca Ferretti',
+            'adminEmail' => 'admin@rossini.test',
         ]);
         $this->call(SystemSettingSeeder::class);
-        $this->call(CurrentMonthSeeder::class, false, ['salonKey' => $salonKey]);
-        $this->call(SalonProfileSeeder::class,  false, ['salonKey' => $salonKey]);
-        $this->call(ProductSeeder::class,       false, ['salonKey' => $salonKey]);
+        $this->call(CurrentMonthSeeder::class);
+        $this->call(SalonProfileSeeder::class, false, ['salonKey' => 'rossini']);
+        $this->call(ProductSeeder::class,      false, ['salonKey' => 'rossini']);
     }
 }
