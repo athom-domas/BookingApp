@@ -30,7 +30,7 @@
             <li>Portale di prenotazione online per i clienti finali</li>
             <li>Pannello di amministrazione per gestire appuntamenti, staff e reportistica</li>
             <li>Integrazione con Stripe per i pagamenti online</li>
-            <li>Sistema di notifiche via email e SMS</li>
+            <li>Sistema di notifiche via email e WhatsApp</li>
             <li>Lista d'attesa automatizzata</li>
         </ul>
 
@@ -150,8 +150,8 @@
 
         <h2>12. Contatti</h2>
         <p>
-            Per domande su questi Termini contattaci tramite il
-            <a href="{{ route('contact') }}">modulo di contatto</a>.
+            Per domande su questi Termini scrivi a <a href="mailto:info@booking-app.it">info@booking-app.it</a>
+            oppure tramite il <a href="{{ route('contact') }}">modulo di contatto</a>.
         </p>
 
     </div>

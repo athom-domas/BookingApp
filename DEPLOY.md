@@ -6,22 +6,99 @@ Admin salone: `https://{subdomain}.booking-app.it/admin`
 
 ---
 
-## Accesso server
+## 1. Acquisto hosting e dominio (IONOS)
+
+1. Registrarsi su [ionos.it](https://www.ionos.it)
+2. Acquistare il pacchetto **Hosting Plus** (supporta PHP 8.4, MySQL 8, SSH, cron job)
+3. Acquistare o trasferire il dominio `booking-app.it` nello stesso account
+4. Dal pannello IONOS → **Hosting** → selezionare il pacchetto → **PHP** → impostare versione **8.4**
+5. Dal pannello IONOS → **Hosting** → **SSH** → abilitare l'accesso SSH e annotare le credenziali
+
+---
+
+## 2. Configurazione DNS (IONOS)
+
+Dal pannello IONOS → **Domini & SSL** → seleziona dominio → **DNS**:
+
+### Record A (base)
+
+| Tipo | Host | Valore |
+|------|------|--------|
+| A | @ | 217.160.0.129 |
+| A | www | 217.160.0.129 |
+| A | * | 217.160.0.129 |
+
+Il record `*` copre il wildcard DNS (risoluzione) ma IONOS non supporta wildcard virtual host — i sottodomini vanno aggiunti manualmente (vedi sezione 8).
+
+### Record email — deliverability (SPF / DKIM / DMARC)
+
+Necessari per non finire nello spam. Da aggiungere nella stessa sezione DNS:
+
+**SPF** (già presente di default su IONOS, verificare):
+| Tipo | Host | Valore |
+|------|------|--------|
+| TXT | @ | `v=spf1 include:ionos.com ~all` |
+
+**DKIM** (IONOS aggiunge automaticamente due chiavi — verificare che esistano):
+| Tipo | Host |
+|------|------|
+| TXT | `s1-ionos._domainkey` |
+| TXT | `s2-ionos._domainkey` |
+
+Se mancano: pannello IONOS → **Email** → seleziona l'account → **Impostazioni DKIM** → attiva.
+
+**DMARC**:
+| Tipo | Host | Valore |
+|------|------|--------|
+| TXT | `_dmarc` | `v=DMARC1; p=none; rua=mailto:info@booking-app.it` |
+
+Se IONOS mostra un conflitto DMARC al salvataggio, scegliere **Standard** (non custom).
+
+---
+
+## 3. Accesso SSH
 
 ```bash
 ssh su814880@access-5020661163.webspace-host.com
 ```
 
-- Home directory: `~` (path assoluto: `/home/www`)
-- Document root configurata su IONOS panel: `/public`
-- PHP web server: 8.4
-- PHP da SSH: `php85` (alias — non usare `php` che è 8.3)
+- Home directory: `/home/www` (document root configurata su IONOS panel: `/public`)
+- PHP CLI: `/usr/bin/php8.5` (non usare `php` che punta a 8.3)
+- Composer: non installato globalmente — usare `~/composer.phar`
+
+```bash
+# Esempio di utilizzo composer sul server
+/usr/bin/php8.5 ~/composer.phar install --no-dev
+```
 
 ---
 
-## Deploy
+## 4. Setup VS Code SFTP (per trasferimenti manuali)
 
-Richiede `.env.production` compilato localmente (vedi sezione Environment).
+Installare l'estensione **SFTP** (Natizyskunk) da VS Code Marketplace.
+
+Creare `.vscode/sftp.json` (già in `.gitignore`):
+
+```json
+{
+  "name": "IONOS Production",
+  "host": "access-5020661163.webspace-host.com",
+  "protocol": "sftp",
+  "port": 22,
+  "username": "su814880",
+  "remotePath": "/home/www",
+  "uploadOnSave": false,
+  "ignore": [".git", "node_modules", ".env", "vendor", "storage/logs"]
+}
+```
+
+Per i deploy automatici via terminale usare il `Makefile` (vedi sezione 5).
+
+---
+
+## 5. Deploy
+
+Richiede `.env.production` compilato localmente (vedi sezione 6).
 
 ```bash
 make deploy          # tutto: env + assets + codice + cache clear
@@ -31,27 +108,18 @@ make deploy-code     # solo PHP (app/, routes/, config/, resources/)
 ```
 
 Dopo ogni deploy il Makefile esegue automaticamente su server:
-```
+```bash
 php85 artisan config:clear && php85 artisan route:clear && php85 artisan view:clear
 ```
 
----
-
-## Setup iniziale (una tantum)
-
-Operazioni da fare solo al primo deploy o dopo un reset completo:
-
+Per deploy di singoli file (rapido):
 ```bash
-# Sul server via SSH
-php85 artisan migrate --force
-php85 artisan storage:link
-chmod -R 775 ~/storage/
-chmod -R 775 ~/bootstrap/cache/
+rsync -az --checksum app/Models/Foo.php su814880@access-5020661163.webspace-host.com:/home/www/app/Models/Foo.php
 ```
 
 ---
 
-## Environment
+## 6. Environment
 
 Crea `.env.production` in locale (già in `.gitignore`) con:
 
@@ -62,6 +130,7 @@ APP_KEY=base64:...          # non rigenerare — usa quello esistente sul server
 APP_DEBUG=false
 APP_URL=https://booking-app.it
 APP_BASE_DOMAIN=booking-app.it
+APP_TIMEZONE=Europe/Rome
 
 APP_LOCALE=it
 APP_FALLBACK_LOCALE=it
@@ -84,10 +153,10 @@ SESSION_DRIVER=file
 MAIL_MAILER=smtp
 MAIL_HOST=smtp.ionos.it
 MAIL_PORT=587
-MAIL_USERNAME=noreply@booking-app.it
+MAIL_USERNAME=info@booking-app.it      # deve essere un indirizzo email esistente su IONOS
 MAIL_PASSWORD=...
 MAIL_ENCRYPTION=tls
-MAIL_FROM_ADDRESS=noreply@booking-app.it
+MAIL_FROM_ADDRESS=info@booking-app.it
 MAIL_FROM_NAME="Booking App"
 MAIL_CONTACT_ADDRESS=info@booking-app.it
 
@@ -101,39 +170,85 @@ TWILIO_TOKEN=
 TWILIO_FROM=
 ```
 
----
+> **Nota MAIL_USERNAME**: deve essere un indirizzo email IONOS reale (creato da pannello → Email). Non usare indirizzi fantasiosi — IONOS rifiuta l'autenticazione SMTP con errore 550 se l'indirizzo non esiste sull'account.
 
-## DNS (IONOS)
-
-| Tipo | Host | Valore |
-|------|------|--------|
-| A | @ | 217.160.0.129 |
-| A | www | 217.160.0.129 |
-| A | * | 217.160.0.129 |
-
-Il record `*` copre i wildcard DNS, ma IONOS non supporta wildcard virtual host nel pannello.
+> **Nota APP_TIMEZONE**: deve essere `Europe/Rome`. Il file `config/app.php` è già configurato per leggere questa variabile. Senza di essa i confronti di data/ora risultano sfasati di 2 ore rispetto all'ora italiana.
 
 ---
 
-## Aggiungere un nuovo salone (subdomain)
+## 7. Setup iniziale (prima installazione)
+
+```bash
+# Sul server via SSH
+cd /home/www
+
+# Dipendenze PHP
+/usr/bin/php8.5 ~/composer.phar install --no-dev
+
+# Generare chiave app (solo al primissimo deploy, poi conservarla)
+/usr/bin/php8.5 artisan key:generate
+
+# Database
+/usr/bin/php8.5 artisan migrate --force
+
+# Storage
+/usr/bin/php8.5 artisan storage:link
+chmod -R 775 ~/storage/
+chmod -R 775 ~/bootstrap/cache/
+
+# Cache
+/usr/bin/php8.5 artisan optimize:clear
+```
+
+---
+
+## 8. Aggiungere un nuovo salone (subdomain)
 
 IONOS non supporta sottodomini wildcard via pannello. Ogni nuovo salone richiede:
 
 1. **IONOS panel → Sottodomini** → aggiungi `{subdomain}.booking-app.it` con document root `/public`
-2. **IONOS panel → SSL** → assegna certificato gratuito Let's Encrypt al sottodominio
-3. Estendere il trial del business se Stripe non è ancora configurato:
+2. **IONOS panel → SSL** → assegna certificato gratuito Let's Encrypt al sottodominio (può richiedere qualche minuto)
+3. Creare il business nel DB tramite il pannello admin di un salone esistente, oppure via tinker:
    ```bash
-   php85 artisan tinker --execute="\App\Models\Business::where('subdomain', '{subdomain}')->first()->update(['trial_ends_at' => now()->addDays(30)]);"
+   /usr/bin/php8.5 artisan tinker
+   ```
+4. Estendere il trial se Stripe non è ancora configurato:
+   ```bash
+   /usr/bin/php8.5 artisan tinker --execute="\App\Models\Business::where('subdomain', '{subdomain}')->first()->update(['trial_ends_at' => now()->addDays(30)]);"
    ```
 
 ---
 
-## Problemi noti
+## 9. Cron job (reminder e scheduler)
 
-**Stripe non configurato**: se `STRIPE_SECRET_KEY` è vuota, il middleware `CheckSubscription` crasha con 500 sull'admin panel. Fix temporaneo: estendere il trial (vedi sopra).
+Il scheduler Laravel deve girare ogni minuto. Su IONOS non è disponibile `crontab` da SSH — va configurato dal pannello.
 
-**PHP su SSH**: usare sempre `php85` non `php`. Il Makefile usa SSH per i comandi artisan post-deploy — se il server cambia configurazione verificare l'alias.
+**IONOS panel → Hosting → Cron Jobs → Crea cronjob**:
+
+| Campo | Valore |
+|-------|--------|
+| Tipo | **UnixCron** |
+| Comando | `/usr/bin/php8.5 /home/www/artisan schedule:run` |
+| Intervallo | Avanzato — tutti i campi `*` |
+
+Questo attiva l'invio automatico dei reminder email agli appuntamenti.
+
+---
+
+## Problemi noti e fix applicati
+
+**Stripe non configurato**: se `STRIPE_SECRET_KEY` è vuota, il middleware `CheckSubscription` crasha con 500 sull'admin panel. Fix temporaneo: estendere il trial (vedi sezione 8).
+
+**PHP su SSH**: usare sempre `/usr/bin/php8.5`, non `php` (punta a 8.3). Il Makefile usa l'alias `php85` — se il server cambia configurazione, verificare.
+
+**Email CSS rotto su mobile**: i client email (Gmail) strippano i tag `<style>`. Il pacchetto `fedeisas/laravel-mail-css-inliner` risolve il problema inlining automaticamente il CSS nelle email.
+
+**QUEUE_CONNECTION=sync**: i job girano in modo sincrono. Eccezioni dentro `DB::transaction()` durante l'invio email causano rollback dell'intera transazione. La logica di dispatch delle email è stata spostata fuori dalla transaction e wrappata in try/catch.
+
+**Timezone**: le date sono salvate in ora italiana (Europe/Rome). `APP_TIMEZONE` deve essere `Europe/Rome` nel `.env` e `config/app.php` deve leggere `env('APP_TIMEZONE', 'UTC')`. Senza questa configurazione i confronti `now() < scheduled_date` risultano sfasati.
 
 **Sottodomini e SSL**: i certificati SSL su IONOS per i sottodomini vanno assegnati manualmente uno per uno dal pannello. Non esiste wildcard SSL automatico su Hosting Plus.
 
 **Email contatti**: arrivano all'indirizzo in `MAIL_CONTACT_ADDRESS`. Se non impostato, fallback su `MAIL_FROM_ADDRESS`.
+
+**Composer sul server**: non è installato globalmente. Usare `~/composer.phar` (già presente in home). Se mancasse: scaricarlo con `curl -sS https://getcomposer.org/installer | /usr/bin/php8.5`.

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>GestionalePro · Software prenotazioni per saloni e centri estetici</title>
     <meta name="description" content="Gestisci prenotazioni, staff e pagamenti del tuo salone in un'unica piattaforma. 14 giorni gratis, nessuna carta richiesta.">
+    <meta name="google-site-verification" content="nD-pGjHxVgpI6sDbYgST9j3ThrJgVLeJgX-qkYDrbcs" />
     <script>if(location.hash)history.replaceState(null,'',location.pathname)</script>
     @vite(['resources/css/app.css', 'resources/scss/landing.scss', 'resources/js/app.js'])
     <link rel="preconnect" href="https://fonts.googleapis.com">

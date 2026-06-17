@@ -26,7 +26,8 @@ class SocialAuthController extends Controller
 
         return Socialite::driver('google')
             ->stateless()
-            ->with(['state' => $state])
+            ->scopes(['https://www.googleapis.com/auth/calendar.events.owned'])
+            ->with(['state' => $state, 'access_type' => 'offline', 'prompt' => 'consent'])
             ->redirect();
     }
 
@@ -53,6 +54,8 @@ class SocialAuthController extends Controller
             ->where('business_id', $currentBusinessId)
             ->first();
 
+        $refreshToken = $googleUser->refreshToken;
+
         if (! $user) {
             $user = User::where('email', $googleUser->getEmail())
                 ->where('business_id', $currentBusinessId)
@@ -76,6 +79,10 @@ class SocialAuthController extends Controller
                 Role::firstOrCreate(['name' => 'customer', 'guard_name' => 'web']);
                 $user->assignRole('customer');
             }
+        }
+
+        if ($refreshToken) {
+            $user->update(['google_refresh_token' => $refreshToken]);
         }
 
         $token = Str::random(64);

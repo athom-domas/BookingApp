@@ -93,20 +93,27 @@
                 <div>
                     <label class="mb-3 block text-sm font-medium text-gray-700 dark:text-gray-300">Canale di notifica</label>
                     <div class="space-y-2">
-                        @foreach (['email' => 'Email', 'sms' => 'SMS', 'whatsapp' => 'WhatsApp'] as $value => $label)
-                            <label class="flex cursor-pointer items-center gap-3">
-                                <input type="radio" name="notification_channel" value="{{ $value }}"
-                                    x-model="channel"
-                                    class="h-4 w-4 border-gray-300 dark:border-gray-600"
-                                    style="accent-color: var(--color-primary)">
-                                <span class="text-sm text-gray-700 dark:text-gray-300">{{ $label }}</span>
-                            </label>
-                        @endforeach
+                        <label class="flex cursor-pointer items-center gap-3">
+                            <input type="radio" name="notification_channel" value="email"
+                                x-model="channel"
+                                class="h-4 w-4 border-gray-300 dark:border-gray-600"
+                                style="accent-color: var(--color-primary)">
+                            <span class="text-sm text-gray-700 dark:text-gray-300">Email</span>
+                        </label>
+                        @if (\App\Models\IntegrationSetting::hasMetaWhatsApp())
+                        <label class="flex cursor-pointer items-center gap-3">
+                            <input type="radio" name="notification_channel" value="whatsapp"
+                                x-model="channel"
+                                class="h-4 w-4 border-gray-300 dark:border-gray-600"
+                                style="accent-color: var(--color-primary)">
+                            <span class="text-sm text-gray-700 dark:text-gray-300">WhatsApp</span>
+                        </label>
+                        @endif
                     </div>
                     @error('notification_channel')<p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
                 </div>
 
-                <div x-cloak x-show="channel === 'sms' || channel === 'whatsapp'">
+                <div x-cloak x-show="channel === 'whatsapp'">
                     <label for="phone_number" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                         Numero di telefono <span class="text-red-500">*</span>
                     </label>

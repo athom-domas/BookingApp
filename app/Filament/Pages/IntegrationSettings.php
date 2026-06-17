@@ -29,9 +29,9 @@ class IntegrationSettings extends Page
             'stripe_public_key'        => $setting->stripe_public_key,
             'stripe_secret_key'        => $setting->stripe_secret_key,
             'stripe_webhook_secret'    => $setting->stripe_webhook_secret,
-            'twilio_sid'               => $setting->twilio_sid,
-            'twilio_token'             => $setting->twilio_token,
-            'twilio_from'              => $setting->twilio_from,
+            'meta_whatsapp_token'      => $setting->meta_whatsapp_token,
+            'meta_whatsapp_phone_id'   => $setting->meta_whatsapp_phone_id,
+            'meta_whatsapp_template'   => $setting->meta_whatsapp_template ?? 'appointment_reminder',
             'google_calendar_id'       => $setting->google_calendar_id,
             'google_credentials_json'  => $setting->google_credentials_json,
         ]);
@@ -64,27 +64,26 @@ class IntegrationSettings extends Page
                             ->nullable(),
                     ]),
 
-                Section::make('Twilio')
-                    ->description('Credenziali per inviare SMS e messaggi WhatsApp. Trovale su console.twilio.com → Account Info (homepage).')
+                Section::make('WhatsApp (Meta Cloud API)')
+                    ->description('Credenziali per inviare promemoria via WhatsApp. Richiede un\'app Meta con WhatsApp Business API configurata. Consulta Aiuto → SMS e WhatsApp per la guida completa.')
                     ->schema([
-                        TextInput::make('twilio_sid')
-                            ->label('Account SID')
-                            ->helperText('Stringa che inizia con AC. Visibile nella homepage della Console Twilio sotto "Account Info".')
+                        TextInput::make('meta_whatsapp_token')
+                            ->label('Access Token')
+                            ->helperText('Token permanente del System User. Meta Business Suite → Impostazioni → Utenti di sistema → Genera token.')
                             ->password()
                             ->revealable()
                             ->nullable(),
 
-                        TextInput::make('twilio_token')
-                            ->label('Auth Token')
-                            ->helperText('Affianco all\'Account SID nella Console Twilio. Clicca sull\'icona occhio per visualizzarlo.')
-                            ->password()
-                            ->revealable()
+                        TextInput::make('meta_whatsapp_phone_id')
+                            ->label('Phone Number ID')
+                            ->helperText('Meta for Developers → App → WhatsApp → Configurazione API → Phone Number ID (stringa numerica).')
                             ->nullable(),
 
-                        TextInput::make('twilio_from')
-                            ->label('Numero mittente')
-                            ->helperText('console.twilio.com → Phone Numbers → Manage → Active Numbers. Formato internazionale, es. +393331234567.')
-                            ->nullable(),
+                        TextInput::make('meta_whatsapp_template')
+                            ->label('Nome template')
+                            ->helperText('Nome del template approvato da Meta per i promemoria. Default: appointment_reminder.')
+                            ->nullable()
+                            ->placeholder('appointment_reminder'),
                     ]),
 
                 Section::make('Google Calendar')

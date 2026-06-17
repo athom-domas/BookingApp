@@ -21,7 +21,7 @@
         </p>
         <p>
             Per qualsiasi richiesta relativa al trattamento dei tuoi dati personali puoi scrivere a
-            <a href="mailto:privacy@example.com">privacy@example.com</a>.
+            <a href="mailto:info@booking-app.it">info@booking-app.it</a>.
         </p>
 
         <h2>2. Dati raccolti e finalità del trattamento</h2>
@@ -49,6 +49,7 @@
                 <tr><td>Erogazione del servizio di gestione prenotazioni</td><td>Esecuzione del contratto (art. 6.1.b)</td></tr>
                 <tr><td>Invio promemoria e notifiche di appuntamento</td><td>Esecuzione del contratto (art. 6.1.b)</td></tr>
                 <tr><td>Gestione dei pagamenti tramite Stripe</td><td>Esecuzione del contratto (art. 6.1.b)</td></tr>
+                <tr><td>Sincronizzazione appuntamenti con Google Calendar</td><td>Consenso (art. 6.1.a)</td></tr>
                 <tr><td>Adempimenti fiscali e contabili</td><td>Obbligo legale (art. 6.1.c)</td></tr>
                 <tr><td>Comunicazioni di marketing (newsletter)</td><td>Consenso (art. 6.1.a)</td></tr>
                 <tr><td>Prevenzione frodi e sicurezza</td><td>Legittimo interesse (art. 6.1.f)</td></tr>
@@ -65,51 +66,71 @@
         <h2>4. Destinatari dei dati</h2>
         <p>I dati possono essere comunicati a:</p>
         <ul>
-            <li><strong>Stripe, Inc.</strong> – elaborazione dei pagamenti (privacy policy: stripe.com/it/privacy)</li>
-            <li><strong>Provider di hosting</strong> – server cloud per l'erogazione del servizio, in UE o con garanzie equivalenti (SCC)</li>
-            <li><strong>Provider di notifiche</strong> – invio di email e SMS (Mailgun, Twilio o equivalenti), in qualità di responsabili del trattamento</li>
-            <li><strong>Autorità pubbliche</strong> – quando richiesto dalla legge</li>
+            <li><strong>Stripe, Inc.</strong> - elaborazione dei pagamenti (privacy policy: stripe.com/it/privacy)</li>
+            <li><strong>Google LLC</strong> - sincronizzazione degli appuntamenti con Google Calendar, esclusivamente previo consenso dell'utente (privacy policy: policies.google.com/privacy)</li>
+            <li><strong>Meta Platforms, Inc.</strong> - invio di messaggi WhatsApp tramite Meta Cloud API, ove l'utente abbia scelto questo canale di notifica</li>
+            <li><strong>Provider di hosting</strong> - server cloud per l'erogazione del servizio, in UE o con garanzie equivalenti (SCC)</li>
+            <li><strong>Provider di posta elettronica</strong> - invio di email transazionali e promemoria (Mailpit/Mailgun o equivalenti), in qualità di responsabili del trattamento</li>
+            <li><strong>Autorità pubbliche</strong> - quando richiesto dalla legge</li>
         </ul>
         <p>I dati non vengono mai venduti a terzi.</p>
 
-        <h2>5. Trasferimenti internazionali</h2>
+        <h2>5. Utilizzo delle Google API</h2>
         <p>
-            Alcuni fornitori (es. Stripe) sono stabiliti negli USA. Il trasferimento avviene nel rispetto del
+            Se scegli di collegare il tuo account Google Calendar, GestionalePro accede, tramite le API di Google, esclusivamente
+            agli <strong>eventi del tuo calendario personale</strong> (scope <code>calendar.events.owned</code>) al solo fine di
+            creare e rimuovere eventi corrispondenti agli appuntamenti confermati o cancellati.
+        </p>
+        <ul>
+            <li>I dati del calendario non vengono utilizzati per finalità pubblicitarie, di profilazione o di analisi.</li>
+            <li>I dati del calendario non vengono condivisi con terze parti al di fuori dell'erogazione del servizio.</li>
+            <li>Il token di accesso a Google Calendar è conservato in forma cifrata e utilizzato esclusivamente per le operazioni sul calendario dell'utente che lo ha fornito.</li>
+            <li>Puoi revocare l'accesso in qualsiasi momento dalla pagina <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener">myaccount.google.com/permissions</a>, oppure eliminando il tuo account da GestionalePro.</li>
+        </ul>
+        <p>
+            <strong>Dichiarazione di uso limitato (Limited Use):</strong> l'utilizzo delle informazioni ricevute dalle Google API
+            è conforme alla <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener">Google API Services User Data Policy</a>,
+            inclusi i requisiti di Limited Use.
+        </p>
+
+        <h2>6. Trasferimenti internazionali</h2>
+        <p>
+            Alcuni fornitori (es. Stripe, Google LLC, Meta Platforms) sono stabiliti negli USA. Il trasferimento avviene nel rispetto del
             GDPR tramite le Clausole Contrattuali Standard (SCC) approvate dalla Commissione Europea
             o in presenza di adeguate garanzie.
         </p>
 
-        <h2>6. I tuoi diritti</h2>
+        <h2>7. I tuoi diritti</h2>
         <p>Ai sensi degli artt. 15-22 del GDPR hai il diritto di:</p>
         <ul>
-            <li><strong>Accesso</strong> – ottenere conferma che stiamo trattando i tuoi dati e riceverne copia.</li>
-            <li><strong>Rettifica</strong> – correggere dati inesatti o incompleti.</li>
-            <li><strong>Cancellazione</strong> – chiedere la cancellazione dei tuoi dati ("diritto all'oblio").</li>
-            <li><strong>Limitazione</strong> – limitare il trattamento in determinati casi.</li>
-            <li><strong>Portabilità</strong> – ricevere i tuoi dati in formato strutturato e leggibile da macchina.</li>
-            <li><strong>Opposizione</strong> – opporti al trattamento basato sul legittimo interesse.</li>
-            <li><strong>Revoca del consenso</strong> – revocare il consenso in qualsiasi momento senza pregiudicare la liceità del trattamento precedente.</li>
+            <li><strong>Accesso</strong> - ottenere conferma che stiamo trattando i tuoi dati e riceverne copia.</li>
+            <li><strong>Rettifica</strong> - correggere dati inesatti o incompleti.</li>
+            <li><strong>Cancellazione</strong> - chiedere la cancellazione dei tuoi dati ("diritto all'oblio").</li>
+            <li><strong>Limitazione</strong> - limitare il trattamento in determinati casi.</li>
+            <li><strong>Portabilità</strong> - ricevere i tuoi dati in formato strutturato e leggibile da macchina.</li>
+            <li><strong>Opposizione</strong> - opporti al trattamento basato sul legittimo interesse.</li>
+            <li><strong>Revoca del consenso</strong> - revocare il consenso in qualsiasi momento senza pregiudicare la liceità del trattamento precedente.</li>
         </ul>
         <p>
-            Per esercitare i tuoi diritti scrivi a <a href="mailto:privacy@example.com">privacy@example.com</a>.
+            Per esercitare i tuoi diritti scrivi a <a href="mailto:info@booking-app.it">info@booking-app.it</a>.
             Risponderemo entro 30 giorni. Hai inoltre il diritto di proporre reclamo al Garante per la
             Protezione dei Dati Personali (<a href="https://www.garanteprivacy.it" target="_blank" rel="noopener">garanteprivacy.it</a>).
         </p>
 
-        <h2>7. Cookie</h2>
+        <h2>8. Cookie</h2>
         <p>
             Utilizziamo esclusivamente cookie tecnici necessari al funzionamento del servizio
             (cookie di sessione, token CSRF, preferenze UI). Nessun cookie di tracciamento o profilazione
             viene impostato senza il tuo consenso esplicito.
         </p>
 
-        <h2>8. Sicurezza</h2>
+        <h2>9. Sicurezza</h2>
         <p>
             I dati sono protetti da misure tecniche e organizzative adeguate: connessioni cifrate TLS,
             hashing delle password, accesso limitato ai soli incaricati autorizzati e backup regolari.
         </p>
 
-        <h2>9. Modifiche alla presente informativa</h2>
+        <h2>10. Modifiche alla presente informativa</h2>
         <p>
             Ci riserviamo di aggiornare questa informativa. Le modifiche sostanziali saranno comunicate
             via email o tramite avviso in evidenza nel servizio. La versione in vigore è sempre disponibile
@@ -119,7 +140,7 @@
     </div>
 
     <div class="mt-16 pt-8 border-t border-warm-border text-sm text-ink-muted/70">
-        <p>Hai domande? Scrivici a <a href="mailto:privacy@example.com" class="text-terra hover:underline">privacy@example.com</a></p>
+        <p>Hai domande? Scrivici a <a href="mailto:info@booking-app.it" class="text-terra hover:underline">info@booking-app.it</a></p>
     </div>
 
 </article>

@@ -63,10 +63,9 @@ class SettingsController extends Controller
     public function updateNotifications(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'notification_channel' => ['required', 'in:email,sms,whatsapp'],
+            'notification_channel' => ['required', 'in:email,whatsapp'],
             'phone_number'         => [
                 'nullable',
-                'required_if:notification_channel,sms',
                 'required_if:notification_channel,whatsapp',
                 'regex:/^\d{10}$/',
             ],

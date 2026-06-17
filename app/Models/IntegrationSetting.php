@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
     'business_id',
     'stripe_public_key', 'stripe_secret_key', 'stripe_webhook_secret',
     'twilio_sid', 'twilio_token', 'twilio_from',
+    'meta_whatsapp_token', 'meta_whatsapp_phone_id', 'meta_whatsapp_template',
     'google_calendar_id', 'google_credentials_json',
 ])]
 class IntegrationSetting extends Model
@@ -24,6 +25,7 @@ class IntegrationSetting extends Model
             'stripe_webhook_secret'   => 'encrypted',
             'twilio_sid'              => 'encrypted',
             'twilio_token'            => 'encrypted',
+            'meta_whatsapp_token'     => 'encrypted',
             'google_credentials_json' => 'encrypted',
         ];
     }
@@ -67,6 +69,27 @@ class IntegrationSetting extends Model
     public static function getTwilioFrom(): ?string
     {
         return self::current()->twilio_from;
+    }
+
+    public static function getMetaWhatsAppToken(): ?string
+    {
+        return self::current()->meta_whatsapp_token;
+    }
+
+    public static function getMetaWhatsAppPhoneId(): ?string
+    {
+        return self::current()->meta_whatsapp_phone_id;
+    }
+
+    public static function getMetaWhatsAppTemplate(): string
+    {
+        return self::current()->meta_whatsapp_template ?? 'appointment_reminder';
+    }
+
+    public static function hasMetaWhatsApp(): bool
+    {
+        $s = self::current();
+        return ! empty($s->meta_whatsapp_token) && ! empty($s->meta_whatsapp_phone_id);
     }
 
     public static function getGoogleCalendarId(): ?string

@@ -50,4 +50,52 @@ class GoogleCalendarService
             $eventId
         );
     }
+
+    public function createEventForUser(Appointment $appointment, string $refreshToken): string
+    {
+        $appointment->loadMissing('user', 'staff', 'business.salonProfile');
+        $services = $appointment->services;
+
+        $start = new EventDateTime();
+        $start->setDateTime($appointment->scheduled_date->toRfc3339String());
+        $start->setTimeZone('UTC');
+
+        $end = new EventDateTime();
+        $end->setDateTime(
+            $appointment->scheduled_date->clone()
+                ->addMinutes($services->sum('duration_minutes'))
+                ->toRfc3339String()
+        );
+        $end->setTimeZone('UTC');
+
+        $staffFirstName = explode(' ', $appointment->staff->name)[0];
+        $salonName      = $appointment->business->salonProfile->name ?? $appointment->business->name;
+
+        $event = new Event([
+            'summary'     => $services->pluck('name')->implode(', ') . ' con ' . $staffFirstName,
+            'description' => $salonName,
+            'start'       => $start,
+            'end'         => $end,
+        ]);
+
+        $created = $this->makeUserCalendar($refreshToken)->events->insert('primary', $event);
+
+        return $created->getId();
+    }
+
+    public function deleteEventForUser(string $eventId, string $refreshToken): void
+    {
+        $this->makeUserCalendar($refreshToken)->events->delete('primary', $eventId);
+    }
+
+    private function makeUserCalendar(string $refreshToken): Calendar
+    {
+        $client = new \Google\Client();
+        $client->setClientId(config('services.google.client_id'));
+        $client->setClientSecret(config('services.google.client_secret'));
+        $client->setAccessType('offline');
+        $client->refreshToken($refreshToken);
+
+        return new Calendar($client);
+    }
 }

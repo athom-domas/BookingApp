@@ -27,7 +27,7 @@ use Spatie\Permission\Traits\HasRoles;
 #[Fillable([
     'name', 'email', 'password', 'internal_notes', 'calendar_color',
     'bio', 'receive_email_notifications', 'business_id', 'must_change_password',
-    'google_id',
+    'google_id', 'google_refresh_token',
 ])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements FilamentUser, HasMedia, HasTenants
@@ -43,6 +43,7 @@ class User extends Authenticatable implements FilamentUser, HasMedia, HasTenants
             'receive_email_notifications' => 'boolean',
             'must_change_password'        => 'boolean',
             'business_id'                 => 'integer',
+            'google_refresh_token'        => 'encrypted',
         ];
     }
 

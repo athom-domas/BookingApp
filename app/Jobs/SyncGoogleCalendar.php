@@ -28,23 +28,59 @@ class SyncGoogleCalendar implements ShouldQueue
             throw new \InvalidArgumentException("Unknown SyncGoogleCalendar action: {$this->action}");
         }
 
-        try {
-            if ($this->action === 'create') {
-                $eventId = $calendarService->createEvent($this->appointment);
-                $this->appointment->update(['google_event_id' => $eventId]);
-                return;
+        $this->appointment->loadMissing('user');
+        $refreshToken = $this->appointment->user->google_refresh_token ?? null;
+
+        if ($this->action === 'create') {
+            if (\App\Models\IntegrationSetting::getGoogleCalendarId()) {
+                try {
+                    $eventId = $calendarService->createEvent($this->appointment);
+                    $this->appointment->update(['google_event_id' => $eventId]);
+                } catch (\Throwable $e) {
+                    Log::warning('SyncGoogleCalendar (business) failed', [
+                        'appointment_id' => $this->appointment->id,
+                        'error'          => $e->getMessage(),
+                    ]);
+                }
             }
 
-            if ($this->appointment->google_event_id) {
+            if ($refreshToken) {
+                try {
+                    $customerEventId = $calendarService->createEventForUser($this->appointment, $refreshToken);
+                    $this->appointment->update(['customer_google_event_id' => $customerEventId]);
+                } catch (\Throwable $e) {
+                    Log::warning('SyncGoogleCalendar (customer) failed', [
+                        'appointment_id' => $this->appointment->id,
+                        'error'          => $e->getMessage(),
+                    ]);
+                }
+            }
+
+            return;
+        }
+
+        if ($this->appointment->google_event_id) {
+            try {
                 $calendarService->deleteEvent($this->appointment->google_event_id);
                 $this->appointment->update(['google_event_id' => null]);
+            } catch (\Throwable $e) {
+                Log::warning('SyncGoogleCalendar (business) delete failed', [
+                    'appointment_id' => $this->appointment->id,
+                    'error'          => $e->getMessage(),
+                ]);
             }
-        } catch (\Throwable $e) {
-            Log::warning('SyncGoogleCalendar failed — calendar sync skipped', [
-                'appointment_id' => $this->appointment->id,
-                'action'         => $this->action,
-                'error'          => $e->getMessage(),
-            ]);
+        }
+
+        if ($refreshToken && $this->appointment->customer_google_event_id) {
+            try {
+                $calendarService->deleteEventForUser($this->appointment->customer_google_event_id, $refreshToken);
+                $this->appointment->update(['customer_google_event_id' => null]);
+            } catch (\Throwable $e) {
+                Log::warning('SyncGoogleCalendar (customer) delete failed', [
+                    'appointment_id' => $this->appointment->id,
+                    'error'          => $e->getMessage(),
+                ]);
+            }
         }
     }
 

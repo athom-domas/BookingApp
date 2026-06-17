@@ -20,6 +20,7 @@
 /public/storage
 /storage/*.key
 /storage/google-credentials.json
+/config/google-credentials.json
 /storage/pail
 /bootstrap/cache/*
 !/bootstrap/cache/.gitkeep
