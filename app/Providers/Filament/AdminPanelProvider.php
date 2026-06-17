@@ -74,6 +74,7 @@ class AdminPanelProvider extends PanelProvider
             ->brandLogo(asset('img/logo.png'))
             ->brandLogoHeight('2rem')
             ->favicon(asset('img/logo.png'))
+            ->sidebarCollapsibleOnDesktop()
             ->colors([
                 'primary' => Color::hex('#2563eb'),
             ])
