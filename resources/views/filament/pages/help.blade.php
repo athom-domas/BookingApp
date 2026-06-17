@@ -1,5 +1,5 @@
 <x-filament-panels::page>
-    <div x-data="{ guide: null }" class="max-w-3xl">
+    <div x-data="{ guide: null }">
 
         {{-- INDICE GUIDE --}}
         <div x-show="guide === null" x-transition.opacity>
