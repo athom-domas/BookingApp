@@ -133,6 +133,78 @@
             </div>
         </div>
 
+        {{-- GUIDA: SETUP SALONE --}}
+        <div x-show="guide === 'setup-salone'" x-transition.opacity style="display:none">
+            <div class="mb-5">
+                <button @click="guide = null" class="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/>
+                    </svg>
+                    Torna alle guide
+                </button>
+            </div>
+
+            <div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden">
+                <div class="flex items-center gap-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/60 px-6 py-4">
+                    <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-900/40">
+                        <svg class="h-4 w-4 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.016a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72L4.318 3.44A1.5 1.5 0 015.378 3h13.243a1.5 1.5 0 011.06.44l1.19 2.189a3.004 3.004 0 01-.621 4.72m-13.5 8.65h3.75a.75.75 0 00.75-.75V13.5a.75.75 0 00-.75-.75H6.75a.75.75 0 00-.75.75v3.75c0 .415.336.75.75.75z"/>
+                        </svg>
+                    </div>
+                    <h2 class="text-base font-semibold text-gray-900 dark:text-white">Setup iniziale del salone</h2>
+                </div>
+                <div class="px-6 py-5 space-y-5 text-sm text-gray-700 dark:text-gray-300">
+                    <p>Prima di accettare prenotazioni, configura le informazioni base del tuo salone. I passaggi qui sotto bastano per rendere il portale clienti operativo.</p>
+
+                    <ol class="space-y-5 list-none">
+                        <li class="flex gap-4">
+                            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-600 text-xs font-bold text-white">1</span>
+                            <div>
+                                <p class="font-semibold text-gray-900 dark:text-white">Inserisci i dati del salone</p>
+                                <p class="mt-0.5 text-gray-500 dark:text-gray-400">Dal menu laterale vai su <strong>Impostazioni → Profilo Salone</strong>. Inserisci nome, indirizzo, numero di telefono e una breve descrizione. Questi dati vengono mostrati ai clienti sul portale e nelle email di conferma.</p>
+                            </div>
+                        </li>
+
+                        <li class="flex gap-4">
+                            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-600 text-xs font-bold text-white">2</span>
+                            <div>
+                                <p class="font-semibold text-gray-900 dark:text-white">Carica il logo</p>
+                                <p class="mt-0.5 text-gray-500 dark:text-gray-400">Nella stessa pagina Profilo Salone, scorri fino alla sezione <strong>Logo</strong> e carica il logo del tuo salone. Il logo compare nell'header del portale clienti, nelle email e nelle notifiche. Formato consigliato: PNG o SVG, sfondo trasparente.</p>
+                            </div>
+                        </li>
+
+                        <li class="flex gap-4">
+                            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-600 text-xs font-bold text-white">3</span>
+                            <div>
+                                <p class="font-semibold text-gray-900 dark:text-white">Personalizza l'aspetto del portale</p>
+                                <p class="mt-0.5 text-gray-500 dark:text-gray-400">Vai su <strong>Impostazioni → Impostazioni di sistema</strong> → sezione <strong>Aspetto</strong>. Scegli il tema colore, il font e lo stile dei bordi per dare al portale clienti l'identità visiva del tuo salone. Le modifiche sono visibili in tempo reale.</p>
+                            </div>
+                        </li>
+
+                        <li class="flex gap-4">
+                            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-600 text-xs font-bold text-white">4</span>
+                            <div>
+                                <p class="font-semibold text-gray-900 dark:text-white">Imposta gli orari di apertura</p>
+                                <p class="mt-0.5 text-gray-500 dark:text-gray-400">Vai su <strong>Salone → Regole di disponibilità</strong> → clicca <strong>Nuova regola</strong>. Aggiungi una regola per ogni giorno lavorativo, specificando l'orario di inizio e fine. I clienti potranno prenotare solo negli orari in cui almeno un collaboratore è disponibile.</p>
+                            </div>
+                        </li>
+
+                        <li class="flex gap-4">
+                            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-green-600 text-xs font-bold text-white">✓</span>
+                            <div>
+                                <p class="font-semibold text-gray-900 dark:text-white">Il portale è pronto</p>
+                                <p class="mt-0.5 text-gray-500 dark:text-gray-400">Il tuo portale clienti è attivo e personalizzato. I clienti possono visitarlo e — una volta aggiunti staff e servizi — iniziare a prenotare.</p>
+                            </div>
+                        </li>
+                    </ol>
+
+                    <div class="rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 px-4 py-3 text-xs text-amber-700 dark:text-amber-300">
+                        <strong>Prossimo passo:</strong> aggiungi i collaboratori e i servizi — consulta la guida <strong>Gestione staff e servizi</strong>.
+                    </div>
+                </div>
+            </div>
+        </div>
+
         {{-- GUIDA: STRIPE --}}
         <div x-show="guide === 'stripe'" x-transition.opacity style="display:none">
             <div class="mb-5">
