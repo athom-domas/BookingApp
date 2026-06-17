@@ -205,6 +205,78 @@
             </div>
         </div>
 
+        {{-- GUIDA: STAFF E SERVIZI --}}
+        <div x-show="guide === 'staff-servizi'" x-transition.opacity style="display:none">
+            <div class="mb-5">
+                <button @click="guide = null" class="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/>
+                    </svg>
+                    Torna alle guide
+                </button>
+            </div>
+
+            <div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden">
+                <div class="flex items-center gap-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/60 px-6 py-4">
+                    <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-100 dark:bg-violet-900/40">
+                        <svg class="h-4 w-4 text-violet-600 dark:text-violet-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/>
+                        </svg>
+                    </div>
+                    <h2 class="text-base font-semibold text-gray-900 dark:text-white">Gestione staff e servizi</h2>
+                </div>
+                <div class="px-6 py-5 space-y-5 text-sm text-gray-700 dark:text-gray-300">
+                    <p>Per accettare prenotazioni devi avere almeno un collaboratore con almeno un servizio assegnato. Segui questi passaggi nell'ordine indicato.</p>
+
+                    <ol class="space-y-5 list-none">
+                        <li class="flex gap-4">
+                            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-violet-600 text-xs font-bold text-white">1</span>
+                            <div>
+                                <p class="font-semibold text-gray-900 dark:text-white">Aggiungi i collaboratori</p>
+                                <p class="mt-0.5 text-gray-500 dark:text-gray-400">Vai su <strong>Salone → Staff</strong> → clicca <strong>Nuovo collaboratore</strong>. Inserisci nome, email e assegna il ruolo <strong>Staff</strong>. Il collaboratore riceverà un'email di invito per impostare la propria password e accedere al pannello.</p>
+                            </div>
+                        </li>
+
+                        <li class="flex gap-4">
+                            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-violet-600 text-xs font-bold text-white">2</span>
+                            <div>
+                                <p class="font-semibold text-gray-900 dark:text-white">Crea i servizi</p>
+                                <p class="mt-0.5 text-gray-500 dark:text-gray-400">Vai su <strong>Salone → Servizi</strong> → clicca <strong>Nuovo servizio</strong>. Per ogni servizio specifica: nome (es. "Taglio donna"), durata in minuti e prezzo. Puoi aggiungere una descrizione opzionale che i clienti vedranno sul portale.</p>
+                            </div>
+                        </li>
+
+                        <li class="flex gap-4">
+                            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-violet-600 text-xs font-bold text-white">3</span>
+                            <div>
+                                <p class="font-semibold text-gray-900 dark:text-white">Assegna i servizi allo staff</p>
+                                <p class="mt-0.5 text-gray-500 dark:text-gray-400">Torna su <strong>Salone → Staff</strong> e apri la scheda di ogni collaboratore. Nella sezione <strong>Servizi</strong> seleziona quali servizi è in grado di eseguire. Un servizio non assegnato a nessun collaboratore non è prenotabile dai clienti.</p>
+                            </div>
+                        </li>
+
+                        <li class="flex gap-4">
+                            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-violet-600 text-xs font-bold text-white">4</span>
+                            <div>
+                                <p class="font-semibold text-gray-900 dark:text-white">Imposta la disponibilità</p>
+                                <p class="mt-0.5 text-gray-500 dark:text-gray-400">Vai su <strong>Salone → Regole di disponibilità</strong>. Puoi impostare regole globali per il salone (applicate a tutti) oppure regole specifiche per singolo collaboratore selezionandolo dal filtro. Ogni regola definisce giorno della settimana, orario di inizio e fine.</p>
+                            </div>
+                        </li>
+
+                        <li class="flex gap-4">
+                            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-green-600 text-xs font-bold text-white">✓</span>
+                            <div>
+                                <p class="font-semibold text-gray-900 dark:text-white">Tutto pronto</p>
+                                <p class="mt-0.5 text-gray-500 dark:text-gray-400">I clienti possono ora prenotare i tuoi servizi online, scegliendo il collaboratore preferito e l'orario disponibile.</p>
+                            </div>
+                        </li>
+                    </ol>
+
+                    <div class="rounded-lg bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800 px-4 py-3 text-xs text-violet-700 dark:text-violet-300">
+                        <strong>Suggerimento:</strong> se un collaboratore va in ferie o ha un'assenza, puoi bloccare singoli giorni aggiungendo una regola di indisponibilità con orario 00:00–00:00 per quel giorno specifico.
+                    </div>
+                </div>
+            </div>
+        </div>
+
         {{-- GUIDA: STRIPE --}}
         <div x-show="guide === 'stripe'" x-transition.opacity style="display:none">
             <div class="mb-5">
