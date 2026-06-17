@@ -67,6 +67,28 @@
                     </div>
                 </button>
 
+                <button @click="guide = 'impostazioni-prenotazioni'"
+                    class="group text-left rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-5 shadow-sm hover:border-sky-400 dark:hover:border-sky-500 hover:shadow-md transition-all">
+                    <div class="flex items-start gap-4">
+                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-sky-100 dark:bg-sky-900/40 group-hover:bg-sky-200 dark:group-hover:bg-sky-800/60 transition-colors">
+                            <svg class="h-5 w-5 text-sky-600 dark:text-sky-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 010 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 010-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            </svg>
+                        </div>
+                        <div class="min-w-0">
+                            <p class="font-semibold text-gray-900 dark:text-white">Impostazioni prenotazioni</p>
+                            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Configura slot del calendario, finestra di prenotazione, promemoria automatici, modalità di pagamento e programma fedeltà.</p>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex items-center gap-1 text-xs font-medium text-sky-600 dark:text-sky-400">
+                        Leggi la guida
+                        <svg class="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/>
+                        </svg>
+                    </div>
+                </button>
+
                 <button @click="guide = 'stripe'"
                     class="group text-left rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-5 shadow-sm hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-md transition-all">
                     <div class="flex items-start gap-4">
@@ -168,13 +190,21 @@
                         <li class="flex gap-4">
                             <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-600 text-xs font-bold text-white">2</span>
                             <div>
+                                <p class="font-semibold text-gray-900 dark:text-white">Aggiungi la mappa Google Maps</p>
+                                <p class="mt-0.5 text-gray-500 dark:text-gray-400">Sempre nella tab <strong>Contatti & Social</strong>, incolla l'URL embed di Google Maps nel campo <strong>Google Maps embed URL</strong>. Per ottenerlo: apri <strong>maps.google.com</strong>, cerca il tuo salone, clicca <strong>Condividi → Incorpora una mappa</strong>, copia solo il valore dell'attributo <code class="bg-gray-100 dark:bg-gray-800 px-1 rounded text-xs">src</code> dall'iframe (la parte che inizia con <code class="bg-gray-100 dark:bg-gray-800 px-1 rounded text-xs">https://www.google.com/maps/embed?...</code>).</p>
+                            </div>
+                        </li>
+
+                        <li class="flex gap-4">
+                            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-600 text-xs font-bold text-white">3</span>
+                            <div>
                                 <p class="font-semibold text-gray-900 dark:text-white">Carica il logo</p>
                                 <p class="mt-0.5 text-gray-500 dark:text-gray-400">Nella stessa pagina <strong>Profilo Salone</strong>, nella tab <strong>Identità</strong>, scorri fino al campo <strong>Logo</strong> e carica il logo del tuo salone. Il logo compare nell'header del portale clienti e nelle email. Formato consigliato: PNG o SVG, sfondo trasparente.</p>
                             </div>
                         </li>
 
                         <li class="flex gap-4">
-                            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-600 text-xs font-bold text-white">3</span>
+                            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-600 text-xs font-bold text-white">4</span>
                             <div>
                                 <p class="font-semibold text-gray-900 dark:text-white">Personalizza l'aspetto del portale</p>
                                 <p class="mt-0.5 text-gray-500 dark:text-gray-400">Sempre in <strong>Impostazioni → Profilo Salone</strong>: nella tab <strong>Identità</strong> trovi il campo <strong>Famiglia di colori</strong>; nella tab <strong>Stile</strong> scegli la coppia di font e lo stile dei bordi. Le modifiche si riflettono sul portale clienti.</p>
@@ -182,7 +212,7 @@
                         </li>
 
                         <li class="flex gap-4">
-                            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-600 text-xs font-bold text-white">4</span>
+                            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-600 text-xs font-bold text-white">5</span>
                             <div>
                                 <p class="font-semibold text-gray-900 dark:text-white">Imposta gli orari di apertura</p>
                                 <p class="mt-0.5 text-gray-500 dark:text-gray-400">Vai su <strong>Impostazioni → Profilo Salone</strong> → tab <strong>Orari</strong>. Configura l'orario di apertura e chiusura per ogni giorno della settimana. Questi orari definiscono quando il portale accetta prenotazioni.</p>
@@ -272,6 +302,87 @@
 
                     <div class="rounded-lg bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800 px-4 py-3 text-xs text-violet-700 dark:text-violet-300">
                         <strong>Suggerimento:</strong> se un collaboratore va in ferie o ha un'assenza, puoi bloccare singoli giorni aggiungendo una regola di indisponibilità con orario 00:00–00:00 per quel giorno specifico.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- GUIDA: IMPOSTAZIONI PRENOTAZIONI --}}
+        <div x-show="guide === 'impostazioni-prenotazioni'" x-transition.opacity style="display:none">
+            <div class="mb-5">
+                <button @click="guide = null" class="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/>
+                    </svg>
+                    Torna alle guide
+                </button>
+            </div>
+
+            <div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden">
+                <div class="flex items-center gap-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/60 px-6 py-4">
+                    <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-100 dark:bg-sky-900/40">
+                        <svg class="h-4 w-4 text-sky-600 dark:text-sky-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 010 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 010-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                    </div>
+                    <h2 class="text-base font-semibold text-gray-900 dark:text-white">Impostazioni prenotazioni</h2>
+                </div>
+                <div class="px-6 py-5 space-y-5 text-sm text-gray-700 dark:text-gray-300">
+                    <p>Tutte le impostazioni si trovano in <strong>Impostazioni → Impostazioni</strong> nel menu laterale. Configurale prima di aprire le prenotazioni ai clienti.</p>
+
+                    <ol class="space-y-5 list-none">
+                        <li class="flex gap-4">
+                            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-sky-600 text-xs font-bold text-white">1</span>
+                            <div>
+                                <p class="font-semibold text-gray-900 dark:text-white">Calendario e slot</p>
+                                <p class="mt-0.5 text-gray-500 dark:text-gray-400">Nella sezione <strong>Calendario e prenotazioni</strong>: imposta la <strong>Granularità slot</strong> (intervallo tra uno slot e l'altro, es. 15 o 30 min), la <strong>Prenotazione massima anticipata</strong> (quanti giorni prima può prenotare un cliente) e la <strong>Scadenza cancellazione</strong> (entro quante ore prima il cliente può disdire da solo).</p>
+                            </div>
+                        </li>
+
+                        <li class="flex gap-4">
+                            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-sky-600 text-xs font-bold text-white">2</span>
+                            <div>
+                                <p class="font-semibold text-gray-900 dark:text-white">Promemoria automatici</p>
+                                <p class="mt-0.5 text-gray-500 dark:text-gray-400">Nella sezione <strong>Promemoria</strong>: scegli quanti promemoria inviare (0, 1 o 2) e a quante ore dall'appuntamento. I promemoria vengono inviati via email e, se WhatsApp è configurato, anche via WhatsApp.</p>
+                            </div>
+                        </li>
+
+                        <li class="flex gap-4">
+                            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-sky-600 text-xs font-bold text-white">3</span>
+                            <div>
+                                <p class="font-semibold text-gray-900 dark:text-white">Modalità di pagamento</p>
+                                <p class="mt-0.5 text-gray-500 dark:text-gray-400">Nella sezione <strong>Pagamenti</strong>: scegli se accettare pagamenti <strong>online (Stripe) e in salone</strong>, solo online o solo in salone. Se scegli online è necessario che Stripe sia configurato nelle Integrazioni.</p>
+                            </div>
+                        </li>
+
+                        <li class="flex gap-4">
+                            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-sky-600 text-xs font-bold text-white">4</span>
+                            <div>
+                                <p class="font-semibold text-gray-900 dark:text-white">Recensioni</p>
+                                <p class="mt-0.5 text-gray-500 dark:text-gray-400">Nella sezione <strong>Sito web</strong>: il toggle <strong>Mostra sezione recensioni</strong> controlla se la sezione recensioni è visibile sul portale clienti. Disattivalo se preferisci non mostrare le recensioni pubblicamente.</p>
+                            </div>
+                        </li>
+
+                        <li class="flex gap-4">
+                            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-sky-600 text-xs font-bold text-white">5</span>
+                            <div>
+                                <p class="font-semibold text-gray-900 dark:text-white">Programma fedeltà (opzionale)</p>
+                                <p class="mt-0.5 text-gray-500 dark:text-gray-400">Nella sezione <strong>Fedeltà</strong>: attiva il toggle <strong>Abilita programma fedeltà</strong> per far accumulare punti ai clienti su ogni acquisto. Configura quanti punti per euro, quanti punti servono per sbloccare lo sconto e la percentuale di sconto. I clienti vedono il proprio saldo punti nell'area personale.</p>
+                            </div>
+                        </li>
+
+                        <li class="flex gap-4">
+                            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-green-600 text-xs font-bold text-white">✓</span>
+                            <div>
+                                <p class="font-semibold text-gray-900 dark:text-white">Configurazione completata</p>
+                                <p class="mt-0.5 text-gray-500 dark:text-gray-400">Clicca <strong>Salva impostazioni</strong> in fondo alla pagina per applicare le modifiche. Le impostazioni entrano in vigore immediatamente per tutte le nuove prenotazioni.</p>
+                            </div>
+                        </li>
+                    </ol>
+
+                    <div class="rounded-lg bg-sky-50 dark:bg-sky-900/20 border border-sky-200 dark:border-sky-800 px-4 py-3 text-xs text-sky-700 dark:text-sky-300">
+                        <strong>Suggerimento:</strong> parti con slot da 30 minuti e finestra di prenotazione a 30 giorni — sono le impostazioni più comuni. Puoi cambiarle in qualsiasi momento senza perdere le prenotazioni esistenti.
                     </div>
                 </div>
             </div>
