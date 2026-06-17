@@ -5,6 +5,7 @@ namespace App\Services\Booking;
 use App\Models\Appointment;
 use App\Models\AvailabilityRule;
 use App\Models\Service;
+use App\Models\StaffBlockout;
 use App\Models\SystemSetting;
 use App\Models\User;
 use Carbon\Carbon;
@@ -143,6 +144,15 @@ class SlotCalculationService
 
     private function getWorkRanges(User $staff, Carbon $date): array
     {
+        $hasBlockout = StaffBlockout::where('user_id', $staff->id)
+            ->where('start_date', '<=', $date->toDateString())
+            ->where('end_date', '>=', $date->toDateString())
+            ->exists();
+
+        if ($hasBlockout) {
+            return [];
+        }
+
         $rules = AvailabilityRule::where('user_id', $staff->id)
             ->where('day_of_week', $date->dayOfWeek)
             ->where('is_available', true)

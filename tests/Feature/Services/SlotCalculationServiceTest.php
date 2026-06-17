@@ -351,3 +351,71 @@ it('blocks time equal to combined duration of all service_ids on an appointment'
         ->and($startTimes)->not->toContain('09:00')
         ->and($startTimes)->toContain('09:20');
 });
+
+// ─── blockout periods ────────────────────────────────────────────────────────
+
+it('returns no slots when staff has an active blockout covering the date', function () {
+    $staff = User::factory()->create();
+    $staff->assignRole('staff');
+
+    $service = Service::factory()->create(['duration_minutes' => 60, 'active' => true]);
+    $staff->services()->attach($service->id);
+
+    $date = Carbon::parse('2026-07-14'); // Monday
+    AvailabilityRule::factory()->create([
+        'user_id'      => $staff->id,
+        'day_of_week'  => $date->dayOfWeek,
+        'start_time'   => '09:00:00',
+        'end_time'     => '17:00:00',
+        'is_available' => true,
+    ]);
+
+    \App\Models\StaffBlockout::factory()->create([
+        'user_id'    => $staff->id,
+        'start_date' => '2026-07-14',
+        'end_date'   => '2026-07-18',
+    ]);
+
+    $svc   = new SlotCalculationService();
+    $slots = $svc->getAvailableSlots([
+        'date'            => $date,
+        'serviceIds'      => [$service->id],
+        'staffId'         => $staff->id,
+        'staffPreference' => 'specific',
+    ]);
+
+    expect($slots)->toBeEmpty();
+});
+
+it('returns slots normally on dates outside the blockout period', function () {
+    $staff = User::factory()->create();
+    $staff->assignRole('staff');
+
+    $service = Service::factory()->create(['duration_minutes' => 60, 'active' => true]);
+    $staff->services()->attach($service->id);
+
+    $date = Carbon::parse('2026-07-21'); // Monday after blockout 14-18
+    AvailabilityRule::factory()->create([
+        'user_id'      => $staff->id,
+        'day_of_week'  => $date->dayOfWeek,
+        'start_time'   => '09:00:00',
+        'end_time'     => '12:00:00',
+        'is_available' => true,
+    ]);
+
+    \App\Models\StaffBlockout::factory()->create([
+        'user_id'    => $staff->id,
+        'start_date' => '2026-07-14',
+        'end_date'   => '2026-07-18',
+    ]);
+
+    $svc   = new SlotCalculationService();
+    $slots = $svc->getAvailableSlots([
+        'date'            => $date,
+        'serviceIds'      => [$service->id],
+        'staffId'         => $staff->id,
+        'staffPreference' => 'specific',
+    ]);
+
+    expect($slots)->not->toBeEmpty();
+});
