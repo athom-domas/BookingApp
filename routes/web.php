@@ -10,6 +10,7 @@ use App\Http\Controllers\Portal\BookingController;
 use App\Http\Controllers\Portal\ProductController;
 use App\Http\Controllers\Portal\ProductOrderController;
 use App\Http\Controllers\Portal\SettingsController;
+use App\Http\Controllers\Portal\ReviewController;
 use App\Http\Controllers\Portal\WaitlistController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\Public\AppointmentActionController;
@@ -77,6 +78,7 @@ Route::middleware(['auth', 'tenant.user', 'tenant.status'])->group(function () {
     Route::post('/portal/appointments/{appointment}/payment/discount', [PortalAppointmentController::class, 'applyDiscount'])->name('portal.appointments.payment.discount');
     Route::delete('/portal/appointments/{appointment}/payment/discount', [PortalAppointmentController::class, 'removeDiscount'])->name('portal.appointments.payment.discount.remove');
     Route::post('/portal/appointments/{appointment}/cancel', [PortalAppointmentController::class, 'cancel'])->name('portal.appointments.cancel');
+    Route::post('/portal/reviews', [ReviewController::class, 'store'])->name('portal.reviews.store');
     Route::get('/portal/settings', [SettingsController::class, 'index'])->name('portal.settings.index');
     Route::patch('/portal/settings/profile', [SettingsController::class, 'updateProfile'])->name('portal.settings.profile');
     Route::patch('/portal/settings/notifications', [SettingsController::class, 'updateNotifications'])->name('portal.settings.notifications');

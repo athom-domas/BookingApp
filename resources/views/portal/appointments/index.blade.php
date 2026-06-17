@@ -12,6 +12,12 @@
             <a href="{{ route('booking.create') }}" class="btn-primary inline-block rounded-md px-5 py-2.5 text-sm font-semibold text-center text-white">Nuova prenotazione</a>
         </div>
 
+        @if (session('review_success'))
+            <div class="rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 px-5 py-4 text-sm text-green-800 dark:text-green-300">
+                Grazie! La tua recensione è stata inviata e sarà pubblicata dopo la revisione.
+            </div>
+        @endif
+
         @if ($loyaltyEnabled)
             @include('portal.appointments.partials.loyalty-card')
         @endif

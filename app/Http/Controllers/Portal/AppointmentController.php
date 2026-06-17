@@ -6,6 +6,7 @@ use App\Exceptions\BookingException;
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
 use App\Models\LoyaltyAccount;
+use App\Models\SalonReview;
 use App\Models\SystemSetting;
 use App\Models\WaitlistEntry;
 use App\Services\AppointmentService;
@@ -45,14 +46,20 @@ class AppointmentController extends Controller
             ? (LoyaltyAccount::where('user_id', $request->user()->id)->value('points') ?? 0)
             : 0;
 
+        $reviewedAppointmentIds = SalonReview::where('user_id', $request->user()->id)
+            ->whereNotNull('appointment_id')
+            ->pluck('appointment_id')
+            ->all();
+
         return view('portal.appointments.index', [
-            'upcomingAppointments' => $appointments->filter(fn (Appointment $appointment) => $appointment->isUpcoming())->values(),
-            'pastAppointments'     => $appointments->filter(fn (Appointment $appointment) => $appointment->isPast())->sortByDesc('scheduled_date')->values(),
-            'waitlistEntries'      => $waitlistEntries,
-            'loyaltyEnabled'       => $loyaltyEnabled,
-            'loyaltyPoints'        => (int) $loyaltyPoints,
-            'loyaltyThreshold'     => SystemSetting::getLoyaltyRewardThreshold(),
-            'loyaltyPercentage'    => SystemSetting::getLoyaltyRewardPercentage(),
+            'upcomingAppointments'   => $appointments->filter(fn (Appointment $appointment) => $appointment->isUpcoming())->values(),
+            'pastAppointments'       => $appointments->filter(fn (Appointment $appointment) => $appointment->isPast())->sortByDesc('scheduled_date')->values(),
+            'waitlistEntries'        => $waitlistEntries,
+            'loyaltyEnabled'         => $loyaltyEnabled,
+            'loyaltyPoints'          => (int) $loyaltyPoints,
+            'loyaltyThreshold'       => SystemSetting::getLoyaltyRewardThreshold(),
+            'loyaltyPercentage'      => SystemSetting::getLoyaltyRewardPercentage(),
+            'reviewedAppointmentIds' => $reviewedAppointmentIds,
         ]);
     }
 

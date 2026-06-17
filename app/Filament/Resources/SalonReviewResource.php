@@ -56,9 +56,10 @@ class SalonReviewResource extends Resource
                     ->formatStateUsing(fn ($state) => str_repeat('★', $state)),
                 TextColumn::make('body')->label('Testo')->limit(60),
                 IconColumn::make('is_published')->label('Pubblicata')->boolean(),
+                TextColumn::make('created_at')->label('Data')->dateTime('d/m/Y H:i')->sortable(),
             ])
             ->reorderable('sort_order')
-            ->defaultSort('sort_order')
+            ->defaultSort(fn ($query) => $query->orderByRaw('is_published DESC')->orderBy('created_at'))
             ->actions([EditAction::make()])
             ->bulkActions([DeleteBulkAction::make()]);
     }
@@ -70,6 +71,17 @@ class SalonReviewResource extends Resource
             'create' => Pages\CreateSalonReview::route('/create'),
             'edit'   => Pages\EditSalonReview::route('/{record}/edit'),
         ];
+    }
+
+    public static function getNavigationBadge(): ?string
+    {
+        $count = \App\Models\SalonReview::whereNull('seen_at')->count();
+        return $count > 0 ? (string) $count : null;
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return 'warning';
     }
 
     public static function canAccess(): bool
