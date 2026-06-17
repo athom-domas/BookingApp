@@ -161,7 +161,7 @@
                             <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-600 text-xs font-bold text-white">1</span>
                             <div>
                                 <p class="font-semibold text-gray-900 dark:text-white">Inserisci i dati del salone</p>
-                                <p class="mt-0.5 text-gray-500 dark:text-gray-400">Dal menu laterale vai su <strong>Impostazioni → Profilo Salone</strong>. Inserisci nome, indirizzo, numero di telefono e una breve descrizione. Questi dati vengono mostrati ai clienti sul portale e nelle email di conferma.</p>
+                                <p class="mt-0.5 text-gray-500 dark:text-gray-400">Dal menu laterale vai su <strong>Impostazioni → Profilo Salone</strong>. Nella tab <strong>Identità</strong> inserisci nome e tagline; nella tab <strong>Contatti & Social</strong> aggiungi indirizzo e numero di telefono. Questi dati vengono mostrati ai clienti sul portale e nelle email di conferma.</p>
                             </div>
                         </li>
 
@@ -169,7 +169,7 @@
                             <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-600 text-xs font-bold text-white">2</span>
                             <div>
                                 <p class="font-semibold text-gray-900 dark:text-white">Carica il logo</p>
-                                <p class="mt-0.5 text-gray-500 dark:text-gray-400">Nella stessa pagina Profilo Salone, scorri fino alla sezione <strong>Logo</strong> e carica il logo del tuo salone. Il logo compare nell'header del portale clienti, nelle email e nelle notifiche. Formato consigliato: PNG o SVG, sfondo trasparente.</p>
+                                <p class="mt-0.5 text-gray-500 dark:text-gray-400">Nella stessa pagina <strong>Profilo Salone</strong>, nella tab <strong>Identità</strong>, scorri fino al campo <strong>Logo</strong> e carica il logo del tuo salone. Il logo compare nell'header del portale clienti e nelle email. Formato consigliato: PNG o SVG, sfondo trasparente.</p>
                             </div>
                         </li>
 
@@ -177,7 +177,7 @@
                             <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-600 text-xs font-bold text-white">3</span>
                             <div>
                                 <p class="font-semibold text-gray-900 dark:text-white">Personalizza l'aspetto del portale</p>
-                                <p class="mt-0.5 text-gray-500 dark:text-gray-400">Vai su <strong>Impostazioni → Impostazioni di sistema</strong> → sezione <strong>Aspetto</strong>. Scegli il tema colore, il font e lo stile dei bordi per dare al portale clienti l'identità visiva del tuo salone. Le modifiche sono visibili in tempo reale.</p>
+                                <p class="mt-0.5 text-gray-500 dark:text-gray-400">Sempre in <strong>Impostazioni → Profilo Salone</strong>: nella tab <strong>Identità</strong> trovi il campo <strong>Famiglia di colori</strong>; nella tab <strong>Stile</strong> scegli la coppia di font e lo stile dei bordi. Le modifiche si riflettono sul portale clienti.</p>
                             </div>
                         </li>
 
@@ -185,7 +185,7 @@
                             <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-600 text-xs font-bold text-white">4</span>
                             <div>
                                 <p class="font-semibold text-gray-900 dark:text-white">Imposta gli orari di apertura</p>
-                                <p class="mt-0.5 text-gray-500 dark:text-gray-400">Vai su <strong>Salone → Regole di disponibilità</strong> → clicca <strong>Nuova regola</strong>. Aggiungi una regola per ogni giorno lavorativo, specificando l'orario di inizio e fine. I clienti potranno prenotare solo negli orari in cui almeno un collaboratore è disponibile.</p>
+                                <p class="mt-0.5 text-gray-500 dark:text-gray-400">Vai su <strong>Impostazioni → Profilo Salone</strong> → tab <strong>Orari</strong>. Configura l'orario di apertura e chiusura per ogni giorno della settimana. Questi orari definiscono quando il portale accetta prenotazioni.</p>
                             </div>
                         </li>
 
@@ -233,7 +233,7 @@
                             <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-violet-600 text-xs font-bold text-white">1</span>
                             <div>
                                 <p class="font-semibold text-gray-900 dark:text-white">Aggiungi i collaboratori</p>
-                                <p class="mt-0.5 text-gray-500 dark:text-gray-400">Vai su <strong>Salone → Staff</strong> → clicca <strong>Nuovo collaboratore</strong>. Inserisci nome, email e assegna il ruolo <strong>Staff</strong>. Il collaboratore riceverà un'email di invito per impostare la propria password e accedere al pannello.</p>
+                                <p class="mt-0.5 text-gray-500 dark:text-gray-400">Vai su <strong>Salone → Staff</strong> → clicca <strong>Registra staff</strong>. Inserisci nome, email e password. Il ruolo staff viene assegnato automaticamente. Il collaboratore potrà accedere al pannello con le credenziali inserite.</p>
                             </div>
                         </li>
 
@@ -257,7 +257,7 @@
                             <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-violet-600 text-xs font-bold text-white">4</span>
                             <div>
                                 <p class="font-semibold text-gray-900 dark:text-white">Imposta la disponibilità</p>
-                                <p class="mt-0.5 text-gray-500 dark:text-gray-400">Vai su <strong>Salone → Regole di disponibilità</strong>. Puoi impostare regole globali per il salone (applicate a tutti) oppure regole specifiche per singolo collaboratore selezionandolo dal filtro. Ogni regola definisce giorno della settimana, orario di inizio e fine.</p>
+                                <p class="mt-0.5 text-gray-500 dark:text-gray-400">Torna su <strong>Salone → Staff</strong>, apri la scheda di ogni collaboratore e clicca il pulsante <strong>Gestisci Disponibilità</strong>. Da lì puoi configurare gli orari lavorativi giorno per giorno, indicando inizio e fine turno.</p>
                             </div>
                         </li>
 
