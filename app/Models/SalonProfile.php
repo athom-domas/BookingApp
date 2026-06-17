@@ -15,7 +15,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
     'business_id',
     'name', 'tagline', 'logo_path', 'theme', 'theme_mode', 'hero_image_preset',
     'announcement_active', 'announcement_text', 'booking_button_label',
-    'meta_description', 'google_review_url', 'owner_signature',
+    'meta_description', 'owner_signature',
     'font_pair', 'border_style', 'bg_texture',
     'phone', 'address',
     'description', 'google_maps_embed',

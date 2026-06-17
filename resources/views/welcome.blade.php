@@ -376,7 +376,7 @@
         $staff->isNotEmpty()                                     ? ['href' => '#team',      'label' => 'Team']           : null,
         $hasGallerySection                                       ? ['href' => '#galleria',  'label' => 'Galleria']       : null,
         ($profile->opening_hours || $profile->phone || $profile->address) ? ['href' => '#contatti', 'label' => 'Orari & contatti'] : null,
-        ($reviews->isNotEmpty() || $profile->google_review_url)  ? ['href' => '#recensioni','label' => 'Recensioni']     : null,
+        $reviews->isNotEmpty()                                    ? ['href' => '#recensioni','label' => 'Recensioni']     : null,
     ]);
 @endphp
 
@@ -629,7 +629,7 @@
 @endif
 
 {{-- 7. RECENSIONI --}}
-@if($reviews->isNotEmpty() || $profile->google_review_url)
+@if($reviews->isNotEmpty())
 <section class="sf-section" id="recensioni">
     <div class="sf-inner">
         <h2 class="sf-heading">Recensioni</h2>
@@ -649,11 +649,7 @@
             @endforeach
         </div>
         @endif
-        @if($profile->google_review_url)
-        <div class="sf-review-cta">
-            <a href="{{ $profile->google_review_url }}" class="sf-btn" target="_blank" rel="noopener">Lascia una recensione su Google</a>
-        </div>
-        @endif
+
     </div>
 </section>
 @endif

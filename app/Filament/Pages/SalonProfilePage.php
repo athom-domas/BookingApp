@@ -58,7 +58,7 @@ class SalonProfilePage extends Page
 
             'description'          => $profile->description,
             'google_maps_embed'    => $profile->google_maps_embed,
-            'google_review_url'    => $profile->google_review_url,
+
             'instagram_url'        => $profile->instagram_url,
             'facebook_url'         => $profile->facebook_url,
             'tiktok_url'           => $profile->tiktok_url,
@@ -305,12 +305,7 @@ class SalonProfilePage extends Page
                                 ->placeholder('39xxxxxxxxxx')
                                 ->helperText('Numero internazionale senza + (es. 39333000000)'),
                         ]),
-                        TextInput::make('google_review_url')
-                            ->label('Link recensione Google')
-                            ->url()
-                            ->placeholder('https://g.page/r/...')
-                            ->helperText('Aggiunge un pulsante "Lascia una recensione" nella sezione recensioni della vetrina.')
-                            ->columnSpanFull(),
+
                     ]),
 
                     Tab::make('Email')->schema([
