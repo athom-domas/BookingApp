@@ -51,6 +51,10 @@ Route::post('/r/{appointment}/disdici', [AppointmentActionController::class, 'pr
     ->name('appointment.public.cancel.post')
     ->middleware('signed');
 
+Route::get('/follow-up-reminders/unsubscribe/{user}', \App\Http\Controllers\FollowUpReminderUnsubscribeController::class)
+    ->name('follow-up-reminders.unsubscribe')
+    ->middleware('signed');
+
 Route::get('/auth/google', [SocialAuthController::class, 'redirect'])->name('auth.google')->middleware('guest');
 Route::get('/auth/google/callback', [SocialAuthController::class, 'callback'])->name('auth.google.callback');
 Route::get('/auth/google/exchange', [SocialAuthController::class, 'exchange'])->name('auth.google.exchange');

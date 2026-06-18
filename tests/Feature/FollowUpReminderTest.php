@@ -269,3 +269,78 @@ it('second job invocation on same reminder does not send (atomic claim)', functi
     Mail::assertSentCount(1);
     expect($reminder->fresh()->status)->toBe('sent');
 });
+
+// ---- Mail sent/failed tests ----
+
+it('job marks reminder as sent and sends email on success', function () {
+    Mail::fake();
+    makeEnabledSettings();
+    $customer = makeCustomerWithPrefs();
+    $appt = Appointment::factory()->create([
+        'user_id'        => $customer->id,
+        'status'         => 'completed',
+        'scheduled_date' => now()->subDays(35),
+    ]);
+    $reminder = FollowUpReminder::factory()->create([
+        'user_id'        => $customer->id,
+        'appointment_id' => $appt->id,
+        'delay_days'     => 30,
+        'scheduled_for'  => now()->subMinute(),
+        'status'         => 'pending',
+    ]);
+
+    (new SendFollowUpReminder($reminder->id))->handle();
+
+    expect($reminder->fresh()->status)->toBe('sent');
+    expect($reminder->fresh()->sent_at)->not->toBeNull();
+    Mail::assertSent(FollowUpReminderMail::class);
+});
+
+it('job marks reminder as failed on mail exception', function () {
+    makeEnabledSettings();
+    $customer = makeCustomerWithPrefs();
+    $appt = Appointment::factory()->create([
+        'user_id'        => $customer->id,
+        'status'         => 'completed',
+        'scheduled_date' => now()->subDays(35),
+    ]);
+    $reminder = FollowUpReminder::factory()->create([
+        'user_id'        => $customer->id,
+        'appointment_id' => $appt->id,
+        'delay_days'     => 30,
+        'scheduled_for'  => now()->subMinute(),
+        'status'         => 'pending',
+    ]);
+
+    Mail::shouldReceive('to')->andReturnSelf();
+    Mail::shouldReceive('send')->andThrow(new \RuntimeException('SMTP error'));
+
+    (new SendFollowUpReminder($reminder->id))->handle();
+
+    expect($reminder->fresh()->status)->toBe('failed');
+    expect($reminder->fresh()->error_message)->toContain('SMTP error');
+});
+
+// ---- Unsubscribe tests ----
+
+it('signed unsubscribe URL sets follow_up_reminders_enabled to false', function () {
+    $customer = makeCustomerWithPrefs(followUpEnabled: true);
+    $url = \Illuminate\Support\Facades\URL::signedRoute(
+        'follow-up-reminders.unsubscribe',
+        ['user' => $customer->id]
+    );
+
+    $response = $this->get($url);
+
+    $response->assertOk();
+    expect($customer->preferences->fresh()->follow_up_reminders_enabled)->toBeFalse();
+});
+
+it('unsigned unsubscribe URL returns 403', function () {
+    $customer = makeCustomerWithPrefs();
+    $url = route('follow-up-reminders.unsubscribe', ['user' => $customer->id]);
+
+    $response = $this->get($url);
+
+    $response->assertForbidden();
+});
