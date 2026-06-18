@@ -31,6 +31,8 @@ RUN apk add --no-cache $PHPIZE_DEPS \
     && docker-php-ext-enable redis \
     && apk del $PHPIZE_DEPS
 
+COPY docker/php/local.ini /usr/local/etc/php/conf.d/local.ini
+
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /app
