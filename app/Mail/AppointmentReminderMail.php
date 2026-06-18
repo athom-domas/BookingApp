@@ -33,6 +33,7 @@ class AppointmentReminderMail extends Mailable
             with: [
                 'confirmUrl' => URL::signedRoute('appointment.public.confirm', ['appointment' => $this->appointment, 'uid' => $this->appointment->user_id], $expiry),
                 'cancelUrl'  => URL::signedRoute('appointment.public.cancel', ['appointment' => $this->appointment, 'uid' => $this->appointment->user_id], $expiry),
+                'noGreeting' => true,
             ],
         );
     }

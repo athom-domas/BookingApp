@@ -33,6 +33,7 @@ class AdminCancellationNotificationMail extends Mailable
     {
         return new Content(
             view: 'emails.admin-cancellation-notification',
+            with: ['noGreeting' => true],
         );
     }
 }

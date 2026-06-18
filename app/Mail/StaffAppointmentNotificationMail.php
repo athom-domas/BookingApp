@@ -27,6 +27,7 @@ class StaffAppointmentNotificationMail extends Mailable
     {
         return new Content(
             view: 'emails.staff-appointment-notification',
+            with: ['noGreeting' => true],
         );
     }
 }

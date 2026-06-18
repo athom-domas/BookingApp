@@ -28,6 +28,6 @@ class WaitlistOfferMail extends Mailable
 
     public function content(): Content
     {
-        return new Content(view: 'emails.waitlist-offer');
+        return new Content(view: 'emails.waitlist-offer', with: ['noGreeting' => true]);
     }
 }

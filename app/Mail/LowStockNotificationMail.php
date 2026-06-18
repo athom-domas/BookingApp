@@ -32,7 +32,7 @@ class LowStockNotificationMail extends Mailable
     {
         return new Content(
             view: 'emails.low-stock-notification',
-            with: ['adminUrl' => $this->buildUrl('/admin/products/' . $this->product->id . '/edit')],
+            with: ['adminUrl' => $this->buildUrl('/admin/products/' . $this->product->id . '/edit'), 'noGreeting' => true],
         );
     }
 

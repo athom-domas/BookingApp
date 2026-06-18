@@ -38,17 +38,9 @@
     $_emailDisplay = $_emailFontVars[$_emailPair][1] ?? $_emailFontVars['classic'][1];
     $_emailRadius  = $_emailRadiusMap[$_emailBorder] ?? '8px';
 
-    // Resolve customer first name from whichever variable the child view provides
-    $_rawName = isset($appointment) ? ($appointment->user->name ?? '')
-              : (isset($recipient) ? ($recipient->name ?? '') : '');
+    $_rawName   = isset($appointment) ? ($appointment->user->name ?? '')
+                : (isset($recipient)  ? ($recipient->name ?? '')  : '');
     $_firstName = $_rawName ? explode(' ', trim($_rawName))[0] : '';
-
-    $_greeting = $salon->email_greeting ?: 'Ciao {nome},';
-    if ($_firstName) {
-        $_greeting = str_replace('{nome}', e($_firstName), $_greeting);
-    } else {
-        $_greeting = str_replace('{nome}', '', trim($_greeting, ' ,')) ?: '';
-    }
 @endphp
 <!DOCTYPE html>
 <html lang="it">
@@ -105,9 +97,7 @@
             </div>
 
             <div class="email-body">
-                @if(empty($noGreeting) && ! $__env->hasSection('skip-greeting') && $_greeting)
-                    <p style="color:#111827;font-size:1rem;font-weight:500;padding-bottom:16px;margin-bottom:16px;border-bottom:1px solid #f3f4f6;">{!! nl2br(e($_greeting)) !!}</p>
-                @endif
+                @yield('greeting')
                 @yield('body')
             </div>
 

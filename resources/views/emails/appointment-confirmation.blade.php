@@ -2,6 +2,19 @@
 
 @section('title')✓ Appuntamento confermato @endsection
 
+@section('greeting')
+@php
+    $salon = \App\Models\SalonProfile::current();
+    $_g = $salon->email_greeting ?: 'Ciao {nome},';
+    $_fn = explode(' ', trim($appointment->user->name ?? ''))[0] ?? '';
+    $_g = $_fn ? str_replace('{nome}', e($_fn), $_g)
+               : (str_replace('{nome}', '', trim($_g, ' ,')) ?: '');
+@endphp
+@if($_g)
+    <p style="color:#111827;font-size:1rem;font-weight:500;padding-bottom:16px;margin-bottom:16px;border-bottom:1px solid #f3f4f6;">{!! nl2br(e($_g)) !!}</p>
+@endif
+@endsection
+
 @section('body')
     <p>il tuo appuntamento è stato confermato. Ti aspettiamo!</p>
 

@@ -22,6 +22,6 @@ class PaymentFailedMail extends Mailable
 
     public function content(): Content
     {
-        return new Content(view: 'emails.payment-failed');
+        return new Content(view: 'emails.payment-failed', with: ['noGreeting' => true]);
     }
 }

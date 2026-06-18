@@ -32,7 +32,7 @@ class OrderReceivedNotificationMail extends Mailable
     {
         return new Content(
             view: 'emails.order-received-notification',
-            with: ['adminUrl' => $this->buildUrl('/admin/product-orders/' . $this->order->id)],
+            with: ['adminUrl' => $this->buildUrl('/admin/product-orders/' . $this->order->id), 'noGreeting' => true],
         );
     }
 

@@ -29,6 +29,7 @@ class AdminAppointmentNotificationMail extends Mailable
     {
         return new Content(
             view: 'emails.admin-appointment-notification',
+            with: ['noGreeting' => true],
         );
     }
 }

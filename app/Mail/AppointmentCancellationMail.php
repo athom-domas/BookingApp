@@ -31,6 +31,7 @@ class AppointmentCancellationMail extends Mailable
     {
         return new Content(
             view: 'emails.appointment-cancellation',
+            with: ['noGreeting' => true],
         );
     }
 }

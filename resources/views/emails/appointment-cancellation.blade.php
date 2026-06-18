@@ -3,7 +3,7 @@
 @section('title')Appuntamento disdetto @endsection
 
 @section('body')
-    <p>il seguente appuntamento è stato disdetto.</p>
+    <p>Ciao {{ explode(' ', trim($appointment->user->name))[0] }}, il seguente appuntamento è stato disdetto.</p>
 
     <div class="detail-card">
         <div class="detail-row">

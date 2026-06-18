@@ -3,7 +3,7 @@
 @section('title')Promemoria appuntamento @endsection
 
 @section('body')
-    <p>ti ricordiamo che hai un appuntamento tra poco.</p>
+    <p>Ciao {{ explode(' ', trim($appointment->user->name))[0] }}, ti ricordiamo che hai un appuntamento tra poco.</p>
 
     <div class="detail-card">
         <div class="detail-row">
