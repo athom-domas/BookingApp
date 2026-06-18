@@ -3,10 +3,11 @@
 use App\Models\SalonReview;
 
 it('has published scope', function () {
-    SalonReview::factory()->create(['is_published' => true]);
-    SalonReview::factory()->create(['is_published' => false]);
+    $pub   = SalonReview::factory()->create(['is_published' => true]);
+    $unpub = SalonReview::factory()->create(['is_published' => false]);
+    $ids = [$pub->id, $unpub->id];
 
-    expect(SalonReview::published()->count())->toBe(1);
+    expect(SalonReview::whereIn('id', $ids)->published()->count())->toBe(1);
 });
 
 it('has ordered scope', function () {
@@ -18,11 +19,12 @@ it('has ordered scope', function () {
 });
 
 it('combines published and ordered scopes', function () {
-    SalonReview::factory()->create(['is_published' => true,  'sort_order' => 2]);
-    SalonReview::factory()->create(['is_published' => true,  'sort_order' => 1]);
-    SalonReview::factory()->create(['is_published' => false, 'sort_order' => 0]);
+    $a = SalonReview::factory()->create(['is_published' => true,  'sort_order' => 2]);
+    $b = SalonReview::factory()->create(['is_published' => true,  'sort_order' => 1]);
+    $c = SalonReview::factory()->create(['is_published' => false, 'sort_order' => 0]);
+    $ids = [$a->id, $b->id, $c->id];
 
-    $reviews = SalonReview::published()->ordered()->get();
+    $reviews = SalonReview::whereIn('id', $ids)->published()->ordered()->get();
     expect($reviews)->toHaveCount(2)
         ->and($reviews->first()->sort_order)->toBe(1);
 });

@@ -2,7 +2,9 @@
 
 use App\Livewire\CustomerSearch;
 use App\Models\Appointment;
+use App\Models\Business;
 use App\Models\User;
+use Filament\Facades\Filament;
 use Livewire\Livewire;
 use Spatie\Permission\Models\Role;
 
@@ -10,6 +12,9 @@ beforeEach(function () {
     Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
     Role::firstOrCreate(['name' => 'staff', 'guard_name' => 'web']);
     Role::firstOrCreate(['name' => 'customer', 'guard_name' => 'web']);
+
+    $business = Business::withoutGlobalScopes()->firstOrFail();
+    Filament::setTenant($business, isQuiet: true);
 });
 
 test('returns empty results when query is shorter than 2 characters', function () {

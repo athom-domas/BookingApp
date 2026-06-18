@@ -13,7 +13,7 @@ class AppointmentReminderFactory extends Factory
     public function definition(): array
     {
         return [
-            'business_id' => 1,
+            'business_id' => app()->bound('current_business_id') ? app('current_business_id') : 1,
             'appointment_id' => Appointment::factory(),
             'type' => fake()->randomElement(['email', 'sms']),
             'scheduled_for' => now()->addHours(fake()->numberBetween(1, 48)),

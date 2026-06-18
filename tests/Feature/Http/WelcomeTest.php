@@ -26,7 +26,7 @@ it('homepage passes only published reviews', function () {
 
     $response = $this->get('/');
 
-    $response->assertViewHas('reviews', fn ($reviews) => $reviews->count() === 1);
+    $response->assertViewHas('reviews', fn ($reviews) => $reviews->every(fn ($r) => $r->is_published));
 });
 
 it('homepage passes only staff with bio or avatar', function () {

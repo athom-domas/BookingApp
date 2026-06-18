@@ -16,6 +16,7 @@ use App\Models\Business;
     'loyalty_enabled', 'loyalty_points_per_euro', 'loyalty_reward_threshold', 'loyalty_reward_percentage',
     'low_stock_notify_user_ids',
     'order_notify_user_ids',
+    'waitlist_offer_timeout_minutes',
 ])]
 class SystemSetting extends Model
 {
@@ -156,5 +157,10 @@ class SystemSetting extends Model
     public static function getOrderNotifyUserIds(): array
     {
         return self::current()->order_notify_user_ids ?? [];
+    }
+
+    public static function getWaitlistOfferTimeout(): int
+    {
+        return self::current()->waitlist_offer_timeout_minutes ?? 180;
     }
 }

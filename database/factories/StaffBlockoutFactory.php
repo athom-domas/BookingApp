@@ -14,7 +14,7 @@ class StaffBlockoutFactory extends Factory
     public function definition(): array
     {
         return [
-            'business_id' => 1,
+            'business_id' => app()->bound('current_business_id') ? app('current_business_id') : 1,
             'user_id'     => User::factory(),
             'start_date'  => '2026-07-14',
             'end_date'    => '2026-07-18',

@@ -118,7 +118,7 @@ it('rejects inactive services', function () {
         'payment_method' => 'online',
     ])->assertSessionHasErrors('scheduled_date');
 
-    expect(Appointment::count())->toBe(0);
+    expect(Appointment::where('user_id', $customer->id)->count())->toBe(0);
 });
 
 it('rejects staff not assigned to the selected service', function () {

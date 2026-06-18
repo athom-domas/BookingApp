@@ -2,8 +2,10 @@
 
 use App\Filament\Resources\StaffResource\Pages\CreateStaff;
 use App\Filament\Resources\StaffResource\Pages\EditStaff;
+use App\Models\Business;
 use App\Models\Service;
 use App\Models\User;
+use Filament\Facades\Filament;
 use Illuminate\Support\Facades\Hash;
 use Livewire\Livewire;
 use Spatie\Permission\Models\Role;
@@ -11,6 +13,9 @@ use Spatie\Permission\Models\Role;
 beforeEach(function () {
     Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
     Role::firstOrCreate(['name' => 'staff', 'guard_name' => 'web']);
+
+    $this->business = Business::withoutGlobalScopes()->firstOrFail();
+    Filament::setTenant($this->business, isQuiet: true);
 });
 
 it('admin can register staff from the admin panel', function () {
@@ -80,10 +85,11 @@ it('salva il colore calendario durante la creazione dello staff', function () {
 });
 
 it('admin-staff user shows Admin badge in staff list', function () {
-    $admin = User::factory()->create();
+    $admin = User::factory()->create(['business_id' => $this->business->id]);
     $admin->assignRole('admin');
+    $admin->businesses()->attach($this->business->id);
 
-    $adminStaff = User::factory()->create(['email' => 'admin.staff@test.com']);
+    $adminStaff = User::factory()->create(['email' => 'admin.staff@test.com', 'business_id' => $this->business->id]);
     $adminStaff->assignRole('admin');
     $adminStaff->assignRole('staff');
 

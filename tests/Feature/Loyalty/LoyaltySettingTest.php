@@ -1,6 +1,12 @@
 <?php
 
+use App\Models\Business;
 use App\Models\SystemSetting;
+
+beforeEach(function () {
+    $business = Business::factory()->create();
+    app()->instance('current_business_id', $business->id);
+});
 
 it('ha defaults fedeltà coerenti', function () {
     expect(SystemSetting::isLoyaltyEnabled())->toBeFalse()

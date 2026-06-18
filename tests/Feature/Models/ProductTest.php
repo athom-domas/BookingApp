@@ -3,18 +3,20 @@
 use App\Models\Product;
 
 it('has active scope', function () {
-    Product::factory()->create(['active' => true]);
-    Product::factory()->create(['active' => false]);
+    $active   = Product::factory()->create(['active' => true]);
+    $inactive = Product::factory()->create(['active' => false]);
+    $ids = [$active->id, $inactive->id];
 
-    expect(Product::active()->count())->toBe(1);
+    expect(Product::whereIn('id', $ids)->active()->count())->toBe(1);
 });
 
 it('has inSale scope returning only active and in_sale products', function () {
-    Product::factory()->create(['in_sale' => true, 'active' => true]);
-    Product::factory()->create(['in_sale' => true, 'active' => false]);
-    Product::factory()->create(['in_sale' => false, 'active' => true]);
+    $a = Product::factory()->create(['in_sale' => true,  'active' => true]);
+    $b = Product::factory()->create(['in_sale' => true,  'active' => false]);
+    $c = Product::factory()->create(['in_sale' => false, 'active' => true]);
+    $ids = [$a->id, $b->id, $c->id];
 
-    expect(Product::inSale()->count())->toBe(1);
+    expect(Product::whereIn('id', $ids)->inSale()->count())->toBe(1);
 });
 
 it('has belowThreshold scope', function () {

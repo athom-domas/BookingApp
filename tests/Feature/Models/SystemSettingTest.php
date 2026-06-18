@@ -1,6 +1,12 @@
 <?php
 
+use App\Models\Business;
 use App\Models\SystemSetting;
+
+beforeEach(function () {
+    $business = Business::factory()->create();
+    app()->instance('current_business_id', $business->id);
+});
 
 it('creates a default row with slot_generation_weeks = 4 when none exists', function () {
     expect(SystemSetting::count())->toBe(0);

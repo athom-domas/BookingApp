@@ -11,7 +11,7 @@ class LoyaltyTransactionFactory extends Factory
     public function definition(): array
     {
         return [
-            'business_id'        => 1,
+            'business_id'        => app()->bound('current_business_id') ? app('current_business_id') : 1,
             'loyalty_account_id' => LoyaltyAccount::factory(),
             'appointment_id'     => null,
             'type'               => 'earn',

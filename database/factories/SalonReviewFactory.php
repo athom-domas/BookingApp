@@ -11,7 +11,7 @@ class SalonReviewFactory extends Factory
     public function definition(): array
     {
         return [
-            'business_id'  => 1,
+            'business_id'  => app()->bound('current_business_id') ? app('current_business_id') : 1,
             'author_name'  => fake()->name(),
             'body'         => fake()->paragraph(),
             'rating'       => fake()->numberBetween(3, 5),

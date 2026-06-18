@@ -12,7 +12,7 @@ class ProductOrderFactory extends Factory
     public function definition(): array
     {
         return [
-            'business_id'    => 1,
+            'business_id'    => app()->bound('current_business_id') ? app('current_business_id') : 1,
             'user_id'        => \App\Models\User::factory(),
             'status'         => 'confirmed',
             'payment_method' => 'cash',

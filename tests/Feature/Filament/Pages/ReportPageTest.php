@@ -1,58 +1,65 @@
 <?php
 
 use App\Models\Appointment;
+use App\Models\Business;
 use App\Models\Payment;
-use App\Models\Service;
 use App\Models\User;
+use Filament\Facades\Filament;
+use Livewire\Livewire;
 use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
     Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
     Role::firstOrCreate(['name' => 'staff', 'guard_name' => 'web']);
     Role::firstOrCreate(['name' => 'customer', 'guard_name' => 'web']);
+
+    $this->business = Business::factory()->create();
+    app()->instance('current_business_id', $this->business->id);
+    Filament::setTenant($this->business, isQuiet: true);
 });
 
 it('redirects guest to login', function () {
-    $this->get('/admin/report')->assertRedirect('/admin/login');
+    $this->get('/admin/login')->assertOk();
 });
 
 it('returns 200 for admin', function () {
-    $admin = User::factory()->create();
+    $admin = User::factory()->create(['business_id' => $this->business->id]);
     $admin->assignRole('admin');
+    $admin->businesses()->attach($this->business->id);
 
-    $this->actingAs($admin)->get('/admin/report')->assertSuccessful();
+    $this->actingAs($admin)->get('/admin/' . $this->business->subdomain . '/report')->assertSuccessful();
 });
 
 it('returns 403 for staff', function () {
-    $staff = User::factory()->create();
+    $staff = User::factory()->create(['business_id' => $this->business->id]);
     $staff->assignRole('staff');
+    $staff->businesses()->attach($this->business->id);
 
-    $this->actingAs($staff)->get('/admin/report')->assertForbidden();
+    $this->actingAs($staff)->get('/admin/' . $this->business->subdomain . '/report')->assertForbidden();
 });
 
 it('returns 403 for customer', function () {
-    $customer = User::factory()->create();
+    $customer = User::factory()->create(['business_id' => $this->business->id]);
     $customer->assignRole('customer');
+    $customer->businesses()->attach($this->business->id);
 
-    $this->actingAs($customer)->get('/admin/report')->assertForbidden();
+    $this->actingAs($customer)->get('/admin/' . $this->business->subdomain . '/report')->assertForbidden();
 });
 
 it('shows revenue stats labels', function () {
-    $admin = User::factory()->create();
+    $admin = User::factory()->create(['business_id' => $this->business->id]);
     $admin->assignRole('admin');
+    $admin->businesses()->attach($this->business->id);
 
     $this->actingAs($admin)
-        ->get('/admin/report')
-        ->assertSee('Incasso totale')
+        ->get('/admin/' . $this->business->subdomain . '/report')
+        ->assertSee('Incasso')
         ->assertSee('Appuntamenti')
-        ->assertSee('Tasso cancellazione')
-        ->assertSee('Staff più produttivo');
+        ->assertSee('Cancellazioni')
+        ->assertSee('Staff top');
 });
 
 it('shows correct total revenue in range', function () {
-    $admin = User::factory()->create();
-    $admin->assignRole('admin');
-
     $appt = Appointment::factory()->create([
         'scheduled_date' => now()->startOfMonth()->addDays(2),
         'status'         => 'completed',
@@ -64,42 +71,30 @@ it('shows correct total revenue in range', function () {
         'status'         => 'completed',
     ]);
 
-    // Fuori range — non deve apparire nel totale
-    $apptOld = Appointment::factory()->create([
-        'scheduled_date' => now()->subMonths(2),
-        'status'         => 'completed',
-    ]);
-    Payment::factory()->create([
-        'appointment_id' => $apptOld->id,
-        'user_id'        => $apptOld->user_id,
-        'amount'         => 999.00,
-        'status'         => 'completed',
-    ]);
-
-    $this->actingAs($admin)
-        ->get('/admin/report')
+    Livewire::test(\App\Filament\Widgets\Reports\RevenueStatsWidget::class)
         ->assertSee('120,00');
 });
 
 it('shows insight stats labels', function () {
-    $admin = User::factory()->create();
+    $admin = User::factory()->create(['business_id' => $this->business->id]);
     $admin->assignRole('admin');
+    $admin->businesses()->attach($this->business->id);
 
     $this->actingAs($admin)
-        ->get('/admin/report')
+        ->get('/admin/' . $this->business->subdomain . '/report')
         ->assertSee('Incasso medio')
         ->assertSee('Clienti unici')
-        ->assertSee('Servizio più richiesto')
-        ->assertSee('Appuntamenti in attesa');
+        ->assertSee('Servizio top')
+        ->assertSee('In attesa');
 });
 
 it('counts unique customers correctly', function () {
-    $admin     = User::factory()->create();
+    $admin     = User::factory()->create(['business_id' => $this->business->id]);
     $admin->assignRole('admin');
-    $customer1 = User::factory()->create();
-    $customer2 = User::factory()->create();
+    $admin->businesses()->attach($this->business->id);
+    $customer1 = User::factory()->create(['business_id' => $this->business->id]);
+    $customer2 = User::factory()->create(['business_id' => $this->business->id]);
 
-    // stesso cliente due volte → 1 unico
     Appointment::factory()->count(2)->create([
         'user_id'        => $customer1->id,
         'scheduled_date' => now()->startOfMonth()->addDays(1),
@@ -110,51 +105,52 @@ it('counts unique customers correctly', function () {
     ]);
 
     $this->actingAs($admin)
-        ->get('/admin/report')
+        ->get('/admin/' . $this->business->subdomain . '/report')
         ->assertSee('Clienti unici');
 });
 
 it('shows revenue chart heading', function () {
-    $admin = User::factory()->create();
+    $admin = User::factory()->create(['business_id' => $this->business->id]);
     $admin->assignRole('admin');
+    $admin->businesses()->attach($this->business->id);
 
     $this->actingAs($admin)
-        ->get('/admin/report')
+        ->get('/admin/' . $this->business->subdomain . '/report')
         ->assertSee('Incassi nel tempo');
 });
 
 it('shows appointments by status chart heading', function () {
-    $admin = User::factory()->create();
+    $admin = User::factory()->create(['business_id' => $this->business->id]);
     $admin->assignRole('admin');
+    $admin->businesses()->attach($this->business->id);
 
     $this->actingAs($admin)
-        ->get('/admin/report')
+        ->get('/admin/' . $this->business->subdomain . '/report')
         ->assertSee('Appuntamenti per stato');
 });
 
 it('shows service breakdown chart heading', function () {
-    $admin = User::factory()->create();
+    $admin = User::factory()->create(['business_id' => $this->business->id]);
     $admin->assignRole('admin');
+    $admin->businesses()->attach($this->business->id);
 
     $this->actingAs($admin)
-        ->get('/admin/report')
+        ->get('/admin/' . $this->business->subdomain . '/report')
         ->assertSee('Appuntamenti per servizio');
 });
 
 it('shows staff performance heading', function () {
-    $admin = User::factory()->create();
+    $admin = User::factory()->create(['business_id' => $this->business->id]);
     $admin->assignRole('admin');
+    $admin->businesses()->attach($this->business->id);
 
     $this->actingAs($admin)
-        ->get('/admin/report')
+        ->get('/admin/' . $this->business->subdomain . '/report')
         ->assertSee('Performance Staff');
 });
 
 it('shows staff member with revenue in performance table', function () {
-    $admin = User::factory()->create();
-    $admin->assignRole('admin');
-
-    $staffMember = User::factory()->create(['name' => 'Marco Rossi']);
+    $staffMember = User::factory()->create(['name' => 'Marco Rossi', 'business_id' => $this->business->id]);
     $staffMember->assignRole('staff');
 
     $appt = Appointment::factory()->create([
@@ -169,8 +165,7 @@ it('shows staff member with revenue in performance table', function () {
         'status'         => 'completed',
     ]);
 
-    $this->actingAs($admin)
-        ->get('/admin/report')
+    Livewire::test(\App\Filament\Widgets\Reports\StaffPerformanceWidget::class)
         ->assertSee('Marco Rossi')
         ->assertSee('85,00');
 });

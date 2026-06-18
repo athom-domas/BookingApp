@@ -15,7 +15,8 @@ beforeEach(function () {
     Role::firstOrCreate(['name' => 'staff', 'guard_name' => 'web']);
     Role::firstOrCreate(['name' => 'customer', 'guard_name' => 'web']);
 
-    $this->business = Business::withoutGlobalScopes()->firstOrFail();
+    $this->business = Business::factory()->create();
+    app()->instance('current_business_id', $this->business->id);
     Filament::setTenant($this->business, isQuiet: true);
 });
 

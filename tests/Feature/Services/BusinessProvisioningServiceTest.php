@@ -56,10 +56,14 @@ it('provisions SalonProfile, IntegrationSetting, and 3 sample services', functio
 });
 
 it('rolls back completely on failure', function () {
-    // Create a user with the same email to trigger a unique constraint violation
-    User::factory()->create(['email' => 'conflict@example.com']);
-
     $business = Business::factory()->create();
+    // Create a user in the SAME business to trigger the (email, business_id) unique constraint
+    User::create([
+        'name'        => 'Existing',
+        'email'       => 'conflict@example.com',
+        'password'    => bcrypt('secret'),
+        'business_id' => $business->id,
+    ]);
 
     expect(fn() => (new BusinessProvisioningService())->provision($business, 'conflict@example.com'))
         ->toThrow(\Exception::class);

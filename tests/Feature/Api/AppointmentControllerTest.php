@@ -52,7 +52,7 @@ it('POST /api/appointments books appointment and returns payment_intent_id', fun
     $response = $this->actingAs($user)->postJson('/api/appointments', [
         'service_ids'    => [$service->id],
         'staff_id'       => $staff->id,
-        'scheduled_date' => '2026-06-10 10:00:00',
+        'scheduled_date' => now()->addDays(5)->toDateTimeString(),
     ]);
 
     $response->assertCreated()
@@ -73,7 +73,7 @@ it('POST /api/appointments returns 422 on BookingException', function () {
     $response = $this->actingAs($user)->postJson('/api/appointments', [
         'service_ids'    => [$service->id],
         'staff_id'       => $staff->id,
-        'scheduled_date' => '2026-06-10 10:00:00',
+        'scheduled_date' => now()->addDays(5)->toDateTimeString(),
     ]);
 
     $response->assertUnprocessable()

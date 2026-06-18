@@ -145,8 +145,8 @@ it('staff with view_all sees all appointments in list', function () {
     $customer = User::factory()->create(['business_id' => $this->business->id]);
     $customer->assignRole('customer');
 
-    $ownAppt = Appointment::factory()->create(['staff_id' => $staff->id, 'user_id' => $customer->id]);
-    $otherAppt = Appointment::factory()->create(['staff_id' => $otherStaff->id, 'user_id' => $customer->id]);
+    $ownAppt = Appointment::factory()->create(['staff_id' => $staff->id, 'user_id' => $customer->id, 'scheduled_date' => now()->addDays(365)]);
+    $otherAppt = Appointment::factory()->create(['staff_id' => $otherStaff->id, 'user_id' => $customer->id, 'scheduled_date' => now()->addDays(364)]);
 
     $this->actingAs($staff);
 

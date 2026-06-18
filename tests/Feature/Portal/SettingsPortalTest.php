@@ -182,13 +182,13 @@ it('saves email channel without phone', function () {
     expect($customer->fresh()->preferences->notification_channel)->toBe('email');
 });
 
-it('requires phone_number when channel is sms', function () {
+it('requires phone_number when channel is whatsapp (second test)', function () {
     $customer = User::factory()->create();
     $customer->assignRole('customer');
 
     $this->actingAs($customer)
         ->patch('/portal/settings/notifications', [
-            'notification_channel' => 'sms',
+            'notification_channel' => 'whatsapp',
         ])
         ->assertSessionHasErrors(['phone_number']);
 });
@@ -210,25 +210,25 @@ it('rejects phone number with non-digit characters', function () {
 
     $this->actingAs($customer)
         ->patch('/portal/settings/notifications', [
-            'notification_channel' => 'sms',
+            'notification_channel' => 'whatsapp',
             'phone_number'         => 'abc1234567',
         ])
         ->assertSessionHasErrors(['phone_number']);
 });
 
-it('saves sms with valid local phone number', function () {
+it('saves whatsapp with valid local phone number', function () {
     $customer = User::factory()->create();
     $customer->assignRole('customer');
 
     $this->actingAs($customer)
         ->patch('/portal/settings/notifications', [
-            'notification_channel' => 'sms',
+            'notification_channel' => 'whatsapp',
             'phone_number'         => '3334567890',
         ])
         ->assertSessionDoesntHaveErrors();
 
     $prefs = $customer->fresh()->preferences;
-    expect($prefs->notification_channel)->toBe('sms')
+    expect($prefs->notification_channel)->toBe('whatsapp')
         ->and($prefs->phone_number)->toBe('+393334567890');
 });
 

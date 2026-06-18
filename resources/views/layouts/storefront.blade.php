@@ -95,10 +95,7 @@ $_radius      = $_radiusMap[$_border] ?? '0';
     {{-- NAV --}}
     <nav id="sf-nav">
         <a href="{{ route('booking.index') }}" class="sf-logo">
-            @if($salonProfile->logoUrl())
-                <img src="{{ $salonProfile->logoUrl() }}" alt="">
-            @endif
-            {{ $salonProfile->name }}
+            <img src="{{ $salonProfile->logoUrl() ?? asset('img/logo.png') }}" alt="{{ $salonProfile->name }}">
         </a>
 
         <div class="sf-nav-right">

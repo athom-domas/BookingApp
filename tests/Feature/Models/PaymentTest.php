@@ -19,9 +19,10 @@ it('belongs to a user', function () {
 });
 
 it('scope completed returns only completed payments', function () {
-    Payment::factory()->create(['status' => 'completed']);
-    Payment::factory()->create(['status' => 'pending']);
-    Payment::factory()->create(['status' => 'failed']);
+    $completed = Payment::factory()->create(['status' => 'completed']);
+    $pending   = Payment::factory()->create(['status' => 'pending']);
+    $failed    = Payment::factory()->create(['status' => 'failed']);
+    $ids = [$completed->id, $pending->id, $failed->id];
 
-    expect(Payment::completed()->count())->toBe(1);
+    expect(Payment::whereIn('id', $ids)->completed()->count())->toBe(1);
 });

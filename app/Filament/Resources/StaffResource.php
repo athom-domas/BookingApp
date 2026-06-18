@@ -297,6 +297,12 @@ class StaffResource extends Resource
                     ->label('Email')
                     ->searchable()
                     ->sortable(),
+
+                TextColumn::make('admin_badge')
+                    ->label('')
+                    ->badge()
+                    ->color('warning')
+                    ->getStateUsing(fn ($record): ?string => $record->hasRole('admin') ? 'Admin' : null),
             ])
             ->actions([
                 EditAction::make(),

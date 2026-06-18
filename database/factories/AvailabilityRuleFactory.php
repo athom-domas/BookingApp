@@ -13,7 +13,7 @@ class AvailabilityRuleFactory extends Factory
     public function definition(): array
     {
         return [
-            'business_id'  => 1,
+            'business_id'  => app()->bound('current_business_id') ? app('current_business_id') : 1,
             'user_id'      => User::factory(),
             'day_of_week'  => fake()->numberBetween(0, 6),
             'start_time'   => '09:00:00',

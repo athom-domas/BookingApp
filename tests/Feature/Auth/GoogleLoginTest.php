@@ -40,6 +40,7 @@ function callbackAndExchange(): \Illuminate\Testing\TestResponse
 it('redirige a Google OAuth', function () {
     $provider = Mockery::mock(\Laravel\Socialite\Contracts\Provider::class);
     $provider->shouldReceive('stateless')->andReturnSelf();
+    $provider->shouldReceive('scopes')->andReturnSelf();
     $provider->shouldReceive('with')->andReturnSelf();
     $provider->shouldReceive('redirect')->andReturn(redirect('https://accounts.google.com/o/oauth2/auth'));
 

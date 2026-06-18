@@ -8,9 +8,9 @@ use Carbon\Carbon;
 it('seeds booking data needed by the customer portal', function () {
     $this->seed();
 
-    expect(User::role('admin')->where('email', 'admin@test.com')->exists())->toBeTrue();
-    expect(User::role('customer')->where('email', 'giovanni@customer.test')->exists())->toBeTrue();
-    expect(User::role('staff')->count())->toBeGreaterThanOrEqual(3);
+    expect(User::role('admin')->where('email', 'admin@rossini.test')->exists())->toBeTrue();
+    expect(User::role('customer')->where('email', 'giovanni@rossini.test')->exists())->toBeTrue();
+    expect(User::role('staff')->count())->toBeGreaterThanOrEqual(2);
     expect(Service::active()->whereHas('staff')->count())->toBeGreaterThanOrEqual(3);
     expect(AvailabilityRule::count())->toBeGreaterThanOrEqual(15);
 

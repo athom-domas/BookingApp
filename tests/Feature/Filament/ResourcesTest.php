@@ -6,18 +6,24 @@ use App\Filament\Resources\CustomerResource;
 use App\Filament\Resources\PaymentResource;
 use App\Filament\Resources\ServiceResource;
 use App\Filament\Resources\StaffResource;
+use App\Models\Business;
 use App\Models\User;
+use Filament\Facades\Filament;
 use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
     Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
     Role::firstOrCreate(['name' => 'customer', 'guard_name' => 'web']);
     Role::firstOrCreate(['name' => 'staff', 'guard_name' => 'web']);
+
+    $this->business = Business::withoutGlobalScopes()->firstOrFail();
+    Filament::setTenant($this->business, isQuiet: true);
 });
 
 it('appointment list page renders', function () {
-    $admin = User::factory()->create();
+    $admin = User::factory()->create(['business_id' => $this->business->id]);
     $admin->assignRole('admin');
+    $admin->businesses()->attach($this->business->id);
 
     $this->actingAs($admin)
         ->get(AppointmentResource::getUrl('index'))
@@ -25,8 +31,9 @@ it('appointment list page renders', function () {
 });
 
 it('service list page renders', function () {
-    $admin = User::factory()->create();
+    $admin = User::factory()->create(['business_id' => $this->business->id]);
     $admin->assignRole('admin');
+    $admin->businesses()->attach($this->business->id);
 
     $this->actingAs($admin)
         ->get(ServiceResource::getUrl('index'))
@@ -34,8 +41,9 @@ it('service list page renders', function () {
 });
 
 it('availability rule list page renders', function () {
-    $admin = User::factory()->create();
+    $admin = User::factory()->create(['business_id' => $this->business->id]);
     $admin->assignRole('admin');
+    $admin->businesses()->attach($this->business->id);
 
     $this->actingAs($admin)
         ->get(AvailabilityRuleResource::getUrl('index'))
@@ -43,8 +51,9 @@ it('availability rule list page renders', function () {
 });
 
 it('payment list page renders', function () {
-    $admin = User::factory()->create();
+    $admin = User::factory()->create(['business_id' => $this->business->id]);
     $admin->assignRole('admin');
+    $admin->businesses()->attach($this->business->id);
 
     $this->actingAs($admin)
         ->get(PaymentResource::getUrl('index'))
@@ -52,8 +61,9 @@ it('payment list page renders', function () {
 });
 
 it('staff list page renders for admins', function () {
-    $admin = User::factory()->create();
+    $admin = User::factory()->create(['business_id' => $this->business->id]);
     $admin->assignRole('admin');
+    $admin->businesses()->attach($this->business->id);
 
     $this->actingAs($admin)
         ->get(StaffResource::getUrl('index'))
@@ -62,8 +72,13 @@ it('staff list page renders for admins', function () {
 });
 
 it('staff resource is forbidden for staff users', function () {
-    $staff = User::factory()->create();
+    $admin = User::factory()->create(['business_id' => $this->business->id]);
+    $admin->assignRole('admin');
+    $admin->businesses()->attach($this->business->id);
+
+    $staff = User::factory()->create(['business_id' => $this->business->id]);
     $staff->assignRole('staff');
+    $staff->businesses()->attach($this->business->id);
 
     $this->actingAs($staff)
         ->get(StaffResource::getUrl('index'))
@@ -71,9 +86,11 @@ it('staff resource is forbidden for staff users', function () {
 });
 
 it('customer list page renders for admins', function () {
-    $admin = User::factory()->create();
+    $admin = User::factory()->create(['business_id' => $this->business->id]);
     $admin->assignRole('admin');
-    $customer = User::factory()->create();
+    $admin->businesses()->attach($this->business->id);
+
+    $customer = User::factory()->create(['business_id' => $this->business->id]);
     $customer->assignRole('customer');
 
     $this->actingAs($admin)
@@ -84,8 +101,9 @@ it('customer list page renders for admins', function () {
 });
 
 it('customer resource is forbidden for staff users', function () {
-    $staff = User::factory()->create();
+    $staff = User::factory()->create(['business_id' => $this->business->id]);
     $staff->assignRole('staff');
+    $staff->businesses()->attach($this->business->id);
 
     $this->actingAs($staff)
         ->get(CustomerResource::getUrl('index'))
@@ -93,9 +111,11 @@ it('customer resource is forbidden for staff users', function () {
 });
 
 it('manage availability page renders for a staff member', function () {
-    $admin = User::factory()->create();
+    $admin = User::factory()->create(['business_id' => $this->business->id]);
     $admin->assignRole('admin');
-    $staff = User::factory()->create();
+    $admin->businesses()->attach($this->business->id);
+
+    $staff = User::factory()->create(['business_id' => $this->business->id]);
     $staff->assignRole('staff');
 
     $this->actingAs($admin)

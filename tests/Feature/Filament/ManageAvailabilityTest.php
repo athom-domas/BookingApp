@@ -2,7 +2,9 @@
 
 use App\Filament\Resources\StaffResource\Pages\ManageAvailability;
 use App\Models\AvailabilityRule;
+use App\Models\Business;
 use App\Models\User;
+use Filament\Facades\Filament;
 use Spatie\Permission\Models\Role;
 use function Pest\Livewire\livewire;
 
@@ -10,13 +12,17 @@ beforeEach(function () {
     Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
     Role::firstOrCreate(['name' => 'staff', 'guard_name' => 'web']);
 
-    $this->admin = User::factory()->create()->assignRole('admin');
-    $this->staff = User::factory()->create()->assignRole('staff');
+    $this->business = Business::withoutGlobalScopes()->firstOrFail();
+    Filament::setTenant($this->business, isQuiet: true);
+
+    $this->admin = User::factory()->create(['business_id' => $this->business->id])->assignRole('admin');
+    $this->admin->businesses()->attach($this->business->id);
+    $this->staff = User::factory()->create(['business_id' => $this->business->id])->assignRole('staff');
 });
 
 it('renders the manage availability page', function () {
     $this->actingAs($this->admin)
-        ->get(route('filament.admin.resources.staff.manage-availability', ['record' => $this->staff]))
+        ->get(route('filament.admin.resources.staff.manage-availability', ['tenant' => $this->business, 'record' => $this->staff]))
         ->assertSuccessful();
 });
 

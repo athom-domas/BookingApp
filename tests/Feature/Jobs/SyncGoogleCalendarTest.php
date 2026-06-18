@@ -2,9 +2,12 @@
 
 use App\Jobs\SyncGoogleCalendar;
 use App\Models\Appointment;
+use App\Models\IntegrationSetting;
 use App\Services\GoogleCalendarService;
 
 it('SyncGoogleCalendar create action stores google_event_id on appointment', function () {
+    IntegrationSetting::current()->update(['google_calendar_id' => 'cal_test_123']);
+
     $appointment = Appointment::factory()->create(['google_event_id' => null]);
 
     $mockService = $this->mock(GoogleCalendarService::class);

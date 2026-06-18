@@ -42,24 +42,27 @@ it('has one payment', function () {
 });
 
 it('scope upcoming returns future appointments', function () {
-    Appointment::factory()->create(['scheduled_date' => now()->addDays(5)]);
-    Appointment::factory()->create(['scheduled_date' => now()->subDays(5)]);
+    $user = User::factory()->create();
+    Appointment::factory()->create(['scheduled_date' => now()->addDays(5), 'user_id' => $user->id]);
+    Appointment::factory()->create(['scheduled_date' => now()->subDays(5), 'user_id' => $user->id]);
 
-    expect(Appointment::upcoming()->count())->toBe(1);
+    expect(Appointment::where('user_id', $user->id)->upcoming()->count())->toBe(1);
 });
 
 it('scope pastAppointments returns past appointments', function () {
-    Appointment::factory()->create(['scheduled_date' => now()->addDays(5)]);
-    Appointment::factory()->create(['scheduled_date' => now()->subDays(5)]);
+    $user = User::factory()->create();
+    Appointment::factory()->create(['scheduled_date' => now()->addDays(5), 'user_id' => $user->id]);
+    Appointment::factory()->create(['scheduled_date' => now()->subDays(5), 'user_id' => $user->id]);
 
-    expect(Appointment::pastAppointments()->count())->toBe(1);
+    expect(Appointment::where('user_id', $user->id)->pastAppointments()->count())->toBe(1);
 });
 
 it('scope confirmed returns only confirmed appointments', function () {
-    Appointment::factory()->create(['status' => 'confirmed']);
-    Appointment::factory()->create(['status' => 'pending']);
+    $user = User::factory()->create();
+    Appointment::factory()->create(['status' => 'confirmed', 'user_id' => $user->id]);
+    Appointment::factory()->create(['status' => 'pending', 'user_id' => $user->id]);
 
-    expect(Appointment::confirmed()->count())->toBe(1);
+    expect(Appointment::where('user_id', $user->id)->confirmed()->count())->toBe(1);
 });
 
 it('isPast returns true for past appointments', function () {

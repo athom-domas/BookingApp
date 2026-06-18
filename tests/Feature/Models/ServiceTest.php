@@ -4,10 +4,11 @@ use App\Models\Service;
 use App\Models\User;
 
 it('has active scope', function () {
-    Service::factory()->create(['active' => true]);
-    Service::factory()->create(['active' => false]);
+    $active   = Service::factory()->create(['active' => true]);
+    $inactive = Service::factory()->create(['active' => false]);
+    $ids = [$active->id, $inactive->id];
 
-    expect(Service::active()->count())->toBe(1);
+    expect(Service::whereIn('id', $ids)->active()->count())->toBe(1);
 });
 
 it('belongs to many staff users via service_staff', function () {

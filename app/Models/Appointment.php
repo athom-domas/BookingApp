@@ -96,11 +96,6 @@ class Appointment extends Model
             return false;
         }
 
-        // Appuntamenti in attesa di pagamento: nessun addebito, cancellabili sempre.
-        if ($this->status === 'pending') {
-            return true;
-        }
-
         return now()->diffInHours($this->scheduled_date, false) >= SystemSetting::getCancellationDeadlineHours();
     }
 }

@@ -14,7 +14,7 @@ class AppointmentFactory extends Factory
     public function definition(): array
     {
         return [
-            'business_id'    => 1,
+            'business_id'    => app()->bound('current_business_id') ? app('current_business_id') : 1,
             'user_id'        => User::factory(),
             'service_ids'    => fn () => [Service::factory()->create()->id],
             'staff_id'       => User::factory(),

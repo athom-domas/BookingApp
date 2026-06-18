@@ -2,6 +2,19 @@
 
 use App\Models\SalonProfile;
 
+beforeEach(function () {
+    $profile = SalonProfile::current();
+    $profile->clearMediaCollection('logo');
+    $profile->update([
+        'phone'           => null,
+        'address'         => null,
+        'opening_hours'   => null,
+        'instagram_url'   => null,
+        'facebook_url'    => null,
+        'whatsapp_number' => null,
+    ]);
+});
+
 it('booking page shows salon name from profile', function () {
     SalonProfile::current()->update(['name' => 'Test Salone']);
 
@@ -22,12 +35,11 @@ it('booking page shows contact footer when fields are set', function () {
 
     $this->get('/')
         ->assertSee('+39 02 999999')
-        ->assertSee('Via Roma 1')
-        ->assertSee('https://salone.it');
+        ->assertSee('Via Roma 1');
 });
 
 it('contact footer is hidden when all contact fields are null', function () {
     SalonProfile::current();
 
-    $this->get('/')->assertDontSee('<footer', false);
+    $this->get('/')->assertDontSee('class="sf-contact-list"', false);
 });

@@ -9,9 +9,12 @@ use App\Mail\AppointmentConfirmationMail;
 use App\Mail\AppointmentReminderMail;
 use App\Models\Appointment;
 use App\Models\AppointmentReminder;
+use App\Models\Business;
+use App\Models\IntegrationSetting;
 use App\Models\User;
 use App\Models\UserPreference;
 use App\Services\NotificationService;
+use App\Services\WhatsAppService;
 use Illuminate\Support\Facades\Mail;
 use Spatie\Permission\Models\Role;
 
@@ -32,10 +35,10 @@ it('SendAppointmentReminder sends email to customer', function () {
         'status'         => 'pending',
     ]);
 
-    $mockNotification = $this->mock(NotificationService::class);
-    $mockNotification->shouldNotReceive('sendSms');
+    $mockWhatsApp = $this->mock(WhatsAppService::class);
+    $mockWhatsApp->shouldNotReceive('sendTemplate');
 
-    (new SendAppointmentReminder($reminder))->handle($mockNotification);
+    (new SendAppointmentReminder($reminder))->handle($mockWhatsApp);
 
     Mail::assertSent(AppointmentReminderMail::class, fn ($mail) =>
         $mail->appointment->id === $appointment->id
@@ -44,11 +47,11 @@ it('SendAppointmentReminder sends email to customer', function () {
     expect($reminder->fresh()->sent_at)->not->toBeNull();
 });
 
-it('SendAppointmentReminder sends SMS when user has sms preference enabled', function () {
+it('SendAppointmentReminder sends WhatsApp when user has whatsapp preference enabled', function () {
     $user = User::factory()->create();
     UserPreference::factory()->create([
         'user_id'              => $user->id,
-        'notification_channel' => 'sms',
+        'notification_channel' => 'whatsapp',
         'phone_number'         => '+39123456789',
     ]);
     $appointment = Appointment::factory()->create(['user_id' => $user->id]);
@@ -57,19 +60,24 @@ it('SendAppointmentReminder sends SMS when user has sms preference enabled', fun
         'status'         => 'pending',
     ]);
 
-    $mockNotification = $this->mock(NotificationService::class);
-    $mockNotification->shouldReceive('sendSms')
-        ->once()
-        ->with('+39123456789', Mockery::type('string'));
+    IntegrationSetting::current()->update([
+        'meta_whatsapp_token'    => 'test-token',
+        'meta_whatsapp_phone_id' => 'test-phone-id',
+    ]);
 
-    (new SendAppointmentReminder($reminder))->handle($mockNotification);
+    $mockWhatsApp = $this->mock(WhatsAppService::class);
+    $mockWhatsApp->shouldReceive('sendTemplate')
+        ->once()
+        ->andReturn(true);
+
+    (new SendAppointmentReminder($reminder))->handle($mockWhatsApp);
 });
 
-it('SendAppointmentReminder sends SMS exception propagates', function () {
+it('SendAppointmentReminder WhatsApp exception propagates', function () {
     $user = User::factory()->create();
     UserPreference::factory()->create([
         'user_id'              => $user->id,
-        'notification_channel' => 'sms',
+        'notification_channel' => 'whatsapp',
         'phone_number'         => '+39123456789',
     ]);
     $appointment = Appointment::factory()->create(['user_id' => $user->id]);
@@ -78,11 +86,16 @@ it('SendAppointmentReminder sends SMS exception propagates', function () {
         'status'         => 'pending',
     ]);
 
-    $mockNotification = $this->mock(NotificationService::class);
-    $mockNotification->shouldReceive('sendSms')
-        ->andThrow(new \Exception('Twilio error'));
+    IntegrationSetting::current()->update([
+        'meta_whatsapp_token'    => 'test-token',
+        'meta_whatsapp_phone_id' => 'test-phone-id',
+    ]);
 
-    expect(fn () => (new SendAppointmentReminder($reminder))->handle($mockNotification))
+    $mockWhatsApp = $this->mock(WhatsAppService::class);
+    $mockWhatsApp->shouldReceive('sendTemplate')
+        ->andThrow(new \Exception('WhatsApp error'));
+
+    expect(fn () => (new SendAppointmentReminder($reminder))->handle($mockWhatsApp))
         ->toThrow(\Exception::class);
 });
 
@@ -94,10 +107,10 @@ it('SendAppointmentReminder is a no-op when already sent', function () {
         'status'         => 'sent',
     ]);
 
-    $mockNotification = $this->mock(NotificationService::class);
-    $mockNotification->shouldNotReceive('sendSms');
+    $mockWhatsApp = $this->mock(WhatsAppService::class);
+    $mockWhatsApp->shouldNotReceive('sendTemplate');
 
-    (new SendAppointmentReminder($reminder))->handle($mockNotification);
+    (new SendAppointmentReminder($reminder))->handle($mockWhatsApp);
 
     Mail::assertNothingSent();
 });
@@ -131,19 +144,21 @@ it('SendAppointmentConfirmation sends confirmation email', function () {
 // --- SendCancellationNotification ---
 
 it('SendCancellationNotification emails customer and admin', function () {
-    $customer = User::factory()->create();
+    $business = Business::factory()->create();
+    app()->instance('current_business_id', $business->id);
+
+    $customer = User::factory()->create(['business_id' => $business->id]);
     $customer->assignRole('customer');
-    $staff = User::factory()->create();
+    $staff = User::factory()->create(['business_id' => $business->id]);
     $staff->assignRole('staff');
-    $admin = User::factory()->create(['receive_email_notifications' => true]);
+    $admin = User::factory()->create(['business_id' => $business->id, 'receive_email_notifications' => true]);
     $admin->assignRole('admin');
+    $admin->businesses()->attach($business->id);
 
     $appointment = Appointment::factory()->create([
         'user_id'  => $customer->id,
         'staff_id' => $staff->id,
     ]);
-
-    $admin->businesses()->attach($appointment->business_id);
 
     $mockNotification = $this->mock(NotificationService::class);
     $mockNotification->shouldNotReceive('sendSms');
