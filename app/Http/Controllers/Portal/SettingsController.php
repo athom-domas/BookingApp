@@ -89,13 +89,15 @@ class SettingsController extends Controller
     public function updateCommunications(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'follow_up_reminders_enabled' => ['required', 'boolean'],
+            'follow_up_reminders_enabled' => ['nullable', 'boolean'],
         ]);
 
         $request->user()->preferences()->firstOrCreate(
             [],
             ['notification_channel' => 'email']
-        )->update($validated);
+        )->update([
+            'follow_up_reminders_enabled' => $validated['follow_up_reminders_enabled'] ?? false,
+        ]);
 
         return back()->with('communications_updated', 'Preferenze aggiornate.');
     }

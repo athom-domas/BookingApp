@@ -66,6 +66,7 @@ class SendFollowUpReminder implements ShouldQueue
 
         if (
             $latestCompleted &&
+            $reminder->appointment_id !== null &&
             $latestCompleted->id !== $reminder->appointment_id &&
             $latestCompleted->scheduled_date->gt(now()->subDays($reminder->delay_days))
         ) {
