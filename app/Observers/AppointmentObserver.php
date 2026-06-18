@@ -4,6 +4,7 @@ namespace App\Observers;
 
 use App\Jobs\SendReviewRequestJob;
 use App\Models\Appointment;
+use App\Models\FollowUpReminder;
 use App\Models\SystemSetting;
 use App\Services\LoyaltyService;
 
@@ -30,6 +31,7 @@ class AppointmentObserver
             $this->reverse($appointment);
         } elseif ($appointment->status === 'completed') {
             $this->scheduleReviewRequest($appointment);
+            $this->scheduleFollowUpReminder($appointment);
         }
     }
 
@@ -74,5 +76,67 @@ class AppointmentObserver
         if ($payment && $payment->status === 'pending') {
             app(\App\Services\PaymentService::class)->cancelPendingPayment($payment);
         }
+    }
+
+    private function scheduleFollowUpReminder(Appointment $appointment): void
+    {
+        if (! app()->bound('current_business_id')) {
+            app()->instance('current_business_id', $appointment->business_id);
+        }
+
+        if (! SystemSetting::isFollowUpRemindersEnabled()) {
+            return;
+        }
+
+        if (! $appointment->user_id) {
+            return;
+        }
+
+        $prefs = $appointment->user->preferences;
+
+        if (! $prefs || ! $prefs->follow_up_reminders_enabled) {
+            return;
+        }
+
+        $hasFutureAppointment = Appointment::where('user_id', $appointment->user_id)
+            ->where('business_id', $appointment->business_id)
+            ->whereIn('status', ['pending', 'confirmed'])
+            ->where('scheduled_date', '>', now())
+            ->exists();
+
+        if ($hasFutureAppointment) {
+            return;
+        }
+
+        $existsForAppointment = FollowUpReminder::where('appointment_id', $appointment->id)
+            ->where('type', 'rebooking')
+            ->whereIn('status', ['pending', 'processing', 'sent'])
+            ->exists();
+
+        if ($existsForAppointment) {
+            return;
+        }
+
+        $existsForUser = FollowUpReminder::where('business_id', $appointment->business_id)
+            ->where('user_id', $appointment->user_id)
+            ->where('type', 'rebooking')
+            ->whereIn('status', ['pending', 'processing'])
+            ->exists();
+
+        if ($existsForUser) {
+            return;
+        }
+
+        $days = SystemSetting::getFollowUpReminderDays();
+
+        FollowUpReminder::create([
+            'business_id'    => $appointment->business_id,
+            'user_id'        => $appointment->user_id,
+            'appointment_id' => $appointment->id,
+            'type'           => 'rebooking',
+            'delay_days'     => $days,
+            'scheduled_for'  => now()->addDays($days),
+            'status'         => 'pending',
+        ]);
     }
 }

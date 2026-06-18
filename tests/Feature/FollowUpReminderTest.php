@@ -36,3 +36,116 @@ it('follow_up_reminders_enabled defaults to true on new preferences', function (
     $pref = UserPreference::factory()->create();
     expect($pref->follow_up_reminders_enabled)->toBeTrue();
 });
+
+// ---- Observer trigger tests ----
+
+function makeEnabledSettings(): void
+{
+    SystemSetting::current()->update([
+        'follow_up_reminders_enabled' => true,
+        'follow_up_reminder_days'     => 30,
+    ]);
+}
+
+function makeCustomerWithPrefs(bool $followUpEnabled = true): User
+{
+    $user = User::factory()->create();
+    UserPreference::factory()->create([
+        'user_id'                     => $user->id,
+        'follow_up_reminders_enabled' => $followUpEnabled,
+    ]);
+    return $user;
+}
+
+it('creates a follow-up reminder when appointment is completed and feature is enabled', function () {
+    makeEnabledSettings();
+    $customer = makeCustomerWithPrefs();
+    $appt = Appointment::factory()->create([
+        'user_id'        => $customer->id,
+        'status'         => 'confirmed',
+        'scheduled_date' => now()->subDays(1),
+    ]);
+
+    $appt->update(['status' => 'completed']);
+
+    expect(FollowUpReminder::where('user_id', $customer->id)->count())->toBe(1);
+    $reminder = FollowUpReminder::where('user_id', $customer->id)->first();
+    expect($reminder->type)->toBe('rebooking');
+    expect($reminder->status)->toBe('pending');
+    expect($reminder->delay_days)->toBe(30);
+    expect($reminder->appointment_id)->toBe($appt->id);
+});
+
+it('does not create a reminder if feature is disabled', function () {
+    $customer = makeCustomerWithPrefs();
+    $appt = Appointment::factory()->create(['user_id' => $customer->id, 'status' => 'confirmed']);
+
+    $appt->update(['status' => 'completed']);
+
+    expect(FollowUpReminder::where('user_id', $customer->id)->count())->toBe(0);
+});
+
+it('does not create a reminder if user has follow_up_reminders_enabled = false', function () {
+    makeEnabledSettings();
+    $customer = makeCustomerWithPrefs(followUpEnabled: false);
+    $appt = Appointment::factory()->create(['user_id' => $customer->id, 'status' => 'confirmed']);
+
+    $appt->update(['status' => 'completed']);
+
+    expect(FollowUpReminder::where('user_id', $customer->id)->count())->toBe(0);
+});
+
+it('does not create a reminder if user has a future appointment', function () {
+    makeEnabledSettings();
+    $customer = makeCustomerWithPrefs();
+    Appointment::factory()->create([
+        'user_id'        => $customer->id,
+        'status'         => 'confirmed',
+        'scheduled_date' => now()->addDays(5),
+    ]);
+    $appt = Appointment::factory()->create([
+        'user_id'        => $customer->id,
+        'status'         => 'confirmed',
+        'scheduled_date' => now()->subDays(1),
+    ]);
+
+    $appt->update(['status' => 'completed']);
+
+    expect(FollowUpReminder::where('user_id', $customer->id)->count())->toBe(0);
+});
+
+it('does not create a duplicate reminder for the same appointment', function () {
+    makeEnabledSettings();
+    $customer = makeCustomerWithPrefs();
+    $appt = Appointment::factory()->create([
+        'user_id'        => $customer->id,
+        'status'         => 'confirmed',
+        'scheduled_date' => now()->subDays(1),
+    ]);
+
+    $appt->update(['status' => 'completed']);
+    $appt->touch(); // trigger updated again
+    $appt->update(['status' => 'completed']); // fire observer again
+
+    expect(FollowUpReminder::where('user_id', $customer->id)->count())->toBe(1);
+});
+
+it('does not create a duplicate pending reminder for same user and business', function () {
+    makeEnabledSettings();
+    $customer = makeCustomerWithPrefs();
+    $appt1 = Appointment::factory()->create([
+        'user_id'        => $customer->id,
+        'status'         => 'confirmed',
+        'scheduled_date' => now()->subDays(10),
+    ]);
+    $appt2 = Appointment::factory()->create([
+        'user_id'        => $customer->id,
+        'status'         => 'confirmed',
+        'scheduled_date' => now()->subDays(1),
+    ]);
+
+    $appt1->update(['status' => 'completed']);
+    $appt2->update(['status' => 'completed']);
+
+    expect(FollowUpReminder::where('user_id', $customer->id)->count())->toBe(1);
+});

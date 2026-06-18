@@ -10,12 +10,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /** @use HasFactory<\Database\Factories\FollowUpReminderFactory> */
+#[Fillable(['business_id', 'user_id', 'appointment_id', 'type', 'channel', 'delay_days',
+            'scheduled_for', 'sent_at', 'status', 'processing_at', 'skipped_reason', 'error_message'])]
 class FollowUpReminder extends Model
 {
     use BelongsToBusiness, HasFactory;
-
-    #[Fillable(['business_id', 'user_id', 'appointment_id', 'type', 'channel', 'delay_days',
-                'scheduled_for', 'sent_at', 'status', 'processing_at', 'skipped_reason', 'error_message'])]
 
     protected function casts(): array
     {
