@@ -18,6 +18,7 @@ use App\Models\Business;
     'order_notify_user_ids',
     'waitlist_offer_timeout_minutes',
     'review_request_enabled', 'review_request_delay_hours',
+    'follow_up_reminders_enabled', 'follow_up_reminder_days',
 ])]
 class SystemSetting extends Model
 {
@@ -42,6 +43,8 @@ class SystemSetting extends Model
             'order_notify_user_ids'        => 'array',
             'review_request_enabled'       => 'boolean',
             'review_request_delay_hours'   => 'integer',
+            'follow_up_reminders_enabled'  => 'boolean',
+            'follow_up_reminder_days'      => 'integer',
         ];
     }
 
@@ -65,6 +68,8 @@ class SystemSetting extends Model
                 'loyalty_points_per_euro'   => 1,
                 'loyalty_reward_threshold'  => 100,
                 'loyalty_reward_percentage' => 10,
+                'follow_up_reminders_enabled' => false,
+                'follow_up_reminder_days'     => 30,
             ]);
         }
 
@@ -87,6 +92,8 @@ class SystemSetting extends Model
                 'loyalty_points_per_euro'   => 1,
                 'loyalty_reward_threshold'  => 100,
                 'loyalty_reward_percentage' => 10,
+                'follow_up_reminders_enabled' => false,
+                'follow_up_reminder_days'     => 30,
             ]
         );
     }
@@ -179,5 +186,15 @@ class SystemSetting extends Model
     public static function getWaitlistOfferTimeout(): int
     {
         return self::current()->waitlist_offer_timeout_minutes ?? 180;
+    }
+
+    public static function isFollowUpRemindersEnabled(): bool
+    {
+        return self::current()->follow_up_reminders_enabled ?? false;
+    }
+
+    public static function getFollowUpReminderDays(): int
+    {
+        return self::current()->follow_up_reminder_days ?? 30;
     }
 }

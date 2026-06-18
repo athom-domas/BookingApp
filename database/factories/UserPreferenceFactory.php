@@ -15,8 +15,9 @@ class UserPreferenceFactory extends Factory
         return [
             'business_id'          => app()->bound('current_business_id') ? app('current_business_id') : 1,
             'user_id'              => User::factory(),
-            'notification_channel' => 'email',
-            'phone_number'         => null,
+            'notification_channel'        => 'email',
+            'phone_number'                => null,
+            'follow_up_reminders_enabled' => true,
         ];
     }
 }
