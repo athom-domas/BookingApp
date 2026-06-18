@@ -1,7 +1,9 @@
 <?php
 
 use App\Jobs\SendAppointmentReminder;
+use App\Jobs\SendFollowUpReminder;
 use App\Models\AppointmentReminder;
+use App\Models\FollowUpReminder;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -17,3 +19,17 @@ Schedule::call(function () {
 })
     ->everyFiveMinutes()
     ->description('Dispatch due appointment reminders');
+
+Schedule::call(function () {
+    FollowUpReminder::pending()
+        ->orderBy('id')
+        ->chunkById(100, function ($reminders) {
+            foreach ($reminders as $reminder) {
+                SendFollowUpReminder::dispatch($reminder->id);
+            }
+        });
+})->everyFiveMinutes()->description('Dispatch due follow-up reminders');
+
+Schedule::call(function () {
+    FollowUpReminder::stale()->update(['status' => 'pending', 'processing_at' => null]);
+})->hourly()->description('Recover stale follow-up reminders');
