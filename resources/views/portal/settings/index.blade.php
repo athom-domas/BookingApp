@@ -138,5 +138,47 @@
             </form>
         </div>
     </div>
+
+    {{-- Comunicazioni --}}
+    <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm">
+        <div class="border-b border-gray-100 dark:border-gray-800 px-6 py-4">
+            <h2 class="font-display text-xl font-semibold text-gray-950 dark:text-gray-50">Comunicazioni</h2>
+        </div>
+        <div class="p-6">
+            @if (session('communications_updated'))
+                <div class="mb-5 rounded border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950 px-4 py-3 text-sm text-green-800 dark:text-green-300">
+                    {{ session('communications_updated') }}
+                </div>
+            @endif
+
+            <form method="POST" action="{{ route('portal.settings.communications') }}" class="max-w-md space-y-5">
+                @csrf
+                @method('PATCH')
+
+                <div class="flex items-start gap-3">
+                    <input type="hidden" name="follow_up_reminders_enabled" value="0">
+                    <input type="checkbox" id="follow_up_reminders_enabled" name="follow_up_reminders_enabled"
+                        value="1"
+                        {{ old('follow_up_reminders_enabled', $preferences->follow_up_reminders_enabled) ? 'checked' : '' }}
+                        class="mt-0.5 h-4 w-4 rounded border-gray-300 dark:border-gray-600"
+                        style="accent-color: var(--color-primary)">
+                    <div>
+                        <label for="follow_up_reminders_enabled" class="block text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer">
+                            Ricevi promemoria per prenotare un nuovo appuntamento
+                        </label>
+                        <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">
+                            Ti invieremo un promemoria se è passato un po' dal tuo ultimo appuntamento e non hai ancora una nuova prenotazione.
+                        </p>
+                    </div>
+                </div>
+
+                <div>
+                    <button type="submit" class="btn-primary rounded px-5 py-2.5 text-sm font-semibold text-white">
+                        Salva preferenze
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 @endsection

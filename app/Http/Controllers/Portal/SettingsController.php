@@ -85,4 +85,18 @@ class SettingsController extends Controller
 
         return back()->with('notifications_updated', 'Preferenze notifiche aggiornate.');
     }
+
+    public function updateCommunications(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'follow_up_reminders_enabled' => ['required', 'boolean'],
+        ]);
+
+        $request->user()->preferences()->firstOrCreate(
+            [],
+            ['notification_channel' => 'email']
+        )->update($validated);
+
+        return back()->with('communications_updated', 'Preferenze aggiornate.');
+    }
 }

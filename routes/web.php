@@ -87,6 +87,7 @@ Route::middleware(['auth', 'tenant.user', 'tenant.status'])->group(function () {
     Route::get('/portal/settings', [SettingsController::class, 'index'])->name('portal.settings.index');
     Route::patch('/portal/settings/profile', [SettingsController::class, 'updateProfile'])->name('portal.settings.profile');
     Route::patch('/portal/settings/notifications', [SettingsController::class, 'updateNotifications'])->name('portal.settings.notifications');
+    Route::patch('/portal/settings/communications', [SettingsController::class, 'updateCommunications'])->name('portal.settings.communications');
 
     Route::post('/portal/waitlist', [WaitlistController::class, 'store'])->name('portal.waitlist.store');
     Route::delete('/portal/waitlist/{entry}', [WaitlistController::class, 'destroy'])->name('portal.waitlist.destroy');
