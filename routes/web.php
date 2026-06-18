@@ -78,6 +78,7 @@ Route::middleware(['auth', 'tenant.user', 'tenant.status'])->group(function () {
     Route::post('/portal/appointments/{appointment}/payment/discount', [PortalAppointmentController::class, 'applyDiscount'])->name('portal.appointments.payment.discount');
     Route::delete('/portal/appointments/{appointment}/payment/discount', [PortalAppointmentController::class, 'removeDiscount'])->name('portal.appointments.payment.discount.remove');
     Route::post('/portal/appointments/{appointment}/cancel', [PortalAppointmentController::class, 'cancel'])->name('portal.appointments.cancel');
+    Route::get('/portal/appointments/{appointment}/review', [ReviewController::class, 'create'])->name('portal.appointments.review');
     Route::post('/portal/reviews', [ReviewController::class, 'store'])->name('portal.reviews.store');
     Route::get('/portal/settings', [SettingsController::class, 'index'])->name('portal.settings.index');
     Route::patch('/portal/settings/profile', [SettingsController::class, 'updateProfile'])->name('portal.settings.profile');

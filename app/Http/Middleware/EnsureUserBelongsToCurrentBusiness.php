@@ -14,6 +14,10 @@ class EnsureUserBelongsToCurrentBusiness
         $user = $request->user();
 
         if ($user) {
+            if (! app()->bound('current_business_id')) {
+                abort(404);
+            }
+
             $currentId = Business::currentId();
 
             if ($user->isAdmin()) {

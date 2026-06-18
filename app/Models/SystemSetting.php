@@ -17,6 +17,7 @@ use App\Models\Business;
     'low_stock_notify_user_ids',
     'order_notify_user_ids',
     'waitlist_offer_timeout_minutes',
+    'review_request_enabled', 'review_request_delay_hours',
 ])]
 class SystemSetting extends Model
 {
@@ -37,8 +38,10 @@ class SystemSetting extends Model
             'loyalty_points_per_euro'   => 'integer',
             'loyalty_reward_threshold'  => 'integer',
             'loyalty_reward_percentage' => 'integer',
-            'low_stock_notify_user_ids' => 'array',
-            'order_notify_user_ids'     => 'array',
+            'low_stock_notify_user_ids'    => 'array',
+            'order_notify_user_ids'        => 'array',
+            'review_request_enabled'       => 'boolean',
+            'review_request_delay_hours'   => 'integer',
         ];
     }
 
@@ -56,6 +59,8 @@ class SystemSetting extends Model
                 'reminder_2_hours'            => 2,
                 'payment_mode'                => 'both',
                 'reviews_enabled'             => true,
+                'review_request_enabled'      => false,
+                'review_request_delay_hours'  => 2,
                 'loyalty_enabled'           => false,
                 'loyalty_points_per_euro'   => 1,
                 'loyalty_reward_threshold'  => 100,
@@ -76,6 +81,8 @@ class SystemSetting extends Model
                 'reminder_2_hours'            => 2,
                 'payment_mode'                => 'both',
                 'reviews_enabled'             => true,
+                'review_request_enabled'      => false,
+                'review_request_delay_hours'  => 2,
                 'loyalty_enabled'           => false,
                 'loyalty_points_per_euro'   => 1,
                 'loyalty_reward_threshold'  => 100,
@@ -87,6 +94,16 @@ class SystemSetting extends Model
     public static function isReviewsEnabled(): bool
     {
         return self::current()->reviews_enabled ?? true;
+    }
+
+    public static function isReviewRequestEnabled(): bool
+    {
+        return self::current()->review_request_enabled ?? false;
+    }
+
+    public static function getReviewRequestDelayHours(): int
+    {
+        return self::current()->review_request_delay_hours ?? 2;
     }
 
     public static function getSlotGranularity(): int

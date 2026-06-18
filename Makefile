@@ -85,7 +85,7 @@ queue-work:
 # ── Deploy ───────────────────────────────────────────────────────────────────
 
 deploy: deploy-env deploy-assets deploy-code
-	ssh $(SSH_HOST) "cd $(SSH_PATH) && $(SSH_PHP) artisan config:clear && $(SSH_PHP) artisan route:clear && $(SSH_PHP) artisan view:clear"
+	ssh $(SSH_HOST) "cd $(SSH_PATH) && $(SSH_PHP) artisan migrate --force && $(SSH_PHP) artisan config:clear && $(SSH_PHP) artisan route:clear && $(SSH_PHP) artisan view:clear"
 	@echo "Deploy completato."
 
 deploy-env:
@@ -107,3 +107,4 @@ deploy-code:
 	rsync -avz routes/ $(SSH_HOST):$(SSH_PATH)/routes/
 	rsync -avz config/ $(SSH_HOST):$(SSH_PATH)/config/
 	rsync -avz resources/ $(SSH_HOST):$(SSH_PATH)/resources/
+	rsync -avz database/migrations/ $(SSH_HOST):$(SSH_PATH)/database/migrations/

@@ -2,7 +2,9 @@
 
 namespace App\Observers;
 
+use App\Jobs\SendReviewRequestJob;
 use App\Models\Appointment;
+use App\Models\SystemSetting;
 use App\Services\LoyaltyService;
 
 class AppointmentObserver
@@ -26,7 +28,24 @@ class AppointmentObserver
             $this->accrue($appointment);
         } elseif ($appointment->status === 'cancelled') {
             $this->reverse($appointment);
+        } elseif ($appointment->status === 'completed') {
+            $this->scheduleReviewRequest($appointment);
         }
+    }
+
+    private function scheduleReviewRequest(Appointment $appointment): void
+    {
+        if (! app()->bound('current_business_id')) {
+            app()->instance('current_business_id', $appointment->business_id);
+        }
+
+        if (! SystemSetting::isReviewRequestEnabled()) {
+            return;
+        }
+
+        $delay = SystemSetting::getReviewRequestDelayHours();
+
+        SendReviewRequestJob::dispatch($appointment)->delay(now()->addHours($delay));
     }
 
     private function accrue(Appointment $appointment): void

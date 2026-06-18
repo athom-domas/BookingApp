@@ -132,6 +132,27 @@ class SystemSettings extends Page
                             ->default(true),
                     ]),
 
+                Section::make('Richiesta recensione')
+                    ->columns(2)
+                    ->schema([
+                        Toggle::make('review_request_enabled')
+                            ->label('Abilita richiesta recensione automatica')
+                            ->helperText('Invia un\'email al cliente dopo il completamento dell\'appuntamento con invito a lasciare una recensione.')
+                            ->default(false)
+                            ->live()
+                            ->columnSpanFull(),
+
+                        TextInput::make('review_request_delay_hours')
+                            ->label('Ore di attesa prima dell\'invio')
+                            ->helperText('L\'email viene inviata dopo questo numero di ore dal completamento.')
+                            ->integer()
+                            ->minValue(1)
+                            ->maxValue(72)
+                            ->default(2)
+                            ->suffix('ore')
+                            ->visible(fn (Get $get): bool => (bool) $get('review_request_enabled')),
+                    ]),
+
                 Section::make('Fedeltà')
                     ->columns(2)
                     ->schema([

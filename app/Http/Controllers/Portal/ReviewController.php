@@ -7,9 +7,26 @@ use App\Models\Appointment;
 use App\Models\SalonReview;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class ReviewController extends Controller
 {
+    public function create(Request $request, Appointment $appointment): View|RedirectResponse
+    {
+        abort_if($appointment->user_id !== $request->user()->id, 403);
+        abort_if($appointment->status !== 'completed', 403);
+
+        if (SalonReview::where('appointment_id', $appointment->id)->exists()) {
+            return redirect()
+                ->route('portal.appointments.index')
+                ->with('review_success', true);
+        }
+
+        return view('portal.appointments.review', [
+            'appointment' => $appointment->load('staff.media'),
+        ]);
+    }
+
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
@@ -36,6 +53,8 @@ class ReviewController extends Controller
             'is_published'   => false,
         ]);
 
-        return back()->with('review_success', true);
+        return redirect()
+            ->route('portal.appointments.index')
+            ->with('review_success', true);
     }
 }
