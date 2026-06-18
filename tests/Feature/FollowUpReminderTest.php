@@ -1,11 +1,14 @@
 <?php
 
+use App\Jobs\SendFollowUpReminder;
+use App\Mail\FollowUpReminderMail;
 use App\Models\Business;
 use App\Models\FollowUpReminder;
 use App\Models\SystemSetting;
 use App\Models\UserPreference;
 use App\Models\User;
 use App\Models\Appointment;
+use Illuminate\Support\Facades\Mail;
 use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
@@ -148,4 +151,121 @@ it('does not create a duplicate pending reminder for same user and business', fu
     $appt2->update(['status' => 'completed']);
 
     expect(FollowUpReminder::where('user_id', $customer->id)->count())->toBe(1);
+});
+
+// ---- Job tests ----
+
+it('job skips if admin disables feature after reminder creation', function () {
+    Mail::fake();
+    $customer = makeCustomerWithPrefs();
+    $reminder = FollowUpReminder::factory()->create([
+        'user_id'       => $customer->id,
+        'delay_days'    => 30,
+        'scheduled_for' => now()->subMinute(),
+        'status'        => 'pending',
+    ]);
+
+    (new SendFollowUpReminder($reminder->id))->handle();
+
+    expect($reminder->fresh()->status)->toBe('skipped');
+    expect($reminder->fresh()->skipped_reason)->toBe('feature_disabled');
+    Mail::assertNotSent(FollowUpReminderMail::class);
+});
+
+it('job skips if user disables follow-up after reminder creation', function () {
+    Mail::fake();
+    makeEnabledSettings();
+    $customer = makeCustomerWithPrefs(followUpEnabled: false);
+    $reminder = FollowUpReminder::factory()->create([
+        'user_id'       => $customer->id,
+        'delay_days'    => 30,
+        'scheduled_for' => now()->subMinute(),
+        'status'        => 'pending',
+    ]);
+
+    (new SendFollowUpReminder($reminder->id))->handle();
+
+    expect($reminder->fresh()->status)->toBe('skipped');
+    expect($reminder->fresh()->skipped_reason)->toBe('user_disabled');
+});
+
+it('job skips if user books a future appointment before send time', function () {
+    Mail::fake();
+    makeEnabledSettings();
+    $customer = makeCustomerWithPrefs();
+    Appointment::factory()->create([
+        'user_id'        => $customer->id,
+        'status'         => 'confirmed',
+        'scheduled_date' => now()->addDays(5),
+    ]);
+    $appt = Appointment::factory()->create([
+        'user_id'        => $customer->id,
+        'status'         => 'completed',
+        'scheduled_date' => now()->subDays(35),
+    ]);
+    $reminder = FollowUpReminder::factory()->create([
+        'user_id'        => $customer->id,
+        'appointment_id' => $appt->id,
+        'delay_days'     => 30,
+        'scheduled_for'  => now()->subMinute(),
+        'status'         => 'pending',
+    ]);
+
+    (new SendFollowUpReminder($reminder->id))->handle();
+
+    expect($reminder->fresh()->status)->toBe('skipped');
+    expect($reminder->fresh()->skipped_reason)->toBe('user_has_future_appointment');
+});
+
+it('job skips if user completed a newer appointment more recently than delay_days', function () {
+    Mail::fake();
+    makeEnabledSettings();
+    $customer = makeCustomerWithPrefs();
+    $originalAppt = Appointment::factory()->create([
+        'user_id'        => $customer->id,
+        'status'         => 'completed',
+        'scheduled_date' => now()->subDays(40),
+    ]);
+    // Newer appointment completed only 5 days ago (within 30-day window)
+    Appointment::factory()->create([
+        'user_id'        => $customer->id,
+        'status'         => 'completed',
+        'scheduled_date' => now()->subDays(5),
+    ]);
+    $reminder = FollowUpReminder::factory()->create([
+        'user_id'        => $customer->id,
+        'appointment_id' => $originalAppt->id,
+        'delay_days'     => 30,
+        'scheduled_for'  => now()->subMinute(),
+        'status'         => 'pending',
+    ]);
+
+    (new SendFollowUpReminder($reminder->id))->handle();
+
+    expect($reminder->fresh()->status)->toBe('skipped');
+    expect($reminder->fresh()->skipped_reason)->toBe('recent_appointment_completed');
+});
+
+it('second job invocation on same reminder does not send (atomic claim)', function () {
+    Mail::fake();
+    makeEnabledSettings();
+    $customer = makeCustomerWithPrefs();
+    $appt = Appointment::factory()->create([
+        'user_id'        => $customer->id,
+        'status'         => 'completed',
+        'scheduled_date' => now()->subDays(35),
+    ]);
+    $reminder = FollowUpReminder::factory()->create([
+        'user_id'        => $customer->id,
+        'appointment_id' => $appt->id,
+        'delay_days'     => 30,
+        'scheduled_for'  => now()->subMinute(),
+        'status'         => 'pending',
+    ]);
+
+    (new SendFollowUpReminder($reminder->id))->handle();
+    (new SendFollowUpReminder($reminder->id))->handle(); // second invocation
+
+    Mail::assertSentCount(1);
+    expect($reminder->fresh()->status)->toBe('sent');
 });
