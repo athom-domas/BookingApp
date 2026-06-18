@@ -43,6 +43,8 @@ class SystemSettings extends Page
             'loyalty_reward_percentage'   => $setting->loyalty_reward_percentage ?? 10,
             'low_stock_notify_user_ids'   => $setting->low_stock_notify_user_ids ?? [],
             'order_notify_user_ids'       => $setting->order_notify_user_ids ?? [],
+            'follow_up_reminders_enabled' => $setting->follow_up_reminders_enabled ?? false,
+            'follow_up_reminder_days'     => $setting->follow_up_reminder_days ?? 30,
         ]);
     }
 
@@ -219,6 +221,26 @@ class SystemSettings extends Page
                                     ->pluck('name', 'id');
                             })
                             ->columnSpanFull(),
+                    ]),
+
+                Section::make('Promemoria di follow-up')
+                    ->columns(2)
+                    ->schema([
+                        Toggle::make('follow_up_reminders_enabled')
+                            ->label('Abilita promemoria di follow-up')
+                            ->helperText('Invia un\'email ai clienti che non prenotano entro N giorni dall\'ultimo appuntamento')
+                            ->live()
+                            ->columnSpanFull(),
+
+                        TextInput::make('follow_up_reminder_days')
+                            ->label('Giorni dopo l\'ultimo appuntamento')
+                            ->helperText('Quanti giorni devono passare prima di inviare il promemoria')
+                            ->integer()
+                            ->minValue(7)
+                            ->maxValue(365)
+                            ->required()
+                            ->suffix('giorni')
+                            ->visible(fn (Get $get): bool => (bool) $get('follow_up_reminders_enabled')),
                     ]),
             ])
             ->statePath('data');
