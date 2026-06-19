@@ -3,12 +3,19 @@
 namespace App\Filament\Pages;
 
 use App\Filament\Widgets\AppointmentCalendarWidget;
+use App\Models\Appointment;
 use App\Models\Service;
 use App\Models\User;
+use App\Services\WalkInService;
+use Filament\Actions\Action;
 use Filament\Facades\Filament;
+use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
+use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Schema;
 
@@ -36,6 +43,106 @@ class AppointmentCalendar extends Page implements HasForms
     public array $filterStatus   = [];
     public array $filterService  = [];
     public array $filterCustomer = [];
+
+    protected function getHeaderActions(): array
+    {
+        $user = Filament::auth()->user();
+
+        return [
+            Action::make('createWalkin')
+                ->label('Walk-in')
+                ->icon('heroicon-o-user-plus')
+                ->slideOver()
+                ->visible(fn () => Filament::auth()->user()?->isAdmin()
+                    || Filament::auth()->user()?->isStaff())
+                ->form([
+                    DateTimePicker::make('scheduled_date')
+                        ->label('Data e ora')
+                        ->required()
+                        ->seconds(false)
+                        ->default(now()),
+
+                    Select::make('staff_id')
+                        ->label('Operatore')
+                        ->options(fn () => User::role(['admin', 'staff'])
+                            ->where('business_id', Filament::auth()->user()?->business_id)
+                            ->orderBy('name')
+                            ->pluck('name', 'id'))
+                        ->required()
+                        ->default($user?->isStaff() ? $user->id : null),
+
+                    Select::make('service_ids')
+                        ->label('Servizi')
+                        ->options(fn () => Service::where('business_id', Filament::auth()->user()?->business_id)
+                            ->where('active', true)
+                            ->orderBy('name')
+                            ->pluck('name', 'id'))
+                        ->multiple()
+                        ->required(),
+
+                    Select::make('user_id')
+                        ->label('Cliente')
+                        ->options(fn () => User::role('customer')
+                            ->where('business_id', Filament::auth()->user()?->business_id)
+                            ->orderBy('name')
+                            ->pluck('name', 'id'))
+                        ->searchable()
+                        ->required()
+                        ->createOptionForm([
+                            TextInput::make('name')
+                                ->label('Nome')
+                                ->required(),
+                            TextInput::make('email')
+                                ->label('Email')
+                                ->email()
+                                ->unique(
+                                    table: 'users',
+                                    column: 'email',
+                                    modifyRuleUsing: fn ($rule) => $rule->where('business_id', Filament::auth()->user()?->business_id),
+                                ),
+                        ])
+                        ->createOptionUsing(function (array $data): int {
+                            return app(WalkInService::class)
+                                ->createInlineCustomer(
+                                    $data['name'],
+                                    $data['email'] ?: null,
+                                    Filament::auth()->user()?->business_id,
+                                )
+                                ->id;
+                        }),
+
+                    Textarea::make('notes')
+                        ->label('Note')
+                        ->rows(2),
+                ])
+                ->action(function (array $data): void {
+                    $customer = User::find($data['user_id']);
+
+                    Appointment::create([
+                        'business_id'    => Filament::auth()->user()?->business_id,
+                        'user_id'        => $data['user_id'],
+                        'staff_id'       => $data['staff_id'],
+                        'service_ids'    => $data['service_ids'],
+                        'scheduled_date' => $data['scheduled_date'],
+                        'status'         => 'confirmed',
+                        'is_walk_in'     => true,
+                        'notes'          => $data['notes'] ?? null,
+                    ]);
+
+                    // Se il cliente ha email placeholder (@noreply.local), non inviare
+                    // notifiche automatiche — l'observer o job devono controllare
+                    // $appointment->user->hasPlaceholderEmail() prima di inviare email.
+
+                    Notification::make()
+                        ->title('Walk-in creato')
+                        ->success()
+                        ->send();
+
+                    $this->dispatch('filament-fullcalendar--refresh')
+                        ->to(AppointmentCalendarWidget::class);
+                }),
+        ];
+    }
 
     public function filtersForm(Schema $schema): Schema
     {
