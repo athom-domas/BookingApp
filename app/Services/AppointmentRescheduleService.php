@@ -25,18 +25,18 @@ class AppointmentRescheduleService
                 ->firstOrFail();
 
             // 1. Permessi
+            if ($appointment->business_id !== $actor->business_id) {
+                throw new RescheduleConflictException(
+                    'Appuntamento non trovato.',
+                    RescheduleConflictException::FORBIDDEN,
+                );
+            }
+
             $canManageAny = $actor->isAdmin() || $actor->can('appointments.view_all');
 
             if (! $canManageAny && $appointment->staff_id !== $actor->id) {
                 throw new RescheduleConflictException(
                     'Non sei autorizzato a spostare questo appuntamento.',
-                    RescheduleConflictException::FORBIDDEN,
-                );
-            }
-
-            if ($appointment->business_id !== $actor->business_id) {
-                throw new RescheduleConflictException(
-                    'Appuntamento non trovato.',
                     RescheduleConflictException::FORBIDDEN,
                 );
             }
@@ -101,8 +101,7 @@ class AppointmentRescheduleService
 
     private function durationFor(Appointment $appointment): int
     {
-        $serviceIds = $appointment->service_ids
-            ?? ($appointment->service_id ? [$appointment->service_id] : []);
+        $serviceIds = $appointment->service_ids ?? [];
 
         return $this->slots->calculateTotalDuration($serviceIds) ?: 30;
     }

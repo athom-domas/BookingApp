@@ -349,8 +349,9 @@ class AppointmentCalendarWidget extends FullCalendarWidget
             return;
         }
 
-        $parsedPrevious = Carbon::createFromFormat(\DateTime::ATOM, $previousDateTime);
-        if (! $parsedPrevious) {
+        try {
+            $parsedPrevious = Carbon::createFromFormat(\DateTime::ATOM, $previousDateTime);
+        } catch (\Carbon\Exceptions\InvalidFormatException $e) {
             Notification::make()
                 ->title('Data non valida.')
                 ->danger()
