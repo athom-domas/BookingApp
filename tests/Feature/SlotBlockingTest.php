@@ -6,6 +6,7 @@ use App\Models\StaffBlockout;
 use App\Models\User;
 use App\Services\Booking\SlotCalculationService;
 use Illuminate\Support\Carbon;
+use App\Models\Service;
 use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
@@ -96,4 +97,47 @@ it('keeps work ranges untouched when time-range blockout is on a different day',
     expect($ranges)->toHaveCount(1)
         ->and($ranges[0]['start']->format('H:i'))->toBe('09:00')
         ->and($ranges[0]['end']->format('H:i'))->toBe('18:00');
+});
+
+it('blocks only the specified time range leaving the rest available', function () {
+    Role::firstOrCreate(['name' => 'customer', 'guard_name' => 'web']);
+
+    $staff = User::factory()->create();
+    $staff->assignRole('staff');
+    $service = Service::factory()->create([
+        'business_id'      => app('current_business_id'),
+        'duration_minutes' => 60,
+        'active'           => true,
+    ]);
+    $staff->services()->attach($service->id);
+
+    AvailabilityRule::factory()->create([
+        'user_id'      => $staff->id,
+        'day_of_week'  => 2,
+        'start_time'   => '09:00',
+        'end_time'     => '18:00',
+        'is_available' => true,
+    ]);
+
+    StaffBlockout::factory()->create([
+        'user_id'    => $staff->id,
+        'start_date' => '2026-06-23',
+        'end_date'   => '2026-06-23',
+        'start_time' => '13:00',
+        'end_time'   => '14:00',
+    ]);
+
+    $slots = (new SlotCalculationService())->getAvailableSlots([
+        'date'            => '2026-06-23',
+        'serviceIds'      => [$service->id],
+        'staffId'         => $staff->id,
+        'staffPreference' => 'specific',
+    ]);
+
+    $times = collect($slots)->pluck('start')->toArray();
+
+    expect($times)
+        ->not->toContain('13:00')
+        ->not->toContain('13:30')
+        ->toContain('14:00');
 });
