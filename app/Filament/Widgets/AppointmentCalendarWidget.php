@@ -3,15 +3,19 @@
 namespace App\Filament\Widgets;
 
 use App\Exceptions\BookingException;
+use App\Exceptions\RescheduleConflictException;
 use App\Models\Appointment;
 use App\Models\Service;
 use App\Models\StaffBlockout;
 use App\Models\User;
+use App\Services\AppointmentRescheduleService;
 use App\Services\PaymentService;
+use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Actions\Action as NotificationAction;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Html;
 use Filament\Schemas\Components\Section;
@@ -63,6 +67,14 @@ class AppointmentCalendarWidget extends FullCalendarWidget
             'allDaySlot'       => false,
             'resources'         => $this->getStaffResources(),
             'resourceAreaWidth' => '0px',
+            'editable'              => true,
+            'eventStartEditable'    => true,
+            'eventDurationEditable' => false,
+            'eventResourceEditable' => false,
+            'views' => [
+                'dayGridMonth' => ['editable' => false],
+                'listWeek'     => ['editable' => false],
+            ],
         ];
     }
 
@@ -146,6 +158,10 @@ class AppointmentCalendarWidget extends FullCalendarWidget
                 'borderColor'     => $this->staffColor($appointment),
                 'classNames'      => ['fc-appt-' . $appointment->status],
                 'extendedProps'   => ['status' => $appointment->status],
+                'editable'         => in_array($appointment->status, ['pending', 'confirmed']),
+                'startEditable'    => in_array($appointment->status, ['pending', 'confirmed']),
+                'durationEditable' => false,
+                'resourceEditable' => false,
             ];
         })->toArray();
 
@@ -165,6 +181,10 @@ class AppointmentCalendarWidget extends FullCalendarWidget
                 'display'         => 'background',
                 'backgroundColor' => '#ef4444',
                 'extendedProps'   => ['type' => 'blockout'],
+                'editable'         => false,
+                'startEditable'    => false,
+                'durationEditable' => false,
+                'resourceEditable' => false,
             ])
             ->toArray();
 
@@ -246,6 +266,109 @@ class AppointmentCalendarWidget extends FullCalendarWidget
         } else {
             $this->mountAction('changeStatus', arguments: ['appointmentId' => $event['id']]);
         }
+    }
+
+    public function onEventDrop(array $event, array $oldEvent, array $relatedEvents, array $delta, ?array $oldResource = null, ?array $newResource = null): bool
+    {
+        if (str_starts_with((string) ($event['id'] ?? ''), 'blockout-')) {
+            return false;
+        }
+
+        $user = Filament::auth()->user();
+
+        $appointment = Appointment::where('id', $event['id'])
+            ->where('business_id', $user?->business_id)
+            ->first();
+
+        if (! $appointment) {
+            return false;
+        }
+
+        // Guard cambio staff — non supportato in v1
+        $eventResourceId = $event['resourceId'] ?? null;
+        if ($eventResourceId !== null && (int) $eventResourceId !== (int) $appointment->staff_id) {
+            Notification::make()
+                ->title('Il cambio operatore tramite drag non è supportato.')
+                ->danger()
+                ->send();
+
+            return false;
+        }
+
+        try {
+            app(AppointmentRescheduleService::class)->reschedule(
+                $appointment,
+                Carbon::parse($event['start']),
+                $user,
+            );
+        } catch (RescheduleConflictException $e) {
+            Notification::make()
+                ->title($e->getMessage())
+                ->danger()
+                ->send();
+
+            // return false fa chiamare info.revert() al wrapper JS di saade/filament-fullcalendar v4.
+            // Se dopo il drop l'evento non torna alla posizione originale, aggiungere
+            // $this->dispatch('filament-fullcalendar--refresh') come fallback prima del return.
+            return false;
+        }
+
+        Notification::make()
+            ->title('Appuntamento spostato alle ' . Carbon::parse($event['start'])->format('H:i'))
+            ->success()
+            ->actions([
+                NotificationAction::make('undo')
+                    ->label('Annulla')
+                    ->dispatch('undo-reschedule', [
+                        'appointmentId'    => $appointment->id,
+                        'previousDateTime' => $oldEvent['start'],
+                    ]),
+            ])
+            ->send();
+
+        $this->dispatch('filament-fullcalendar--refresh')->to(AppointmentCalendarWidget::class);
+
+        return true;
+    }
+
+    #[On('undo-reschedule')]
+    public function undoReschedule(int $appointmentId, string $previousDateTime): void
+    {
+        $user = Filament::auth()->user();
+
+        $appointment = Appointment::where('id', $appointmentId)
+            ->where('business_id', $user?->business_id)
+            ->first();
+
+        if (! $appointment) {
+            Notification::make()
+                ->title('Appuntamento non trovato.')
+                ->danger()
+                ->send();
+
+            return;
+        }
+
+        try {
+            app(AppointmentRescheduleService::class)->reschedule(
+                $appointment,
+                Carbon::parse($previousDateTime),
+                $user,
+            );
+
+            Notification::make()
+                ->title('Spostamento annullato.')
+                ->success()
+                ->send();
+        } catch (RescheduleConflictException $e) {
+            Notification::make()
+                ->title('Non è più possibile ripristinare l\'orario precedente.')
+                ->body($e->getMessage())
+                ->danger()
+                ->send();
+        }
+
+        $this->dispatch('filament-fullcalendar--refresh')->to(AppointmentCalendarWidget::class);
     }
 
     public function changeStatusAction(): Action
