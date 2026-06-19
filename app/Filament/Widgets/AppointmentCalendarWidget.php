@@ -15,7 +15,6 @@ use Filament\Actions\Action;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Notifications\Actions\Action as NotificationAction;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Html;
 use Filament\Schemas\Components\Section;
@@ -271,7 +270,7 @@ class AppointmentCalendarWidget extends FullCalendarWidget
     public function onEventDrop(array $event, array $oldEvent, array $relatedEvents, array $delta, ?array $oldResource = null, ?array $newResource = null): bool
     {
         if (str_starts_with((string) ($event['id'] ?? ''), 'blockout-')) {
-            return false;
+            return true;
         }
 
         $user = Filament::auth()->user();
@@ -281,7 +280,7 @@ class AppointmentCalendarWidget extends FullCalendarWidget
             ->first();
 
         if (! $appointment) {
-            return false;
+            return true;
         }
 
         // Guard cambio staff — non supportato in v1
@@ -292,7 +291,7 @@ class AppointmentCalendarWidget extends FullCalendarWidget
                 ->danger()
                 ->send();
 
-            return false;
+            return true;
         }
 
         try {
@@ -307,17 +306,15 @@ class AppointmentCalendarWidget extends FullCalendarWidget
                 ->danger()
                 ->send();
 
-            // return false fa chiamare info.revert() al wrapper JS di saade/filament-fullcalendar v4.
-            // Se dopo il drop l'evento non torna alla posizione originale, aggiungere
-            // $this->dispatch('filament-fullcalendar--refresh') come fallback prima del return.
-            return false;
+            // saade/filament-fullcalendar v4: return true → JS chiama revert(), false → mantiene posizione
+            return true;
         }
 
         Notification::make()
             ->title('Appuntamento spostato alle ' . Carbon::parse($event['start'])->format('H:i'))
             ->success()
             ->actions([
-                NotificationAction::make('undo')
+                Action::make('undo')
                     ->label('Annulla')
                     ->dispatch('undo-reschedule', [
                         'appointmentId'    => $appointment->id,
@@ -326,9 +323,9 @@ class AppointmentCalendarWidget extends FullCalendarWidget
             ])
             ->send();
 
-        $this->dispatch('filament-fullcalendar--refresh')->to(AppointmentCalendarWidget::class);
+        $this->dispatch('filament-fullcalendar--refresh');
 
-        return true;
+        return false;
     }
 
     #[On('undo-reschedule')]
@@ -379,7 +376,7 @@ class AppointmentCalendarWidget extends FullCalendarWidget
                 ->send();
         }
 
-        $this->dispatch('filament-fullcalendar--refresh')->to(AppointmentCalendarWidget::class);
+        $this->dispatch('filament-fullcalendar--refresh');
     }
 
     public function changeStatusAction(): Action

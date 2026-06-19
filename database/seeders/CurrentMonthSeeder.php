@@ -104,16 +104,18 @@ class CurrentMonthSeeder extends Seeder
     /** @param array<string, User> $staff */
     private function seedAvailabilityRules(array $staff): void
     {
-        $slots = [['08:00:00', '13:00:00'], ['16:00:00', '21:00:00']];
-
         foreach ($staff as $user) {
+            AvailabilityRule::where('user_id', $user->id)->delete();
             foreach (self::WORK_DAYS as $day) {
-                foreach ($slots as [$start, $end]) {
-                    AvailabilityRule::updateOrCreate(
-                        ['user_id' => $user->id, 'day_of_week' => $day, 'start_time' => $start],
-                        ['end_time' => $end, 'is_available' => true]
-                    );
-                }
+                AvailabilityRule::create([
+                    'user_id'      => $user->id,
+                    'day_of_week'  => $day,
+                    'start_time'   => '08:00:00',
+                    'end_time'     => '13:00:00',
+                    'start_time_2' => '16:00:00',
+                    'end_time_2'   => '21:00:00',
+                    'is_available' => true,
+                ]);
             }
         }
     }
