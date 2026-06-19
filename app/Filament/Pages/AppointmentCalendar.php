@@ -184,10 +184,14 @@ class AppointmentCalendar extends Page implements HasForms
                         ->placeholder('es. Pausa pranzo'),
                 ])
                 ->action(function (array $data): void {
-                    $staffId = $data['staff_id']
-                        ?? (Filament::auth()->user()?->isStaff()
-                            ? Filament::auth()->user()?->id
-                            : null);
+                    $user = Filament::auth()->user();
+                    $staffId = ($user?->isAdmin() || $user?->can('appointments.view_all'))
+                        ? ($data['staff_id'] ?? $user?->id)
+                        : $user?->id;
+
+                    if (! $staffId) {
+                        return;
+                    }
 
                     StaffBlockout::create([
                         'business_id' => Filament::auth()->user()?->business_id,
