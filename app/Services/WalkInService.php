@@ -14,7 +14,7 @@ class WalkInService
         $user = User::create([
             'name'        => $name,
             'email'       => $email,
-            'password'    => bcrypt(Str::random(16)),
+            'password'    => Str::random(16),
             'business_id' => $businessId,
         ]);
         $user->assignRole('customer');

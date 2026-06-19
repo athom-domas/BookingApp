@@ -116,8 +116,6 @@ class AppointmentCalendar extends Page implements HasForms
                         ->rows(2),
                 ])
                 ->action(function (array $data): void {
-                    $customer = User::find($data['user_id']);
-
                     Appointment::create([
                         'business_id'    => Filament::auth()->user()?->business_id,
                         'user_id'        => $data['user_id'],
