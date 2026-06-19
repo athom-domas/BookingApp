@@ -276,7 +276,7 @@ class AppointmentCalendarWidget extends FullCalendarWidget
 
         $user = Filament::auth()->user();
 
-        $appointment = Appointment::where('id', $event['id'])
+        $appointment = Appointment::where('id', (int) $event['id'])
             ->where('business_id', $user?->business_id)
             ->first();
 
@@ -349,10 +349,20 @@ class AppointmentCalendarWidget extends FullCalendarWidget
             return;
         }
 
+        $parsedPrevious = Carbon::createFromFormat(\DateTime::ATOM, $previousDateTime);
+        if (! $parsedPrevious) {
+            Notification::make()
+                ->title('Data non valida.')
+                ->danger()
+                ->send();
+
+            return;
+        }
+
         try {
             app(AppointmentRescheduleService::class)->reschedule(
                 $appointment,
-                Carbon::parse($previousDateTime),
+                $parsedPrevious,
                 $user,
             );
 
