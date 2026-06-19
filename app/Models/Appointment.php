@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
-#[Fillable(['user_id', 'service_ids', 'staff_id', 'scheduled_date', 'status', 'customer_confirmed_at', 'final_price', 'notes', 'google_event_id', 'customer_google_event_id', 'business_id'])]
+#[Fillable(['user_id', 'service_ids', 'staff_id', 'scheduled_date', 'status', 'customer_confirmed_at', 'final_price', 'notes', 'google_event_id', 'customer_google_event_id', 'business_id', 'is_walk_in'])]
 #[ObservedBy(AppointmentObserver::class)]
 class Appointment extends Model
 {
@@ -27,6 +27,7 @@ class Appointment extends Model
             'scheduled_date' => 'datetime',
             'final_price'    => 'decimal:2',
             'service_ids'    => 'array',
+            'is_walk_in'     => 'boolean',
         ];
     }
 

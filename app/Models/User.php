@@ -96,6 +96,11 @@ class User extends Authenticatable implements FilamentUser, HasMedia, HasTenants
     public function isStaff(): bool    { return $this->hasRole('staff'); }
     public function isCustomer(): bool { return $this->hasRole('customer'); }
 
+    public function hasPlaceholderEmail(): bool
+    {
+        return str_ends_with($this->email, '@noreply.local');
+    }
+
     public function registerMediaCollections(): void
     {
         $this->addMediaCollection('avatar')->singleFile()->useDisk('public');
