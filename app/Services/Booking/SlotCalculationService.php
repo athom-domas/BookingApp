@@ -146,6 +146,7 @@ class SlotCalculationService
     {
         // Full-day blockout: start_time IS NULL — staff completamente bloccato
         $hasFullDayBlockout = StaffBlockout::where('user_id', $staff->id)
+            ->where('business_id', $staff->business_id)
             ->where('start_date', '<=', $date->toDateString())
             ->where('end_date', '>=', $date->toDateString())
             ->whereNull('start_time')
@@ -176,6 +177,7 @@ class SlotCalculationService
 
         // Time-range blockouts: sottrai le fasce orarie bloccate
         $timeBlockouts = StaffBlockout::where('user_id', $staff->id)
+            ->where('business_id', $staff->business_id)
             ->where('start_date', '<=', $date->toDateString())
             ->where('end_date', '>=', $date->toDateString())
             ->whereNotNull('start_time')

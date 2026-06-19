@@ -64,8 +64,10 @@ it('subtracts time-range blockout from work ranges', function () {
     $ranges = $service->getWorkRangesForOperator($staff, Carbon::parse('2026-06-23'));
 
     expect($ranges)->toHaveCount(2)
+        ->and($ranges[0]['start']->format('H:i'))->toBe('09:00')
         ->and($ranges[0]['end']->format('H:i'))->toBe('13:00')
-        ->and($ranges[1]['start']->format('H:i'))->toBe('14:00');
+        ->and($ranges[1]['start']->format('H:i'))->toBe('14:00')
+        ->and($ranges[1]['end']->format('H:i'))->toBe('18:00');
 });
 
 it('keeps work ranges untouched when time-range blockout is on a different day', function () {
@@ -91,5 +93,7 @@ it('keeps work ranges untouched when time-range blockout is on a different day',
     $service = new SlotCalculationService();
     $ranges = $service->getWorkRangesForOperator($staff, Carbon::parse('2026-06-23'));
 
-    expect($ranges)->toHaveCount(1);
+    expect($ranges)->toHaveCount(1)
+        ->and($ranges[0]['start']->format('H:i'))->toBe('09:00')
+        ->and($ranges[0]['end']->format('H:i'))->toBe('18:00');
 });
