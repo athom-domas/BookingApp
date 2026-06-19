@@ -18,6 +18,8 @@ class StaffBlockoutFactory extends Factory
             'user_id'     => User::factory(),
             'start_date'  => '2026-07-14',
             'end_date'    => '2026-07-18',
+            'start_time'  => null,
+            'end_time'    => null,
             'reason'      => null,
         ];
     }

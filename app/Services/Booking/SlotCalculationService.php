@@ -144,12 +144,14 @@ class SlotCalculationService
 
     private function getWorkRanges(User $staff, Carbon $date): array
     {
-        $hasBlockout = StaffBlockout::where('user_id', $staff->id)
+        // Full-day blockout: start_time IS NULL — staff completamente bloccato
+        $hasFullDayBlockout = StaffBlockout::where('user_id', $staff->id)
             ->where('start_date', '<=', $date->toDateString())
             ->where('end_date', '>=', $date->toDateString())
+            ->whereNull('start_time')
             ->exists();
 
-        if ($hasBlockout) {
+        if ($hasFullDayBlockout) {
             return [];
         }
 
@@ -172,7 +174,42 @@ class SlotCalculationService
             }
         }
 
+        // Time-range blockouts: sottrai le fasce orarie bloccate
+        $timeBlockouts = StaffBlockout::where('user_id', $staff->id)
+            ->where('start_date', '<=', $date->toDateString())
+            ->where('end_date', '>=', $date->toDateString())
+            ->whereNotNull('start_time')
+            ->whereNotNull('end_time')
+            ->get();
+
+        foreach ($timeBlockouts as $blockout) {
+            $blockStart = $date->copy()->setTimeFromTimeString($blockout->start_time);
+            $blockEnd   = $date->copy()->setTimeFromTimeString($blockout->end_time);
+            $ranges     = $this->subtractRange($ranges, $blockStart, $blockEnd);
+        }
+
         return $ranges;
+    }
+
+    private function subtractRange(array $ranges, Carbon $blockStart, Carbon $blockEnd): array
+    {
+        $result = [];
+        foreach ($ranges as $range) {
+            if ($blockEnd <= $range['start'] || $blockStart >= $range['end']) {
+                $result[] = $range;
+            } elseif ($blockStart <= $range['start'] && $blockEnd >= $range['end']) {
+                // blockout copre tutto il range — droppato
+            } elseif ($blockStart > $range['start'] && $blockEnd < $range['end']) {
+                // blockout in mezzo — split
+                $result[] = ['start' => $range['start']->copy(), 'end' => $blockStart->copy()];
+                $result[] = ['start' => $blockEnd->copy(),       'end' => $range['end']->copy()];
+            } elseif ($blockStart <= $range['start']) {
+                $result[] = ['start' => $blockEnd->copy(), 'end' => $range['end']->copy()];
+            } else {
+                $result[] = ['start' => $range['start']->copy(), 'end' => $blockStart->copy()];
+            }
+        }
+        return $result;
     }
 
     private function getOccupations(User $staff, Carbon $date): array
