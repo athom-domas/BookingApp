@@ -153,14 +153,15 @@ class AppointmentCalendarWidget extends FullCalendarWidget
             ->where('business_id', $user->business_id)
             ->whereNotNull('start_time')
             ->whereNotNull('end_time')
-            ->whereBetween('start_date', [$fetchInfo['start'], $fetchInfo['end']])
+            ->where('start_date', '<=', $fetchInfo['end'])
+            ->where('end_date', '>=', $fetchInfo['start'])
             ->get()
             ->map(fn ($blockout) => [
                 'id'              => 'blockout-' . $blockout->id,
                 'resourceId'      => (string) $blockout->user_id,
                 'title'           => $blockout->reason ?? 'Slot bloccato',
                 'start'           => $blockout->start_date->format('Y-m-d') . 'T' . $blockout->start_time,
-                'end'             => $blockout->start_date->format('Y-m-d') . 'T' . $blockout->end_time,
+                'end'             => $blockout->end_date->format('Y-m-d') . 'T' . $blockout->end_time,
                 'display'         => 'background',
                 'backgroundColor' => '#ef4444',
                 'extendedProps'   => ['type' => 'blockout'],
