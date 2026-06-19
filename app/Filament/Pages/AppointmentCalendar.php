@@ -5,14 +5,17 @@ namespace App\Filament\Pages;
 use App\Filament\Widgets\AppointmentCalendarWidget;
 use App\Models\Appointment;
 use App\Models\Service;
+use App\Models\StaffBlockout;
 use App\Models\User;
 use App\Services\WalkInService;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\TimePicker;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
@@ -133,6 +136,71 @@ class AppointmentCalendar extends Page implements HasForms
 
                     Notification::make()
                         ->title('Walk-in creato')
+                        ->success()
+                        ->send();
+
+                    $this->dispatch('filament-fullcalendar--refresh')
+                        ->to(AppointmentCalendarWidget::class);
+                }),
+            Action::make('blockSlot')
+                ->label('Blocca slot')
+                ->icon('heroicon-o-lock-closed')
+                ->color('danger')
+                ->slideOver()
+                ->visible(fn () => Filament::auth()->user()?->isAdmin()
+                    || Filament::auth()->user()?->isStaff())
+                ->form([
+                    DatePicker::make('date')
+                        ->label('Data')
+                        ->required()
+                        ->default(today()),
+
+                    Select::make('staff_id')
+                        ->label('Operatore')
+                        ->options(fn () => User::role(['admin', 'staff'])
+                            ->where('business_id', Filament::auth()->user()?->business_id)
+                            ->orderBy('name')
+                            ->pluck('name', 'id'))
+                        ->required()
+                        ->default(Filament::auth()->user()?->isStaff()
+                            ? Filament::auth()->user()?->id
+                            : null)
+                        ->visible(fn () => Filament::auth()->user()?->isAdmin()
+                            || Filament::auth()->user()?->can('appointments.view_all')),
+
+                    TimePicker::make('start_time')
+                        ->label('Dalle')
+                        ->required()
+                        ->seconds(false),
+
+                    TimePicker::make('end_time')
+                        ->label('Alle')
+                        ->required()
+                        ->seconds(false)
+                        ->after('start_time'),
+
+                    TextInput::make('reason')
+                        ->label('Motivo')
+                        ->placeholder('es. Pausa pranzo'),
+                ])
+                ->action(function (array $data): void {
+                    $staffId = $data['staff_id']
+                        ?? (Filament::auth()->user()?->isStaff()
+                            ? Filament::auth()->user()?->id
+                            : null);
+
+                    StaffBlockout::create([
+                        'business_id' => Filament::auth()->user()?->business_id,
+                        'user_id'     => $staffId,
+                        'start_date'  => $data['date'],
+                        'end_date'    => $data['date'],
+                        'start_time'  => $data['start_time'],
+                        'end_time'    => $data['end_time'],
+                        'reason'      => $data['reason'] ?? null,
+                    ]);
+
+                    Notification::make()
+                        ->title('Slot bloccato')
                         ->success()
                         ->send();
 
