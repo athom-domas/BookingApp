@@ -12,6 +12,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 
 class SendFollowUpReminder implements ShouldQueue
@@ -75,7 +76,25 @@ class SendFollowUpReminder implements ShouldQueue
         }
 
         try {
-            Mail::to($reminder->user->email)->send(new FollowUpReminderMail($reminder));
+            $baseDomain = config('app.base_domain');
+            $subdomain  = $reminder->business->subdomain ?? null;
+
+            if ($baseDomain && $subdomain) {
+                URL::forceRootUrl("https://{$subdomain}.{$baseDomain}");
+            }
+
+            $bookingUrl     = route('booking.index');
+            $unsubscribeUrl = URL::signedRoute(
+                'follow-up-reminders.unsubscribe',
+                ['user' => $reminder->user_id],
+                now()->addYear()
+            );
+
+            if ($baseDomain && $subdomain) {
+                URL::forceRootUrl(null);
+            }
+
+            Mail::to($reminder->user->email)->send(new FollowUpReminderMail($reminder, $bookingUrl, $unsubscribeUrl));
             $reminder->update(['status' => 'sent', 'sent_at' => now(), 'channel' => 'email']);
         } catch (\Throwable $e) {
             $reminder->update([
