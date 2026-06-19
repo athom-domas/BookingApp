@@ -5,6 +5,7 @@ namespace App\Filament\Widgets;
 use App\Exceptions\BookingException;
 use App\Models\Appointment;
 use App\Models\Service;
+use App\Models\StaffBlockout;
 use App\Models\User;
 use App\Services\PaymentService;
 use Filament\Actions\Action;
@@ -126,7 +127,7 @@ class AppointmentCalendarWidget extends FullCalendarWidget
 
         $services = Service::whereIn('id', $allServiceIds)->get()->keyBy('id');
 
-        return $appointments->map(function ($appointment) use ($services) {
+        $appointmentEvents = $appointments->map(function ($appointment) use ($services) {
             $duration = collect($appointment->service_ids ?? [])
                 ->sum(fn($id) => $services->get($id)?->duration_minutes ?? 30);
 
@@ -147,6 +148,26 @@ class AppointmentCalendarWidget extends FullCalendarWidget
                 'extendedProps'   => ['status' => $appointment->status],
             ];
         })->toArray();
+
+        $blockoutEvents = StaffBlockout::query()
+            ->where('business_id', $user->business_id)
+            ->whereNotNull('start_time')
+            ->whereNotNull('end_time')
+            ->whereBetween('start_date', [$fetchInfo['start'], $fetchInfo['end']])
+            ->get()
+            ->map(fn ($blockout) => [
+                'id'              => 'blockout-' . $blockout->id,
+                'resourceId'      => (string) $blockout->user_id,
+                'title'           => $blockout->reason ?? 'Slot bloccato',
+                'start'           => $blockout->start_date->format('Y-m-d') . 'T' . $blockout->start_time,
+                'end'             => $blockout->start_date->format('Y-m-d') . 'T' . $blockout->end_time,
+                'display'         => 'background',
+                'backgroundColor' => '#ef4444',
+                'extendedProps'   => ['type' => 'blockout'],
+            ])
+            ->toArray();
+
+        return array_merge($appointmentEvents, $blockoutEvents);
     }
 
     private function authorizeAppointmentAccess(Action $action): bool
@@ -213,6 +234,10 @@ class AppointmentCalendarWidget extends FullCalendarWidget
 
     public function onEventClick(array $event): void
     {
+        if (($event['extendedProps']['type'] ?? null) === 'blockout') {
+            return;
+        }
+
         $status = $event['extendedProps']['status'] ?? null;
 
         if ($status === 'completed') {
