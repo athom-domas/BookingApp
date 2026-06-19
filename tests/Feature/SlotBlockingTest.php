@@ -136,6 +136,7 @@ it('blocks only the specified time range leaving the rest available', function (
 
     $times = collect($slots)->pluck('start')->toArray();
 
+    expect($times)->not->toBeEmpty();
     expect($times)
         ->not->toContain('13:00')
         ->not->toContain('13:30')
