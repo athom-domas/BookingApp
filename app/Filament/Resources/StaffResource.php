@@ -322,6 +322,8 @@ class StaffResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->reorderable('sort_order')
+            ->defaultSort('sort_order')
             ->columns([
                 TextColumn::make('name')
                     ->label('Nome')

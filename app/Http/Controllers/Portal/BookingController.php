@@ -39,6 +39,8 @@ class BookingController extends Controller
                 ->whereNotNull('bio')
                 ->orWhereHas('media', fn ($m) => $m->where('collection_name', 'avatar'))
             )
+            ->orderByRaw($this->staffOrderRaw())
+            ->orderBy('sort_order')
             ->get();
         $reviews = SystemSetting::isReviewsEnabled()
             ? SalonReview::published()->ordered()->get()
@@ -55,7 +57,8 @@ class BookingController extends Controller
             ->with(['staff' => fn ($q) => $q
                 ->whereHas('roles', fn ($r) => $r->where('name', 'staff')->where('guard_name', 'web'))
                 ->where('business_id', $businessId)
-                ->orderBy('name')])
+                ->orderByRaw($this->staffOrderRaw())
+                ->orderBy('sort_order')])
             ->orderBy('sort_order')
             ->orderBy('name')
             ->get();
@@ -64,7 +67,8 @@ class BookingController extends Controller
             ->where('business_id', $businessId)
             ->whereHas('services', fn ($q) => $q->active())
             ->with(['services' => fn ($q) => $q->active()->select('services.id', 'services.name'), 'media'])
-            ->orderBy('name')
+            ->orderByRaw($this->staffOrderRaw())
+            ->orderBy('sort_order')
             ->get();
 
         return view('portal.booking.index', [
@@ -124,5 +128,16 @@ class BookingController extends Controller
         return redirect()
             ->route('portal.appointments.payment', $appointment)
             ->with('status', 'Prenotazione creata. Completa il pagamento per confermarla.');
+    }
+
+    private function staffOrderRaw(): string
+    {
+        return "CASE WHEN EXISTS (
+            SELECT 1 FROM model_has_roles mhr
+            JOIN roles r ON r.id = mhr.role_id
+            WHERE mhr.model_id = users.id
+              AND r.name = 'admin'
+              AND r.guard_name = 'web'
+        ) THEN 0 ELSE 1 END";
     }
 }
