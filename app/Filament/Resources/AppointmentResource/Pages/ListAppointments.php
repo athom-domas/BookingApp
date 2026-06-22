@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\AppointmentResource\Pages;
 
 use App\Filament\Resources\AppointmentResource;
-use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
 
 class ListAppointments extends ListRecords
@@ -12,13 +11,10 @@ class ListAppointments extends ListRecords
 
     protected function getHeaderActions(): array
     {
-        return [
-            CreateAction::make()
-                ->hidden(fn () => auth()->user()?->isStaff() && ! auth()->user()?->can('appointments.create')),
-        ];
+        return [];
     }
 
-    public function filterToday(): void
+public function filterToday(): void
     {
         $this->tableFilters['scheduled_date'] = [
             'from'  => now()->toDateString(),

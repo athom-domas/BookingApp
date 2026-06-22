@@ -67,11 +67,13 @@ class AvailabilityRuleResource extends Resource
 
             TimePicker::make('start_time')
                 ->label('Inizio')
-                ->required(),
+                ->required()
+                ->seconds(false),
 
             TimePicker::make('end_time')
                 ->label('Fine')
-                ->required(),
+                ->required()
+                ->seconds(false),
 
             Toggle::make('is_available')
                 ->label('Disponibile')

@@ -116,8 +116,8 @@ class PaymentResource extends Resource
                 Filter::make('created_at')
                     ->label('Periodo')
                     ->form([
-                        DatePicker::make('from')->label('Dal'),
-                        DatePicker::make('until')->label('Al'),
+                        DatePicker::make('from')->label('Dal')->native(false)->displayFormat('d/m/Y'),
+                        DatePicker::make('until')->label('Al')->native(false)->displayFormat('d/m/Y'),
                     ])
                     ->query(fn (Builder $query, array $data): Builder => $query
                         ->when($data['from'], fn (Builder $q) => $q->whereDate('created_at', '>=', $data['from']))

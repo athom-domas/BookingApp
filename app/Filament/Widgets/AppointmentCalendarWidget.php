@@ -5,6 +5,7 @@ namespace App\Filament\Widgets;
 use App\Exceptions\BookingException;
 use App\Exceptions\RescheduleConflictException;
 use App\Models\Appointment;
+use App\Models\SalonProfile;
 use App\Models\Service;
 use App\Models\StaffBlockout;
 use App\Models\User;
@@ -12,9 +13,11 @@ use App\Services\AppointmentRescheduleService;
 use App\Services\PaymentService;
 use Carbon\Carbon;
 use Filament\Actions\Action;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\TimePicker;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Html;
 use Filament\Schemas\Components\Section;
@@ -61,8 +64,8 @@ class AppointmentCalendarWidget extends FullCalendarWidget
             'eventTimeFormat'  => ['hour' => '2-digit', 'minute' => '2-digit', 'hour12' => false],
             'dayMaxEvents'     => true,
             'contentHeight'    => 'auto',
-            'slotMinTime'      => '07:00:00',
-            'slotMaxTime'      => '21:00:00',
+            'slotMinTime'      => $this->resolveSlotMinTime(),
+            'slotMaxTime'      => $this->resolveSlotMaxTime(),
             'allDaySlot'       => false,
             'resources'         => $this->getStaffResources(),
             'resourceAreaWidth' => '0px',
@@ -75,6 +78,56 @@ class AppointmentCalendarWidget extends FullCalendarWidget
                 'listWeek'     => ['editable' => false],
             ],
         ];
+    }
+
+    private function resolveSlotMinTime(): string
+    {
+        $hours = SalonProfile::current()?->opening_hours ?? [];
+        $min   = null;
+
+        foreach ($hours as $day) {
+            $type  = $day['type'] ?? 'closed';
+            $start = match ($type) {
+                'continuous' => $day['open_time']    ?? null,
+                'split'      => $day['morning_open'] ?? null,
+                default      => null,
+            };
+
+            if ($start && ($min === null || $start < $min)) {
+                $min = $start;
+            }
+        }
+
+        $min ??= '07:00';
+
+        // Subtract 30 min buffer so the first slot is fully visible
+        [$h, $m] = explode(':', $min);
+        $totalMinutes = max(0, ((int) $h * 60) + (int) $m - 30);
+        return sprintf('%02d:%02d:00', intdiv($totalMinutes, 60), $totalMinutes % 60);
+    }
+
+    private function resolveSlotMaxTime(): string
+    {
+        $hours = SalonProfile::current()?->opening_hours ?? [];
+        $max   = '21:00';
+
+        foreach ($hours as $day) {
+            $type = $day['type'] ?? 'closed';
+            $end  = match ($type) {
+                'continuous' => $day['close_time']      ?? null,
+                'split'      => $day['afternoon_close'] ?? null,
+                default      => null,
+            };
+
+            if ($end && $end > $max) {
+                $max = $end;
+            }
+        }
+
+        // Add 30 min buffer so the last slot is fully visible
+        [$h, $m] = explode(':', $max);
+        $totalMinutes = ((int) $h * 60) + (int) $m + 30;
+        return sprintf('%02d:%02d:00', intdiv($totalMinutes, 60), $totalMinutes % 60);
     }
 
     private function getStaffResources(): array
@@ -165,26 +218,37 @@ class AppointmentCalendarWidget extends FullCalendarWidget
         })->toArray();
 
         $blockoutEvents = StaffBlockout::query()
+            ->with('user')
             ->where('business_id', $user->business_id)
             ->whereNotNull('start_time')
             ->whereNotNull('end_time')
             ->where('start_date', '<=', $fetchInfo['end'])
             ->where('end_date', '>=', $fetchInfo['start'])
             ->get()
-            ->map(fn ($blockout) => [
-                'id'              => 'blockout-' . $blockout->id,
-                'resourceId'      => (string) $blockout->user_id,
-                'title'           => $blockout->reason ?? 'Slot bloccato',
-                'start'           => $blockout->start_date->format('Y-m-d') . 'T' . $blockout->start_time,
-                'end'             => $blockout->end_date->format('Y-m-d') . 'T' . $blockout->end_time,
-                'display'         => 'background',
-                'backgroundColor' => '#ef4444',
-                'extendedProps'   => ['type' => 'blockout'],
-                'editable'         => false,
-                'startEditable'    => false,
-                'durationEditable' => false,
-                'resourceEditable' => false,
-            ])
+            ->map(function ($blockout) {
+                $startTime = substr($blockout->start_time, 0, 5);
+                $endTime   = substr($blockout->end_time, 0, 5);
+                $parts     = array_filter([
+                    $startTime . '–' . $endTime,
+                    $blockout->user->name ?? null,
+                    $blockout->reason,
+                ]);
+                return [
+                    'id'              => 'blockout-' . $blockout->id,
+                    'resourceId'      => (string) $blockout->user_id,
+                    'title'           => implode(' · ', $parts),
+                    'start'           => $blockout->start_date->format('Y-m-d') . 'T' . $blockout->start_time,
+                    'end'             => $blockout->end_date->format('Y-m-d') . 'T' . $blockout->end_time,
+                    'backgroundColor' => '#334155',
+                    'borderColor'     => '#94a3b8',
+                    'textColor'       => '#cbd5e1',
+                    'extendedProps'   => ['type' => 'blockout'],
+                    'editable'         => false,
+                    'startEditable'    => false,
+                    'durationEditable' => false,
+                    'resourceEditable' => false,
+                ];
+            })
             ->toArray();
 
         return array_merge($appointmentEvents, $blockoutEvents);
@@ -255,6 +319,8 @@ class AppointmentCalendarWidget extends FullCalendarWidget
     public function onEventClick(array $event): void
     {
         if (($event['extendedProps']['type'] ?? null) === 'blockout') {
+            $blockoutId = (int) str_replace('blockout-', '', (string) $event['id']);
+            $this->mountAction('editBlockout', arguments: ['blockoutId' => $blockoutId]);
             return;
         }
 
@@ -562,6 +628,107 @@ class AppointmentCalendarWidget extends FullCalendarWidget
             ->authorize(fn(Action $action) => $this->authorizeAppointmentAccess($action))
             ->modalSubmitAction(false)
             ->modalCancelActionLabel('Chiudi');
+    }
+
+    public function editBlockoutAction(): Action
+    {
+        return Action::make('editBlockout')
+            ->label('Slot bloccato')
+            ->slideOver()
+            ->mountUsing(function (Action $action, ?Schema $schema): void {
+                $blockout = StaffBlockout::find($action->getArguments()['blockoutId']);
+                if (! $blockout) {
+                    return;
+                }
+                $schema?->fill([
+                    'blockout_id' => $blockout->id,
+                    'date'        => $blockout->start_date->format('Y-m-d'),
+                    'staff_id'    => $blockout->user_id,
+                    'start_time'  => $blockout->start_time,
+                    'end_time'    => $blockout->end_time,
+                    'reason'      => $blockout->reason ?? '',
+                ]);
+            })
+            ->schema([
+                Hidden::make('blockout_id'),
+                DatePicker::make('date')
+                    ->label('Data')
+                    ->required()
+                    ->native(false)
+                    ->displayFormat('d/m/Y'),
+                Select::make('staff_id')
+                    ->label('Operatore')
+                    ->options(fn() => User::role('staff')
+                        ->where('business_id', Filament::auth()->user()?->business_id)
+                        ->orderBy('name')
+                        ->pluck('name', 'id'))
+                    ->required()
+                    ->visible(fn() => Filament::auth()->user()?->isAdmin()
+                        || Filament::auth()->user()?->can('appointments.view_all')),
+                TimePicker::make('start_time')
+                    ->label('Dalle')
+                    ->required()
+                    ->seconds(false),
+                TimePicker::make('end_time')
+                    ->label('Alle')
+                    ->required()
+                    ->seconds(false),
+                TextInput::make('reason')
+                    ->label('Motivo'),
+            ])
+            ->action(function (array $data): void {
+                $blockout = StaffBlockout::find($data['blockout_id']);
+                if (! $blockout) {
+                    return;
+                }
+                $user = Filament::auth()->user();
+                $staffId = ($user?->isAdmin() || $user?->can('appointments.view_all'))
+                    ? ($data['staff_id'] ?? $blockout->user_id)
+                    : $blockout->user_id;
+
+                $blockout->update([
+                    'user_id'    => $staffId,
+                    'start_date' => $data['date'],
+                    'end_date'   => $data['date'],
+                    'start_time' => $data['start_time'],
+                    'end_time'   => $data['end_time'],
+                    'reason'     => $data['reason'] ?? null,
+                ]);
+
+                Notification::make()->title('Slot aggiornato')->success()->send();
+                $this->dispatch('filament-fullcalendar--refresh');
+            })
+            ->extraModalFooterActions([
+                Action::make('deleteBlockout')
+                    ->label('Elimina')
+                    ->color('danger')
+                    ->icon('heroicon-o-trash')
+                    ->requiresConfirmation()
+                    ->modalHeading('Elimina blocco')
+                    ->modalDescription('Sei sicuro di voler eliminare questo slot bloccato?')
+                    ->action(function (Action $action): void {
+                        $arguments = $action->getParentAction()->getArguments();
+                        $blockout  = StaffBlockout::find($arguments['blockoutId']);
+                        $blockout?->delete();
+                        Notification::make()->title('Slot eliminato')->success()->send();
+                        $this->dispatch('filament-fullcalendar--refresh');
+                    }),
+            ])
+            ->modalSubmitActionLabel('Salva');
+    }
+
+    public function eventDidMount(): string
+    {
+        return <<<'JS'
+            function(info) {
+                if (info.event.extendedProps.type === 'blockout') {
+                    var view = info.view.type;
+                    if (view === 'dayGridMonth' || view === 'listWeek') {
+                        info.el.style.display = 'none';
+                    }
+                }
+            }
+        JS;
     }
 
     #[On('calendar-filters-updated')]

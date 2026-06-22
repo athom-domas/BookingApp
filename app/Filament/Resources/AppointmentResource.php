@@ -73,8 +73,7 @@ class AppointmentResource extends Resource
 
     public static function canCreate(): bool
     {
-        $user = auth()->user();
-        return ($user?->isAdmin() || ($user?->isStaff() && $user->can('appointments.create'))) ?? false;
+        return false;
     }
 
     public static function form(Schema $schema): Schema
@@ -114,6 +113,9 @@ class AppointmentResource extends Resource
                     DateTimePicker::make('scheduled_date')
                         ->label('Data e ora')
                         ->required()
+                        ->native(false)
+                        ->displayFormat('d/m/Y H:i')
+                        ->seconds(false)
                         ->disabled(
                             fn($record) =>
                             $record?->status === 'completed'
@@ -167,56 +169,57 @@ class AppointmentResource extends Resource
                     Select::make('payment_method')
                         ->label('Metodo di pagamento')
                         ->options(['cash' => 'Contanti', 'pos' => 'POS (carta)'])
-                        ->required(fn (Get $get) => ! (bool) $get('has_completed_payment'))
-                        ->disabled(fn (Get $get) => (bool) $get('has_completed_payment'))
+                        ->required(fn(Get $get) => ! (bool) $get('has_completed_payment'))
+                        ->disabled(fn(Get $get) => (bool) $get('has_completed_payment'))
                         ->hidden(
-                            fn (Get $get, string $operation) =>
+                            fn(Get $get, string $operation) =>
                             $operation !== 'edit' || $get('status') !== 'completed'
                         ),
 
                     TextInput::make('payment_amount')
                         ->label('Importo (€)')
                         ->numeric()
-                        ->minValue(fn (Get $get) => (bool) $get('has_completed_payment') ? null : 0.01)
-                        ->required(fn (Get $get) => ! (bool) $get('has_completed_payment'))
-                        ->disabled(fn (Get $get) => (bool) $get('has_completed_payment'))
-                        ->hint(fn (Get $get): ?string =>
+                        ->minValue(fn(Get $get) => (bool) $get('has_completed_payment') ? null : 0.01)
+                        ->required(fn(Get $get) => ! (bool) $get('has_completed_payment'))
+                        ->disabled(fn(Get $get) => (bool) $get('has_completed_payment'))
+                        ->hint(
+                            fn(Get $get): ?string =>
                             $get('loyalty_discount_percentage')
                                 ? 'Sconto fedeltà ' . $get('loyalty_discount_percentage') . '% applicato'
                                 : null
                         )
                         ->hintColor('success')
                         ->hidden(
-                            fn (Get $get, string $operation) =>
+                            fn(Get $get, string $operation) =>
                             $operation !== 'edit' || $get('status') !== 'completed'
                         ),
 
-                        Toggle::make('apply_loyalty_discount')
-                            ->label(fn (): string => 'Applica sconto fedeltà ' . SystemSetting::getLoyaltyRewardPercentage() . '% (−' . SystemSetting::getLoyaltyRewardThreshold() . ' punti)')
-                            ->default(false)
-                            ->live()
-                            ->dehydrated(true)
-                            ->dehydratedWhenHidden(true)
-                            ->afterStateUpdated(function (bool $state, Set $set, Get $get, ?Appointment $record): void {
-                                $original = (float) ($record?->final_price ?? $get('payment_amount'));
-                                if ($state) {
-                                    $pct = SystemSetting::getLoyaltyRewardPercentage();
-                                    $set('payment_amount', round($original * (1 - $pct / 100), 2));
-                                } else {
-                                    $set('payment_amount', $original);
-                                }
-                            })
-                            ->visible(function (Get $get): bool {
-                                if (! SystemSetting::isLoyaltyEnabled() || $get('status') !== 'completed') {
-                                    return false;
-                                }
-                                if ((bool) $get('has_completed_payment')) {
-                                    return false;
-                                }
+                    Toggle::make('apply_loyalty_discount')
+                        ->label(fn(): string => 'Applica sconto fedeltà ' . SystemSetting::getLoyaltyRewardPercentage() . '% (−' . SystemSetting::getLoyaltyRewardThreshold() . ' punti)')
+                        ->default(false)
+                        ->live()
+                        ->dehydrated(true)
+                        ->dehydratedWhenHidden(true)
+                        ->afterStateUpdated(function (bool $state, Set $set, Get $get, ?Appointment $record): void {
+                            $original = (float) ($record?->final_price ?? $get('payment_amount'));
+                            if ($state) {
+                                $pct = SystemSetting::getLoyaltyRewardPercentage();
+                                $set('payment_amount', round($original * (1 - $pct / 100), 2));
+                            } else {
+                                $set('payment_amount', $original);
+                            }
+                        })
+                        ->visible(function (Get $get): bool {
+                            if (! SystemSetting::isLoyaltyEnabled() || $get('status') !== 'completed') {
+                                return false;
+                            }
+                            if ((bool) $get('has_completed_payment')) {
+                                return false;
+                            }
 
-                                return (int) $get('customer_loyalty_points') >= SystemSetting::getLoyaltyRewardThreshold();
-                            })
-                            ->columnSpanFull(),
+                            return (int) $get('customer_loyalty_points') >= SystemSetting::getLoyaltyRewardThreshold();
+                        })
+                        ->columnSpanFull(),
                 ])
                 ->columns(2)
                 ->columnSpanFull(),
@@ -288,8 +291,8 @@ class AppointmentResource extends Resource
                 Filter::make('scheduled_date')
                     ->label('Data')
                     ->form([
-                        DatePicker::make('from')->label('Dal'),
-                        DatePicker::make('until')->label('Al'),
+                        DatePicker::make('from')->label('Dal')->native(false)->displayFormat('d/m/Y'),
+                        DatePicker::make('until')->label('Al')->native(false)->displayFormat('d/m/Y'),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         return $query
@@ -326,7 +329,7 @@ class AppointmentResource extends Resource
                             ->minValue(0.01)
                             ->required(),
                         Toggle::make('apply_loyalty_discount')
-                            ->label(fn (): string => 'Applica sconto fedeltà ' . SystemSetting::getLoyaltyRewardPercentage() . '% (−' . SystemSetting::getLoyaltyRewardThreshold() . ' punti)')
+                            ->label(fn(): string => 'Applica sconto fedeltà ' . SystemSetting::getLoyaltyRewardPercentage() . '% (−' . SystemSetting::getLoyaltyRewardThreshold() . ' punti)')
                             ->default(false)
                             ->live()
                             ->afterStateUpdated(function (bool $state, Set $set, Get $get, Appointment $record): void {
@@ -338,9 +341,10 @@ class AppointmentResource extends Resource
                                     $set('amount', $original);
                                 }
                             })
-                            ->visible(fn (Appointment $record): bool =>
+                            ->visible(
+                                fn(Appointment $record): bool =>
                                 SystemSetting::isLoyaltyEnabled()
-                                && (LoyaltyAccount::where('user_id', $record->user_id)->value('points') ?? 0) >= SystemSetting::getLoyaltyRewardThreshold()
+                                    && (LoyaltyAccount::where('user_id', $record->user_id)->value('points') ?? 0) >= SystemSetting::getLoyaltyRewardThreshold()
                             ),
                     ])
                     ->fillForm(fn(Appointment $record): array => [
@@ -379,15 +383,17 @@ class AppointmentResource extends Resource
                         }
                     })
                     ->successNotificationTitle('Pagamento registrato con successo')
-                    ->visible(fn(Appointment $record): bool =>
+                    ->visible(
+                        fn(Appointment $record): bool =>
                         ! in_array($record->status, ['pending', 'completed', 'cancelled'])
-                        && (! $record->payment || $record->payment->status !== 'completed')
-                        && (auth()->user()?->isAdmin() || auth()->user()?->can('appointments.payments'))
+                            && (! $record->payment || $record->payment->status !== 'completed')
+                            && (auth()->user()?->isAdmin() || auth()->user()?->can('appointments.payments'))
                     ),
                 EditAction::make()
-                    ->hidden(fn(Appointment $record) =>
+                    ->hidden(
+                        fn(Appointment $record) =>
                         ! auth()->user()?->isAdmin()
-                        && (! auth()->user()?->can('appointments.edit') || in_array($record->status, ['completed', 'cancelled']))
+                            && (! auth()->user()?->can('appointments.edit') || in_array($record->status, ['completed', 'cancelled']))
                     ),
                 DeleteAction::make()
                     ->hidden(fn() => auth()->user()?->isStaff() && ! auth()->user()?->can('appointments.delete')),

@@ -11,6 +11,7 @@ use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\TimePicker;
 use Filament\Forms\Components\Toggle; // kept for possible future use
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -18,6 +19,8 @@ use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Schema;
+use App\Models\AvailabilityRule;
+use App\Models\Business;
 use Illuminate\Support\Arr;
 use Illuminate\Support\HtmlString;
 use Filament\Schemas\Components\Utilities\Get;
@@ -111,40 +114,72 @@ class SalonProfilePage extends Page
                     ->live()
                     ->columnSpan(2),
 
-                TextInput::make("hours_{$key}_open_time")
+                TimePicker::make("hours_{$key}_open_time")
                     ->label('Apertura')
-                    ->placeholder('09:00')
+                    ->seconds(false)
                     ->visible(fn(Get $get) => $get("hours_{$key}_type") === 'continuous')
                     ->columnSpan(2),
 
-                TextInput::make("hours_{$key}_close_time")
+                TimePicker::make("hours_{$key}_close_time")
                     ->label('Chiusura')
-                    ->placeholder('19:00')
+                    ->seconds(false)
                     ->visible(fn(Get $get) => $get("hours_{$key}_type") === 'continuous')
+                    ->rules(fn(Get $get): array => [
+                        function (string $attribute, mixed $value, \Closure $fail) use ($get, $key): void {
+                            $open = $get("hours_{$key}_open_time");
+                            if ($value && $open && strtotime($value) <= strtotime($open)) {
+                                $fail('La chiusura deve essere dopo l\'apertura.');
+                            }
+                        },
+                    ])
                     ->columnSpan(2),
 
-                TextInput::make("hours_{$key}_morning_open")
+                TimePicker::make("hours_{$key}_morning_open")
                     ->label('Mat. apertura')
-                    ->placeholder('09:00')
+                    ->seconds(false)
                     ->visible(fn(Get $get) => $get("hours_{$key}_type") === 'split')
                     ->columnSpan(1),
 
-                TextInput::make("hours_{$key}_morning_close")
+                TimePicker::make("hours_{$key}_morning_close")
                     ->label('Mat. chiusura')
-                    ->placeholder('13:00')
+                    ->seconds(false)
                     ->visible(fn(Get $get) => $get("hours_{$key}_type") === 'split')
+                    ->rules(fn(Get $get): array => [
+                        function (string $attribute, mixed $value, \Closure $fail) use ($get, $key): void {
+                            $open = $get("hours_{$key}_morning_open");
+                            if ($value && $open && strtotime($value) <= strtotime($open)) {
+                                $fail('La chiusura mattutina deve essere dopo l\'apertura mattutina.');
+                            }
+                        },
+                    ])
                     ->columnSpan(1),
 
-                TextInput::make("hours_{$key}_afternoon_open")
+                TimePicker::make("hours_{$key}_afternoon_open")
                     ->label('Pom. apertura')
-                    ->placeholder('15:00')
+                    ->seconds(false)
                     ->visible(fn(Get $get) => $get("hours_{$key}_type") === 'split')
+                    ->rules(fn(Get $get): array => [
+                        function (string $attribute, mixed $value, \Closure $fail) use ($get, $key): void {
+                            $morningClose = $get("hours_{$key}_morning_close");
+                            if ($value && $morningClose && strtotime($value) <= strtotime($morningClose)) {
+                                $fail('L\'apertura pomeridiana deve essere dopo la chiusura mattutina.');
+                            }
+                        },
+                    ])
                     ->columnSpan(1),
 
-                TextInput::make("hours_{$key}_afternoon_close")
+                TimePicker::make("hours_{$key}_afternoon_close")
                     ->label('Pom. chiusura')
-                    ->placeholder('19:30')
+                    ->seconds(false)
                     ->visible(fn(Get $get) => $get("hours_{$key}_type") === 'split')
+                    ->rules(fn(Get $get): array => [
+                        function (string $attribute, mixed $value, \Closure $fail) use ($get, $key): void {
+                            $open = $get("hours_{$key}_afternoon_open");
+                            if ($value && $open && strtotime($value) <= strtotime($open)) {
+                                $fail('La chiusura pomeridiana deve essere dopo l\'apertura pomeridiana.');
+                            }
+                        },
+                    ])
                     ->columnSpan(1),
             ]);
         }
@@ -394,10 +429,63 @@ class SalonProfilePage extends Page
         $profile->update($profileData);
         $profile->refresh();
 
+        $this->clampStaffAvailability($openingHours);
+
         $this->form->saveRelationships();
         $this->mount();
 
         Notification::make()->title('Profilo salvato')->success()->send();
+    }
+
+    private function clampStaffAvailability(array $openingHours): void
+    {
+        $dayKeyMap = [0 => 'sun', 1 => 'mon', 2 => 'tue', 3 => 'wed', 4 => 'thu', 5 => 'fri', 6 => 'sat'];
+        $t         = fn(?string $time): string => substr($time ?? '00:00', 0, 5);
+        $ts        = fn(string $hhmm): string => $hhmm . ':00';
+
+        $rules = AvailabilityRule::where('business_id', Business::currentId())
+            ->where('is_available', true)
+            ->get();
+
+        foreach ($rules as $rule) {
+            $salonDay = $openingHours[$dayKeyMap[$rule->day_of_week]] ?? null;
+            $type     = $salonDay['type'] ?? 'closed';
+
+            if ($type === 'closed') {
+                $rule->update(['is_available' => false]);
+                continue;
+            }
+
+            $ranges = $type === 'continuous'
+                ? [['start' => $salonDay['open_time'],    'end' => $salonDay['close_time']]]
+                : [
+                    ['start' => $salonDay['morning_open'],   'end' => $salonDay['morning_close']],
+                    ['start' => $salonDay['afternoon_open'], 'end' => $salonDay['afternoon_close']],
+                ];
+
+            $changes = [];
+
+            if ($rule->start_time && $t($rule->start_time) < $t($ranges[0]['start'])) {
+                $changes['start_time'] = $ts($ranges[0]['start']);
+            }
+            if ($rule->end_time && $t($rule->end_time) > $t($ranges[0]['end'])) {
+                $changes['end_time'] = $ts($ranges[0]['end']);
+            }
+
+            if ($rule->start_time_2 || $rule->end_time_2) {
+                $r = $ranges[1] ?? $ranges[0];
+                if ($rule->start_time_2 && $t($rule->start_time_2) < $t($r['start'])) {
+                    $changes['start_time_2'] = $ts($r['start']);
+                }
+                if ($rule->end_time_2 && $t($rule->end_time_2) > $t($r['end'])) {
+                    $changes['end_time_2'] = $ts($r['end']);
+                }
+            }
+
+            if (! empty($changes)) {
+                $rule->update($changes);
+            }
+        }
     }
 
     public static function canAccess(): bool

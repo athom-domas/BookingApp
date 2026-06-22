@@ -400,7 +400,9 @@ class AppointmentCalendar extends Page implements HasForms
                     DatePicker::make('date')
                         ->label('Data')
                         ->required()
-                        ->default(today()),
+                        ->default(today())
+                        ->native(false)
+                        ->displayFormat('d/m/Y'),
 
                     Select::make('staff_id')
                         ->label('Operatore')
