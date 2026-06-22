@@ -14,7 +14,7 @@ class ServiceController extends Controller
 
     public function index(): JsonResponse
     {
-        $services = Service::active()->get();
+        $services = Service::active()->orderBy('sort_order')->orderBy('name')->get();
 
         return response()->json(['data' => $services]);
     }

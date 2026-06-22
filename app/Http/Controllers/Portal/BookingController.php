@@ -31,7 +31,7 @@ class BookingController extends Controller
         }
 
         $profile  = SalonProfile::current()->load('media');
-        $services = Service::active()->orderByDesc('featured')->orderBy('name')->get();
+        $services = Service::active()->orderBy('sort_order')->orderBy('name')->get();
         $staff    = User::whereHas('roles', fn ($q) => $q->where('name', 'staff')->where('guard_name', 'web'))
             ->where('business_id', app('current_business_id'))
             ->with('media')
@@ -56,7 +56,7 @@ class BookingController extends Controller
                 ->whereHas('roles', fn ($r) => $r->where('name', 'staff')->where('guard_name', 'web'))
                 ->where('business_id', $businessId)
                 ->orderBy('name')])
-            ->orderByDesc('featured')
+            ->orderBy('sort_order')
             ->orderBy('name')
             ->get();
 
