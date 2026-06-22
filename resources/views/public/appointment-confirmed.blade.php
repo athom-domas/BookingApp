@@ -36,14 +36,21 @@
 <body>
     <div class="card">
         @if($alreadyPast)
-            <h1>Appuntamento non disponibile</h1>
-            <p>Questo appuntamento è già passato o annullato.</p>
+            <h1 style="color:#6b7280">Appuntamento non disponibile</h1>
+            <p>Questo appuntamento è già passato o è stato annullato.</p>
         @else
-            <h1>✓ Perfetto, ci vediamo!</h1>
+            <div style="display:flex;justify-content:center;margin-bottom:16px">
+                <span style="display:inline-flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:50%;background:#dcfce7">
+                    <svg style="width:28px;height:28px;color:#16a34a" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                    </svg>
+                </span>
+            </div>
+            <h1>Perfetto, ci vediamo!</h1>
             <p>Abbiamo registrato la tua conferma.</p>
             <div class="detail">
                 <strong>{{ $appointment->services_label }}</strong><br>
-                {{ $appointment->scheduled_date->format('d/m/Y') }} alle <strong>{{ $appointment->scheduled_date->format('H:i') }}</strong><br>
+                {{ $appointment->scheduled_date->translatedFormat('l j F Y') }} alle <strong>{{ $appointment->scheduled_date->format('H:i') }}</strong><br>
                 con {{ $appointment->staff->name }}
             </div>
         @endif

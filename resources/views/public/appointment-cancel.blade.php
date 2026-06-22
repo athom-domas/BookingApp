@@ -49,8 +49,8 @@
         </div>
         <form method="POST" action="{{ request()->fullUrl() }}">
             @csrf
-            <label for="reason">Motivo (opzionale)</label>
-            <textarea id="reason" name="reason" rows="3" placeholder="Es. impegno improvviso..."></textarea>
+            <label for="reason">Motivo della cancellazione <span style="font-weight:400;color:var(--color-muted)">(opzionale — ci aiuta a migliorare)</span></label>
+            <textarea id="reason" name="reason" rows="3" maxlength="500" placeholder="Es. impegno imprevisto, emergenza familiare…"></textarea>
             <button type="submit">Conferma annullamento</button>
         </form>
     </div>

@@ -74,8 +74,13 @@
                 <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-5 shadow-sm">
                     <form method="POST" action="{{ route('portal.appointments.cancel', $appointment) }}">
                         @csrf
-                        <label for="reason" class="block text-sm font-medium text-gray-900 dark:text-gray-200 mb-2">Motivo cancellazione</label>
+                        <div class="flex items-baseline justify-between mb-2">
+                            <label for="reason" class="block text-sm font-medium text-gray-900 dark:text-gray-200">Motivo cancellazione <span class="font-normal text-gray-400">(opzionale)</span></label>
+                            <span class="text-xs text-gray-400 dark:text-gray-500" x-text="(reason ?? '').length + ' / 1000'"></span>
+                        </div>
                         <textarea id="reason" name="reason" rows="3" maxlength="1000"
+                            x-data="{ reason: '' }" x-model="reason"
+                            placeholder="Es. impegno imprevisto, emergenza familiare…"
                             class="block w-full rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-950 dark:text-gray-50 px-3 py-2 text-sm focus:border-gray-900 dark:focus:border-gray-200 focus:outline-none focus:ring-1 focus:ring-gray-900 dark:focus:ring-gray-200"></textarea>
                         <button type="submit"
                             class="mt-3 w-full rounded border border-red-200 dark:border-red-800 px-4 py-2.5 text-sm font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 transition-colors">

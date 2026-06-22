@@ -66,6 +66,7 @@
             'title' => 'Prossimi appuntamenti',
             'appointments' => $upcomingAppointments,
             'empty' => 'Non hai appuntamenti futuri.',
+            'cta' => ['label' => 'Prenota ora', 'href' => route('booking.create')],
         ])
 
         @include('portal.appointments.partials.list', [

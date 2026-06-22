@@ -4,7 +4,12 @@
     </div>
 
     @if ($appointments->isEmpty())
-        <p class="px-5 py-8 text-sm text-gray-500 dark:text-gray-400">{{ $empty }}</p>
+        <div class="flex flex-col items-center gap-3 px-5 py-10 text-center">
+            <p class="text-sm text-gray-500 dark:text-gray-400">{{ $empty }}</p>
+            @isset($cta)
+                <a href="{{ $cta['href'] }}" class="btn-primary inline-block rounded-md px-4 py-2 text-sm font-semibold text-white">{{ $cta['label'] }}</a>
+            @endisset
+        </div>
     @else
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-100 dark:divide-gray-800 text-sm">
@@ -80,9 +85,12 @@
                                                                 @endfor
                                                             </div>
                                                         </div>
-                                                        <div class="mb-5">
-                                                            <label class="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block">La tua esperienza</label>
-                                                            <textarea name="body" rows="4" required maxlength="1000" placeholder="Raccontaci com'è andata..." class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"></textarea>
+                                                        <div class="mb-5" x-data="{ body: '' }">
+                                                            <div class="flex items-baseline justify-between mb-1">
+                                                                <label class="text-xs font-medium text-gray-700 dark:text-gray-300">La tua esperienza</label>
+                                                                <span class="text-xs text-gray-400 dark:text-gray-500" x-text="body.length + ' / 1000'"></span>
+                                                            </div>
+                                                            <textarea name="body" rows="4" required maxlength="1000" x-model="body" placeholder="Raccontaci com'è andata..." class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"></textarea>
                                                         </div>
                                                         <div class="flex gap-3 justify-end">
                                                             <button type="button" @click="open = false" class="rounded border border-gray-200 dark:border-gray-700 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">Annulla</button>
