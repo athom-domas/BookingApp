@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['business_id', 'name', 'description', 'duration_minutes', 'price', 'active', 'featured'])]
+#[Fillable(['business_id', 'name', 'description', 'duration_minutes', 'price', 'active', 'featured', 'sort_order'])]
 class Service extends Model
 {
     /** @use HasFactory<\Database\Factories\ServiceFactory> */

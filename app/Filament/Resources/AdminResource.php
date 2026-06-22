@@ -80,14 +80,24 @@ class AdminResource extends Resource
                     TextInput::make('name')
                         ->label('Nome')
                         ->required()
-                        ->maxLength(255),
+                        ->maxLength(255)
+                        ->validationMessages([
+                            'required' => 'Il nome è obbligatorio.',
+                            'max'      => 'Il nome non può superare 255 caratteri.',
+                        ]),
 
                     TextInput::make('email')
                         ->label('Email')
                         ->email()
                         ->required()
                         ->unique(User::class, 'email', ignoreRecord: true)
-                        ->maxLength(255),
+                        ->maxLength(255)
+                        ->validationMessages([
+                            'required' => 'L\'email è obbligatoria.',
+                            'email'    => 'Inserisci un indirizzo email valido.',
+                            'unique'   => 'Questa email è già in uso.',
+                            'max'      => 'L\'email non può superare 255 caratteri.',
+                        ]),
                 ])
                 ->columns(2)
                 ->columnSpanFull(),
@@ -101,14 +111,24 @@ class AdminResource extends Resource
                         ->required(fn(string $operation): bool => $operation === 'create')
                         ->dehydrated(fn(?string $state): bool => filled($state))
                         ->minLength(8)
-                        ->maxLength(255),
+                        ->maxLength(255)
+                        ->validationMessages([
+                            'required'  => 'La password è obbligatoria.',
+                            'confirmed' => 'Le password non corrispondono.',
+                            'min'       => 'La password deve contenere almeno 8 caratteri.',
+                            'max'       => 'La password non può superare 255 caratteri.',
+                        ]),
 
                     TextInput::make('password_confirmation')
                         ->label('Conferma password')
                         ->password()
                         ->required(fn(string $operation): bool => $operation === 'create')
                         ->dehydrated(false)
-                        ->maxLength(255),
+                        ->maxLength(255)
+                        ->validationMessages([
+                            'required' => 'La conferma password è obbligatoria.',
+                            'max'      => 'La conferma password non può superare 255 caratteri.',
+                        ]),
                 ])
                 ->columns(2)
                 ->columnSpanFull(),

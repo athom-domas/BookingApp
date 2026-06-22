@@ -52,7 +52,11 @@ class ProductResource extends Resource
                     TextInput::make('name')
                         ->label('Nome')
                         ->required()
-                        ->maxLength(255),
+                        ->maxLength(255)
+                        ->validationMessages([
+                            'required' => 'Il nome è obbligatorio.',
+                            'max'      => 'Il nome non può superare 255 caratteri.',
+                        ]),
 
                     Textarea::make('description')
                         ->label('Descrizione')
@@ -64,7 +68,12 @@ class ProductResource extends Resource
                         ->required()
                         ->numeric()
                         ->minValue(0.01)
-                        ->step(0.01),
+                        ->step(0.01)
+                        ->validationMessages([
+                            'required' => 'Il prezzo è obbligatorio.',
+                            'numeric'  => 'Il valore deve essere un numero.',
+                            'min'      => 'Il prezzo minimo è 0,01.',
+                        ]),
 
                     SpatieMediaLibraryFileUpload::make('photo')
                         ->label('Foto prodotto')
@@ -83,14 +92,25 @@ class ProductResource extends Resource
                         ->required()
                         ->numeric()
                         ->integer()
-                        ->minValue(0),
+                        ->minValue(0)
+                        ->validationMessages([
+                            'required' => 'Le scorte disponibili sono obbligatorie.',
+                            'numeric'  => 'Il valore deve essere un numero.',
+                            'integer'  => 'Il valore deve essere un numero intero.',
+                            'min'      => 'Il valore minimo è 0.',
+                        ]),
 
                     TextInput::make('low_stock_threshold')
                         ->label('Soglia scorte basse')
                         ->helperText('Ricevi una notifica quando le scorte scendono a questo livello. Lascia vuoto per disabilitare.')
                         ->numeric()
                         ->integer()
-                        ->minValue(0),
+                        ->minValue(0)
+                        ->validationMessages([
+                            'numeric' => 'Il valore deve essere un numero.',
+                            'integer' => 'Il valore deve essere un numero intero.',
+                            'min'     => 'Il valore minimo è 0.',
+                        ]),
                 ])
                 ->columns(2)
                 ->columnSpanFull(),

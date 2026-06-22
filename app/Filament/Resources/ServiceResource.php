@@ -40,8 +40,18 @@ class ServiceResource extends Resource
                     TextInput::make('name')
                         ->label('Nome')
                         ->required()
-                        ->unique(Service::class, 'name', ignoreRecord: true)
-                        ->maxLength(255),
+                        ->unique(
+                            table: Service::class,
+                            column: 'name',
+                            ignoreRecord: true,
+                            modifyRuleUsing: fn ($rule) => $rule->where('business_id', \App\Models\Business::currentId()),
+                        )
+                        ->maxLength(255)
+                        ->validationMessages([
+                            'required' => 'Il nome del servizio è obbligatorio.',
+                            'unique'   => 'Esiste già un servizio con questo nome.',
+                            'max'      => 'Il nome non può superare 255 caratteri.',
+                        ]),
 
                     Textarea::make('description')
                         ->label('Descrizione')
@@ -53,14 +63,25 @@ class ServiceResource extends Resource
                         ->required()
                         ->numeric()
                         ->minValue(1)
-                        ->integer(),
+                        ->integer()
+                        ->validationMessages([
+                            'required' => 'La durata è obbligatoria.',
+                            'numeric'  => 'La durata deve essere un numero.',
+                            'min'      => 'La durata deve essere di almeno 1 minuto.',
+                            'integer'  => 'La durata deve essere un numero intero.',
+                        ]),
 
                     TextInput::make('price')
                         ->label('Prezzo (€)')
                         ->required()
                         ->numeric()
                         ->minValue(0.01)
-                        ->step(0.01),
+                        ->step(0.01)
+                        ->validationMessages([
+                            'required' => 'Il prezzo è obbligatorio.',
+                            'numeric'  => 'Il prezzo deve essere un numero.',
+                            'min'      => 'Il prezzo deve essere maggiore di zero.',
+                        ]),
                 ])
                 ->columns(2)
                 ->columnSpanFull(),
@@ -132,6 +153,8 @@ class ServiceResource extends Resource
                         return $state;
                     }),
             ])
+            ->reorderable('sort_order')
+            ->defaultSort('sort_order')
             ->filters([
                 TernaryFilter::make('active')
                     ->label('Attivo')

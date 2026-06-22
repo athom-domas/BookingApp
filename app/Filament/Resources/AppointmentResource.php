@@ -86,7 +86,10 @@ class AppointmentResource extends Resource
                         ->relationship('user', 'name', fn($query) => $query->role('customer'))
                         ->required()
                         ->searchable()
-                        ->disabled(fn($record) => $record !== null),
+                        ->disabled(fn($record) => $record !== null)
+                        ->validationMessages([
+                            'required' => 'Il cliente è obbligatorio.',
+                        ]),
 
                     Select::make('service_ids')
                         ->label('Servizi')
@@ -94,7 +97,10 @@ class AppointmentResource extends Resource
                         ->multiple()
                         ->searchable()
                         ->required()
-                        ->disabled(fn($record) => $record !== null),
+                        ->disabled(fn($record) => $record !== null)
+                        ->validationMessages([
+                            'required' => 'Seleziona almeno un servizio.',
+                        ]),
 
                     Select::make('staff_id')
                         ->label('Staff')
@@ -108,7 +114,10 @@ class AppointmentResource extends Resource
                             $record?->status === 'completed'
                                 || $record?->status === 'cancelled'
                                 || (! auth()->user()?->isAdmin() && $record !== null)
-                        ),
+                        )
+                        ->validationMessages([
+                            'required' => 'Il membro dello staff è obbligatorio.',
+                        ]),
 
                     DateTimePicker::make('scheduled_date')
                         ->label('Data e ora')
@@ -122,7 +131,10 @@ class AppointmentResource extends Resource
                                 || (! auth()->user()?->isAdmin()
                                     && $record !== null
                                     && ! auth()->user()?->can('appointments.edit'))
-                        ),
+                        )
+                        ->validationMessages([
+                            'required' => 'La data e l\'ora sono obbligatorie.',
+                        ]),
 
                     Textarea::make('notes')
                         ->label('Note')
@@ -155,7 +167,10 @@ class AppointmentResource extends Resource
                         ->disabled(
                             fn($record) => ($record?->status === 'completed' && $record?->payment?->status !== 'refunded')
                                 || (! auth()->user()?->isAdmin() && $record?->status === 'cancelled')
-                        ),
+                        )
+                        ->validationMessages([
+                            'required' => 'Lo stato è obbligatorio.',
+                        ]),
 
                     Hidden::make('has_completed_payment')
                         ->dehydrated(false),
@@ -174,7 +189,10 @@ class AppointmentResource extends Resource
                         ->hidden(
                             fn(Get $get, string $operation) =>
                             $operation !== 'edit' || $get('status') !== 'completed'
-                        ),
+                        )
+                        ->validationMessages([
+                            'required' => 'Il metodo di pagamento è obbligatorio.',
+                        ]),
 
                     TextInput::make('payment_amount')
                         ->label('Importo (€)')
@@ -192,7 +210,12 @@ class AppointmentResource extends Resource
                         ->hidden(
                             fn(Get $get, string $operation) =>
                             $operation !== 'edit' || $get('status') !== 'completed'
-                        ),
+                        )
+                        ->validationMessages([
+                            'required' => 'L\'importo è obbligatorio.',
+                            'numeric'  => 'Il valore deve essere un numero.',
+                            'min'      => 'L\'importo minimo è 0,01.',
+                        ]),
 
                     Toggle::make('apply_loyalty_discount')
                         ->label(fn(): string => 'Applica sconto fedeltà ' . SystemSetting::getLoyaltyRewardPercentage() . '% (−' . SystemSetting::getLoyaltyRewardThreshold() . ' punti)')
@@ -322,12 +345,20 @@ class AppointmentResource extends Resource
                                 'cash' => 'Contanti',
                                 'pos'  => 'POS (carta)',
                             ])
-                            ->required(),
+                            ->required()
+                            ->validationMessages([
+                                'required' => 'Il metodo di pagamento è obbligatorio.',
+                            ]),
                         TextInput::make('amount')
                             ->label('Importo (€)')
                             ->numeric()
                             ->minValue(0.01)
-                            ->required(),
+                            ->required()
+                            ->validationMessages([
+                                'required' => 'L\'importo è obbligatorio.',
+                                'numeric'  => 'Il valore deve essere un numero.',
+                                'min'      => 'L\'importo minimo è 0,01.',
+                            ]),
                         Toggle::make('apply_loyalty_discount')
                             ->label(fn(): string => 'Applica sconto fedeltà ' . SystemSetting::getLoyaltyRewardPercentage() . '% (−' . SystemSetting::getLoyaltyRewardThreshold() . ' punti)')
                             ->default(false)

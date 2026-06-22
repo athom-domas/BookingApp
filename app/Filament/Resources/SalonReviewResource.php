@@ -32,16 +32,25 @@ class SalonReviewResource extends Resource
         return $schema->schema([
             TextInput::make('author_name')
                 ->label('Nome cliente')
-                ->required(),
+                ->required()
+                ->validationMessages([
+                    'required' => 'Il nome cliente è obbligatorio.',
+                ]),
             Select::make('rating')
                 ->label('Stelle')
                 ->options([1 => '★', 2 => '★★', 3 => '★★★', 4 => '★★★★', 5 => '★★★★★'])
-                ->required(),
+                ->required()
+                ->validationMessages([
+                    'required' => 'Il voto è obbligatorio.',
+                ]),
             Textarea::make('body')
                 ->label('Testo')
                 ->required()
                 ->rows(4)
-                ->columnSpanFull(),
+                ->columnSpanFull()
+                ->validationMessages([
+                    'required' => 'Il testo della recensione è obbligatorio.',
+                ]),
             Toggle::make('is_published')
                 ->label('Pubblicata'),
         ]);
