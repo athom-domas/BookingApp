@@ -108,3 +108,4 @@ deploy-code:
 	rsync -avz config/ $(SSH_HOST):$(SSH_PATH)/config/
 	rsync -avz resources/ $(SSH_HOST):$(SSH_PATH)/resources/
 	rsync -avz database/migrations/ $(SSH_HOST):$(SSH_PATH)/database/migrations/
+	rsync -avz database/seeders/ $(SSH_HOST):$(SSH_PATH)/database/seeders/
