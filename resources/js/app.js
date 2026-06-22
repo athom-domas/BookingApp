@@ -1,6 +1,37 @@
 import Alpine from 'alpinejs';
 import { bookingWizard } from './booking-wizard.js';
 
+const STRIPE_ERRORS = {
+    card_declined:             'La carta è stata rifiutata. Verifica i dati o usa un altro metodo di pagamento.',
+    insufficient_funds:        'Fondi insufficienti sulla carta.',
+    lost_card:                 'La carta risulta bloccata. Contatta la tua banca.',
+    stolen_card:               'La carta risulta bloccata. Contatta la tua banca.',
+    expired_card:              'La carta è scaduta. Usa una carta valida.',
+    incorrect_cvc:             'Il codice di sicurezza (CVV) non è corretto.',
+    incorrect_number:          'Il numero della carta non è valido.',
+    incorrect_zip:             'Il CAP inserito non corrisponde a quello della carta.',
+    invalid_cvc:               'Il codice di sicurezza (CVV) non è valido.',
+    invalid_expiry_month:      'Il mese di scadenza non è valido.',
+    invalid_expiry_year:       'L\'anno di scadenza non è valido.',
+    invalid_number:            'Il numero della carta non è valido.',
+    do_not_honor:              'La carta è stata rifiutata dalla banca. Contatta il tuo istituto.',
+    do_not_try_again:          'La carta è stata rifiutata. Non riprovare con questa carta.',
+    fraudulent:                'Il pagamento è stato rifiutato per motivi di sicurezza.',
+    generic_decline:           'La carta è stata rifiutata. Verifica i dati o contatta la tua banca.',
+    payment_intent_authentication_failure: 'Autenticazione non riuscita. Riprova.',
+    processing_error:          'Si è verificato un errore durante l\'elaborazione. Riprova tra qualche istante.',
+};
+
+function stripeErrorMessage(error) {
+    if (error.code && STRIPE_ERRORS[error.code]) {
+        return STRIPE_ERRORS[error.code];
+    }
+    if (error.decline_code && STRIPE_ERRORS[error.decline_code]) {
+        return STRIPE_ERRORS[error.decline_code];
+    }
+    return 'Pagamento non completato. Verifica i dati della carta e riprova.';
+}
+
 window.bookingWizard = bookingWizard;
 
 window.scrollToSection = function (id) {
@@ -48,7 +79,7 @@ ready(() => {
             });
 
             if (error) {
-                errorTarget.textContent = error.message || 'Pagamento non completato.';
+                errorTarget.textContent = stripeErrorMessage(error);
                 errorTarget.classList.remove('hidden');
                 submitButton.disabled = false;
                 submitButton.textContent = 'Paga ora';
