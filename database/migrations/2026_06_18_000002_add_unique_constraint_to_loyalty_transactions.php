@@ -16,7 +16,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('loyalty_transactions', function (Blueprint $table) {
+            $table->dropForeign(['appointment_id']);
             $table->dropUnique('loyalty_transactions_appointment_type_unique');
+            $table->foreign('appointment_id')->references('id')->on('appointments')->nullOnDelete();
         });
     }
 };

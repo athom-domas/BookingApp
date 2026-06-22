@@ -16,6 +16,15 @@ class CurrentMonthSeeder extends Seeder
 {
     private const WORK_DAYS = [Carbon::TUESDAY, Carbon::WEDNESDAY, Carbon::THURSDAY, Carbon::FRIDAY, Carbon::SATURDAY];
 
+    // Orari entro l'apertura del salone (Rossini): mar-ven split 09-13 / 15-19:30, sab split 09-13 / 14-18
+    private const AVAILABILITY = [
+        Carbon::TUESDAY   => ['09:00:00', '13:00:00', '15:00:00', '19:30:00'],
+        Carbon::WEDNESDAY => ['09:00:00', '13:00:00', '15:00:00', '19:30:00'],
+        Carbon::THURSDAY  => ['09:00:00', '13:00:00', '15:00:00', '19:30:00'],
+        Carbon::FRIDAY    => ['09:00:00', '13:00:00', '15:00:00', '19:30:00'],
+        Carbon::SATURDAY  => ['09:00:00', '13:00:00', '14:00:00', '18:00:00'],
+    ];
+
     private const STAFF = [
         'marco'  => ['email' => 'marco@rossini.test',  'name' => 'Marco Russo'],
         'andrea' => ['email' => 'andrea@rossini.test', 'name' => 'Andrea Conti'],
@@ -106,14 +115,15 @@ class CurrentMonthSeeder extends Seeder
     {
         foreach ($staff as $user) {
             AvailabilityRule::where('user_id', $user->id)->delete();
-            foreach (self::WORK_DAYS as $day) {
+            foreach (self::AVAILABILITY as $day => [$s1, $e1, $s2, $e2]) {
                 AvailabilityRule::create([
                     'user_id'      => $user->id,
+                    'business_id'  => app('current_business_id'),
                     'day_of_week'  => $day,
-                    'start_time'   => '08:00:00',
-                    'end_time'     => '13:00:00',
-                    'start_time_2' => '16:00:00',
-                    'end_time_2'   => '21:00:00',
+                    'start_time'   => $s1,
+                    'end_time'     => $e1,
+                    'start_time_2' => $s2,
+                    'end_time_2'   => $e2,
                     'is_available' => true,
                 ]);
             }

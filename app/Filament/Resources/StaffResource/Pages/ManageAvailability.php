@@ -8,7 +8,7 @@ use App\Models\SalonProfile;
 use App\Models\StaffBlockout;
 use App\Models\User;
 use Filament\Schemas\Components\Section;
-use Filament\Forms\Components\TimePicker;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\Page;
@@ -32,6 +32,18 @@ class ManageAvailability extends Page
 
     private static array $dayOrder = [1, 2, 3, 4, 5, 6, 0];
 
+    private static function timeOptions(): array
+    {
+        $options = [];
+        for ($h = 5; $h <= 23; $h++) {
+            foreach ([0, 30] as $m) {
+                $time           = sprintf('%02d:%02d', $h, $m);
+                $options[$time] = $time;
+            }
+        }
+        return $options;
+    }
+
     private static array $dayLabels = [
         1 => 'Lunedì',
         2 => 'Martedì',
@@ -53,12 +65,13 @@ class ManageAvailability extends Page
         $days = [];
         foreach (self::$dayOrder as $day) {
             $rule = $rules->get($day);
+            $t          = fn(?string $v): ?string => $v ? substr($v, 0, 5) : null;
             $days[$day] = [
                 'is_available' => $rule?->is_available ?? false,
-                'start_time'   => $rule?->start_time,
-                'end_time'     => $rule?->end_time,
-                'start_time_2' => $rule?->start_time_2,
-                'end_time_2'   => $rule?->end_time_2,
+                'start_time'   => $t($rule?->start_time),
+                'end_time'     => $t($rule?->end_time),
+                'start_time_2' => $t($rule?->start_time_2),
+                'end_time_2'   => $t($rule?->end_time_2),
             ];
         }
 
@@ -82,25 +95,23 @@ class ManageAvailability extends Page
                         ->live()
                         ->columnSpanFull(),
 
-                    TimePicker::make("days.{$day}.start_time")
+                    Select::make("days.{$day}.start_time")
                         ->label('Inizio mattina')
-                        ->seconds(false)
+                        ->options(self::timeOptions())
                         ->required(fn (Get $get): bool => (bool) $get("days.{$day}.is_available")),
 
-                    TimePicker::make("days.{$day}.end_time")
+                    Select::make("days.{$day}.end_time")
                         ->label('Fine mattina')
-                        ->seconds(false)
+                        ->options(self::timeOptions())
                         ->required(fn (Get $get): bool => (bool) $get("days.{$day}.is_available")),
 
-                    TimePicker::make("days.{$day}.start_time_2")
+                    Select::make("days.{$day}.start_time_2")
                         ->label('Inizio pomeriggio')
-                        ->seconds(false)
-                        ->required(fn (Get $get): bool => filled($get("days.{$day}.end_time_2"))),
+                        ->options(self::timeOptions()),
 
-                    TimePicker::make("days.{$day}.end_time_2")
+                    Select::make("days.{$day}.end_time_2")
                         ->label('Fine pomeriggio')
-                        ->seconds(false)
-                        ->required(fn (Get $get): bool => filled($get("days.{$day}.start_time_2"))),
+                        ->options(self::timeOptions()),
                 ]);
         }
 

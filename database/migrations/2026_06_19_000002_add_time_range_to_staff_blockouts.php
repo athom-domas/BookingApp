@@ -18,7 +18,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('staff_blockouts', function (Blueprint $table) {
+            $table->dropForeign(['user_id']);
             $table->dropIndex('staff_blockouts_user_date_range_idx');
+            $table->foreign('user_id')->references('id')->on('users')->cascadeOnDelete();
             $table->dropColumn(['start_time', 'end_time']);
         });
     }

@@ -11,7 +11,6 @@ use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\TimePicker;
 use Filament\Forms\Components\Toggle; // kept for possible future use
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -114,15 +113,15 @@ class SalonProfilePage extends Page
                     ->live()
                     ->columnSpan(2),
 
-                TimePicker::make("hours_{$key}_open_time")
+                Select::make("hours_{$key}_open_time")
                     ->label('Apertura')
-                    ->seconds(false)
+                    ->options(self::timeOptions())
                     ->visible(fn(Get $get) => $get("hours_{$key}_type") === 'continuous')
                     ->columnSpan(2),
 
-                TimePicker::make("hours_{$key}_close_time")
+                Select::make("hours_{$key}_close_time")
                     ->label('Chiusura')
-                    ->seconds(false)
+                    ->options(self::timeOptions())
                     ->visible(fn(Get $get) => $get("hours_{$key}_type") === 'continuous')
                     ->rules(fn(Get $get): array => [
                         function (string $attribute, mixed $value, \Closure $fail) use ($get, $key): void {
@@ -134,15 +133,15 @@ class SalonProfilePage extends Page
                     ])
                     ->columnSpan(2),
 
-                TimePicker::make("hours_{$key}_morning_open")
+                Select::make("hours_{$key}_morning_open")
                     ->label('Mat. apertura')
-                    ->seconds(false)
+                    ->options(self::timeOptions())
                     ->visible(fn(Get $get) => $get("hours_{$key}_type") === 'split')
                     ->columnSpan(1),
 
-                TimePicker::make("hours_{$key}_morning_close")
+                Select::make("hours_{$key}_morning_close")
                     ->label('Mat. chiusura')
-                    ->seconds(false)
+                    ->options(self::timeOptions())
                     ->visible(fn(Get $get) => $get("hours_{$key}_type") === 'split')
                     ->rules(fn(Get $get): array => [
                         function (string $attribute, mixed $value, \Closure $fail) use ($get, $key): void {
@@ -154,9 +153,9 @@ class SalonProfilePage extends Page
                     ])
                     ->columnSpan(1),
 
-                TimePicker::make("hours_{$key}_afternoon_open")
+                Select::make("hours_{$key}_afternoon_open")
                     ->label('Pom. apertura')
-                    ->seconds(false)
+                    ->options(self::timeOptions())
                     ->visible(fn(Get $get) => $get("hours_{$key}_type") === 'split')
                     ->rules(fn(Get $get): array => [
                         function (string $attribute, mixed $value, \Closure $fail) use ($get, $key): void {
@@ -168,9 +167,9 @@ class SalonProfilePage extends Page
                     ])
                     ->columnSpan(1),
 
-                TimePicker::make("hours_{$key}_afternoon_close")
+                Select::make("hours_{$key}_afternoon_close")
                     ->label('Pom. chiusura')
-                    ->seconds(false)
+                    ->options(self::timeOptions())
                     ->visible(fn(Get $get) => $get("hours_{$key}_type") === 'split')
                     ->rules(fn(Get $get): array => [
                         function (string $attribute, mixed $value, \Closure $fail) use ($get, $key): void {
@@ -486,6 +485,18 @@ class SalonProfilePage extends Page
                 $rule->update($changes);
             }
         }
+    }
+
+    private static function timeOptions(): array
+    {
+        $options = [];
+        for ($h = 5; $h <= 23; $h++) {
+            foreach ([0, 30] as $m) {
+                $time           = sprintf('%02d:%02d', $h, $m);
+                $options[$time] = $time;
+            }
+        }
+        return $options;
     }
 
     public static function canAccess(): bool
