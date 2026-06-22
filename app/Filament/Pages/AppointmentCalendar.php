@@ -6,6 +6,7 @@ use App\Filament\Widgets\AppointmentCalendarWidget;
 use App\Models\Appointment;
 use App\Models\AvailabilityRule;
 use App\Models\Service;
+use App\Models\SalonProfile;
 use App\Models\StaffBlockout;
 use App\Models\User;
 use App\Models\SystemSetting;
@@ -22,7 +23,6 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\TimePicker;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Grid;
 use Filament\Forms\Concerns\InteractsWithForms;
@@ -54,6 +54,41 @@ class AppointmentCalendar extends Page implements HasForms
         return $user?->isAdmin() || $user?->isStaff() ?? false;
     }
 
+    private static function timeOptions(?string $date = null): array
+    {
+        $ranges = $date ? self::salonRangesForDate($date) : [];
+
+        if (empty($ranges)) {
+            $ranges = [['05:00', '23:30']];
+        }
+
+        $options = [];
+        foreach ($ranges as [$from, $to]) {
+            [$fh, $fm] = array_map('intval', explode(':', $from));
+            [$th, $tm] = array_map('intval', explode(':', $to));
+            for ($mins = $fh * 60 + $fm; $mins <= $th * 60 + $tm; $mins += 30) {
+                $time           = sprintf('%02d:%02d', intdiv($mins, 60), $mins % 60);
+                $options[$time] = $time;
+            }
+        }
+
+        return $options;
+    }
+
+    private static function salonRangesForDate(string $date): array
+    {
+        static $dayKeys = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+        $dayKey = $dayKeys[Carbon::parse($date)->dayOfWeek];
+        $hours  = SalonProfile::current()?->opening_hours ?? [];
+        $day    = $hours[$dayKey] ?? [];
+
+        return match ($day['type'] ?? 'closed') {
+            'continuous' => [[$day['open_time'],    $day['close_time']]],
+            'split'      => [[$day['morning_open'], $day['morning_close']], [$day['afternoon_open'], $day['afternoon_close']]],
+            default      => [],
+        };
+    }
+
     public array $filterStaff    = [];
     public array $filterStatus   = [];
     public array $filterService  = [];
@@ -69,7 +104,7 @@ class AppointmentCalendar extends Page implements HasForms
                 ->icon('heroicon-o-user-plus')
                 ->slideOver()
                 ->visible(fn() => Filament::auth()->user()?->isAdmin()
-                    || Filament::auth()->user()?->isStaff())
+                    || (Filament::auth()->user()?->isStaff() && Filament::auth()->user()?->can('appointments.create')))
                 ->form([
                     Grid::make(1)
                         ->extraAttributes(['class' => '!gap-y-4'])
@@ -394,15 +429,15 @@ class AppointmentCalendar extends Page implements HasForms
                 ->icon('heroicon-o-lock-closed')
                 ->color('danger')
                 ->slideOver()
-                ->visible(fn() => Filament::auth()->user()?->isAdmin()
-                    || Filament::auth()->user()?->isStaff())
+                ->visible(fn() => Filament::auth()->user()?->isAdmin())
                 ->form([
                     DatePicker::make('date')
                         ->label('Data')
                         ->required()
                         ->default(today())
                         ->native(false)
-                        ->displayFormat('d/m/Y'),
+                        ->displayFormat('d/m/Y')
+                        ->live(),
 
                     Select::make('staff_id')
                         ->label('Operatore')
@@ -417,16 +452,23 @@ class AppointmentCalendar extends Page implements HasForms
                         ->visible(fn() => Filament::auth()->user()?->isAdmin()
                             || Filament::auth()->user()?->can('appointments.view_all')),
 
-                    TimePicker::make('start_time')
+                    Select::make('start_time')
                         ->label('Dalle')
-                        ->required()
-                        ->seconds(false),
+                        ->options(fn(Get $get) => self::timeOptions($get('date')))
+                        ->required(),
 
-                    TimePicker::make('end_time')
+                    Select::make('end_time')
                         ->label('Alle')
+                        ->options(fn(Get $get) => self::timeOptions($get('date')))
                         ->required()
-                        ->seconds(false)
-                        ->after('start_time'),
+                        ->rules(fn(Get $get): array => [
+                            function (string $attribute, mixed $value, \Closure $fail) use ($get): void {
+                                $start = $get('start_time');
+                                if ($value && $start && $value <= $start) {
+                                    $fail('L\'ora di fine deve essere dopo l\'ora di inizio.');
+                                }
+                            },
+                        ]),
 
                     TextInput::make('reason')
                         ->label('Motivo')

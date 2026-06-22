@@ -2,8 +2,8 @@
 
 namespace App\Filament\Pages;
 
-use App\Models\Business;
 use App\Models\SystemSetting;
+use App\Models\User;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -37,6 +37,8 @@ class SystemSettings extends Page
             'reminder_2_hours'            => $setting->reminder_2_hours,
             'payment_mode'                => $setting->payment_mode ?? 'both',
             'reviews_enabled'             => $setting->reviews_enabled ?? true,
+            'review_request_enabled'      => $setting->review_request_enabled ?? false,
+            'review_request_delay_hours'  => $setting->review_request_delay_hours ?? 2,
             'loyalty_enabled'             => $setting->loyalty_enabled ?? false,
             'loyalty_points_per_euro'     => $setting->loyalty_points_per_euro ?? 1,
             'loyalty_reward_threshold'    => $setting->loyalty_reward_threshold ?? 100,
@@ -50,23 +52,26 @@ class SystemSettings extends Page
 
     public function form(Schema $schema): Schema
     {
+        $staffOptions = fn () => User::where('business_id', \App\Models\Business::currentId())
+            ->whereHas('roles', fn ($q) => $q->whereIn('name', ['admin', 'staff'])->where('guard_name', 'web'))
+            ->orderBy('name')
+            ->pluck('name', 'id')
+            ->all();
+
         return $schema
             ->schema([
-                Section::make('Calendario e prenotazioni')
-                    ->columns(2)
+                Section::make('Prenotazioni')
+                    ->columns(3)
                     ->schema([
-                        TextInput::make('slot_granularity_minutes')
-                            ->label('Granularità slot (min)')
-                            ->helperText('Intervallo tra uno slot e l\'altro nel calendario (es. 15 min → 09:00, 09:15, 09:30…)')
-                            ->integer()
-                            ->minValue(5)
-                            ->maxValue(60)
-                            ->required()
-                            ->suffix('min'),
+                        Select::make('slot_granularity_minutes')
+                            ->label('Granularità slot')
+                            ->helperText('Intervallo tra uno slot e l\'altro nel calendario')
+                            ->options([5 => '5 min', 10 => '10 min', 15 => '15 min', 20 => '20 min', 30 => '30 min', 60 => '60 min'])
+                            ->required(),
 
                         TextInput::make('booking_max_days_ahead')
-                            ->label('Prenotazione massima anticipata')
-                            ->helperText('Quanti giorni in anticipo può prenotare un cliente')
+                            ->label('Prenotazione max anticipata')
+                            ->helperText('Giorni in anticipo consentiti')
                             ->integer()
                             ->minValue(1)
                             ->maxValue(365)
@@ -75,42 +80,34 @@ class SystemSettings extends Page
 
                         TextInput::make('cancellation_deadline_hours')
                             ->label('Scadenza cancellazione')
-                            ->helperText('Entro quante ore prima dell\'appuntamento il cliente può cancellare')
+                            ->helperText('Ore prima entro cui il cliente può cancellare')
                             ->integer()
                             ->minValue(0)
                             ->required()
                             ->suffix('ore'),
                     ]),
 
-                Section::make('Promemoria')
-                    ->columns(2)
+                Section::make('Promemoria appuntamento')
+                    ->columns(3)
                     ->schema([
                         Select::make('reminder_count')
                             ->label('Numero di promemoria')
-                            ->options([
-                                '0' => 'Nessuno',
-                                '1' => '1 promemoria',
-                                '2' => '2 promemoria',
-                            ])
+                            ->options(['0' => 'Nessuno', '1' => '1 promemoria', '2' => '2 promemoria'])
                             ->required()
                             ->live(),
 
-                        TextInput::make('reminder_1_hours')
+                        Select::make('reminder_1_hours')
                             ->label('Primo promemoria')
                             ->helperText('Ore prima dell\'appuntamento')
-                            ->integer()
-                            ->minValue(1)
+                            ->options([1 => '1 ora', 2 => '2 ore', 4 => '4 ore', 6 => '6 ore', 12 => '12 ore', 24 => '24 ore', 48 => '48 ore'])
                             ->required()
-                            ->suffix('ore prima')
                             ->visible(fn (Get $get): bool => (int) $get('reminder_count') >= 1),
 
-                        TextInput::make('reminder_2_hours')
+                        Select::make('reminder_2_hours')
                             ->label('Secondo promemoria')
                             ->helperText('Ore prima dell\'appuntamento')
-                            ->integer()
-                            ->minValue(1)
+                            ->options([1 => '1 ora', 2 => '2 ore', 4 => '4 ore', 6 => '6 ore', 12 => '12 ore', 24 => '24 ore', 48 => '48 ore'])
                             ->required()
-                            ->suffix('ore prima')
                             ->visible(fn (Get $get): bool => (int) $get('reminder_count') >= 2),
                     ]),
 
@@ -119,34 +116,32 @@ class SystemSettings extends Page
                         Select::make('payment_mode')
                             ->label('Metodi di pagamento accettati')
                             ->options([
-                                'both'      => 'Online (Stripe) e in salone',
-                                'online'    => 'Solo online (Stripe)',
-                                'in_salon'  => 'Solo in salone',
+                                'both'     => 'Online (Stripe) e in salone',
+                                'online'   => 'Solo online (Stripe)',
+                                'in_salon' => 'Solo in salone',
                             ])
                             ->required(),
                     ]),
 
-                Section::make('Sito web')
+                Section::make('Sito web e recensioni')
+                    ->columns(2)
                     ->schema([
                         Toggle::make('reviews_enabled')
                             ->label('Mostra sezione recensioni')
-                            ->helperText('Se disattivato, la sezione recensioni non compare sul sito del salone')
-                            ->default(true),
-                    ]),
+                            ->helperText('Se disattivato, la sezione recensioni non compare sul sito')
+                            ->default(true)
+                            ->columnSpanFull(),
 
-                Section::make('Richiesta recensione')
-                    ->columns(2)
-                    ->schema([
                         Toggle::make('review_request_enabled')
-                            ->label('Abilita richiesta recensione automatica')
-                            ->helperText('Invia un\'email al cliente dopo il completamento dell\'appuntamento con invito a lasciare una recensione.')
+                            ->label('Richiesta recensione automatica')
+                            ->helperText('Invia un\'email al cliente dopo il completamento dell\'appuntamento con invito a lasciare una recensione')
                             ->default(false)
                             ->live()
                             ->columnSpanFull(),
 
                         TextInput::make('review_request_delay_hours')
                             ->label('Ore di attesa prima dell\'invio')
-                            ->helperText('L\'email viene inviata dopo questo numero di ore dal completamento.')
+                            ->helperText('L\'email viene inviata dopo questo numero di ore dal completamento')
                             ->integer()
                             ->minValue(1)
                             ->maxValue(72)
@@ -155,8 +150,8 @@ class SystemSettings extends Page
                             ->visible(fn (Get $get): bool => (bool) $get('review_request_enabled')),
                     ]),
 
-                Section::make('Fedeltà')
-                    ->columns(2)
+                Section::make('Programma fedeltà')
+                    ->columns(3)
                     ->schema([
                         Toggle::make('loyalty_enabled')
                             ->label('Abilita programma fedeltà')
@@ -166,7 +161,6 @@ class SystemSettings extends Page
 
                         TextInput::make('loyalty_points_per_euro')
                             ->label('Punti per euro speso')
-                            ->helperText('Punti accreditati per ogni euro di spesa')
                             ->integer()
                             ->minValue(1)
                             ->required()
@@ -175,7 +169,6 @@ class SystemSettings extends Page
 
                         TextInput::make('loyalty_reward_threshold')
                             ->label('Punti per lo sconto')
-                            ->helperText('Punti necessari al cliente per sbloccare lo sconto')
                             ->integer()
                             ->minValue(1)
                             ->required()
@@ -184,7 +177,6 @@ class SystemSettings extends Page
 
                         TextInput::make('loyalty_reward_percentage')
                             ->label('Sconto sbloccato')
-                            ->helperText('Percentuale di sconto sbloccata al raggiungimento della soglia')
                             ->integer()
                             ->minValue(1)
                             ->maxValue(100)
@@ -193,34 +185,20 @@ class SystemSettings extends Page
                             ->visible(fn (Get $get): bool => (bool) $get('loyalty_enabled')),
                     ]),
 
-                Section::make('Notifiche scorte basse')
+                Section::make('Notifiche')
+                    ->columns(2)
                     ->schema([
-                        \Filament\Forms\Components\Select::make('low_stock_notify_user_ids')
-                            ->label('Notifica a')
-                            ->helperText('Utenti che ricevono un\'email quando le scorte di un prodotto scendono sotto la soglia impostata.')
+                        Select::make('low_stock_notify_user_ids')
+                            ->label('Scorte basse — notifica a')
+                            ->helperText('Email quando le scorte di un prodotto scendono sotto la soglia')
                             ->multiple()
-                            ->options(function () {
-                                return \App\Models\User::where('business_id', \App\Models\Business::currentId())
-                                    ->whereHas('roles', fn ($q) => $q->whereIn('name', ['admin', 'staff'])->where('guard_name', 'web'))
-                                    ->orderBy('name')
-                                    ->pluck('name', 'id');
-                            })
-                            ->columnSpanFull(),
-                    ]),
+                            ->options($staffOptions),
 
-                Section::make('Notifiche ordini ricevuti')
-                    ->schema([
-                        \Filament\Forms\Components\Select::make('order_notify_user_ids')
-                            ->label('Notifica a')
-                            ->helperText('Utenti che ricevono un\'email quando un cliente effettua un ordine prodotti.')
+                        Select::make('order_notify_user_ids')
+                            ->label('Ordini ricevuti — notifica a')
+                            ->helperText('Email quando un cliente effettua un ordine prodotti')
                             ->multiple()
-                            ->options(function () {
-                                return \App\Models\User::where('business_id', \App\Models\Business::currentId())
-                                    ->whereHas('roles', fn ($q) => $q->whereIn('name', ['admin', 'staff'])->where('guard_name', 'web'))
-                                    ->orderBy('name')
-                                    ->pluck('name', 'id');
-                            })
-                            ->columnSpanFull(),
+                            ->options($staffOptions),
                     ]),
 
                 Section::make('Promemoria di follow-up')
@@ -234,7 +212,6 @@ class SystemSettings extends Page
 
                         TextInput::make('follow_up_reminder_days')
                             ->label('Giorni dopo l\'ultimo appuntamento')
-                            ->helperText('Quanti giorni devono passare prima di inviare il promemoria')
                             ->integer()
                             ->minValue(7)
                             ->maxValue(365)

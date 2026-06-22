@@ -33,7 +33,7 @@ class ProductResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return ! auth()->user()?->isStaff();
+        return auth()->user()?->isAdmin() || ! auth()->user()?->isStaff();
     }
 
     public static function canDelete(\Illuminate\Database\Eloquent\Model $record): bool

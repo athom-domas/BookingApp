@@ -17,6 +17,11 @@ class BillingPage extends Page
 
     protected string $view = 'filament.pages.billing';
 
+    public static function canAccess(): bool
+    {
+        return auth()->user()?->isAdmin() ?? false;
+    }
+
     public function getBusiness(): Business
     {
         return once(fn () => Business::findOrFail(Business::currentId()));

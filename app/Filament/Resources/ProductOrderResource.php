@@ -28,7 +28,7 @@ class ProductOrderResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return ! auth()->user()?->isStaff();
+        return auth()->user()?->isAdmin() || ! auth()->user()?->isStaff();
     }
 
     public static function canCreate(): bool
