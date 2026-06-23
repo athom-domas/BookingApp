@@ -94,6 +94,9 @@ deploy-env:
 deploy-assets:
 	docker compose run --rm --no-deps app npm run build
 	rsync -avz --delete public/build/ $(SSH_HOST):$(SSH_PATH)/public/build/
+	rsync -avz public/img/ $(SSH_HOST):$(SSH_PATH)/public/img/
+	rsync -avz public/video/ $(SSH_HOST):$(SSH_PATH)/public/video/
+	rsync -avz public/fonts/ $(SSH_HOST):$(SSH_PATH)/public/fonts/
 
 deploy-code:
 	rsync -avz \
