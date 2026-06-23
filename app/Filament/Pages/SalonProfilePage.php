@@ -310,6 +310,7 @@ class SalonProfilePage extends Page
                         SpatieMediaLibraryFileUpload::make('gallery')
                             ->label('Foto galleria')
                             ->collection('gallery')
+                            ->conversion('web')
                             ->multiple()
                             ->reorderable()
                             ->image()

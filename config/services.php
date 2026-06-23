@@ -47,6 +47,10 @@ return [
         'from' => env('TWILIO_FROM', '+1234567890'),
     ],
 
+    'anthropic' => [
+        'key' => env('ANTHROPIC_API_KEY'),
+    ],
+
     'google' => [
         'credentials' => env('GOOGLE_APPLICATION_CREDENTIALS', '/app/config/google-credentials.json'),
         'calendar_id' => env('GOOGLE_CALENDAR_ID'),

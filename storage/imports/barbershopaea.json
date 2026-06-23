@@ -1,0 +1,139 @@
+{
+    "business": {
+        "name": "Barbershop Andrea e Antonio | Pescara",
+        "tagline": "Dal oltre 30 anni facciamo della tua Testa un Capolavoro",
+        "description": "Situato nel cuore di Pescara, il Barbershop Andrea & Antonio rappresenta un'oasi di stile e raffinatezza per tutti gli uomini che desiderano prendersi cura del proprio look. Con anni di esperienza e una passione senza pari per l'arte del taglio dei capelli e della barba, Andrea e Antonio hanno creato un luogo dove la tradizione si incontra con l'innovazione.",
+        "address": "Via Benedetto Croce, 217, 65126 Pescara PE",
+        "phone": "+39 085693212",
+        "whatsapp_number": null,
+        "instagram_url": "https:\/\/www.instagram.com\/lineauomoaea\/",
+        "facebook_url": "https:\/\/www.facebook.com\/p\/Linea-Uomo-Andrea-E-Antonio-100046867546075\/?locale=it_IT",
+        "logo_url": "https:\/\/www.barbershopaea.it\/wp-content\/uploads\/2024\/07\/cropped-logo_trasparente-1-130x92.png",
+        "google_maps_embed": "https:\/\/maps.google.com\/maps?q=Via+Benedetto+Croce%2C+217%2C+65126+Pescara+PE&output=embed"
+    },
+    "hours": [
+        {
+            "day": "tuesday",
+            "open": "08:30",
+            "close": "20:00",
+            "open_2": null,
+            "close_2": null
+        },
+        {
+            "day": "wednesday",
+            "open": "08:30",
+            "close": "20:00",
+            "open_2": null,
+            "close_2": null
+        },
+        {
+            "day": "thursday",
+            "open": "08:30",
+            "close": "20:00",
+            "open_2": null,
+            "close_2": null
+        },
+        {
+            "day": "friday",
+            "open": "08:30",
+            "close": "20:00",
+            "open_2": null,
+            "close_2": null
+        },
+        {
+            "day": "saturday",
+            "open": "08:30",
+            "close": "20:00",
+            "open_2": null,
+            "close_2": null
+        }
+    ],
+    "services": [
+        {
+            "name": "Taglio Classico",
+            "description": "Tagli classici che non passano mai di moda con precisione e attenzione ai dettagli",
+            "duration_minutes": 30,
+            "price": null
+        },
+        {
+            "name": "Taglio Moderno",
+            "description": "Look contemporaneo con le ultime tendenze e tecniche di taglio personalizzate",
+            "duration_minutes": 30,
+            "price": null
+        },
+        {
+            "name": "Consulenza Stilistica",
+            "description": "Consulenza personalizzata per trovare il look perfetto per te",
+            "duration_minutes": 15,
+            "price": null
+        },
+        {
+            "name": "Rifinitura Barba",
+            "description": "Servizi di rifinitura per mantenere la barba in perfette condizioni",
+            "duration_minutes": 20,
+            "price": null
+        },
+        {
+            "name": "Rasatura Tradizionale",
+            "description": "Rasatura a mano libera con panni caldi e creme emollienti per un risultato liscio e duraturo",
+            "duration_minutes": 25,
+            "price": null
+        },
+        {
+            "name": "Modellatura Barba",
+            "description": "Tecniche avanzate per dare forma alla barba con contorni definiti e armoniosi",
+            "duration_minutes": 20,
+            "price": null
+        },
+        {
+            "name": "Stile Personalizzato Baffi",
+            "description": "Creazione del look perfetto per i baffi tenendo conto della forma del viso",
+            "duration_minutes": 15,
+            "price": null
+        },
+        {
+            "name": "Trattamenti Anticaduta",
+            "description": "Trattamenti specifici per stimolare la crescita e rafforzare i capelli",
+            "duration_minutes": 30,
+            "price": null
+        },
+        {
+            "name": "Massaggio del Cuoio Capelluto",
+            "description": "Massaggio rilassante che migliora la circolazione sanguigna e promuove la salute dei capelli",
+            "duration_minutes": 20,
+            "price": null
+        },
+        {
+            "name": "Trattamenti Idratanti",
+            "description": "Trattamenti con prodotti di alta qualità per capelli secchi e danneggiati",
+            "duration_minutes": 25,
+            "price": null
+        }
+    ],
+    "staff": [
+        {
+            "name": "Andrea",
+            "role": "admin",
+            "bio": "Con oltre 30 anni di esperienza nel settore della barberia, Andrea è uno dei fondatori del Barbershop Andrea & Antonio. Esperto nell'arte del taglio dei capelli e della cura della barba, porta avanti la tradizione con passione e dedizione.",
+            "photo_url": null
+        },
+        {
+            "name": "Antonio",
+            "role": "admin",
+            "bio": "Co-fondatore del barbershop con oltre 30 anni di esperienza. Antonio è specializzato in tagli moderni e tradizionali, offrendo consulenze stilistiche personalizzate per ogni cliente.",
+            "photo_url": null
+        }
+    ],
+    "gallery_images": [
+        "https:\/\/www.barbershopaea.it\/wp-content\/uploads\/2024\/08\/foto-1.png",
+        "https:\/\/www.barbershopaea.it\/wp-content\/uploads\/2024\/08\/foto-2-1-scaled.jpg",
+        "https:\/\/www.barbershopaea.it\/wp-content\/uploads\/2024\/08\/foto-3-1.jpg",
+        "https:\/\/www.barbershopaea.it\/wp-content\/uploads\/2024\/08\/foto-4-scaled.jpg",
+        "https:\/\/www.barbershopaea.it\/wp-content\/uploads\/2024\/08\/foto-5.jpg",
+        "https:\/\/www.barbershopaea.it\/wp-content\/uploads\/2024\/08\/foto-6.png",
+        "https:\/\/www.barbershopaea.it\/wp-content\/uploads\/2024\/08\/foto-7-scaled.jpg",
+        "https:\/\/www.barbershopaea.it\/wp-content\/uploads\/2024\/08\/foto-8-scaled.jpg",
+        "https:\/\/www.barbershopaea.it\/wp-content\/uploads\/2024\/08\/foto-9-scaled.jpg",
+        "https:\/\/www.barbershopaea.it\/wp-content\/uploads\/2024\/08\/foto-10.jpg"
+    ]
+}

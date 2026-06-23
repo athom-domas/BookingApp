@@ -80,12 +80,14 @@ class SalonProfile extends Model implements HasMedia
         $this->addMediaConversion('thumb')
             ->width(200)
             ->height(200)
-            ->nonQueued();
+            ->nonQueued()
+            ->performOnCollections('logo', 'cover', 'favicon');
 
         $this->addMediaConversion('web')
             ->width(1200)
             ->height(800)
-            ->nonQueued();
+            ->nonQueued()
+            ->performOnCollections('gallery', 'cover');
     }
 
     public function logoUrl(): ?string
