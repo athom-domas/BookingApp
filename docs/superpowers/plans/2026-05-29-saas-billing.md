@@ -679,7 +679,7 @@ Create `resources/views/filament/pages/billing.blade.php`:
 
     <div class="space-y-6">
         <x-filament::section>
-            <x-slot name="heading">Piano GestionalePro</x-slot>
+            <x-slot name="heading">Piano BookingApp</x-slot>
 
             @if ($status === 'trial')
                 <div class="flex items-center gap-3 flex-wrap">
@@ -695,7 +695,7 @@ Create `resources/views/filament/pages/billing.blade.php`:
                 <div class="flex items-center gap-3 flex-wrap">
                     <x-filament::badge color="success">Piano attivo</x-filament::badge>
                     <span class="text-sm text-gray-600 dark:text-gray-400">
-                        GestionalePro — €29/mese
+                        BookingApp — €29/mese
                     </span>
                 </div>
                 @if ($business->pm_last_four)
@@ -717,7 +717,7 @@ Create `resources/views/filament/pages/billing.blade.php`:
                 <div class="flex items-center gap-3 flex-wrap">
                     <x-filament::badge color="danger">Accesso scaduto</x-filament::badge>
                     <span class="text-sm text-gray-600 dark:text-gray-400">
-                        Il periodo di prova è terminato. Abbonati per continuare a usare GestionalePro.
+                        Il periodo di prova è terminato. Abbonati per continuare a usare BookingApp.
                     </span>
                 </div>
             @endif
@@ -727,7 +727,7 @@ Create `resources/views/filament/pages/billing.blade.php`:
             <x-slot name="heading">Dettagli piano</x-slot>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
                 <div>
-                    <p class="font-semibold text-gray-900 dark:text-white">GestionalePro</p>
+                    <p class="font-semibold text-gray-900 dark:text-white">BookingApp</p>
                     <p class="text-gray-500">Piano unico</p>
                 </div>
                 <div>
@@ -842,7 +842,7 @@ class PaymentFailedMail extends Mailable
 
     public function envelope(): Envelope
     {
-        return new Envelope(subject: '[GestionalePro] Pagamento non riuscito — azione richiesta');
+        return new Envelope(subject: '[BookingApp] Pagamento non riuscito — azione richiesta');
     }
 
     public function content(): Content
@@ -862,13 +862,13 @@ Create `resources/views/emails/payment-failed.blade.php`:
 <head><meta charset="utf-8"></head>
 <body style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:24px">
     <h2 style="color:#dc2626">Pagamento non riuscito</h2>
-    <p>Il pagamento per l'abbonamento GestionalePro del salone
+    <p>Il pagamento per l'abbonamento BookingApp del salone
        <strong>{{ $business->name }}</strong> non è andato a buon fine.</p>
     <p>Per aggiornare il metodo di pagamento ed evitare l'interruzione del servizio,
        accedi al pannello e vai su <strong>Abbonamento</strong>.</p>
     <p>Per assistenza rispondi a questa email.</p>
     <p style="color:#6b7280;font-size:12px;margin-top:32px">
-        GestionalePro — {{ now()->format('d/m/Y') }}
+        BookingApp — {{ now()->format('d/m/Y') }}
     </p>
 </body>
 </html>
@@ -1137,7 +1137,7 @@ git commit -m "feat: add BillingOverviewWidget to super-admin dashboard"
 
 ## Pre-requisiti manuali (eseguire prima di testare in produzione)
 
-1. **Stripe Dashboard:** creare Product "GestionalePro" → Price €29/mese ricorrente → copiare il `price_id` in `.env` come `STRIPE_PRICE_ID`
+1. **Stripe Dashboard:** creare Product "BookingApp" → Price €29/mese ricorrente → copiare il `price_id` in `.env` come `STRIPE_PRICE_ID`
 2. **Stripe Dashboard:** registrare webhook endpoint `/stripe/billing-webhook` → copiare secret in `STRIPE_BILLING_WEBHOOK_SECRET`
 3. **Seed esistente:** verificare che il Business di default (id=1, subdomain=salone) abbia `trial_ends_at` impostato — eseguire:
    ```bash

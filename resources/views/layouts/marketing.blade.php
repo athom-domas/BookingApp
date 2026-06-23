@@ -33,7 +33,7 @@
 
     <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
         <a href="{{ url('/') }}" class="font-bold text-lg tracking-tight text-ink">
-            Gestionale<span class="text-primary font-normal">Pro</span>
+            Booking<span class="text-primary font-normal">App</span>
         </a>
 
         <nav class="hidden md:flex items-center gap-8">
@@ -85,7 +85,7 @@
         <div class="grid grid-cols-2 md:grid-cols-3 gap-10 mb-12">
             <div class="col-span-2 md:col-span-1">
                 <div class="font-bold text-lg text-white tracking-tight mb-3">
-                    Gestionale<span class="text-primary font-normal">Pro</span>
+                    Booking<span class="text-primary font-normal">App</span>
                 </div>
                 <p class="text-sm leading-relaxed">Software di gestione per saloni, barbieri e centri estetici italiani.</p>
             </div>

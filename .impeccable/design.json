@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generatedAt": "2026-06-04T00:00:00Z",
-  "title": "Design System: GestionalePro",
+  "title": "Design System: BookingApp",
   "extensions": {
     "colorMeta": {
       "terra-bruciata": {
@@ -121,7 +121,7 @@
       "kind": "nav",
       "refersTo": "navigation",
       "description": "Header fisso dopo lo scroll. Sfondo crema, bordo caldo.",
-      "html": "<header class=\"ds-nav\"><div class=\"ds-nav-inner\"><a class=\"ds-nav-logo\" href=\"/\">Gestionale<span class=\"ds-nav-logo-accent\">Pro</span></a><nav class=\"ds-nav-links\"><a class=\"ds-nav-link\" href=\"#funzionalita\">Funzionalità</a><a class=\"ds-nav-link\" href=\"#prezzi\">Prezzi</a><a class=\"ds-nav-cta\" href=\"/contact\">Inizia Gratis</a></nav></div></header>",
+      "html": "<header class=\"ds-nav\"><div class=\"ds-nav-inner\"><a class=\"ds-nav-logo\" href=\"/\">Booking<span class=\"ds-nav-logo-accent\">App</span></a><nav class=\"ds-nav-links\"><a class=\"ds-nav-link\" href=\"#funzionalita\">Funzionalità</a><a class=\"ds-nav-link\" href=\"#prezzi\">Prezzi</a><a class=\"ds-nav-cta\" href=\"/contact\">Inizia Gratis</a></nav></div></header>",
       "css": ".ds-nav { background: rgba(250,247,242,0.95); backdrop-filter: blur(4px); border-bottom: 1px solid #E5D8CF; box-shadow: none; } .ds-nav-inner { max-width: 1152px; margin: 0 auto; padding: 0 24px; height: 64px; display: flex; align-items: center; justify-content: space-between; } .ds-nav-logo { font-family: 'Instrument Sans', ui-sans-serif, sans-serif; font-size: 1.125rem; font-weight: 700; color: #1C1410; text-decoration: none; letter-spacing: -0.02em; } .ds-nav-logo-accent { color: #C4714A; font-weight: 400; } .ds-nav-links { display: flex; align-items: center; gap: 32px; } .ds-nav-link { font-family: 'Instrument Sans', ui-sans-serif, sans-serif; font-size: 0.875rem; font-weight: 500; color: #7A6A60; text-decoration: none; transition: color 0.15s ease; } .ds-nav-link:hover { color: #1C1410; } .ds-nav-cta { font-family: 'Instrument Sans', ui-sans-serif, sans-serif; font-size: 0.875rem; font-weight: 600; background: #C4714A; color: #FAF7F2; padding: 8px 16px; border-radius: 8px; text-decoration: none; transition: background 0.15s ease; } .ds-nav-cta:hover { background: #b86440; }"
     },
     {
@@ -135,7 +135,7 @@
   ],
   "narrative": {
     "northStar": "L'Atelier Italiano",
-    "overview": "GestionalePro è lo strumento professionale di chi gestisce un mestiere con le mani. Il sistema visivo deve riflettere questa realtà: caldo senza essere decorativo, preciso senza essere freddo, italiano senza essere pittoresco. Come l'interno di una buona bottega, tutto ha una posizione, tutto ha uno scopo, niente è lì per fare scena.\n\nLa palette ruota attorno a Terra Bruciata come accento, Inchiostro di Noce come struttura, e Lino Grezzo come superficie. Il display serif (Cormorant Garamond) porta personalità e identità solo nei titoli; Instrument Sans gestisce tutto il resto con pulizia chirurgica. La proporzione è intenzionale: Cormorant è il volto del brand, Instrument Sans è la voce operativa.\n\nIl sistema rifiuta esplicitamente: l'estetica SaaS generica 2024 (gradienti teal, blob animati, card grid uniformi, eyebrow su ogni sezione); l'impersonalità enterprise di Salesforce o HubSpot; la vacuità lifestyle di Fresha/Treatwell; e l'eccesso estetico dei brand luxury fashion.",
+    "overview": "BookingApp è lo strumento professionale di chi gestisce un mestiere con le mani. Il sistema visivo deve riflettere questa realtà: caldo senza essere decorativo, preciso senza essere freddo, italiano senza essere pittoresco. Come l'interno di una buona bottega, tutto ha una posizione, tutto ha uno scopo, niente è lì per fare scena.\n\nLa palette ruota attorno a Terra Bruciata come accento, Inchiostro di Noce come struttura, e Lino Grezzo come superficie. Il display serif (Cormorant Garamond) porta personalità e identità solo nei titoli; Instrument Sans gestisce tutto il resto con pulizia chirurgica. La proporzione è intenzionale: Cormorant è il volto del brand, Instrument Sans è la voce operativa.\n\nIl sistema rifiuta esplicitamente: l'estetica SaaS generica 2024 (gradienti teal, blob animati, card grid uniformi, eyebrow su ogni sezione); l'impersonalità enterprise di Salesforce o HubSpot; la vacuità lifestyle di Fresha/Treatwell; e l'eccesso estetico dei brand luxury fashion.",
     "keyCharacteristics": [
       "Serif display usato raramente, con peso — mai decorativamente",
       "Terracotta come accento, non come sfondo; presente su ≤15% di ogni schermata",

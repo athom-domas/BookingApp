@@ -1,5 +1,5 @@
 ---
-name: GestionalePro
+name: BookingApp
 description: Software di gestione prenotazioni per saloni, barberie e centri estetici italiani
 colors:
   terra-bruciata: "#C4714A"
@@ -80,13 +80,13 @@ components:
     padding: "10px 16px"
 ---
 
-# Design System: GestionalePro
+# Design System: BookingApp
 
 ## 1. Overview
 
 **Creative North Star: "L'Atelier Italiano"**
 
-GestionalePro è lo strumento professionale di chi gestisce un mestiere con le mani. Il sistema visivo deve riflettere questa realtà: caldo senza essere decorativo, preciso senza essere freddo, italiano senza essere pittoresco. Come l'interno di una buona bottega, tutto ha una posizione, tutto ha uno scopo, niente è lì per fare scena.
+BookingApp è lo strumento professionale di chi gestisce un mestiere con le mani. Il sistema visivo deve riflettere questa realtà: caldo senza essere decorativo, preciso senza essere freddo, italiano senza essere pittoresco. Come l'interno di una buona bottega, tutto ha una posizione, tutto ha uno scopo, niente è lì per fare scena.
 
 La palette ruota attorno a Terra Bruciata come accento, Inchiostro di Noce come struttura, e Lino Grezzo come superficie. Il display serif (Cormorant Garamond) porta personalità e identità solo nei titoli; Instrument Sans gestisce tutto il resto con pulizia chirurgica. La proporzione è intenzionale: Cormorant è il volto del brand, Instrument Sans è la voce operativa.
 
@@ -147,7 +147,7 @@ Una palette da atelier italiano: calda, materica, non tinteggiata-dall'IA.
 
 ## 4. Elevation
 
-GestionalePro è **flat by default con un'eccezione strutturale**. Le superfici sono piatte a riposo. La profondità è comunicata attraverso l'alternanza cromatica (Lino Grezzo ↔ Lino Scuro) e i bordi caldi (Orlo Caldo), non attraverso ombre.
+BookingApp è **flat by default con un'eccezione strutturale**. Le superfici sono piatte a riposo. La profondità è comunicata attraverso l'alternanza cromatica (Lino Grezzo ↔ Lino Scuro) e i bordi caldi (Orlo Caldo), non attraverso ombre.
 
 L'unica eccezione intenzionale è la **pricing card**: `shadow-xl shadow-ink/10` — un'ombra con colore brand diluito, che segnala che questa è la superficie più importante della pagina. È strutturale, non decorativa.
 

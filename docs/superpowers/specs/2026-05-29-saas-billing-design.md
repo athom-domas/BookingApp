@@ -89,7 +89,7 @@ if (! $business->hasAccess()) {
 
 #### Abbonamento attivo (`$business->subscribed('default')` e non cancellato)
 - Badge verde "Piano attivo"
-- "Piano GestionalePro — €29/mese"
+- "Piano BookingApp — €29/mese"
 - "Prossimo rinnovo: **[data]**"
 - Pulsante secondario: **Annulla abbonamento** (con modal di conferma)
 
@@ -100,7 +100,7 @@ if (! $business->hasAccess()) {
 
 #### Scaduto / nessun piano attivo
 - Banner rosso prominente
-- "Il periodo di prova è terminato. Abbonati per continuare a usare GestionalePro."
+- "Il periodo di prova è terminato. Abbonati per continuare a usare BookingApp."
 - Pulsante primario grande: **Abbonati ora — €29/mese**
 
 ### Azioni
@@ -257,7 +257,7 @@ dopo la creazione del business, così ogni nuovo salone creato dal super-admin p
 
 ## Pre-requisiti manuali (fuori dal codice)
 
-1. Creare in Stripe Dashboard: Product "GestionalePro" → Price €29/mese ricorrente
+1. Creare in Stripe Dashboard: Product "BookingApp" → Price €29/mese ricorrente
 2. Copiare il `price_id` in `.env` come `STRIPE_PRICE_ID`
 3. Registrare webhook `/stripe/billing-webhook` in Stripe Dashboard, copiare secret in `STRIPE_BILLING_WEBHOOK_SECRET`
 4. Per test locali: `stripe listen --forward-to localhost/stripe/billing-webhook`
