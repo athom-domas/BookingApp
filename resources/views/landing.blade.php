@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>GestionalePro · Software prenotazioni per saloni e centri estetici</title>
+    <title>BookingApp · Software prenotazioni per saloni e centri estetici</title>
     <meta name="description" content="Gestisci prenotazioni, staff e pagamenti del tuo salone in un'unica piattaforma. 14 giorni gratis, nessuna carta richiesta.">
     <meta name="google-site-verification" content="nD-pGjHxVgpI6sDbYgST9j3ThrJgVLeJgX-qkYDrbcs" />
     <script>if(location.hash)history.replaceState(null,'',location.pathname)</script>
@@ -593,7 +593,7 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
             </div>
         </div>
         <div class="border-t border-white/10 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-ink-muted/70">
-            <span>© {{ date('Y') }} GestionalePro. Tutti i diritti riservati.</span>
+            <span>© {{ date('Y') }} BookingApp. Tutti i diritti riservati.</span>
             <div class="flex gap-5">
                 <a href="{{ route('legal.privacy') }}" class="hover:text-white/90 transition">Privacy Policy</a>
                 <a href="{{ route('legal.terms') }}" class="hover:text-white/90 transition">Termini di servizio</a>

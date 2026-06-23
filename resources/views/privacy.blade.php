@@ -16,7 +16,7 @@
 
         <h2>1. Titolare del trattamento</h2>
         <p>
-            Il titolare del trattamento dei dati personali è <strong>GestionalePro</strong> (di seguito "la Società"),
+            Il titolare del trattamento dei dati personali è <strong>BookingApp</strong> (di seguito "la Società"),
             raggiungibile all'indirizzo email <a href="{{ route('contact') }}">modulo di contatto</a>.
         </p>
         <p>
@@ -31,7 +31,7 @@
         <ul>
             <li><strong>Dati identificativi:</strong> nome, cognome, indirizzo email, numero di telefono.</li>
             <li><strong>Dati di prenotazione:</strong> servizi richiesti, data e ora degli appuntamenti, note.</li>
-            <li><strong>Dati di pagamento:</strong> i dati di carta/conto vengono trattati esclusivamente da Stripe, Inc. (PCI-DSS Level 1). GestionalePro non memorizza numeri di carta.</li>
+            <li><strong>Dati di pagamento:</strong> i dati di carta/conto vengono trattati esclusivamente da Stripe, Inc. (PCI-DSS Level 1). BookingApp non memorizza numeri di carta.</li>
         </ul>
 
         <h3>2.2 Dati raccolti automaticamente</h3>
@@ -77,7 +77,7 @@
 
         <h2>5. Utilizzo delle Google API</h2>
         <p>
-            Se scegli di collegare il tuo account Google Calendar, GestionalePro accede, tramite le API di Google, esclusivamente
+            Se scegli di collegare il tuo account Google Calendar, BookingApp accede, tramite le API di Google, esclusivamente
             agli <strong>eventi del tuo calendario personale</strong> (scope <code>calendar.events.owned</code>) al solo fine di
             creare e rimuovere eventi corrispondenti agli appuntamenti confermati o cancellati.
         </p>
@@ -85,7 +85,7 @@
             <li>I dati del calendario non vengono utilizzati per finalità pubblicitarie, di profilazione o di analisi.</li>
             <li>I dati del calendario non vengono condivisi con terze parti al di fuori dell'erogazione del servizio.</li>
             <li>Il token di accesso a Google Calendar è conservato in forma cifrata e utilizzato esclusivamente per le operazioni sul calendario dell'utente che lo ha fornito.</li>
-            <li>Puoi revocare l'accesso in qualsiasi momento dalla pagina <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener">myaccount.google.com/permissions</a>, oppure eliminando il tuo account da GestionalePro.</li>
+            <li>Puoi revocare l'accesso in qualsiasi momento dalla pagina <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener">myaccount.google.com/permissions</a>, oppure eliminando il tuo account da BookingApp.</li>
         </ul>
         <p>
             <strong>Dichiarazione di uso limitato (Limited Use):</strong> l'utilizzo delle informazioni ricevute dalle Google API

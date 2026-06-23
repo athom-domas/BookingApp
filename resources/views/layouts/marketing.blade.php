@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>@yield('title') · GestionalePro</title>
+    <title>@yield('title') · BookingApp</title>
     <meta name="description" content="@yield('description', 'Software di gestione prenotazioni per saloni e centri estetici.')">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -108,7 +108,7 @@
             </div>
         </div>
         <div class="border-t border-white/10 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-ink-muted/70">
-            <span>© {{ date('Y') }} GestionalePro. Tutti i diritti riservati.</span>
+            <span>© {{ date('Y') }} BookingApp. Tutti i diritti riservati.</span>
             <div class="flex gap-5">
                 <a href="{{ route('legal.privacy') }}" class="hover:text-white/90 transition">Privacy Policy</a>
                 <a href="{{ route('legal.terms') }}" class="hover:text-white/90 transition">Termini di servizio</a>

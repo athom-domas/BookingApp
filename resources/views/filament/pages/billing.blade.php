@@ -71,7 +71,7 @@
                         <x-heroicon-o-check-circle class="w-5 h-5 text-green-600 dark:text-green-400"/>
                     </div>
                     <div>
-                        <p class="font-semibold text-green-900 dark:text-green-100">Piano attivo — GestionalePro</p>
+                        <p class="font-semibold text-green-900 dark:text-green-100">Piano attivo — BookingApp</p>
                         <p class="text-sm text-green-700 dark:text-green-400 mt-0.5">€29/mese · IVA esclusa · Cancellazione in qualsiasi momento</p>
                     </div>
                 </div>
@@ -117,7 +117,7 @@
                 </div>
                 <p class="font-semibold text-red-900 dark:text-red-100 text-base">Accesso sospeso</p>
                 <p class="text-sm text-red-700 dark:text-red-400 mt-1 mb-5">
-                    Il periodo di prova è terminato. Attiva l'abbonamento per continuare a usare GestionalePro.
+                    Il periodo di prova è terminato. Attiva l'abbonamento per continuare a usare BookingApp.
                 </p>
                 @if ($isAdmin)
                     <p class="text-xs text-red-500 dark:text-red-500">Usa il pulsante <strong>Abbonati ora</strong> in alto a destra.</p>
@@ -135,7 +135,7 @@
                 <x-slot name="heading">Dettagli piano</x-slot>
                 <dl class="divide-y divide-gray-100 dark:divide-white/5">
                     @foreach ([
-                        ['Piano',         'GestionalePro'],
+                        ['Piano',         'BookingApp'],
                         ['Tipo',          'Piano mensile'],
                         ['Prezzo',        '€29 / mese (IVA esclusa)'],
                         ['Fatturazione',  'Mensile, con rinnovo automatico'],
@@ -214,7 +214,7 @@
 
         @if ($status === 'expired')
         <x-filament::section>
-            <x-slot name="heading">Cosa include GestionalePro</x-slot>
+            <x-slot name="heading">Cosa include BookingApp</x-slot>
             <ul class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2.5 text-sm text-gray-700 dark:text-gray-300">
                 @foreach ([
                     'Appuntamenti e prenotazioni online illimitati',

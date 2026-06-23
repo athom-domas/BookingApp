@@ -24,7 +24,7 @@ class ContactFormMail extends Mailable
         ];
 
         return new Envelope(
-            subject: '[GestionalePro] ' . ($subjects[$this->data['subject']] ?? 'Contatto dal sito'),
+            subject: '[BookingApp] ' . ($subjects[$this->data['subject']] ?? 'Contatto dal sito'),
             replyTo: [$this->data['email']],
         );
     }

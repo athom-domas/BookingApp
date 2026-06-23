@@ -17,7 +17,7 @@ class PaymentFailedMail extends Mailable
 
     public function envelope(): Envelope
     {
-        return new Envelope(subject: '[GestionalePro] Pagamento non riuscito — azione richiesta');
+        return new Envelope(subject: '[BookingApp] Pagamento non riuscito — azione richiesta');
     }
 
     public function content(): Content

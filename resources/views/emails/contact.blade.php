@@ -21,7 +21,7 @@
 <div class="card">
     <div class="header">
         <h1>Nuovo messaggio dal sito</h1>
-        <p>GestionalePro — modulo di contatto</p>
+        <p>BookingApp — modulo di contatto</p>
     </div>
     <div class="body">
         <div class="row">

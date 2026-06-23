@@ -1,7 +1,7 @@
 @extends('layouts.marketing')
 
 @section('title', 'Contatti')
-@section('description', 'Contattaci per una demo gratuita o per qualsiasi domanda su GestionalePro.')
+@section('description', 'Contattaci per una demo gratuita o per qualsiasi domanda su BookingApp.')
 
 @section('content')
 <section class="min-h-[calc(100vh-64px)] bg-cream py-20 px-6">
@@ -16,7 +16,7 @@
                     Parliamo del tuo salone
                 </h1>
                 <p class="text-ink-muted leading-relaxed mb-10">
-                    Hai domande su GestionalePro o vuoi vedere una demo dal vivo?
+                    Hai domande su BookingApp o vuoi vedere una demo dal vivo?
                     Compila il form e ti risponderemo entro 24 ore nei giorni lavorativi.
                 </p>
 

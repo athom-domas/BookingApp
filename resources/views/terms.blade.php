@@ -1,7 +1,7 @@
 @extends('layouts.marketing')
 
 @section('title', 'Termini di servizio')
-@section('description', 'Termini e condizioni di utilizzo del software GestionalePro.')
+@section('description', 'Termini e condizioni di utilizzo del software BookingApp.')
 
 @section('content')
 <article class="max-w-3xl mx-auto px-6 py-20">
@@ -16,14 +16,14 @@
 
         <h2>1. Accettazione dei termini</h2>
         <p>
-            Accedendo o utilizzando GestionalePro (il "Servizio") accetti integralmente i presenti Termini di Servizio.
+            Accedendo o utilizzando BookingApp (il "Servizio") accetti integralmente i presenti Termini di Servizio.
             Se utilizzi il Servizio per conto di un'azienda, dichiari di avere l'autorità per vincolare tale azienda.
             Se non accetti questi termini, non puoi utilizzare il Servizio.
         </p>
 
         <h2>2. Descrizione del servizio</h2>
         <p>
-            GestionalePro è un software SaaS (Software as a Service) per la gestione di prenotazioni,
+            BookingApp è un software SaaS (Software as a Service) per la gestione di prenotazioni,
             staff e pagamenti destinato a saloni, barberie e centri estetici. Il Servizio include:
         </p>
         <ul>
@@ -98,7 +98,7 @@
         <h2>7. Dati dei clienti e GDPR</h2>
         <p>
             Utilizzando il Servizio per raccogliere e gestire dati personali dei tuoi clienti,
-            agisci come Titolare del Trattamento ai sensi del GDPR. GestionalePro opera come
+            agisci come Titolare del Trattamento ai sensi del GDPR. BookingApp opera come
             Responsabile del Trattamento per tuo conto. I dettagli sono disciplinati dal Data
             Processing Agreement (DPA) disponibile su richiesta.
         </p>
