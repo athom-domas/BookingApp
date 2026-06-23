@@ -290,6 +290,26 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
 </section>
 
 
+{{-- VIDEO DEMO --}}
+<section class="py-24 px-6 bg-cream-dark">
+    <div class="max-w-4xl mx-auto text-center">
+        <p class="text-xs font-semibold text-terra uppercase tracking-widest mb-3" data-r style="--d:0">Demo</p>
+        <h2 class="font-display text-4xl sm:text-5xl font-semibold text-ink mb-4 text-balance" data-r style="--d:1">
+            Guardalo in azione
+        </h2>
+        <p class="text-ink-muted mb-10" data-r style="--d:2">Da zero a prima prenotazione: meno di 2 minuti.</p>
+        <div class="rounded-2xl overflow-hidden shadow-2xl border border-warm-border" data-r style="--d:3">
+            <video controls
+                   poster="/img/screenshots/screenshot-lista.png"
+                   class="w-full block"
+                   preload="none">
+                <source src="/video/demo.mp4" type="video/mp4">
+            </video>
+        </div>
+    </div>
+</section>
+
+
 {{-- PRODUCT PREVIEW --}}
 <section class="py-24 px-6 bg-ink">
     <div class="max-w-6xl mx-auto">
