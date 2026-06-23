@@ -165,8 +165,9 @@
 .sf-about-photo:first-child { grid-row: span 2; }
 
 @media (max-width: 820px) {
-    .sf-about-grid { grid-template-columns: 1fr; gap: 40px; }
-    .sf-about-photos { display: none; }
+    .sf-about-grid { grid-template-columns: 1fr; gap: 24px; }
+    .sf-about-photos { grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 110px; }
+    .sf-about-photo:first-child { grid-row: span 1; }
 }
 
 /* ── TEAM ─────────────────────────────────────────────────────────────────── */
