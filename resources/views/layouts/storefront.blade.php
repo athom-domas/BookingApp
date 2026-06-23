@@ -94,8 +94,13 @@ $_radius      = $_radiusMap[$_border] ?? '0';
 
     {{-- NAV --}}
     <nav id="sf-nav">
+        @php $logoDarkUrl = $salonProfile->logoDarkUrl(); @endphp
         <a href="{{ route('booking.index') }}" class="sf-logo">
-            <img src="{{ $salonProfile->logoUrl() ?? asset('img/logo.png') }}" alt="{{ $salonProfile->name }}">
+            <img src="{{ $salonProfile->logoUrl() ?? asset('img/logo.png') }}" alt="{{ $salonProfile->name }}"
+                 @if($logoDarkUrl) class="sf-logo-light" @endif>
+            @if($logoDarkUrl)
+                <img src="{{ $logoDarkUrl }}" alt="{{ $salonProfile->name }}" class="sf-logo-dark">
+            @endif
         </a>
 
         <div class="sf-nav-right">

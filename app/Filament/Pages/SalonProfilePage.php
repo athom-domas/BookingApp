@@ -235,12 +235,18 @@ class SalonProfilePage extends Page
                             ->inline()
                             ->helperText('Il cliente può cambiare la modalità con il toggle sul sito.')
                             ->columnSpanFull(),
-                        Grid::make(2)->schema([
+                        Grid::make(3)->schema([
                             SpatieMediaLibraryFileUpload::make('logo')
-                                ->label('Logo')
+                                ->label('Logo (light mode)')
                                 ->collection('logo')
                                 ->image()
                                 ->maxSize(2048),
+                            SpatieMediaLibraryFileUpload::make('logo_dark')
+                                ->label('Logo (dark mode)')
+                                ->collection('logo_dark')
+                                ->image()
+                                ->maxSize(2048)
+                                ->helperText('Se non caricato, viene usato il logo principale.'),
                             SpatieMediaLibraryFileUpload::make('cover')
                                 ->label('Immagine hero (carica la tua)')
                                 ->collection('cover')
@@ -434,7 +440,7 @@ class SalonProfilePage extends Page
             ],
             $days
         ));
-        $profileData = Arr::except($state, [...$hourKeys, 'logo', 'cover', 'favicon', 'gallery', 'portfolio']);
+        $profileData = Arr::except($state, [...$hourKeys, 'logo', 'logo_dark', 'cover', 'favicon', 'gallery', 'portfolio']);
         $profileData['opening_hours'] = $openingHours;
 
         $profile->update($profileData);
