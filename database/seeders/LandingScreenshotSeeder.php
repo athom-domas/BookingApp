@@ -19,11 +19,15 @@ class LandingScreenshotSeeder extends Seeder
 {
     private const SUBDOMAIN = 'atelier-chioma-demo';
 
-    private const ADMIN = ['email' => 'lucia@atelierchioma.it', 'name' => 'Lucia Ferrario'];
+    private const ADMIN = [
+        'email' => 'lucia@atelierchioma.it',
+        'name'  => 'Lucia Ferrario',
+        'bio'   => 'Fondatrice di Atelier Chioma, specializzata in colorazioni e trattamenti ricostruttivi. Oltre 15 anni di esperienza nel settore della bellezza.',
+    ];
 
     private const STAFF = [
-        'sara'      => ['email' => 'sara@atelierchioma.it',      'name' => 'Sara Bianchi'],
-        'valentina' => ['email' => 'valentina@atelierchioma.it', 'name' => 'Valentina Costa'],
+        'sara'      => ['email' => 'sara@atelierchioma.it',      'name' => 'Sara Bianchi',    'bio' => 'Esperta in balayage e tecniche di colorazione moderna. Appassionata di tendenze e nuovi stili.'],
+        'valentina' => ['email' => 'valentina@atelierchioma.it', 'name' => 'Valentina Costa', 'bio' => "Specializzata in tagli creativi e trattamenti keratina. Trasforma ogni capello in un'opera d'arte."],
     ];
 
     private const CUSTOMERS = [
@@ -32,10 +36,10 @@ class LandingScreenshotSeeder extends Seeder
         'chiara'    => ['email' => 'chiara.esposito@demo.test', 'name' => 'Chiara Esposito',  'phone' => '+39 320 3456789'],
         'anna'      => ['email' => 'anna.deluca@demo.test',     'name' => 'Anna De Luca',     'phone' => '+39 393 4567890'],
         'elena'     => ['email' => 'elena.ricci@demo.test',     'name' => 'Elena Ricci',      'phone' => '+39 366 5678901'],
-        'beatrice'  => ['email' => 'beatrice.moretti@demo.test','name' => 'Beatrice Moretti', 'phone' => '+39 329 6789012'],
+        'beatrice'  => ['email' => 'beatrice.moretti@demo.test', 'name' => 'Beatrice Moretti', 'phone' => '+39 329 6789012'],
         'sofia'     => ['email' => 'sofia.villa@demo.test',     'name' => 'Sofia Villa',      'phone' => '+39 351 7890123'],
         'paola'     => ['email' => 'paola.ferrari@demo.test',   'name' => 'Paola Ferrari',    'phone' => '+39 380 8901234'],
-        'francesca' => ['email' => 'francesca.romano@demo.test','name' => 'Francesca Romano', 'phone' => '+39 335 9012345'],
+        'francesca' => ['email' => 'francesca.romano@demo.test', 'name' => 'Francesca Romano', 'phone' => '+39 335 9012345'],
         'irene'     => ['email' => 'irene.gallo@demo.test',     'name' => 'Irene Gallo',      'phone' => '+39 347 0123456'],
     ];
 
@@ -45,6 +49,28 @@ class LandingScreenshotSeeder extends Seeder
         'colore'     => ['name' => 'Colore',                'duration_minutes' => 120, 'price' =>  85.00],
         'balayage'   => ['name' => 'Balayage',              'duration_minutes' => 150, 'price' => 120.00],
         'keratina'   => ['name' => 'Trattamento Keratina',  'duration_minutes' =>  90, 'price' =>  70.00],
+    ];
+
+    private const PHOTOS = [
+        'cover'   => 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=1600&q=80',
+        'gallery' => [
+            'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=1200&q=80', // interno luxury, specchi e luci calde
+            'https://images.unsplash.com/photo-1595476108010-b4d1f102b1b1?w=1200&q=80', // postazione salone, poltrona e specchio
+            'https://images.unsplash.com/photo-1527799820374-dcf8d9d4a388?w=1200&q=80', // vista d'insieme del salone
+        ],
+        'portfolio' => [
+            'https://images.unsplash.com/photo-1562322140-8baeececf3df?w=1200&q=80', // parrucchiera al lavoro con cliente
+            'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=1200&q=80', // styling capelli lunghi
+            'https://images.unsplash.com/photo-1492106087820-71f1a00d2b11?w=1200&q=80', // acconciatura completata
+            'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=1200&q=80', // lavoro in corso, cliente in poltrona
+            'https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=1200&q=80', // acconciatura completata
+            'https://images.unsplash.com/photo-1519823551278-64ac92734fb1?w=1200&q=80', // capelli dopo trattamento
+        ],
+        'avatars' => [
+            'lucia'     => 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&q=80',
+            'sara'      => 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&q=80',
+            'valentina' => 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&q=80',
+        ],
     ];
 
     public function run(): void
@@ -142,20 +168,41 @@ class LandingScreenshotSeeder extends Seeder
             'facebook_url'         => 'https://www.facebook.com/atelierchioma',
             'whatsapp_number'      => '390245678901',
             'booking_button_label' => 'Prenota ora',
+            'google_maps_embed'    => 'https://maps.google.com/maps?q=Via+Montenapoleone+12,+20121+Milano+MI&output=embed',
             'theme'                => 'luxury',
             'theme_mode'           => 'light',
             'border_style'         => 'rounded',
         ]);
+
+        $profile->clearMediaCollection('cover');
+        $profile->addMediaFromUrl(self::PHOTOS['cover'])
+            ->usingFileName('cover.jpg')
+            ->toMediaCollection('cover');
+
+        $profile->clearMediaCollection('gallery');
+        foreach (self::PHOTOS['gallery'] as $i => $url) {
+            $profile->addMediaFromUrl($url)
+                ->usingFileName('gallery-' . ($i + 1) . '.jpg')
+                ->toMediaCollection('gallery');
+        }
+
+        $profile->clearMediaCollection('portfolio');
+        foreach (self::PHOTOS['portfolio'] as $i => $url) {
+            $profile->addMediaFromUrl($url)
+                ->usingFileName('portfolio-' . ($i + 1) . '.jpg')
+                ->toMediaCollection('portfolio');
+        }
     }
 
     private function seedAdmin(int $businessId): User
     {
         $user = User::updateOrCreate(
             ['email' => self::ADMIN['email']],
-            ['name' => self::ADMIN['name'], 'password' => Hash::make('passworddemo'), 'business_id' => $businessId]
+            ['name' => self::ADMIN['name'], 'bio' => self::ADMIN['bio'], 'password' => Hash::make('passworddemo'), 'business_id' => $businessId]
         );
         $user->syncRoles(['admin', 'staff']);
         $user->businesses()->syncWithoutDetaching([$businessId]);
+        $this->attachAvatar($user, self::PHOTOS['avatars']['lucia']);
         return $user;
     }
 
@@ -166,10 +213,11 @@ class LandingScreenshotSeeder extends Seeder
         foreach (self::STAFF as $key => $attrs) {
             $user = User::updateOrCreate(
                 ['email' => $attrs['email']],
-                ['name' => $attrs['name'], 'password' => Hash::make('passworddemo'), 'business_id' => $businessId]
+                ['name' => $attrs['name'], 'bio' => $attrs['bio'], 'password' => Hash::make('passworddemo'), 'business_id' => $businessId]
             );
             $user->syncRoles(['staff']);
             $user->businesses()->syncWithoutDetaching([$businessId]);
+            $this->attachAvatar($user, self::PHOTOS['avatars'][$key]);
             $users[$key] = $user;
         }
         return $users;
@@ -266,8 +314,8 @@ class LandingScreenshotSeeder extends Seeder
         $today = Carbon::today();
 
         // ─── OGGI (per lo screenshot della lista) ───────────────────────────────
-        $this->appt($customers['giulia'],    $allStaff['sara'],      $services['piega'],    $today->copy()->setTime( 9,  0), 'confirmed');
-        $this->appt($customers['marta'],     $allStaff['valentina'], $services['taglio'],   $today->copy()->setTime( 9, 30), 'confirmed');
+        $this->appt($customers['giulia'],    $allStaff['sara'],      $services['piega'],    $today->copy()->setTime(9,  0), 'confirmed');
+        $this->appt($customers['marta'],     $allStaff['valentina'], $services['taglio'],   $today->copy()->setTime(9, 30), 'confirmed');
         $this->appt($customers['chiara'],    $allStaff['sara'],      $services['colore'],   $today->copy()->setTime(10,  0), 'confirmed');
         $this->appt($customers['anna'],      $allStaff['valentina'], $services['taglio'],   $today->copy()->setTime(10,  0), 'confirmed');
         $this->appt($customers['elena'],     $allStaff['lucia'],     $services['balayage'], $today->copy()->setTime(10, 30), 'confirmed');
@@ -315,5 +363,13 @@ class LandingScreenshotSeeder extends Seeder
     {
         $date = Carbon::today()->addDays($daysFromToday)->setTime($hour, $minute);
         $this->appt($customer, $staff, $service, $date, $status);
+    }
+
+    private function attachAvatar(User $user, string $url): void
+    {
+        $user->clearMediaCollection('avatar');
+        $user->addMediaFromUrl($url)
+            ->usingFileName('avatar.jpg')
+            ->toMediaCollection('avatar');
     }
 }

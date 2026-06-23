@@ -73,6 +73,7 @@ class SalonProfile extends Model implements HasMedia
         $this->addMediaCollection('cover')->singleFile()->useDisk('public');
         $this->addMediaCollection('favicon')->singleFile()->useDisk('public');
         $this->addMediaCollection('gallery')->useDisk('public');
+        $this->addMediaCollection('portfolio')->useDisk('public');
     }
 
     public function registerMediaConversions(?Media $media = null): void
@@ -87,7 +88,7 @@ class SalonProfile extends Model implements HasMedia
             ->width(1200)
             ->height(800)
             ->nonQueued()
-            ->performOnCollections('gallery', 'cover');
+            ->performOnCollections('gallery', 'portfolio', 'cover');
     }
 
     public function logoUrl(): ?string

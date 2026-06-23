@@ -7,7 +7,7 @@
 <article class="max-w-3xl mx-auto px-6 py-20">
 
     <header class="mb-12">
-        <p class="text-xs font-semibold text-terra uppercase tracking-widest mb-3">Informativa privacy</p>
+        <p class="text-xs font-semibold text-primary uppercase tracking-widest mb-3">Informativa privacy</p>
         <h1 class="font-display text-4xl font-semibold text-ink mb-4">Privacy Policy</h1>
         <p class="text-ink-muted">Ultimo aggiornamento: {{ \Carbon\Carbon::now()->format('d/m/Y') }}</p>
     </header>
@@ -140,7 +140,7 @@
     </div>
 
     <div class="mt-16 pt-8 border-t border-warm-border text-sm text-ink-muted/70">
-        <p>Hai domande? Scrivici a <a href="mailto:info@booking-app.it" class="text-terra hover:underline">info@booking-app.it</a></p>
+        <p>Hai domande? Scrivici a <a href="mailto:info@booking-app.it" class="text-primary hover:underline">info@booking-app.it</a></p>
     </div>
 
 </article>

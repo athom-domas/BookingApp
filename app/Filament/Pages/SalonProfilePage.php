@@ -308,8 +308,19 @@ class SalonProfilePage extends Page
 
                     Tab::make('Galleria')->schema([
                         SpatieMediaLibraryFileUpload::make('gallery')
-                            ->label('Foto galleria')
+                            ->label('Foto salone')
+                            ->helperText('Immagini degli interni, dell\'atmosfera e degli spazi del salone.')
                             ->collection('gallery')
+                            ->conversion('web')
+                            ->multiple()
+                            ->reorderable()
+                            ->image()
+                            ->maxSize(10240)
+                            ->columnSpanFull(),
+                        SpatieMediaLibraryFileUpload::make('portfolio')
+                            ->label('Foto lavori')
+                            ->helperText('Risultati, trasformazioni e lavori realizzati dallo staff.')
+                            ->collection('portfolio')
                             ->conversion('web')
                             ->multiple()
                             ->reorderable()
@@ -423,7 +434,7 @@ class SalonProfilePage extends Page
             ],
             $days
         ));
-        $profileData = Arr::except($state, [...$hourKeys, 'logo', 'cover', 'favicon', 'gallery']);
+        $profileData = Arr::except($state, [...$hourKeys, 'logo', 'cover', 'favicon', 'gallery', 'portfolio']);
         $profileData['opening_hours'] = $openingHours;
 
         $profile->update($profileData);

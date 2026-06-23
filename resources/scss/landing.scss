@@ -104,7 +104,7 @@
     left: 0;
     height: 2px;
     width: 100%;
-    background: linear-gradient(to right, #C4714A, #1C1410);
+    background: linear-gradient(to right, var(--color-primary), #1C1410);
     z-index: 200;
     transform: scaleX(0);
     transform-origin: left;
@@ -121,7 +121,7 @@
     font-weight: 700;
     letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: var(--eb-color, #C4714A);
+    color: var(--eb-color, var(--color-primary));
     margin-bottom: 0.875rem;
 
     &::before {

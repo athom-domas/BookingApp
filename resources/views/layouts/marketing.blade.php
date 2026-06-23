@@ -33,14 +33,14 @@
 
     <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
         <a href="{{ url('/') }}" class="font-bold text-lg tracking-tight text-ink">
-            Gestionale<span class="text-terra font-normal">Pro</span>
+            Gestionale<span class="text-primary font-normal">Pro</span>
         </a>
 
         <nav class="hidden md:flex items-center gap-8">
             <a href="{{ url('/') }}#funzionalita" class="text-sm font-medium text-ink-muted hover:text-ink transition">Funzionalità</a>
             <a href="{{ url('/') }}#prezzi" class="text-sm font-medium text-ink-muted hover:text-ink transition">Prezzi</a>
             <a href="{{ route('contact') }}"
-               class="shimmer text-sm font-semibold bg-terra text-white px-4 py-2 rounded-lg hover:bg-terra/90 transition shadow-sm">
+               class="shimmer text-sm font-semibold bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition shadow-sm">
                 Inizia Gratis
             </a>
         </nav>
@@ -69,7 +69,7 @@
             <a href="{{ url('/') }}#prezzi" @click="open = false"
                class="text-sm font-medium text-ink px-2 py-3 rounded-lg hover:bg-cream-dark transition">Prezzi</a>
             <a href="{{ route('contact') }}"
-               class="mt-2 text-sm font-semibold bg-terra text-white px-4 py-3 rounded-xl text-center hover:bg-terra/90 transition">
+               class="mt-2 text-sm font-semibold bg-primary text-white px-4 py-3 rounded-xl text-center hover:bg-primary/90 transition">
                 Inizia Gratis
             </a>
         </div>
@@ -85,7 +85,7 @@
         <div class="grid grid-cols-2 md:grid-cols-3 gap-10 mb-12">
             <div class="col-span-2 md:col-span-1">
                 <div class="font-bold text-lg text-white tracking-tight mb-3">
-                    Gestionale<span class="text-terra font-normal">Pro</span>
+                    Gestionale<span class="text-primary font-normal">Pro</span>
                 </div>
                 <p class="text-sm leading-relaxed">Software di gestione per saloni, barbieri e centri estetici italiani.</p>
             </div>

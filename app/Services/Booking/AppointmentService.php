@@ -88,19 +88,25 @@ class AppointmentService
         $staffPreference    = $staffId ? 'specific' : 'any';
 
         $appointment = DB::transaction(function () use ($userId, $serviceIds, $staffId, $scheduledDate, $confirmImmediately, $notes, $staffPreference) {
-            $date     = $scheduledDate->copy()->startOfDay();
-            $slotTime = $scheduledDate->format('H:i');
+            $date = $scheduledDate->copy()->startOfDay();
 
-            $slots = $this->slotService->getAvailableSlots([
+            // Grace period: allow slots up to one granularity window in the past to avoid
+            // race conditions between slot display and form submission (especially for today).
+            $graceCutoff = Carbon::now()->subMinutes(SystemSetting::getSlotGranularity());
+            if ($scheduledDate->lt($graceCutoff)) {
+                throw new \RuntimeException('Slot non disponibile.');
+            }
+
+            // Validate against work ranges and conflicts without the "today from now" UI cutoff.
+            $slotFree = $this->slotService->isSlotFree([
                 'date'            => $date,
+                'slotStart'       => $scheduledDate,
                 'serviceIds'      => $serviceIds,
                 'staffId'         => $staffId,
                 'staffPreference' => $staffPreference,
             ]);
 
-            $matchingSlot = collect($slots)->first(fn($s) => $s['start'] === $slotTime);
-
-            if (! $matchingSlot) {
+            if (! $slotFree) {
                 throw new \RuntimeException('Slot non disponibile.');
             }
 
@@ -163,26 +169,23 @@ class AppointmentService
         Carbon $slotStart,
         int $duration
     ): ?int {
-        $slots = $this->slotService->getAvailableSlots([
-            'date'            => $date,
-            'serviceIds'      => $serviceIds,
-            'staffPreference' => 'any',
+        $availableIds = $this->slotService->getAvailableOperatorsForSlot([
+            'date'       => $date,
+            'slotStart'  => $slotStart,
+            'serviceIds' => $serviceIds,
         ]);
 
-        $slotTime = $slotStart->format('H:i');
-        foreach ($slots as $slot) {
-            if ($slot['start'] === $slotTime) {
-                $operator = $this->scoringService->chooseBestOperator(
-                    $slot['availableOperators'],
-                    $slotStart,
-                    $duration,
-                    $date
-                );
-
-                return $operator?->id;
-            }
+        if (empty($availableIds)) {
+            return null;
         }
 
-        return null;
+        $operator = $this->scoringService->chooseBestOperator(
+            $availableIds,
+            $slotStart,
+            $duration,
+            $date
+        );
+
+        return $operator?->id;
     }
 }

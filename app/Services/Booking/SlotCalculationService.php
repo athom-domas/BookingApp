@@ -108,6 +108,66 @@ class SlotCalculationService
         return $this->calculateFreeRanges($workRanges, $occupations);
     }
 
+    public function isSlotFree(array $params): bool
+    {
+        $date            = Carbon::parse($params['date'])->startOfDay();
+        $slotStart       = Carbon::parse($params['slotStart']);
+        $serviceIds      = $params['serviceIds'];
+        $staffId         = $params['staffId'] ?? null;
+        $staffPreference = $params['staffPreference'] ?? 'specific';
+
+        $duration = $this->calculateTotalDuration($serviceIds);
+        if ($duration <= 0) {
+            return false;
+        }
+
+        $slotEnd       = $slotStart->copy()->addMinutes($duration);
+        $eligibleStaff = $this->getEligibleOperators($serviceIds, $staffId, $staffPreference);
+
+        foreach ($eligibleStaff as $staff) {
+            $freeRanges = $this->calculateFreeRanges(
+                $this->getWorkRanges($staff, $date),
+                $this->getOccupations($staff, $date)
+            );
+
+            foreach ($freeRanges as $range) {
+                if ($range['start']->lte($slotStart) && $range['end']->gte($slotEnd)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public function getAvailableOperatorsForSlot(array $params): array
+    {
+        $date       = Carbon::parse($params['date'])->startOfDay();
+        $slotStart  = Carbon::parse($params['slotStart']);
+        $serviceIds = $params['serviceIds'];
+
+        $duration      = $this->calculateTotalDuration($serviceIds);
+        $slotEnd       = $slotStart->copy()->addMinutes($duration);
+        $eligibleStaff = $this->getEligibleOperators($serviceIds, null, 'any');
+        $available     = [];
+
+        foreach ($eligibleStaff as $staff) {
+            $freeRanges = $this->calculateFreeRanges(
+                $this->getWorkRanges($staff, $date),
+                $this->getOccupations($staff, $date)
+            );
+
+            foreach ($freeRanges as $range) {
+                if ($range['start']->lte($slotStart) && $range['end']->gte($slotEnd)) {
+                    $available[] = $staff->id;
+                    break;
+                }
+            }
+        }
+
+        return $available;
+    }
+
     private function getSlotsForOperator(User $staff, Carbon $date, int $duration): array
     {
         $workRanges = $this->getWorkRanges($staff, $date);
@@ -119,14 +179,20 @@ class SlotCalculationService
         $freeRanges  = $this->calculateFreeRanges($workRanges, $occupations);
 
         if ($date->isToday()) {
-            $now        = Carbon::now();
+            $now         = Carbon::now();
+            $granularity = SystemSetting::getSlotGranularity();
+            // Round up to the next granularity boundary so slots stay on the configured grid
+            // e.g. now=15:43 → cutoff=15:45, now=15:45:01 → cutoff=16:00
+            $totalMins = $now->hour * 60 + $now->minute + ($now->second > 0 ? 1 : 0);
+            $cutoff    = $date->copy()->addMinutes((int) ceil($totalMins / $granularity) * $granularity);
+
             $freeRanges = array_values(array_filter(
-                array_map(function (array $range) use ($now): ?array {
-                    if ($range['end'] <= $now) {
+                array_map(function (array $range) use ($cutoff): ?array {
+                    if ($range['end'] <= $cutoff) {
                         return null;
                     }
-                    if ($range['start'] < $now) {
-                        $range['start'] = $now->copy();
+                    if ($range['start'] < $cutoff) {
+                        $range['start'] = $cutoff->copy();
                     }
 
                     return $range;

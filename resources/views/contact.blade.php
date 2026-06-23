@@ -11,7 +11,7 @@
 
             {{-- LEFT: info --}}
             <div class="lg:col-span-2">
-                <p class="text-xs font-semibold text-terra uppercase tracking-widest mb-3">Contatti</p>
+                <p class="text-xs font-semibold text-primary uppercase tracking-widest mb-3">Contatti</p>
                 <h1 class="font-display text-3xl sm:text-4xl font-semibold text-ink mb-4 leading-tight">
                     Parliamo del tuo salone
                 </h1>
@@ -22,8 +22,8 @@
 
                 <div class="space-y-5">
                     <div class="flex items-start gap-4">
-                        <div class="w-10 h-10 rounded-xl bg-terra-light flex items-center justify-center shrink-0 mt-0.5">
-                            <svg class="w-5 h-5 text-terra" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <div class="w-10 h-10 rounded-xl bg-primary-light flex items-center justify-center shrink-0 mt-0.5">
+                            <svg class="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                             </svg>
                         </div>
@@ -33,8 +33,8 @@
                         </div>
                     </div>
                     <div class="flex items-start gap-4">
-                        <div class="w-10 h-10 rounded-xl bg-terra-light flex items-center justify-center shrink-0 mt-0.5">
-                            <svg class="w-5 h-5 text-terra" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <div class="w-10 h-10 rounded-xl bg-primary-light flex items-center justify-center shrink-0 mt-0.5">
+                            <svg class="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
                             </svg>
                         </div>
@@ -44,8 +44,8 @@
                         </div>
                     </div>
                     <div class="flex items-start gap-4">
-                        <div class="w-10 h-10 rounded-xl bg-terra-light flex items-center justify-center shrink-0 mt-0.5">
-                            <svg class="w-5 h-5 text-terra" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <div class="w-10 h-10 rounded-xl bg-primary-light flex items-center justify-center shrink-0 mt-0.5">
+                            <svg class="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                             </svg>
                         </div>
@@ -82,7 +82,7 @@
                                        value="{{ old('name') }}"
                                        placeholder="Mario Rossi"
                                        class="w-full px-4 py-2.5 rounded-xl border text-sm transition
-                                              {{ $errors->has('name') ? 'border-red-300 bg-red-50 focus:ring-red-300' : 'border-warm-border focus:border-terra focus:ring-terra/20' }}
+                                              {{ $errors->has('name') ? 'border-red-300 bg-red-50 focus:ring-red-300' : 'border-warm-border focus:border-primary focus:ring-primary/20' }}
                                               focus:outline-none focus:ring-2">
                                 @error('name')
                                 <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
@@ -97,7 +97,7 @@
                                        value="{{ old('email') }}"
                                        placeholder="mario@salone.it"
                                        class="w-full px-4 py-2.5 rounded-xl border text-sm transition
-                                              {{ $errors->has('email') ? 'border-red-300 bg-red-50 focus:ring-red-300' : 'border-warm-border focus:border-terra focus:ring-terra/20' }}
+                                              {{ $errors->has('email') ? 'border-red-300 bg-red-50 focus:ring-red-300' : 'border-warm-border focus:border-primary focus:ring-primary/20' }}
                                               focus:outline-none focus:ring-2">
                                 @error('email')
                                 <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
@@ -114,7 +114,7 @@
                                        value="{{ old('phone') }}"
                                        placeholder="+39 340 000 0000"
                                        class="w-full px-4 py-2.5 rounded-xl border border-warm-border text-sm transition
-                                              focus:outline-none focus:border-terra focus:ring-2 focus:ring-terra/20">
+                                              focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20">
                             </div>
 
                             <div>
@@ -123,7 +123,7 @@
                                 </label>
                                 <select id="subject" name="subject"
                                         class="w-full px-4 py-2.5 rounded-xl border text-sm transition
-                                               {{ $errors->has('subject') ? 'border-red-300 bg-red-50 focus:ring-red-300' : 'border-warm-border focus:border-terra focus:ring-terra/20' }}
+                                               {{ $errors->has('subject') ? 'border-red-300 bg-red-50 focus:ring-red-300' : 'border-warm-border focus:border-primary focus:ring-primary/20' }}
                                                focus:outline-none focus:ring-2">
                                     <option value="" disabled {{ old('subject') ? '' : 'selected' }}>Seleziona…</option>
                                     <option value="demo"    {{ old('subject') === 'demo'    ? 'selected' : '' }}>Richiesta demo gratuita</option>
@@ -144,7 +144,7 @@
                             <textarea id="message" name="message" rows="5"
                                       placeholder="Dimmi pure come posso aiutarti…"
                                       class="w-full px-4 py-2.5 rounded-xl border text-sm transition resize-none
-                                             {{ $errors->has('message') ? 'border-red-300 bg-red-50 focus:ring-red-300' : 'border-warm-border focus:border-terra focus:ring-terra/20' }}
+                                             {{ $errors->has('message') ? 'border-red-300 bg-red-50 focus:ring-red-300' : 'border-warm-border focus:border-primary focus:ring-primary/20' }}
                                              focus:outline-none focus:ring-2">{{ old('message') }}</textarea>
                             @error('message')
                             <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
@@ -152,13 +152,13 @@
                         </div>
 
                         <button type="submit"
-                                class="w-full bg-terra hover:bg-terra/90 text-white font-semibold py-3.5 rounded-xl transition text-sm shadow-sm shadow-terra/20">
+                                class="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-3.5 rounded-xl transition text-sm shadow-sm shadow-primary/20">
                             Invia messaggio
                         </button>
 
                         <p class="text-xs text-ink-muted/70 text-center">
                             Inviando il messaggio accetti la nostra
-                            <a href="{{ route('legal.privacy') }}" class="text-terra hover:underline">Privacy Policy</a>.
+                            <a href="{{ route('legal.privacy') }}" class="text-primary hover:underline">Privacy Policy</a>.
                         </p>
                     </form>
                 </div>

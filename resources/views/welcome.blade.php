@@ -314,6 +314,8 @@
 /* ── HEADING UTILITIES ────────────────────────────────────────────────────── */
 .sf-heading { text-wrap: balance; }
 .sf-heading--sm { font-size: clamp(22px, 3vw, 30px); }
+.sf-subheading { font-size: clamp(16px, 2vw, 20px); font-weight: 600; margin-bottom: 20px; opacity: .75; }
+.sf-subheading--spaced { margin-top: 48px; }
 .sf-svc-cta { margin-top: 44px; }
 
 /* ── PAGE NAV ─────────────────────────────────────────────────────────────── */
@@ -365,11 +367,12 @@
 @section('content')
 
 @php
-    $galleryItems = $profile->getMedia('gallery');
+    $galleryItems   = $profile->getMedia('gallery');
+    $portfolioItems = $profile->getMedia('portfolio');
     $days   = ['mon'=>'Lunedì','tue'=>'Martedì','wed'=>'Mercoledì','thu'=>'Giovedì','fri'=>'Venerdì','sat'=>'Sabato','sun'=>'Domenica'];
     $dayMap = ['Mon'=>'mon','Tue'=>'tue','Wed'=>'wed','Thu'=>'thu','Fri'=>'fri','Sat'=>'sat','Sun'=>'sun'];
     $todayKey = $dayMap[now()->format('D')] ?? '';
-    $hasGallerySection = $galleryItems->count() > 3 || ($galleryItems->isNotEmpty() && !$profile->description);
+    $hasGallerySection = $portfolioItems->isNotEmpty();
     $navLinks = array_filter([
         $services->isNotEmpty()                                  ? ['href' => '#servizi',   'label' => 'Servizi']        : null,
         $profile->description                                    ? ['href' => '#salone',    'label' => 'Il salone']      : null,
@@ -477,6 +480,7 @@
 <section class="sf-section-alt" id="team">
     <div class="sf-inner">
         <h2 class="sf-heading">Il team</h2>
+        <div class="sf-rule"></div>
         <div class="sf-team-grid">
             @foreach($staff as $member)
             @php $avatarUrl = $member->getFirstMediaUrl('avatar', 'thumb'); @endphp
@@ -502,12 +506,13 @@
 @endif
 
 {{-- 5. GALLERIA --}}
-@if($galleryItems->count() > 3 || ($galleryItems->isNotEmpty() && !$profile->description))
+@if($hasGallerySection)
 <section class="sf-section" id="galleria" x-data="{ lightbox: null }">
     <div class="sf-inner">
         <h2 class="sf-heading">Galleria</h2>
+        <div class="sf-rule"></div>
         <div class="sf-gallery-grid">
-            @foreach($galleryItems as $item)
+            @foreach($portfolioItems as $item)
             @php $webUrl = $item->getUrl('web'); @endphp
             <div class="sf-gallery-item" @click="lightbox = '{{ $webUrl }}'">
                 <img src="{{ $webUrl }}" alt="Galleria {{ $loop->iteration }}" loading="lazy">
