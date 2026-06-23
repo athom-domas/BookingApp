@@ -462,7 +462,7 @@
             <div class="sf-about-photos">
                 @foreach($galleryItems->take(3) as $item)
                     <div class="sf-about-photo">
-                        <img src="{{ $item->getUrl('thumb') }}" alt="" loading="lazy">
+                        <img src="{{ $item->getUrl('web') }}" alt="" loading="lazy">
                     </div>
                 @endforeach
             </div>
@@ -508,9 +508,9 @@
         <h2 class="sf-heading">Galleria</h2>
         <div class="sf-gallery-grid">
             @foreach($galleryItems as $item)
-            @php $thumbUrl = $item->getUrl('thumb'); $webUrl = $item->getUrl('web'); @endphp
+            @php $webUrl = $item->getUrl('web'); @endphp
             <div class="sf-gallery-item" @click="lightbox = '{{ $webUrl }}'">
-                <img src="{{ $thumbUrl }}" alt="Galleria {{ $loop->iteration }}" loading="lazy">
+                <img src="{{ $webUrl }}" alt="Galleria {{ $loop->iteration }}" loading="lazy">
             </div>
             @endforeach
         </div>
@@ -541,8 +541,9 @@
                 <ul class="sf-hours-list">
                     @foreach($days as $key => $label)
                     @php
-                        $day    = $profile->opening_hours[$key] ?? null;
-                        $isOpen = $day && (($day['type'] ?? null) === 'split' || ($day['open'] ?? false));
+                        $day     = $profile->opening_hours[$key] ?? null;
+                        $dayType = $day['type'] ?? null;
+                        $isOpen  = $day && in_array($dayType, ['split', 'continuous']);
                     @endphp
                     <li class="sf-hours-item {{ $key === $todayKey ? 'is-today' : '' }} {{ !$isOpen ? 'is-closed' : '' }}">
                         <div class="sf-hours-day">
@@ -553,9 +554,13 @@
                         </div>
                         <div class="sf-hours-time">
                             @if($isOpen)
-                                {{ $day['morning_open'] ?? '09:00' }}–{{ $day['morning_close'] ?? '13:00' }}
-                                @if(!empty($day['afternoon_open']) && !empty($day['afternoon_close']))
-                                    &thinsp;/&thinsp;{{ $day['afternoon_open'] }}–{{ $day['afternoon_close'] }}
+                                @if($dayType === 'continuous')
+                                    {{ $day['open_time'] }}–{{ $day['close_time'] }}
+                                @else
+                                    {{ $day['morning_open'] ?? '09:00' }}–{{ $day['morning_close'] ?? '13:00' }}
+                                    @if(!empty($day['afternoon_open']) && !empty($day['afternoon_close']))
+                                        &thinsp;/&thinsp;{{ $day['afternoon_open'] }}–{{ $day['afternoon_close'] }}
+                                    @endif
                                 @endif
                             @else
                                 Chiuso
