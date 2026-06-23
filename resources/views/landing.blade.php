@@ -320,9 +320,8 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
                 </ul>
             </div>
 
-            {{-- Right: admin panel mockup --}}
-            <div data-r style="--d:1" aria-hidden="true">
-                {{-- Browser chrome --}}
+            {{-- Right: screenshot tab switcher --}}
+            <div data-r style="--d:1" x-data="{ tab: 'lista' }">
                 <div class="rounded-xl overflow-hidden shadow-2xl shadow-black/60 border border-white/10">
 
                     {{-- Chrome bar --}}
@@ -333,74 +332,38 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
                             <div class="w-3 h-3 rounded-full" style="background:#28c840"></div>
                         </div>
                         <div class="flex-1 rounded px-3 py-1 text-xs font-mono" style="background:#2a2b3d;color:rgba(255,255,255,0.3)">
-                            gestionale.pro/admin/appuntamenti
+                            gestionale.pro/admin
                         </div>
                     </div>
 
-                    {{-- App UI --}}
-                    <div class="flex overflow-hidden" style="height:360px">
+                    {{-- Tab bar --}}
+                    <div class="flex" style="background:#1a1b26;border-bottom:1px solid rgba(255,255,255,0.08)">
+                        <button @click="tab = 'lista'"
+                                class="px-4 py-2.5 text-xs font-medium transition-colors border-b-2"
+                                :class="tab === 'lista' ? 'text-terra border-terra' : 'text-white/40 border-transparent hover:text-white/70'">
+                            Lista appuntamenti
+                        </button>
+                        <button @click="tab = 'calendario'"
+                                class="px-4 py-2.5 text-xs font-medium transition-colors border-b-2"
+                                :class="tab === 'calendario' ? 'text-terra border-terra' : 'text-white/40 border-transparent hover:text-white/70'">
+                            Calendario
+                        </button>
+                    </div>
 
-                        {{-- Sidebar --}}
-                        <div class="flex-shrink-0 py-4 flex flex-col gap-1" style="width:160px;background:#12100e">
-                            <div class="px-4 py-3 mb-2 text-xs font-bold" style="color:#C4714A">
-                                GestionalePro
-                            </div>
-                            <div class="mx-2 px-3 py-2 rounded-lg text-xs font-medium" style="background:rgba(196,113,74,0.18);color:#C4714A">Appuntamenti</div>
-                            @foreach(['Staff', 'Servizi', 'Statistiche', 'Impostazioni'] as $nav)
-                            <div class="mx-2 px-3 py-2 text-xs" style="color:rgba(255,255,255,0.4)">{{ $nav }}</div>
-                            @endforeach
-                        </div>
+                    {{-- Screenshots --}}
+                    <div style="height:360px" class="overflow-hidden bg-cream">
+                        <img x-show="tab === 'lista'"
+                             src="/img/screenshots/screenshot-lista.png"
+                             alt="Lista appuntamenti nel pannello admin"
+                             class="w-full h-full object-cover object-top">
+                        <img x-show="tab === 'calendario'"
+                             src="/img/screenshots/screenshot-calendario.png"
+                             alt="Vista calendario con drag-and-drop"
+                             class="w-full h-full object-cover object-top">
+                    </div>
 
-                        {{-- Main content --}}
-                        <div class="flex-1 flex flex-col overflow-hidden" style="background:#faf7f2">
-
-                            {{-- Header --}}
-                            <div class="flex items-center justify-between px-5 py-3 border-b" style="border-color:#e5d8cf;background:#faf7f2">
-                                <div>
-                                    <div class="text-xs font-semibold" style="color:#1c1410">Appuntamenti</div>
-                                    <div class="text-xs" style="color:#7a6a60">Oggi, 4 giugno 2026</div>
-                                </div>
-                                <div class="flex gap-2">
-                                    <div class="rounded px-2 py-1 text-xs font-medium" style="background:rgba(196,113,74,0.12);color:#C4714A">+ Nuovo</div>
-                                </div>
-                            </div>
-
-                            {{-- Stats bar --}}
-                            <div class="flex gap-4 px-5 py-2.5 border-b" style="border-color:#e5d8cf;background:#f2ebe3">
-                                <div class="text-xs" style="color:#7a6a60"><span class="font-semibold" style="color:#1c1410">4</span> oggi</div>
-                                <div class="text-xs" style="color:#7a6a60"><span class="font-semibold" style="color:#16a34a">3</span> confermati</div>
-                                <div class="text-xs" style="color:#7a6a60"><span class="font-semibold" style="color:#d97706">1</span> in attesa</div>
-                            </div>
-
-                            {{-- Table header --}}
-                            <div class="grid px-5 py-2 text-xs font-semibold uppercase tracking-wide" style="grid-template-columns:1fr 1fr auto auto auto;gap:8px;color:#7a6a60;border-bottom:1px solid #e5d8cf">
-                                <div>Cliente</div>
-                                <div>Servizio</div>
-                                <div class="text-center">Orario</div>
-                                <div>Operatore</div>
-                                <div>Stato</div>
-                            </div>
-
-                            {{-- Appointment rows --}}
-                            @foreach([
-                                ['Giulia Rossi',     'Taglio + Colore', '09:30', 'Sara B.',  'Confermato', '#16a34a', '#dcfce7'],
-                                ['Marco Ferretti',   'Barba',           '10:15', 'Luca M.',  'Confermato', '#16a34a', '#dcfce7'],
-                                ['Valentina Conti',  'Piega',           '11:00', 'Sara B.',  'In attesa',  '#d97706', '#fef9c3'],
-                                ['Roberto Neri',     'Taglio',          '11:30', 'Luca M.',  'Confermato', '#16a34a', '#dcfce7'],
-                            ] as $row)
-                            <div class="grid items-center px-5 py-2.5 text-xs border-b" style="grid-template-columns:1fr 1fr auto auto auto;gap:8px;border-color:#f2ebe3;color:#1c1410">
-                                <div class="font-medium truncate">{{ $row[0] }}</div>
-                                <div style="color:#7a6a60" class="truncate">{{ $row[1] }}</div>
-                                <div class="font-mono text-center font-medium" style="color:#C4714A">{{ $row[2] }}</div>
-                                <div style="color:#7a6a60">{{ $row[3] }}</div>
-                                <div class="rounded-full px-2 py-0.5 text-xs font-medium text-center" style="background:{{ $row[6] }};color:{{ $row[5] }}">{{ $row[4] }}</div>
-                            </div>
-                            @endforeach
-
-                        </div>{{-- /main --}}
-                    </div>{{-- /app UI --}}
-                </div>{{-- /chrome --}}
-            </div>{{-- /right col --}}
+                </div>
+            </div>
 
         </div>
     </div>
