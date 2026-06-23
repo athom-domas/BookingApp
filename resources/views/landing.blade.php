@@ -208,6 +208,9 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
                     </div>
                     <p class="font-semibold text-ink mb-1.5">Prenotazioni Online 24/7</p>
                     <p class="text-sm text-ink-muted leading-relaxed">I clienti prenotano dal telefono in qualsiasi momento. Nessuna telefonata, nessun messaggio da gestire.</p>
+                    <img src="/img/screenshots/screenshot-booking.png"
+                         alt="Pagina prenotazione online"
+                         class="rounded-xl border border-warm-border shadow-sm mt-4 w-full max-w-xs">
                 </div>
                 <div>
                     <div class="w-10 h-10 rounded-full bg-terra-light flex items-center justify-center mb-4">
@@ -435,27 +438,29 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
         </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             @foreach([
-                ['quote'=>'Prima passavo mezz\'ora ogni mattina a confermare appuntamenti su WhatsApp. Adesso arrivano i clienti e basta. I promemoria pensano a tutto, io non devo fare niente.','name'=>'Giulia Rossi',  'role'=>'Parrucchiera, Milano','initial'=>'G','color'=>'bg-terra'],
-                ['quote'=>'Ho tre colleghi in salone e prima era il caos: turni sbagliati, pagamenti da registrare a mano. Adesso tutto è in ordine e so sempre com\'è andata la settimana.',    'name'=>'Marco Torrisi', 'role'=>'Barbiere, Roma',       'initial'=>'M','color'=>'bg-indigo-500'],
-                ['quote'=>'Le mie clienti prenotano quando vogliono, anche a mezzanotte. Non rispondo più a nessun messaggio per gli appuntamenti. E le prenotazioni sono aumentate.',              'name'=>'Alessia Marino','role'=>'Estetista, Torino',    'initial'=>'A','color'=>'bg-rose-500'],
+                ['quote'=>'Prima passavo mezz\'ora ogni mattina a confermare appuntamenti su WhatsApp. Adesso arrivano i clienti e basta. I promemoria pensano a tutto, io non devo fare niente.','name'=>'Giulia Rossi',  'badge'=>'Parrucchiera','city'=>'Milano','initial'=>'G','color'=>'bg-terra'],
+                ['quote'=>'Ho tre colleghi in salone e prima era il caos: turni sbagliati, pagamenti da registrare a mano. Adesso tutto è in ordine e so sempre com\'è andata la settimana.',    'name'=>'Marco Torrisi', 'badge'=>'Barbiere',    'city'=>'Roma',   'initial'=>'M','color'=>'bg-indigo-500'],
+                ['quote'=>'Le mie clienti prenotano quando vogliono, anche a mezzanotte. Non rispondo più a nessun messaggio per gli appuntamenti. E le prenotazioni sono aumentate.',              'name'=>'Alessia Marino','badge'=>'Estetista',   'city'=>'Torino', 'initial'=>'A','color'=>'bg-rose-500'],
             ] as $i => $t)
             <article class="bg-cream-dark rounded-2xl p-8 flex flex-col" data-r style="--d:{{ $i }}">
-                <div class="font-display text-6xl text-terra/30 leading-none mb-1 select-none">&ldquo;</div>
-                <div class="flex gap-0.5 mb-5">
+                <div class="flex gap-1 mb-5">
                     @for($s = 0; $s < 5; $s++)
-                    <svg class="w-4 h-4 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
+                    <svg class="w-5 h-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
                         <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
                     </svg>
                     @endfor
                 </div>
-                <p class="text-sm text-ink-muted leading-relaxed mb-6 flex-1">"{{ $t['quote'] }}"</p>
+                <p class="text-sm text-ink-muted leading-relaxed mb-6 flex-1 italic">"{{ $t['quote'] }}"</p>
                 <div class="flex items-center gap-3">
                     <div class="w-9 h-9 rounded-full {{ $t['color'] }} flex items-center justify-center text-white text-sm font-bold shrink-0">
                         {{ $t['initial'] }}
                     </div>
                     <div>
                         <p class="text-sm font-semibold text-ink">{{ $t['name'] }}</p>
-                        <p class="text-xs text-ink-muted">{{ $t['role'] }}</p>
+                        <div class="flex items-center gap-2 mt-0.5">
+                            <span class="bg-terra-light text-terra text-xs rounded-full px-2 py-0.5 font-medium">{{ $t['badge'] }}</span>
+                            <span class="text-xs text-ink-muted">{{ $t['city'] }}</span>
+                        </div>
                     </div>
                 </div>
             </article>
