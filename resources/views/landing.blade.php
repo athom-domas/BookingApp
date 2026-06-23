@@ -361,12 +361,12 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
 
                     {{-- Tab bar --}}
                     <div class="flex" style="background:#1a1b26;border-bottom:1px solid rgba(255,255,255,0.08)">
-                        <button @click="tab = 'lista'"
+                        <button type="button" @click="tab = 'lista'"
                                 class="px-4 py-2.5 text-xs font-medium transition-colors border-b-2"
                                 :class="tab === 'lista' ? 'text-terra border-terra' : 'text-white/40 border-transparent hover:text-white/70'">
                             Lista appuntamenti
                         </button>
-                        <button @click="tab = 'calendario'"
+                        <button type="button" @click="tab = 'calendario'"
                                 class="px-4 py-2.5 text-xs font-medium transition-colors border-b-2"
                                 :class="tab === 'calendario' ? 'text-terra border-terra' : 'text-white/40 border-transparent hover:text-white/70'">
                             Calendario
@@ -375,13 +375,14 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
 
                     {{-- Screenshots --}}
                     <div style="height:360px" class="overflow-hidden bg-cream">
-                        <img x-show="tab === 'lista'"
+                        <img x-cloak x-show="tab === 'lista'"
                              src="/img/screenshots/screenshot-lista.png"
                              alt="Lista appuntamenti nel pannello admin"
                              class="w-full h-full object-cover object-top">
-                        <img x-show="tab === 'calendario'"
+                        <img x-cloak x-show="tab === 'calendario'"
                              src="/img/screenshots/screenshot-calendario.png"
                              alt="Vista calendario con drag-and-drop"
+                             loading="lazy"
                              class="w-full h-full object-cover object-top">
                     </div>
 
