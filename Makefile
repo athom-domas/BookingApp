@@ -134,7 +134,7 @@ staging-setup:
 	@echo "Staging setup completato. Visita https://staging.booking-app.it"
 
 deploy-staging: deploy-staging-env deploy-staging-assets deploy-staging-code
-	ssh $(SSH_HOST) "cd $(STAGING_PATH) && $(SSH_PHP) artisan migrate --force && $(SSH_PHP) artisan optimize:clear && $(SSH_PHP) artisan config:cache && $(SSH_PHP) artisan route:cache && $(SSH_PHP) artisan view:cache"
+	ssh $(SSH_HOST) "cd $(STAGING_PATH) && $(SSH_PHP) artisan migrate:fresh --force --seeder=StagingSeeder && $(SSH_PHP) artisan optimize:clear && $(SSH_PHP) artisan config:cache && $(SSH_PHP) artisan route:cache && $(SSH_PHP) artisan view:cache && $(SSH_PHP) artisan storage:link 2>/dev/null; true"
 	@echo "Deploy staging completato."
 
 deploy-staging-env:
