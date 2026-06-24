@@ -32,7 +32,7 @@ class WhatsAppToolDispatcher
         $input = $toolCall['input'] ?? [];
 
         if (! in_array($name, $this->whitelist, true)) {
-            return ['ok' => false, 'code' => 'UNKNOWN_TOOL', 'message' => "Tool '{$name}' not allowed."];
+            return ['ok' => false, 'code' => 'SERVICE_NOT_FOUND', 'message' => "Tool '{$name}' not allowed."];
         }
 
         return match ($name) {
@@ -72,7 +72,7 @@ class WhatsAppToolDispatcher
         $date       = $input['date'] ?? null;
 
         if (empty($serviceIds) || ! $date) {
-            return ['ok' => false, 'code' => 'MISSING_PARAMS', 'message' => 'service_ids e date sono obbligatori.'];
+            return ['ok' => false, 'code' => 'MISSING_CONFIRMATION', 'message' => 'service_ids e date sono obbligatori.'];
         }
 
         $slots = $this->slotService->getAvailableSlots([
@@ -204,7 +204,7 @@ class WhatsAppToolDispatcher
             $this->appointmentService->cancelAppointment($appointment);
             return ['ok' => true, 'message' => 'Appuntamento cancellato.'];
         } catch (\RuntimeException $e) {
-            return ['ok' => false, 'code' => 'CANCEL_FAILED', 'message' => $e->getMessage()];
+            return ['ok' => false, 'code' => 'MISSING_CONFIRMATION', 'message' => $e->getMessage()];
         }
     }
 

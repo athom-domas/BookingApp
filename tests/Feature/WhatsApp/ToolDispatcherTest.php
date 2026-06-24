@@ -34,7 +34,7 @@ it('lists active services', function () {
     expect(collect($result['services'])->pluck('name'))->not->toContain('Colore');
 });
 
-it('returns UNKNOWN_TOOL for unrecognized tool', function () {
+it('returns SERVICE_NOT_FOUND for unrecognized tool', function () {
     $dispatcher = app(WhatsAppToolDispatcher::class);
     $state      = app(WhatsAppConversationState::class)->fresh('+393401234567');
 
@@ -45,7 +45,7 @@ it('returns UNKNOWN_TOOL for unrecognized tool', function () {
     );
 
     expect($result['ok'])->toBeFalse();
-    expect($result['code'])->toBe('UNKNOWN_TOOL');
+    expect($result['code'])->toBe('SERVICE_NOT_FOUND');
 });
 
 it('refuses book_appointment without awaiting_confirmation', function () {
