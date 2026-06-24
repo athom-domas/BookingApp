@@ -76,7 +76,7 @@ it('marks message as failed on Claude API error', function () {
     expect($message->error_code)->toBe('CLAUDE_ERROR');
 });
 
-it('does not send reply when escalated', function () {
+it('sends acknowledgement when escalated', function () {
     $businessId = app('current_business_id');
     $message    = makeInboundMessage($businessId, 'ancora non ho capito');
 
@@ -85,9 +85,9 @@ it('does not send reply when escalated', function () {
     $state['escalated'] = true;
     $stateService->set($businessId, '+393401234567', $state);
 
-    Http::fake(['https://graph.facebook.com/*' => Http::response([], 200)]);
+    Http::fake(['https://graph.facebook.com/*' => Http::response(['messages' => [['id' => 'wamid.out']]], 200)]);
 
     app(WhatsAppConversationService::class)->handle($message->id, $businessId);
 
-    Http::assertNothingSent(); // no Claude, no Meta send
+    Http::assertSentCount(1); // one request to Meta for the acknowledgement
 });

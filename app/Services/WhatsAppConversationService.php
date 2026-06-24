@@ -29,6 +29,16 @@ class WhatsAppConversationService
                 $state = $this->stateService->get($businessId, $phone);
 
                 if ($state['escalated']) {
+                    try {
+                        $this->whatsApp->sendTextWithinWindow(
+                            $message->phone,
+                            'Ti metto in contatto con il salone — ti risponderanno al più presto.',
+                            Carbon::parse($state['last_user_message_at']),
+                            $message->business_id
+                        );
+                    } catch (WhatsAppWindowExpiredException) {
+                        // Window expired, can't send acknowledgement
+                    }
                     $message->update(['processed_at' => now()]);
                     return;
                 }
@@ -61,6 +71,9 @@ class WhatsAppConversationService
                 $message->update(['processed_at' => now()]);
                 $this->stateService->set($businessId, $phone, $state);
 
+            } catch (WhatsAppWindowExpiredException $e) {
+                Log::info('WhatsApp 24h window expired, message not sent', ['message_id' => $messageId]);
+                // Don't mark as failed — this is expected behavior
             } catch (\Throwable $e) {
                 Log::error('WhatsApp conversation error', [
                     'message_id'  => $messageId,
