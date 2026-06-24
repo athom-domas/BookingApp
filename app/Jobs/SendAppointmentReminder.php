@@ -37,7 +37,7 @@ class SendAppointmentReminder implements ShouldQueue
         $sentViaWhatsApp = false;
 
         if ($channel === 'whatsapp' && $prefs?->phone_number && IntegrationSetting::hasMetaWhatsApp()) {
-            $sentViaWhatsApp = $whatsApp->sendTemplate($prefs->phone_number, [
+            $sentViaWhatsApp = $whatsApp->sendTemplateDefault($prefs->phone_number, [
                 $appointment->user->name,
                 $appointment->services_label,
                 $appointment->scheduled_date->format('d/m/Y'),

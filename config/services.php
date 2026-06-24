@@ -48,7 +48,16 @@ return [
     ],
 
     'anthropic' => [
-        'key' => env('ANTHROPIC_API_KEY'),
+        'key'   => env('ANTHROPIC_API_KEY'),
+        'model' => env('ANTHROPIC_MODEL', 'claude-haiku-4-5'),
+    ],
+
+    'whatsapp' => [
+        'webhook_verify_token' => env('WHATSAPP_WEBHOOK_VERIFY_TOKEN'),
+        'graph_api_version'    => env('WHATSAPP_GRAPH_API_VERSION', 'v23.0'),
+        'queue'                => env('WHATSAPP_QUEUE', 'whatsapp'),
+        'conversation_ttl'     => (int) env('WHATSAPP_CONVERSATION_TTL_HOURS', 4),
+        'summary_ttl'          => (int) env('WHATSAPP_SUMMARY_TTL_HOURS', 24),
     ],
 
     'google' => [

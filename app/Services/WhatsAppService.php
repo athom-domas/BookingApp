@@ -2,17 +2,60 @@
 
 namespace App\Services;
 
+use App\Exceptions\WhatsAppWindowExpiredException;
 use App\Models\IntegrationSetting;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class WhatsAppService
 {
-    public function sendTemplate(string $phone, array $parameters): bool
+    private function getSettings(int $businessId): IntegrationSetting
     {
-        $token    = IntegrationSetting::getMetaWhatsAppToken();
-        $phoneId  = IntegrationSetting::getMetaWhatsAppPhoneId();
-        $template = IntegrationSetting::getMetaWhatsAppTemplate();
+        return IntegrationSetting::where('business_id', $businessId)->firstOrNew(['business_id' => $businessId]);
+    }
+
+    private function graphUrl(string $phoneId, string $path = 'messages'): string
+    {
+        $version = config('services.whatsapp.graph_api_version', 'v23.0');
+        return "https://graph.facebook.com/{$version}/{$phoneId}/{$path}";
+    }
+
+    public function sendTextWithinWindow(string $phone, string $text, Carbon $lastUserMessageAt, int $businessId): bool
+    {
+        if (now()->diffInSeconds($lastUserMessageAt, false) <= -86400) {
+            throw new WhatsAppWindowExpiredException($phone);
+        }
+
+        $setting = $this->getSettings($businessId);
+        $token   = $setting->meta_whatsapp_token;
+        $phoneId = $setting->meta_whatsapp_phone_id;
+
+        if (! $token || ! $phoneId) {
+            return false;
+        }
+
+        $response = Http::withToken($token)
+            ->post($this->graphUrl($phoneId), [
+                'messaging_product' => 'whatsapp',
+                'to'                => ltrim(preg_replace('/[^0-9+]/', '', $phone), '+'),
+                'type'              => 'text',
+                'text'              => ['body' => $text],
+            ]);
+
+        if (! $response->successful()) {
+            Log::error('WhatsApp sendText error', ['status' => $response->status(), 'body' => $response->json()]);
+            return false;
+        }
+
+        return true;
+    }
+
+    public function sendTemplate(string $phone, string $templateName, string $language, string $category, array $params, int $businessId): bool
+    {
+        $setting = $this->getSettings($businessId);
+        $token   = $setting->meta_whatsapp_token;
+        $phoneId = $setting->meta_whatsapp_phone_id;
 
         if (! $token || ! $phoneId) {
             return false;
@@ -24,33 +67,37 @@ class WhatsAppService
         }
 
         $response = Http::withToken($token)
-            ->post("https://graph.facebook.com/v19.0/{$phoneId}/messages", [
+            ->post($this->graphUrl($phoneId), [
                 'messaging_product' => 'whatsapp',
                 'to'                => $number,
                 'type'              => 'template',
                 'template'          => [
-                    'name'       => $template,
-                    'language'   => ['code' => 'it'],
+                    'name'       => $templateName,
+                    'language'   => ['code' => $language],
+                    'category'   => $category,
                     'components' => [
                         [
                             'type'       => 'body',
-                            'parameters' => array_map(
-                                fn ($p) => ['type' => 'text', 'text' => $p],
-                                $parameters
-                            ),
+                            'parameters' => array_map(fn ($p) => ['type' => 'text', 'text' => $p], $params),
                         ],
                     ],
                 ],
             ]);
 
         if (! $response->successful()) {
-            Log::error('WhatsApp Meta API error', [
-                'status' => $response->status(),
-                'body'   => $response->json(),
-            ]);
+            Log::error('WhatsApp sendTemplate error', ['status' => $response->status(), 'body' => $response->json()]);
             return false;
         }
 
         return true;
+    }
+
+    public function sendTemplateDefault(string $phone, array $parameters): bool
+    {
+        $setting  = IntegrationSetting::current();
+        $template = $setting->meta_whatsapp_template ?? 'appointment_reminder';
+        $businessId = $setting->business_id ?? 0;
+
+        return $this->sendTemplate($phone, $template, 'it', 'UTILITY', $parameters, $businessId);
     }
 }
