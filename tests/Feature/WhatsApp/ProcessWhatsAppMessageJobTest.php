@@ -81,6 +81,25 @@ it('skips outbound messages', function () {
     );
 });
 
+it('marks message as failed via failed() callback', function () {
+    $message = WhatsAppMessage::create([
+        'business_id'      => $this->business->id,
+        'wamid'            => 'wamid.test.failed',
+        'phone'            => '+393401234567',
+        'phone_normalized' => '+393401234567',
+        'direction'        => 'inbound',
+        'type'             => 'text',
+        'payload'          => ['text' => ['body' => 'test']],
+    ]);
+
+    (new ProcessWhatsAppMessageJob($message->id))->failed(new \RuntimeException('Test error'));
+
+    $message->refresh();
+    expect($message->failed_at)->not->toBeNull()
+        ->and($message->error_code)->toBe('JOB_FAILED')
+        ->and($message->error_message)->toBe('Test error');
+});
+
 it('logs warning when message not found', function () {
     Log::shouldReceive('warning')
         ->once()
