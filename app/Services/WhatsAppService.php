@@ -21,6 +21,15 @@ class WhatsAppService
         return "https://graph.facebook.com/{$version}/{$phoneId}/{$path}";
     }
 
+    private function normalizePhoneForApi(string $phone): string
+    {
+        $digits = preg_replace('/[^0-9]/', '', $phone);
+        if (str_starts_with($digits, '0')) {
+            $digits = '39' . ltrim($digits, '0');
+        }
+        return $digits;
+    }
+
     public function sendTextWithinWindow(string $phone, string $text, Carbon $lastUserMessageAt, int $businessId): bool
     {
         if (now()->diffInSeconds($lastUserMessageAt, false) <= -86400) {
@@ -38,7 +47,7 @@ class WhatsAppService
         $response = Http::withToken($token)
             ->post($this->graphUrl($phoneId), [
                 'messaging_product' => 'whatsapp',
-                'to'                => ltrim(preg_replace('/[^0-9+]/', '', $phone), '+'),
+                'to'                => $this->normalizePhoneForApi($phone),
                 'type'              => 'text',
                 'text'              => ['body' => $text],
             ]);
@@ -61,15 +70,10 @@ class WhatsAppService
             return false;
         }
 
-        $number = preg_replace('/[^0-9]/', '', $phone);
-        if (str_starts_with($number, '0')) {
-            $number = '39' . ltrim($number, '0');
-        }
-
         $response = Http::withToken($token)
             ->post($this->graphUrl($phoneId), [
                 'messaging_product' => 'whatsapp',
-                'to'                => $number,
+                'to'                => $this->normalizePhoneForApi($phone),
                 'type'              => 'template',
                 'template'          => [
                     'name'       => $templateName,
@@ -96,7 +100,11 @@ class WhatsAppService
     {
         $setting  = IntegrationSetting::current();
         $template = $setting->meta_whatsapp_template ?? 'appointment_reminder';
-        $businessId = $setting->business_id ?? 0;
+        $businessId = $setting->business_id;
+        if (! $businessId) {
+            Log::warning('sendTemplateDefault called without current_business_id binding');
+            return false;
+        }
 
         return $this->sendTemplate($phone, $template, 'it', 'UTILITY', $parameters, $businessId);
     }
