@@ -19,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->preventRequestForgery(except: [
             'stripe/webhook',
             'stripe/billing-webhook',
+            'whatsapp/webhook',
         ]);
 
         $middleware->alias([

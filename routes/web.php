@@ -17,6 +17,9 @@ use App\Http\Controllers\Public\AppointmentActionController;
 use App\Http\Controllers\StripeWebhookController;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/whatsapp/webhook', [\App\Http\Controllers\WhatsAppWebhookController::class, 'verify']);
+Route::post('/whatsapp/webhook', [\App\Http\Controllers\WhatsAppWebhookController::class, 'handle']);
+
 Route::middleware('storefront.access')->group(function () {
     Route::get('/', function () {
         if (! app()->bound('current_business_id')) {
