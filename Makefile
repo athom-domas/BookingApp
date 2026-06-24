@@ -1,13 +1,15 @@
-SSH_HOST = su814880@access-5020661163.webspace-host.com
-SSH_PATH = ~
-SSH_PHP  = /usr/bin/php8.5
+SSH_HOST     = su814880@access-5020661163.webspace-host.com
+SSH_PATH     = ~
+SSH_PHP      = /usr/bin/php8.5
+STAGING_PATH = ~/staging
 
 .PHONY: up down build restart logs shell \
         migrate migrate-fresh migrate-rollback seed \
         test test-filter \
         composer npm-install npm-dev npm-build vite \
         artisan tinker cache-clear queue-work \
-        deploy deploy-env deploy-assets deploy-code
+        deploy deploy-env deploy-assets deploy-code \
+        staging-setup deploy-staging deploy-staging-env deploy-staging-assets deploy-staging-code
 
 up:
 	docker compose up -d
@@ -112,3 +114,50 @@ deploy-code:
 	rsync -avz resources/ $(SSH_HOST):$(SSH_PATH)/resources/
 	rsync -avz database/migrations/ $(SSH_HOST):$(SSH_PATH)/database/migrations/
 	rsync -avz database/seeders/ $(SSH_HOST):$(SSH_PATH)/database/seeders/
+
+# ── Staging ──────────────────────────────────────────────────────────────────
+
+staging-setup:
+	@echo "Creo struttura staging sul server..."
+	ssh $(SSH_HOST) "mkdir -p $(STAGING_PATH)/storage/{app/public,framework/{cache/data,sessions,testing,views},logs} $(STAGING_PATH)/bootstrap/cache"
+	rsync -avz \
+		--exclude='.env' \
+		--exclude='.env.*' \
+		--exclude='vendor/' \
+		--exclude='node_modules/' \
+		--exclude='storage/' \
+		--exclude='.git/' \
+		. $(SSH_HOST):$(STAGING_PATH)/
+	scp .env.staging $(SSH_HOST):$(STAGING_PATH)/.env
+	ssh $(SSH_HOST) "cd $(STAGING_PATH) && $(SSH_PHP) ~/composer.phar install --no-dev --optimize-autoloader --no-interaction"
+	ssh $(SSH_HOST) "cd $(STAGING_PATH) && $(SSH_PHP) artisan key:generate --force && $(SSH_PHP) artisan migrate --force && $(SSH_PHP) artisan optimize:clear && $(SSH_PHP) artisan config:cache && $(SSH_PHP) artisan route:cache && $(SSH_PHP) artisan view:cache && $(SSH_PHP) artisan storage:link"
+	@echo "Staging setup completato. Visita https://staging.booking-app.it"
+
+deploy-staging: deploy-staging-env deploy-staging-assets deploy-staging-code
+	ssh $(SSH_HOST) "cd $(STAGING_PATH) && $(SSH_PHP) artisan migrate --force && $(SSH_PHP) artisan optimize:clear && $(SSH_PHP) artisan config:cache && $(SSH_PHP) artisan route:cache && $(SSH_PHP) artisan view:cache"
+	@echo "Deploy staging completato."
+
+deploy-staging-env:
+	scp .env.staging $(SSH_HOST):$(STAGING_PATH)/.env
+
+deploy-staging-assets:
+	docker compose run --rm --no-deps app npm run build
+	rsync -avz --delete public/build/ $(SSH_HOST):$(STAGING_PATH)/public/build/
+	rsync -avz public/img/ $(SSH_HOST):$(STAGING_PATH)/public/img/
+	rsync -avz public/video/ $(SSH_HOST):$(STAGING_PATH)/public/video/
+	rsync -avz public/fonts/ $(SSH_HOST):$(STAGING_PATH)/public/fonts/
+
+deploy-staging-code:
+	rsync -avz \
+		--exclude='.env' \
+		--exclude='vendor/' \
+		--exclude='node_modules/' \
+		--exclude='storage/logs/' \
+		--exclude='public/build/' \
+		--exclude='.git/' \
+		app/ $(SSH_HOST):$(STAGING_PATH)/app/
+	rsync -avz routes/ $(SSH_HOST):$(STAGING_PATH)/routes/
+	rsync -avz config/ $(SSH_HOST):$(STAGING_PATH)/config/
+	rsync -avz resources/ $(SSH_HOST):$(STAGING_PATH)/resources/
+	rsync -avz database/migrations/ $(SSH_HOST):$(STAGING_PATH)/database/migrations/
+	rsync -avz database/seeders/ $(SSH_HOST):$(STAGING_PATH)/database/seeders/
