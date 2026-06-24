@@ -53,6 +53,7 @@ return [
     ],
 
     'whatsapp' => [
+        'app_secret'           => env('WHATSAPP_APP_SECRET'),
         'webhook_verify_token' => env('WHATSAPP_WEBHOOK_VERIFY_TOKEN'),
         'graph_api_version'    => env('WHATSAPP_GRAPH_API_VERSION', 'v23.0'),
         'queue'                => env('WHATSAPP_QUEUE', 'whatsapp'),
