@@ -64,7 +64,7 @@ class WhatsAppWebhookController extends Controller
 
         $expected = 'sha256=' . hash_hmac('sha256', $rawBody, $appSecret);
         if (! hash_equals($expected, $header)) {
-            abort(401, 'Invalid signature');
+            abort(403, 'Invalid signature');
         }
     }
 
