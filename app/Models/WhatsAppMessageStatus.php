@@ -11,7 +11,6 @@ class WhatsAppMessageStatus extends Model
 {
     protected $table = 'whatsapp_message_statuses';
     public $timestamps = false;
-    protected $guarded = [];
 
     protected function casts(): array
     {
