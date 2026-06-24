@@ -13,6 +13,9 @@ use Illuminate\Database\Eloquent\Model;
     'twilio_sid', 'twilio_token', 'twilio_from',
     'meta_whatsapp_token', 'meta_whatsapp_phone_id', 'meta_whatsapp_template',
     'google_calendar_id', 'google_credentials_json',
+    'whatsapp_ai_enabled', 'whatsapp_ai_booking_enabled', 'whatsapp_ai_cancellation_enabled',
+    'whatsapp_ai_custom_instructions', 'whatsapp_ai_handoff_email',
+    'whatsapp_ai_timezone', 'whatsapp_ai_language', 'whatsapp_ai_max_turns',
 ])]
 class IntegrationSetting extends Model
 {
@@ -100,5 +103,50 @@ class IntegrationSetting extends Model
     public static function getGoogleCredentialsJson(): ?string
     {
         return self::current()->google_credentials_json;
+    }
+
+    public static function findByPhoneNumberId(string $phoneNumberId): ?self
+    {
+        return self::where('meta_whatsapp_phone_id', $phoneNumberId)->first();
+    }
+
+    public function hasWhatsAppAiEnabled(): bool
+    {
+        return (bool) $this->whatsapp_ai_enabled;
+    }
+
+    public function isWhatsAppBookingEnabled(): bool
+    {
+        return (bool) ($this->whatsapp_ai_booking_enabled ?? true);
+    }
+
+    public function isWhatsAppCancellationEnabled(): bool
+    {
+        return (bool) ($this->whatsapp_ai_cancellation_enabled ?? false);
+    }
+
+    public function getWhatsAppAiCustomInstructions(): ?string
+    {
+        return $this->whatsapp_ai_custom_instructions;
+    }
+
+    public function getWhatsAppAiHandoffEmail(): ?string
+    {
+        return $this->whatsapp_ai_handoff_email;
+    }
+
+    public function getWhatsAppAiTimezone(): string
+    {
+        return $this->whatsapp_ai_timezone ?? 'Europe/Rome';
+    }
+
+    public function getWhatsAppAiLanguage(): string
+    {
+        return $this->whatsapp_ai_language ?? 'it';
+    }
+
+    public function getWhatsAppAiMaxTurns(): int
+    {
+        return $this->whatsapp_ai_max_turns ?? 12;
     }
 }
