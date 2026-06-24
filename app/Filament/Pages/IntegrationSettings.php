@@ -99,7 +99,7 @@ class IntegrationSettings extends Page
                     ->description('Abilita un assistente conversazionale AI per ricevere prenotazioni via WhatsApp. Richiede le credenziali Meta WhatsApp configurate sopra.')
                     ->schema([
                         Toggle::make('whatsapp_ai_enabled')
-                            ->label('Assistente AI attivo')
+                            ->label('Assistente WhatsApp attivo')
                             ->helperText('Attiva il bot AI per rispondere ai messaggi in arrivo su WhatsApp.'),
 
                         Toggle::make('whatsapp_ai_booking_enabled')
@@ -112,13 +112,13 @@ class IntegrationSettings extends Page
                             ->default(false),
 
                         TextInput::make('whatsapp_ai_handoff_email')
-                            ->label('Email per escalation staff')
+                            ->label('Email notifica escalation staff')
                             ->helperText('Indirizzo a cui inviare la notifica quando il bot trasferisce a un operatore umano.')
                             ->email()
                             ->nullable(),
 
                         TextInput::make('whatsapp_ai_max_turns')
-                            ->label('Numero massimo di turni')
+                            ->label('Numero max turni')
                             ->helperText('Limite di messaggi per conversazione prima di invitare il cliente a contattare direttamente il salone. Default: 12.')
                             ->numeric()
                             ->default(12)
@@ -176,7 +176,7 @@ class IntegrationSettings extends Page
                                 $msg = WhatsAppMessage::whereNotNull('error_code')
                                     ->latest()
                                     ->first();
-                                return $msg ? "[{$msg->error_code}] {$msg->error_message}" : 'nessuno';
+                                return $msg ? "[{$msg->error_code}] " . ($msg->error_message ?? 'nessun dettaglio') : 'nessuno';
                             }),
                     ]),
 
