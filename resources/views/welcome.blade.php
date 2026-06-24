@@ -22,18 +22,19 @@
 }
 
 /* With background image */
-.sf-hero--img {
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
+.sf-hero-bg {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover; object-position: center;
+    z-index: 0;
 }
-.sf-hero--img::before {
-    content: '';
+.sf-hero-overlay {
     position: absolute; inset: 0; pointer-events: none;
     background: radial-gradient(ellipse at 50% 35%,
         rgba(0,0,0,0.20) 0%,
         rgba(0,0,0,0.60) 55%,
         rgba(0,0,0,0.84) 100%);
+    z-index: 0;
 }
 
 .sf-hero-inner {
@@ -266,8 +267,11 @@
 .sf-contact-ico { color: var(--sf-gold); flex-shrink: 0; margin-top: 2px; opacity: 0.65; width: 16px; }
 .sf-contact-item a { color: inherit; text-decoration: none; }
 .sf-contact-item a:hover { color: var(--sf-gold); }
-.sf-map-wrap { margin-top: 24px; overflow: hidden; border: 1px solid var(--sf-border); height: 220px; }
+.sf-map-wrap { margin-top: 24px; overflow: hidden; border: 1px solid var(--sf-border); height: 220px; position: relative; }
 .sf-map-wrap iframe { width: 100%; height: 100%; border: 0; display: block; }
+.sf-map-placeholder { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; background: var(--sf-surface, #f5f0ea); cursor: pointer; border: 0; color: var(--sf-ink, #1C1410); font-size: 13px; }
+.sf-map-placeholder svg { color: var(--sf-ink, #1C1410); opacity: .55; }
+.sf-map-placeholder span { color: var(--sf-ink, #1C1410); }
 
 @media (max-width: 768px) { .sf-info-grid { grid-template-columns: 1fr; gap: 48px; } }
 
@@ -462,8 +466,11 @@ a.sf-svc-book-badge:hover {
 
 {{-- 1. HERO --}}
 @php $_heroImg = $profile->heroImageUrl(); @endphp
-<section class="sf-hero {{ $_heroImg ? 'sf-hero--img' : 'sf-hero--no-img' }}"
-    @if($_heroImg) style="background-image:url('{{ $_heroImg }}')" @endif>
+<section class="sf-hero {{ $_heroImg ? 'sf-hero--img' : 'sf-hero--no-img' }}">
+    @if($_heroImg)
+        <img class="sf-hero-bg" src="{{ $_heroImg }}" alt="" fetchpriority="high" loading="eager" decoding="async" width="1200" height="640">
+        <div class="sf-hero-overlay"></div>
+    @endif
     <div class="sf-hero-inner">
         <div class="sf-hero-ornament">
             <span class="sf-hero-line"></span>
@@ -520,7 +527,7 @@ a.sf-svc-book-badge:hover {
                 <div class="sf-svc-item-meta">
                     <span class="sf-svc-item-price">€{{ number_format((float) $service->price, 0, ',', '.') }}</span>
                     <span class="sf-svc-item-dur">{{ $service->duration_minutes }}&thinsp;min</span>
-                    <a href="{{ route('booking.create') }}?service={{ $service->id }}" class="sf-svc-book-badge">Prenota &rarr;</a>
+                    <a href="{{ route('booking.create') }}?service={{ $service->id }}" class="sf-svc-book-badge" aria-label="Prenota {{ $service->name }}">Prenota &rarr;</a>
                 </div>
             </li>
             @endforeach
@@ -539,7 +546,7 @@ a.sf-svc-book-badge:hover {
                     <div class="sf-svc-item-meta">
                         <span class="sf-svc-item-price">€{{ number_format((float) $service->price, 0, ',', '.') }}</span>
                         <span class="sf-svc-item-dur">{{ $service->duration_minutes }}&thinsp;min</span>
-                        <a href="{{ route('booking.create') }}?service={{ $service->id }}" class="sf-svc-book-badge">Prenota &rarr;</a>
+                        <a href="{{ route('booking.create') }}?service={{ $service->id }}" class="sf-svc-book-badge" aria-label="Prenota {{ $service->name }}">Prenota &rarr;</a>
                     </div>
                 </li>
                 @endforeach
@@ -581,7 +588,10 @@ a.sf-svc-book-badge:hover {
             <div class="sf-about-photos">
                 @foreach($galleryItems->take(3) as $item)
                     <div class="sf-about-photo" @click="idx = {{ $loop->index }}">
-                        <img src="{{ $item->getUrl('web') }}" alt="" loading="lazy">
+                        <img src="{{ $item->getUrl('web') }}"
+                             srcset="{{ $item->getUrl('gallery-sm') }} 576w, {{ $item->getUrl('web') }} 1200w"
+                             sizes="(max-width: 640px) 288px, 400px"
+                             alt="" loading="lazy" width="874" height="800">
                     </div>
                 @endforeach
             </div>
@@ -621,7 +631,7 @@ a.sf-svc-book-badge:hover {
             <div class="sf-team-card">
                 <div class="sf-team-avatar">
                     @if($avatarUrl)
-                        <img src="{{ $avatarUrl }}" alt="{{ $member->name }}" loading="lazy">
+                        <img src="{{ $avatarUrl }}" alt="{{ $member->name }}" loading="lazy" width="72" height="72">
                     @else
                         <span class="sf-team-initial" aria-hidden="true">{{ strtoupper(mb_substr($member->name, 0, 1)) }}</span>
                     @endif
@@ -654,7 +664,10 @@ a.sf-svc-book-badge:hover {
         <div class="sf-gallery-grid">
             @foreach($portfolioItems as $item)
             <div class="sf-gallery-item" @click="idx = {{ $loop->index }}">
-                <img src="{{ $item->getUrl('web') }}" alt="Galleria {{ $loop->iteration }}" loading="lazy">
+                <img src="{{ $item->getUrl('web') }}"
+                     srcset="{{ $item->getUrl('gallery-sm') }} 576w, {{ $item->getUrl('web') }} 1200w"
+                     sizes="(max-width: 640px) 50vw, (max-width: 900px) 33vw, 25vw"
+                     alt="Galleria {{ $loop->iteration }}" loading="lazy" width="874" height="800">
             </div>
             @endforeach
         </div>
@@ -770,12 +783,17 @@ a.sf-svc-book-badge:hover {
                     @endif
                 </ul>
                 @if($profile->google_maps_embed)
-                <div class="sf-map-wrap">
-                    <iframe src="{{ $profile->google_maps_embed }}"
-                        loading="lazy"
-                        allowfullscreen
-                        referrerpolicy="no-referrer-when-downgrade"
-                        title="Mappa {{ $profile->name }}"></iframe>
+                <div class="sf-map-wrap" x-data="{ loaded: false }">
+                    <template x-if="loaded">
+                        <iframe src="{{ $profile->google_maps_embed }}"
+                            allowfullscreen
+                            referrerpolicy="no-referrer-when-downgrade"
+                            title="Mappa {{ $profile->name }}"></iframe>
+                    </template>
+                    <button x-show="!loaded" @click="loaded = true" class="sf-map-placeholder" aria-label="Carica la mappa di {{ $profile->name }}">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>
+                        <span>Clicca per vedere la mappa</span>
+                    </button>
                 </div>
                 @endif
             </div>
@@ -795,7 +813,7 @@ a.sf-svc-book-badge:hover {
             @foreach($reviews as $review)
             <div class="sf-review-card">
                 <div class="sf-review-quote" aria-hidden="true">"</div>
-                <div class="sf-review-stars" aria-label="Valutazione {{ $review->rating }} su 5">
+                <div class="sf-review-stars" role="img" aria-label="Valutazione {{ $review->rating }} su 5">
                     @for($i = 1; $i <= 5; $i++)
                         <span aria-hidden="true">{{ $i <= $review->rating ? '★' : '☆' }}</span>
                     @endfor

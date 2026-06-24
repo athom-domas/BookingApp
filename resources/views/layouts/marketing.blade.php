@@ -5,11 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title') · BookingApp</title>
     <meta name="description" content="@yield('description', 'Software di gestione prenotazioni per saloni e centri estetici.')">
+    <link rel="icon" type="image/webp" href="{{ asset('img/logo_icon.webp') }}">
     <link rel="icon" type="image/png" href="{{ asset('img/logo_icon.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&display=swap" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&display=swap"></noscript>
     <style>
         [x-cloak] { display: none !important; }
         html { scroll-padding-top: 80px; }
@@ -34,7 +37,7 @@
 
     <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
         <a href="{{ url('/') }}">
-            <img src="{{ asset('img/logo.png') }}" alt="BookingApp" style="height:2rem;">
+            <img src="{{ asset('img/logo.webp') }}" alt="BookingApp" style="height:2rem;" width="99" height="32">
         </a>
 
         <nav class="hidden md:flex items-center gap-8">
@@ -81,7 +84,7 @@
     @yield('content')
 </main>
 
-<footer class="bg-ink text-ink-muted py-16 px-6">
+<footer class="bg-ink text-white/60 py-16 px-6">
     <div class="max-w-6xl mx-auto">
         <div class="grid grid-cols-2 md:grid-cols-3 gap-10 mb-12">
             <div class="col-span-2 md:col-span-1">
@@ -91,7 +94,7 @@
                 <p class="text-sm leading-relaxed">Software di gestione per saloni, barbieri e centri estetici italiani.</p>
             </div>
             <div>
-                <h4 class="text-xs font-semibold text-white/70 uppercase tracking-widest mb-4">Prodotto</h4>
+                <p class="text-xs font-semibold text-white/70 uppercase tracking-widest mb-4">Prodotto</p>
                 <ul class="space-y-3 text-sm">
                     <li><a href="{{ url('/') }}#funzionalita" class="hover:text-white transition">Funzionalità</a></li>
                     <li><a href="{{ url('/') }}#prezzi" class="hover:text-white transition">Prezzi</a></li>
@@ -99,7 +102,7 @@
                 </ul>
             </div>
             <div>
-                <h4 class="text-xs font-semibold text-white/70 uppercase tracking-widest mb-4">Azienda</h4>
+                <p class="text-xs font-semibold text-white/70 uppercase tracking-widest mb-4">Azienda</p>
                 <ul class="space-y-3 text-sm">
                     <li><a href="{{ route('contact') }}" class="hover:text-white transition">Contatti</a></li>
                     <li><a href="{{ route('contact') }}" class="hover:text-white transition">Supporto</a></li>
@@ -108,7 +111,7 @@
                 </ul>
             </div>
         </div>
-        <div class="border-t border-white/10 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-ink-muted/70">
+        <div class="border-t border-white/10 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-white/40">
             <span>© {{ date('Y') }} BookingApp. Tutti i diritti riservati.</span>
             <div class="flex gap-5">
                 <a href="{{ route('legal.privacy') }}" class="hover:text-white/90 transition">Privacy Policy</a>

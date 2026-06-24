@@ -63,19 +63,34 @@ $_radius      = $_radiusMap[$_border] ?? '0';
         <meta name="twitter:description" content="{{ $_ogDesc }}">
     @endif
 
-    @if($salonProfile->faviconUrl())
-        <link rel="icon" href="{{ $salonProfile->faviconUrl() }}">
-    @endif
+    @php
+        $_faviconUrl = $salonProfile->faviconUrl()
+            ?: $salonProfile->getFirstMediaUrl('logo', 'thumb')
+            ?: asset('img/logo_icon.webp');
+    @endphp
+    <link rel="icon" href="{{ $_faviconUrl }}">
 
+    {{-- preconnect to both Google Fonts origins before the CSS request --}}
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="{{ $_fontUrl }}" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    {{-- preconnect to Unsplash if using preset hero images --}}
+    <link rel="preconnect" href="https://images.unsplash.com" crossorigin>
+    {{-- non-blocking font load: media=print trick hands off to all once loaded --}}
+    <link rel="preload" as="style" href="{{ $_fontUrl }}">
+    <link rel="stylesheet" href="{{ $_fontUrl }}" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="{{ $_fontUrl }}"></noscript>
 
     @vite('resources/scss/storefront.scss')
 
-    @fonts
-    @filamentStyles
-    @vite('resources/scss/filament/admin/theme.scss')
-    @vite('resources/css/app.css')
+    {{-- hero image preload: hints browser as early as possible, img tag in body does the rest --}}
+    @php $_heroImg = $salonProfile->heroImageUrl(); @endphp
+    @if($_heroImg)
+        <link rel="preload" as="image" href="{{ $_heroImg }}" fetchpriority="high">
+    @endif
+
+    @if(!request()->routeIs('booking.index'))
+        @vite('resources/css/app.css')
+    @endif
     @stack('head')
     <script>
         (function(){
@@ -96,10 +111,11 @@ $_radius      = $_radiusMap[$_border] ?? '0';
     <nav id="sf-nav">
         @php $logoDarkUrl = $salonProfile->logoDarkUrl(); @endphp
         <a href="{{ route('booking.index') }}" class="sf-logo">
-            <img src="{{ $salonProfile->logoUrl() ?? asset('img/logo.png') }}" alt="{{ $salonProfile->name }}"
+            <img src="{{ $salonProfile->logoUrl() ?? asset('img/logo.webp') }}" alt="{{ $salonProfile->name }}"
+                 width="120" height="28"
                  class="sf-logo-light{{ $logoDarkUrl ? '' : ' sf-logo-only' }}">
             @if($logoDarkUrl)
-                <img src="{{ $logoDarkUrl }}" alt="{{ $salonProfile->name }}" class="sf-logo-dark">
+                <img src="{{ $logoDarkUrl }}" alt="{{ $salonProfile->name }}" width="120" height="28" class="sf-logo-dark">
             @endif
         </a>
 
@@ -160,7 +176,9 @@ $_radius      = $_radiusMap[$_border] ?? '0';
         <a href="{{ route('booking.create') }}" class="sf-btn sf-mob-cta">Prenota ora</a>
     </div>
 
-    @yield('content')
+    <main>
+        @yield('content')
+    </main>
 
     {{-- FOOTER --}}
     <footer id="sf-footer">

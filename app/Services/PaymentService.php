@@ -14,7 +14,7 @@ use App\Services\LoyaltyService;
 
 class PaymentService
 {
-    public function __construct(private readonly StripeClient $stripe) {}
+    public function __construct(private readonly ?StripeClient $stripe) {}
 
     public function initiateStripePayment(int $appointmentId, int $amountCents): Payment
     {

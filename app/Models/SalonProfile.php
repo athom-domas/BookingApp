@@ -94,11 +94,18 @@ class SalonProfile extends Model implements HasMedia
             ->quality(82)
             ->nonQueued()
             ->performOnCollections('gallery', 'portfolio', 'cover');
+
+        $this->addMediaConversion('gallery-sm')
+            ->width(576)
+            ->format('webp')
+            ->quality(80)
+            ->nonQueued()
+            ->performOnCollections('gallery', 'portfolio');
     }
 
     public function logoUrl(): ?string
     {
-        $url = $this->getFirstMediaUrl('logo');
+        $url = $this->getFirstMediaUrl('logo', 'thumb') ?: $this->getFirstMediaUrl('logo');
         if ($url) {
             return $url;
         }
@@ -110,7 +117,7 @@ class SalonProfile extends Model implements HasMedia
 
     public function logoDarkUrl(): ?string
     {
-        $url = $this->getFirstMediaUrl('logo_dark');
+        $url = $this->getFirstMediaUrl('logo_dark', 'thumb') ?: $this->getFirstMediaUrl('logo_dark');
         return $url ?: null;
     }
 

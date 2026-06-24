@@ -10,7 +10,9 @@
     @vite(['resources/css/app.css', 'resources/scss/landing.scss', 'resources/js/app.js'])
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&display=swap" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&display=swap"></noscript>
 </head>
 <body class="bg-cream text-ink antialiased">
 
@@ -24,8 +26,8 @@
 
     <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
         <a href="{{ url('/') }}">
-            <img :src="scrolled ? '{{ asset('img/logo.png') }}' : '{{ asset('img/logo_dark.png') }}'"
-                 alt="BookingApp" style="height:2rem;">
+            <img :src="scrolled ? '{{ asset('img/logo.webp') }}' : '{{ asset('img/logo_dark.webp') }}'"
+                 alt="BookingApp" style="height:2rem;" width="99" height="32">
         </a>
         </a>
 
@@ -85,6 +87,7 @@
     </div>
 </header>
 
+<main>
 
 {{-- HERO --}}
 <section class="bg-ink relative overflow-hidden min-h-[680px] flex items-center pt-16 pb-24 px-6">
@@ -135,22 +138,22 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
         <div class="grid grid-cols-2 sm:flex sm:items-center sm:justify-center gap-6 sm:gap-0 text-center">
             <div class="flex flex-col items-center gap-2 sm:flex-1 sm:px-5" data-r style="--d:0">
                 <svg class="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                <span class="text-xs font-medium text-ink-muted leading-snug">Prenotazioni online 24/7</span>
+                <span class="text-xs font-medium text-ink leading-snug">Prenotazioni online 24/7</span>
             </div>
             <div class="hidden sm:block w-px h-9 bg-warm-border shrink-0" aria-hidden="true"></div>
             <div class="flex flex-col items-center gap-2 sm:flex-1 sm:px-5" data-r style="--d:1">
                 <svg class="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
-                <span class="text-xs font-medium text-ink-muted leading-snug">Promemoria automatici via email e SMS</span>
+                <span class="text-xs font-medium text-ink leading-snug">Promemoria automatici via email e SMS</span>
             </div>
             <div class="hidden sm:block w-px h-9 bg-warm-border shrink-0" aria-hidden="true"></div>
             <div class="flex flex-col items-center gap-2 sm:flex-1 sm:px-5" data-r style="--d:2">
                 <svg class="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-                <span class="text-xs font-medium text-ink-muted leading-snug">Pagamenti sicuri &amp; GDPR compliant</span>
+                <span class="text-xs font-medium text-ink leading-snug">Pagamenti sicuri &amp; GDPR compliant</span>
             </div>
             <div class="hidden sm:block w-px h-9 bg-warm-border shrink-0" aria-hidden="true"></div>
             <div class="flex flex-col items-center gap-2 sm:flex-1 sm:px-5" data-r style="--d:3">
                 <svg class="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                <span class="text-xs font-medium text-ink-muted leading-snug">Setup in meno di 10 minuti</span>
+                <span class="text-xs font-medium text-ink leading-snug">Setup in meno di 10 minuti</span>
             </div>
         </div>
     </div>
@@ -209,8 +212,9 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
                     </div>
                     <p class="font-semibold text-ink mb-1.5">Prenotazioni Online 24/7</p>
                     <p class="text-sm text-ink-muted leading-relaxed">I clienti prenotano dal telefono in qualsiasi momento. Nessuna telefonata, nessun messaggio da gestire.</p>
-                    <img src="/img/screenshots/screenshot-booking.png"
+                    <img src="/img/screenshots/screenshot-booking.webp"
                          alt="Pagina prenotazione online"
+                         width="320" height="335" loading="lazy"
                          class="rounded-xl border border-warm-border shadow-sm mt-4 w-full max-w-xs">
                 </div>
                 <div>
@@ -219,8 +223,9 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
                     </div>
                     <p class="font-semibold text-ink mb-1.5">Report e Statistiche</p>
                     <p class="text-sm text-ink-muted leading-relaxed">Incassi, servizi più richiesti e performance dello staff in tempo reale, sempre aggiornati.</p>
-                    <img src="/img/screenshots/screenshot-report.png"
-                         alt="Pagina prenotazione online"
+                    <img src="/img/screenshots/screenshot-report.webp"
+                         alt="Report e statistiche"
+                         width="320" height="340" loading="lazy"
                          class="rounded-xl border border-warm-border shadow-sm mt-4 w-full max-w-xs">
                 </div>
             </div>
@@ -317,7 +322,7 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
         <p class="text-ink-muted mb-10" data-r style="--d:2">Da zero a prima prenotazione: meno di 3 minuti.</p>
         <div class="rounded-2xl overflow-hidden shadow-2xl border border-warm-border relative" data-r style="--d:3">
             <video controls
-                   poster="/img/screenshots/screenshot-demo.png"
+                   poster="/img/screenshots/screenshot-demo.webp"
                    class="w-full block"
                    preload="none"
                    id="sf-demo-video">
@@ -412,8 +417,9 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
                              x-transition:leave="transition ease-in-out duration-500"
                              x-transition:leave-start="opacity-100"
                              x-transition:leave-end="opacity-0"
-                             src="/img/screenshots/screenshot-lista.png"
+                             src="/img/screenshots/screenshot-lista.webp"
                              alt="Lista appuntamenti nel pannello admin"
+                             loading="lazy"
                              class="w-full h-full object-cover object-top absolute inset-0">
                         <img x-cloak x-show="tab === 'calendario'"
                              x-transition:enter="transition ease-in-out duration-500"
@@ -422,7 +428,7 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
                              x-transition:leave="transition ease-in-out duration-500"
                              x-transition:leave-start="opacity-100"
                              x-transition:leave-end="opacity-0"
-                             src="/img/screenshots/screenshot-calendario.png"
+                             src="/img/screenshots/screenshot-calendario.webp"
                              alt="Vista calendario con drag-and-drop"
                              loading="lazy"
                              class="w-full h-full object-cover object-top absolute inset-0">
@@ -575,8 +581,10 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
 </section>
 
 
+</main>
+
 {{-- FOOTER --}}
-<footer class="bg-ink text-ink-muted py-16 px-6">
+<footer class="bg-ink text-white/60 py-16 px-6">
     <div class="max-w-6xl mx-auto">
         <div class="grid grid-cols-2 md:grid-cols-3 gap-10 mb-12">
             <div class="col-span-2 md:col-span-1">
@@ -586,7 +594,7 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
                 <p class="text-sm leading-relaxed">Software di gestione per saloni, barbieri e centri estetici italiani.</p>
             </div>
             <div>
-                <h4 class="text-xs font-semibold text-white/70 uppercase tracking-widest mb-4">Prodotto</h4>
+                <p class="text-xs font-semibold text-white/70 uppercase tracking-widest mb-4">Prodotto</p>
                 <ul class="space-y-3 text-sm">
                     <li><a href="#funzionalita" @click.prevent="scrollToSection('funzionalita')" class="hover:text-white transition">Funzionalità</a></li>
                     <li><a href="#prezzi" @click.prevent="scrollToSection('prezzi')" class="hover:text-white transition">Prezzi</a></li>
@@ -594,7 +602,7 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
                 </ul>
             </div>
             <div>
-                <h4 class="text-xs font-semibold text-white/70 uppercase tracking-widest mb-4">Azienda</h4>
+                <p class="text-xs font-semibold text-white/70 uppercase tracking-widest mb-4">Azienda</p>
                 <ul class="space-y-3 text-sm">
                     <li><a href="{{ route('contact') }}" class="hover:text-white transition">Contatti</a></li>
                     <li><a href="{{ route('contact') }}" class="hover:text-white transition">Supporto</a></li>
@@ -603,7 +611,7 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
                 </ul>
             </div>
         </div>
-        <div class="border-t border-white/10 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-ink-muted/70">
+        <div class="border-t border-white/10 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-white/40">
             <span>© {{ date('Y') }} BookingApp. Tutti i diritti riservati.</span>
             <div class="flex gap-5">
                 <a href="{{ route('legal.privacy') }}" class="hover:text-white/90 transition">Privacy Policy</a>

@@ -18,6 +18,9 @@ class AppServiceProvider extends ServiceProvider
 
         $this->app->bind(StripeClient::class, function () {
             $secret = \App\Models\IntegrationSetting::getStripeSecretKey() ?? config('services.stripe.secret');
+            if (empty($secret)) {
+                return null;
+            }
             return new StripeClient($secret);
         });
 
