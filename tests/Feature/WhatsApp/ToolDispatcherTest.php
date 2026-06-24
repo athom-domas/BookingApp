@@ -85,7 +85,7 @@ it('refuses book_appointment when slot not in last_available_slots', function ()
     );
 
     expect($result['ok'])->toBeFalse();
-    expect($result['code'])->toBe('MISSING_CONFIRMATION');
+    expect($result['code'])->toBe('SLOT_NO_LONGER_AVAILABLE');
 });
 
 it('refuses cancel_appointment when cancellation is disabled', function () {

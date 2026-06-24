@@ -8,6 +8,7 @@ use App\Models\Service;
 use App\Models\User;
 use App\Services\Booking\AppointmentService;
 use App\Services\Booking\SlotCalculationService;
+use App\Services\WalkInService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
@@ -107,7 +108,7 @@ class WhatsAppToolDispatcher
 
         $proposedStarts = collect($state['last_available_slots'])->pluck('starts_at')->toArray();
         if (! in_array($slot['starts_at'], $proposedStarts, true)) {
-            return ['ok' => false, 'code' => 'MISSING_CONFIRMATION', 'message' => 'Lo slot selezionato non è tra quelli proposti.', 'alternatives' => []];
+            return ['ok' => false, 'code' => 'SLOT_NO_LONGER_AVAILABLE', 'message' => 'Lo slot selezionato non è tra quelli proposti.', 'alternatives' => []];
         }
 
         $serviceId = (int) ($slot['service_id'] ?? 0);
@@ -196,7 +197,7 @@ class WhatsAppToolDispatcher
         $appointment   = Appointment::where('id', $appointmentId)->where('business_id', $businessId)->first();
 
         if (! $appointment) {
-            return ['ok' => false, 'code' => 'NOT_FOUND', 'message' => 'Appuntamento non trovato.'];
+            return ['ok' => false, 'code' => 'MISSING_CONFIRMATION', 'message' => 'Appuntamento non trovato.'];
         }
 
         try {
