@@ -3,8 +3,11 @@
 namespace App\Filament\Pages;
 
 use App\Models\IntegrationSetting;
+use App\Models\WhatsAppMessage;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\Section;
@@ -26,14 +29,20 @@ class IntegrationSettings extends Page
     {
         $setting = IntegrationSetting::current();
         $this->form->fill([
-            'stripe_public_key'        => $setting->stripe_public_key,
-            'stripe_secret_key'        => $setting->stripe_secret_key,
-            'stripe_webhook_secret'    => $setting->stripe_webhook_secret,
-            'meta_whatsapp_token'      => $setting->meta_whatsapp_token,
-            'meta_whatsapp_phone_id'   => $setting->meta_whatsapp_phone_id,
-            'meta_whatsapp_template'   => $setting->meta_whatsapp_template ?? 'appointment_reminder',
-            'google_calendar_id'       => $setting->google_calendar_id,
-            'google_credentials_json'  => $setting->google_credentials_json,
+            'stripe_public_key'                 => $setting->stripe_public_key,
+            'stripe_secret_key'                 => $setting->stripe_secret_key,
+            'stripe_webhook_secret'             => $setting->stripe_webhook_secret,
+            'meta_whatsapp_token'               => $setting->meta_whatsapp_token,
+            'meta_whatsapp_phone_id'            => $setting->meta_whatsapp_phone_id,
+            'meta_whatsapp_template'            => $setting->meta_whatsapp_template ?? 'appointment_reminder',
+            'google_calendar_id'                => $setting->google_calendar_id,
+            'google_credentials_json'           => $setting->google_credentials_json,
+            'whatsapp_ai_enabled'               => $setting->whatsapp_ai_enabled ?? false,
+            'whatsapp_ai_booking_enabled'       => $setting->whatsapp_ai_booking_enabled ?? true,
+            'whatsapp_ai_cancellation_enabled'  => $setting->whatsapp_ai_cancellation_enabled ?? false,
+            'whatsapp_ai_custom_instructions'   => $setting->whatsapp_ai_custom_instructions,
+            'whatsapp_ai_handoff_email'         => $setting->whatsapp_ai_handoff_email,
+            'whatsapp_ai_max_turns'             => $setting->whatsapp_ai_max_turns ?? 12,
         ]);
     }
 
@@ -84,6 +93,91 @@ class IntegrationSettings extends Page
                             ->helperText('Nome del template approvato da Meta per i promemoria. Default: appointment_reminder.')
                             ->nullable()
                             ->placeholder('appointment_reminder'),
+                    ]),
+
+                Section::make('Assistente WhatsApp (AI)')
+                    ->description('Abilita un assistente conversazionale AI per ricevere prenotazioni via WhatsApp. Richiede le credenziali Meta WhatsApp configurate sopra.')
+                    ->schema([
+                        Toggle::make('whatsapp_ai_enabled')
+                            ->label('Assistente AI attivo')
+                            ->helperText('Attiva il bot AI per rispondere ai messaggi in arrivo su WhatsApp.'),
+
+                        Toggle::make('whatsapp_ai_booking_enabled')
+                            ->label('Permetti prenotazione via WhatsApp')
+                            ->default(true),
+
+                        Toggle::make('whatsapp_ai_cancellation_enabled')
+                            ->label('Permetti cancellazione via WhatsApp')
+                            ->helperText('Se disabilitato, il bot non potrà cancellare appuntamenti. Abilitare solo dopo aver testato il flusso.')
+                            ->default(false),
+
+                        TextInput::make('whatsapp_ai_handoff_email')
+                            ->label('Email per escalation staff')
+                            ->helperText('Indirizzo a cui inviare la notifica quando il bot trasferisce a un operatore umano.')
+                            ->email()
+                            ->nullable(),
+
+                        TextInput::make('whatsapp_ai_max_turns')
+                            ->label('Numero massimo di turni')
+                            ->helperText('Limite di messaggi per conversazione prima di invitare il cliente a contattare direttamente il salone. Default: 12.')
+                            ->numeric()
+                            ->default(12)
+                            ->minValue(4)
+                            ->maxValue(50),
+
+                        Textarea::make('whatsapp_ai_custom_instructions')
+                            ->label('Istruzioni personalizzate')
+                            ->helperText('Personalizza tono e identità dell\'assistente (es. "Usa un tono caloroso e chiama il salone Atelier Rossi"). Non può sovrascrivere le regole di sicurezza.')
+                            ->rows(4)
+                            ->nullable(),
+
+                        Placeholder::make('webhook_url')
+                            ->label('URL webhook da registrare su Meta Developer Console')
+                            ->content(fn () => url('/whatsapp/webhook'))
+                            ->helperText('Subscribed fields: messages'),
+                    ]),
+
+                Section::make('Stato connessione WhatsApp')
+                    ->description('Informazioni di sola lettura sullo stato della connessione WhatsApp.')
+                    ->schema([
+                        Placeholder::make('status_token')
+                            ->label('Token Meta')
+                            ->content(fn () => IntegrationSetting::current()->meta_whatsapp_token ? 'presente' : 'assente'),
+
+                        Placeholder::make('status_phone_id')
+                            ->label('Phone ID')
+                            ->content(fn () => IntegrationSetting::current()->meta_whatsapp_phone_id ? 'presente' : 'assente'),
+
+                        Placeholder::make('status_ai_enabled')
+                            ->label('AI abilitata')
+                            ->content(fn () => IntegrationSetting::current()->whatsapp_ai_enabled ? 'sì' : 'no'),
+
+                        Placeholder::make('status_last_outbound')
+                            ->label('Ultimo messaggio inviato')
+                            ->content(function () {
+                                $msg = WhatsAppMessage::where('direction', 'outbound')
+                                    ->latest()
+                                    ->first();
+                                return $msg ? $msg->created_at->format('d/m/Y H:i') : 'nessuno';
+                            }),
+
+                        Placeholder::make('status_last_inbound')
+                            ->label('Ultimo webhook ricevuto')
+                            ->content(function () {
+                                $msg = WhatsAppMessage::where('direction', 'inbound')
+                                    ->latest()
+                                    ->first();
+                                return $msg ? $msg->created_at->format('d/m/Y H:i') : 'nessuno';
+                            }),
+
+                        Placeholder::make('status_last_error')
+                            ->label('Ultimo errore')
+                            ->content(function () {
+                                $msg = WhatsAppMessage::whereNotNull('error_code')
+                                    ->latest()
+                                    ->first();
+                                return $msg ? "[{$msg->error_code}] {$msg->error_message}" : 'nessuno';
+                            }),
                     ]),
 
                 Section::make('Google Calendar')
