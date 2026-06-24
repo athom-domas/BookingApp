@@ -103,6 +103,12 @@ class WhatsAppWebhookController extends Controller
     {
         $wamid   = $messageData['id'] ?? null;
         $waId    = $messageData['from'] ?? '';
+
+        if (empty($waId)) {
+            Log::warning('WhatsApp webhook received message with empty waId', ['messageData' => $messageData]);
+            return;
+        }
+
         $phone   = PhoneNormalizer::normalize('+' . ltrim($waId, '+'));
         $profile = collect(data_get($value, 'contacts', []))->firstWhere('wa_id', $waId);
 

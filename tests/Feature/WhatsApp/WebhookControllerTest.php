@@ -62,6 +62,24 @@ it('rejects GET challenge with wrong token', function () {
     $response->assertStatus(403);
 });
 
+it('rejects POST with invalid signature', function () {
+    $payload = makeWebhookPayload('111222333', 'wamid.abc', '393401234567', 'Test message');
+    config(['services.whatsapp.app_secret' => 'test-app-secret']);
+
+    $response = $this->postJson('/whatsapp/webhook', $payload, ['X-Hub-Signature-256' => 'sha256=invalidsignature']);
+
+    $response->assertStatus(403);
+});
+
+it('rejects POST with missing signature header', function () {
+    $payload = makeWebhookPayload('111222333', 'wamid.abc', '393401234567', 'Test message');
+    config(['services.whatsapp.app_secret' => 'test-app-secret']);
+
+    $response = $this->postJson('/whatsapp/webhook', $payload);
+
+    $response->assertStatus(403);
+});
+
 it('saves inbound message and dispatches job', function () {
     $payload = makeWebhookPayload('111222333', 'wamid.abc', '393401234567', 'Voglio prenotare');
     $body    = json_encode($payload);
