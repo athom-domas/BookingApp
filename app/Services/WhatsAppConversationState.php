@@ -3,45 +3,46 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class WhatsAppConversationState
 {
-    private function draftKey(int $businessId, string $phone): string
+    private function draftKey(int $businessId, string $phoneNormalized): string
     {
-        return "whatsapp:conv:{$businessId}:{$phone}";
+        return "whatsapp:conv:{$businessId}:{$phoneNormalized}";
     }
 
-    private function summaryKey(int $businessId, string $phone): string
+    private function summaryKey(int $businessId, string $phoneNormalized): string
     {
-        return "whatsapp:summary:{$businessId}:{$phone}";
+        return "whatsapp:summary:{$businessId}:{$phoneNormalized}";
     }
 
-    private function lockKey(int $businessId, string $phone): string
+    private function lockKey(int $businessId, string $phoneNormalized): string
     {
-        return "whatsapp:conv:lock:{$businessId}:{$phone}";
+        return "whatsapp:conv:lock:{$businessId}:{$phoneNormalized}";
     }
 
-    public function get(int $businessId, string $phone): array
+    public function get(int $businessId, string $phoneNormalized): array
     {
         $draftTtl   = config('services.whatsapp.conversation_ttl', 4) * 3600;
         $summaryTtl = config('services.whatsapp.summary_ttl', 24) * 3600;
 
-        $state = Cache::get($this->draftKey($businessId, $phone));
+        $state = Cache::get($this->draftKey($businessId, $phoneNormalized));
 
         if ($state === null) {
-            $summary = Cache::get($this->summaryKey($businessId, $phone));
-            $state   = $this->fresh($phone);
+            $summary = Cache::get($this->summaryKey($businessId, $phoneNormalized));
+            $state   = $this->fresh($phoneNormalized);
             if ($summary) {
                 $state['summary'] = $summary;
             }
-            Cache::put($this->draftKey($businessId, $phone), $state, $draftTtl);
+            Cache::put($this->draftKey($businessId, $phoneNormalized), $state, $draftTtl);
         }
 
         return $state;
     }
 
-    public function set(int $businessId, string $phone, array $state): void
+    public function set(int $businessId, string $phoneNormalized, array $state): void
     {
         $draftTtl   = config('services.whatsapp.conversation_ttl', 4) * 3600;
         $summaryTtl = config('services.whatsapp.summary_ttl', 24) * 3600;
@@ -51,25 +52,33 @@ class WhatsAppConversationState
         }
 
         if (! empty($state['summary'])) {
-            Cache::put($this->summaryKey($businessId, $phone), $state['summary'], $summaryTtl);
+            Cache::put($this->summaryKey($businessId, $phoneNormalized), $state['summary'], $summaryTtl);
         }
 
-        Cache::put($this->draftKey($businessId, $phone), $state, $draftTtl);
+        Cache::put($this->draftKey($businessId, $phoneNormalized), $state, $draftTtl);
     }
 
-    public function withLock(int $businessId, string $phone, callable $fn): mixed
+    public function withLock(int $businessId, string $phoneNormalized, callable $fn): mixed
     {
-        return Cache::lock($this->lockKey($businessId, $phone), 90)
-            ->block(10, $fn);
+        return Cache::lock($this->lockKey($businessId, $phoneNormalized), 90)
+            ->block(10, function () use ($businessId, $phoneNormalized, $fn) {
+                return $fn();
+            }, function () use ($businessId, $phoneNormalized) {
+                Log::warning('WhatsApp conversation lock timeout', [
+                    'business_id' => $businessId,
+                    'phone' => $phoneNormalized,
+                ]);
+                return null;
+            });
     }
 
-    public function fresh(string $phone, string $waId = ''): array
+    public function fresh(string $phoneNormalized, string $waId = ''): array
     {
         return [
             'intent'                            => 'unknown',
             'step'                              => 'new',
             'language'                          => 'it',
-            'customer_phone'                    => $phone,
+            'customer_phone'                    => $phoneNormalized,
             'wa_id'                             => $waId,
             'customer_id'                       => null,
             'conversation_id'                   => (string) Str::ulid(),
