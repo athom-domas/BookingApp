@@ -144,7 +144,15 @@
                             type="button"
                             @click="showAllServices = true"
                             class="text-xs font-semibold text-gray-500 dark:text-gray-400 underline underline-offset-2 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
-                            x-text="'Mostra tutti i servizi (' + allServices.length + ')'">
+                            x-text="'Mostra tutti i servizi (' + (allServices.length - visibleServices.length) + ')'">
+                        </button>
+                    </div>
+                    <div x-show="hasMoreServices && showAllServices" class="mt-3">
+                        <button
+                            type="button"
+                            @click="showAllServices = false"
+                            class="text-xs font-semibold text-gray-500 dark:text-gray-400 underline underline-offset-2 hover:text-gray-700 dark:hover:text-gray-200 transition-colors">
+                            Riduci ai servizi in evidenza
                         </button>
                     </div>
                     <div class="mt-4 flex items-center justify-between">

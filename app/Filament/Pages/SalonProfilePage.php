@@ -315,10 +315,11 @@ class SalonProfilePage extends Page
                     Tab::make('Galleria')->schema([
                         SpatieMediaLibraryFileUpload::make('gallery')
                             ->label('Foto salone')
-                            ->helperText('Immagini degli interni, dell\'atmosfera e degli spazi del salone.')
+                            ->helperText('Vengono mostrate fino a 3 immagini nella vetrina pubblica (nella sezione "Il salone").')
                             ->collection('gallery')
                             ->conversion('web')
                             ->multiple()
+                            ->maxFiles(3)
                             ->reorderable()
                             ->image()
                             ->maxSize(10240)

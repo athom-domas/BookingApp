@@ -82,12 +82,16 @@ class SalonProfile extends Model implements HasMedia
         $this->addMediaConversion('thumb')
             ->width(200)
             ->height(200)
+            ->format('webp')
+            ->quality(80)
             ->nonQueued()
             ->performOnCollections('logo', 'logo_dark', 'cover', 'favicon');
 
         $this->addMediaConversion('web')
             ->width(1200)
             ->height(800)
+            ->format('webp')
+            ->quality(82)
             ->nonQueued()
             ->performOnCollections('gallery', 'portfolio', 'cover');
     }

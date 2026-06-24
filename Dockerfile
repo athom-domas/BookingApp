@@ -8,6 +8,7 @@ RUN apk add --no-cache \
     libjpeg-turbo-dev \
     freetype-dev \
     jpeg-dev \
+    libwebp-dev \
     libzip-dev \
     icu-dev \
     nodejs \
@@ -15,7 +16,7 @@ RUN apk add --no-cache \
     supervisor \
     && rm -rf /var/cache/apk/*
 
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg && \
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp && \
     docker-php-ext-install \
     pdo \
     pdo_mysql \

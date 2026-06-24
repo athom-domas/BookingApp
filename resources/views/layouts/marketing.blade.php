@@ -34,10 +34,7 @@
 
     <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
         <a href="{{ url('/') }}">
-            <picture>
-                <source srcset="{{ asset('img/logo_dark.png') }}" media="(prefers-color-scheme: dark)">
-                <img src="{{ asset('img/logo.png') }}" alt="BookingApp" style="height:2rem;">
-            </picture>
+            <img src="{{ asset('img/logo.png') }}" alt="BookingApp" style="height:2rem;">
         </a>
 
         <nav class="hidden md:flex items-center gap-8">

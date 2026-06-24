@@ -133,13 +133,12 @@ export function bookingWizard(allServices, allStaff) {
         get visibleServices() {
             if (this.showAllServices) return this.allServices;
             const featured = this.allServices.filter(s => s.featured);
-            return featured.length > 0 ? featured : this.allServices.slice(0, 4);
+            return featured.length > 0 ? featured : this.allServices;
         },
 
         get hasMoreServices() {
             const featured = this.allServices.filter(s => s.featured);
-            const shown = featured.length > 0 ? featured : this.allServices.slice(0, 4);
-            return shown.length < this.allServices.length;
+            return featured.length > 0 && featured.length < this.allServices.length;
         },
 
         get filteredStaff() {

@@ -153,6 +153,7 @@
     overflow: hidden;
     background: var(--sf-bg-card);
     border: 1px solid var(--sf-border);
+    cursor: pointer;
 }
 .sf-about-photo img {
     width: 100%;
@@ -214,12 +215,23 @@
     background: rgba(0,0,0,0.92);
     display: flex; align-items: center; justify-content: center; padding: 16px;
 }
-.sf-lightbox img { max-height: 90vh; max-width: 100%; object-fit: contain; }
+.sf-lightbox img { max-height: 90vh; max-width: 90vw; object-fit: contain; }
 .sf-lightbox-close {
     position: absolute; top: 16px; right: 20px;
     color: #e8d5a3; font-size: 28px; cursor: pointer;
     background: none; border: none; line-height: 1; padding: 4px;
 }
+.sf-lightbox-nav {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    background: rgba(255,255,255,0.1); border: none;
+    color: #e8d5a3; font-size: 36px; line-height: 1;
+    width: 48px; height: 48px; border-radius: 50%;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s;
+}
+.sf-lightbox-nav:hover { background: rgba(255,255,255,0.22); }
+.sf-lightbox-prev { left: 16px; }
+.sf-lightbox-next { right: 16px; }
 
 /* ── HOURS + CONTACTS ─────────────────────────────────────────────────────── */
 .sf-info-grid { display: grid; gap: 72px; }
@@ -321,6 +333,9 @@
 
 /* ── PAGE NAV ─────────────────────────────────────────────────────────────── */
 .sf-page-nav {
+    position: sticky;
+    top: var(--sf-nav-h, 0px);
+    z-index: 90;
     background: var(--sf-bg-alt);
     border-bottom: 1px solid var(--sf-border);
     padding: 0 48px;
@@ -354,6 +369,67 @@
     border-bottom-color: var(--sf-gold);
 }
 @media (max-width: 768px) { .sf-page-nav { padding: 0 20px; } }
+
+/* ── SERVICE ITEM BADGE ───────────────────────────────────────────────────── */
+.sf-svc-book-badge {
+    display: inline-block;
+    font-size: 10px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--sf-gold);
+    border: 1px solid var(--sf-gold);
+    padding: 3px 8px;
+    border-radius: var(--sf-radius);
+    white-space: nowrap;
+    margin-top: 6px;
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s;
+}
+a.sf-svc-book-badge:hover {
+    background: var(--sf-gold);
+    color: var(--sf-bg);
+    text-decoration: none;
+}
+.sf-show-more {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 20px;
+    background: none;
+    border: 1px solid var(--sf-border);
+    color: var(--sf-body);
+    font-size: 13px;
+    padding: 8px 18px;
+    border-radius: var(--sf-radius);
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+    font-family: inherit;
+}
+.sf-show-more:hover { border-color: var(--sf-gold); color: var(--sf-gold); }
+.sf-show-more-count { color: var(--sf-muted); }
+.sf-svc-list--more .sf-svc-item:first-child { border-top: none; }
+
+/* ── STICKY PRENOTA BUTTON (mobile only) ──────────────────────────────────── */
+.sf-sticky-book { display: none; }
+@media (max-width: 768px) {
+    .sf-sticky-book {
+        display: block;
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 95;
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(10px);
+        transition: opacity 0.2s, transform 0.2s;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+    }
+    .sf-sticky-book.is-visible {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translateY(0);
+    }
+}
 
 /* ── REDUCED MOTION ───────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
@@ -418,14 +494,22 @@
 </nav>
 @endif
 
+{{-- STICKY PRENOTA (appare quando sf-hero esce dal viewport) --}}
+<a href="{{ route('booking.create') }}" class="sf-sticky-book sf-btn">{{ $profile->bookingButtonLabel() }}</a>
+
 {{-- 2. SERVIZI --}}
 @if($services->isNotEmpty())
 <section class="sf-section-alt" id="servizi">
     <div class="sf-inner">
         <h2 class="sf-heading">I <em>servizi</em></h2>
         <div class="sf-rule"></div>
+        @php
+            $featuredServices = $services->where('featured', true);
+            $otherServices    = $services->where('featured', false);
+            $hasFeatured      = $featuredServices->isNotEmpty();
+        @endphp
         <ul class="sf-svc-list">
-            @foreach($services as $service)
+            @foreach($hasFeatured ? $featuredServices : $services as $service)
             <li class="sf-svc-item">
                 <div class="sf-svc-item-main">
                     <div class="sf-svc-item-name">{{ $service->name }}</div>
@@ -436,20 +520,51 @@
                 <div class="sf-svc-item-meta">
                     <span class="sf-svc-item-price">€{{ number_format((float) $service->price, 0, ',', '.') }}</span>
                     <span class="sf-svc-item-dur">{{ $service->duration_minutes }}&thinsp;min</span>
+                    <a href="{{ route('booking.create') }}?service={{ $service->id }}" class="sf-svc-book-badge">Prenota &rarr;</a>
                 </div>
             </li>
             @endforeach
         </ul>
-        <div class="sf-svc-cta">
-            <a href="{{ route('booking.create') }}" class="sf-btn">Prenota ora</a>
+        @if($hasFeatured && $otherServices->isNotEmpty())
+        <div x-data="{ open: false }">
+            <ul x-show="open" x-transition class="sf-svc-list sf-svc-list--more">
+                @foreach($otherServices as $service)
+                <li class="sf-svc-item">
+                    <div class="sf-svc-item-main">
+                        <div class="sf-svc-item-name">{{ $service->name }}</div>
+                        @if($service->description)
+                            <div class="sf-svc-item-desc">{{ $service->description }}</div>
+                        @endif
+                    </div>
+                    <div class="sf-svc-item-meta">
+                        <span class="sf-svc-item-price">€{{ number_format((float) $service->price, 0, ',', '.') }}</span>
+                        <span class="sf-svc-item-dur">{{ $service->duration_minutes }}&thinsp;min</span>
+                        <a href="{{ route('booking.create') }}?service={{ $service->id }}" class="sf-svc-book-badge">Prenota &rarr;</a>
+                    </div>
+                </li>
+                @endforeach
+            </ul>
+            <button x-show="!open" @click="open = true" class="sf-show-more">
+                Mostra tutti i servizi <span class="sf-show-more-count">({{ $otherServices->count() }})</span>
+            </button>
+            <button x-show="open" @click="open = false" class="sf-show-more">
+                Riduci ai servizi in evidenza
+            </button>
         </div>
+        @endif
     </div>
 </section>
 @endif
 
 {{-- 3. CHI SIAMO --}}
 @if($profile->description)
-<section class="sf-section" id="salone">
+@php $salonPhotoUrls = $galleryItems->take(3)->map(fn($m) => $m->getUrl('web'))->values()->toArray(); @endphp
+<section class="sf-section" id="salone" x-data="{
+    images: {{ json_encode($salonPhotoUrls) }},
+    idx: -1,
+    prev() { this.idx = (this.idx - 1 + this.images.length) % this.images.length; },
+    next() { this.idx = (this.idx + 1) % this.images.length; },
+}">
     <div class="sf-inner">
         <div class="sf-about-grid">
             <div>
@@ -465,13 +580,31 @@
             @if($galleryItems->isNotEmpty())
             <div class="sf-about-photos">
                 @foreach($galleryItems->take(3) as $item)
-                    <div class="sf-about-photo">
+                    <div class="sf-about-photo" @click="idx = {{ $loop->index }}">
                         <img src="{{ $item->getUrl('web') }}" alt="" loading="lazy">
                     </div>
                 @endforeach
             </div>
             @endif
         </div>
+    </div>
+    <div x-show="idx >= 0"
+         x-transition.opacity
+         x-cloak
+         class="sf-lightbox"
+         @click="idx = -1"
+         @keydown.escape.window="idx = -1"
+         @keydown.left.window="idx >= 0 && prev()"
+         @keydown.right.window="idx >= 0 && next()"
+    >
+        <button class="sf-lightbox-close" @click.stop="idx = -1" aria-label="Chiudi">×</button>
+        <template x-if="images.length > 1">
+            <button class="sf-lightbox-nav sf-lightbox-prev" @click.stop="prev()" aria-label="Precedente">&#8249;</button>
+        </template>
+        <img :src="idx >= 0 ? images[idx] : ''" @click.stop alt="">
+        <template x-if="images.length > 1">
+            <button class="sf-lightbox-nav sf-lightbox-next" @click.stop="next()" aria-label="Successiva">&#8250;</button>
+        </template>
     </div>
 </section>
 @endif
@@ -508,28 +641,41 @@
 
 {{-- 5. GALLERIA --}}
 @if($hasGallerySection)
-<section class="sf-section" id="galleria" x-data="{ lightbox: null }">
+@php $portfolioUrls = $portfolioItems->map(fn($m) => $m->getUrl('web'))->values()->toArray(); @endphp
+<section class="sf-section" id="galleria" x-data="{
+    images: {{ json_encode($portfolioUrls) }},
+    idx: -1,
+    prev() { this.idx = (this.idx - 1 + this.images.length) % this.images.length; },
+    next() { this.idx = (this.idx + 1) % this.images.length; },
+}">
     <div class="sf-inner">
         <h2 class="sf-heading">Galleria</h2>
         <div class="sf-rule"></div>
         <div class="sf-gallery-grid">
             @foreach($portfolioItems as $item)
-            @php $webUrl = $item->getUrl('web'); @endphp
-            <div class="sf-gallery-item" @click="lightbox = '{{ $webUrl }}'">
-                <img src="{{ $webUrl }}" alt="Galleria {{ $loop->iteration }}" loading="lazy">
+            <div class="sf-gallery-item" @click="idx = {{ $loop->index }}">
+                <img src="{{ $item->getUrl('web') }}" alt="Galleria {{ $loop->iteration }}" loading="lazy">
             </div>
             @endforeach
         </div>
     </div>
-    <div x-show="lightbox"
+    <div x-show="idx >= 0"
          x-transition.opacity
          x-cloak
          class="sf-lightbox"
-         @click="lightbox = null"
-         @keydown.escape.window="lightbox = null"
+         @click="idx = -1"
+         @keydown.escape.window="idx = -1"
+         @keydown.left.window="idx >= 0 && prev()"
+         @keydown.right.window="idx >= 0 && next()"
     >
-        <button class="sf-lightbox-close" @click.stop="lightbox = null" aria-label="Chiudi">×</button>
-        <img :src="lightbox" @click.stop alt="">
+        <button class="sf-lightbox-close" @click.stop="idx = -1" aria-label="Chiudi">×</button>
+        <template x-if="images.length > 1">
+            <button class="sf-lightbox-nav sf-lightbox-prev" @click.stop="prev()" aria-label="Precedente">&#8249;</button>
+        </template>
+        <img :src="idx >= 0 ? images[idx] : ''" @click.stop alt="">
+        <template x-if="images.length > 1">
+            <button class="sf-lightbox-nav sf-lightbox-next" @click.stop="next()" aria-label="Successiva">&#8250;</button>
+        </template>
     </div>
 </section>
 @endif
@@ -699,19 +845,30 @@
 </section>
 @endif
 
-{{-- 9. CTA --}}
-<section class="sf-section sf-cta">
-    <div class="sf-inner">
-        <h2 class="sf-heading">Prenota il tuo <em>appuntamento</em></h2>
-        <div class="sf-rule"></div>
-        <p>Scegli il servizio, il giorno e l'orario che preferisci. La conferma arriva subito.</p>
-        <a href="{{ route('booking.create') }}" class="sf-btn sf-btn-lg">Prenota ora</a>
-    </div>
-</section>
 
 @push('scripts')
 <script>
 (function () {
+    // ── Nav-height CSS variable (sticky page nav) ────────────────────────────
+    var sfNav = document.getElementById('sf-nav');
+    if (sfNav) {
+        var setNavH = function () {
+            document.documentElement.style.setProperty('--sf-nav-h', sfNav.offsetHeight + 'px');
+        };
+        setNavH();
+        new ResizeObserver(setNavH).observe(sfNav);
+    }
+
+    // ── Sticky prenota button ─────────────────────────────────────────────────
+    var hero = document.querySelector('.sf-hero');
+    var stickyBook = document.querySelector('.sf-sticky-book');
+    if (hero && stickyBook) {
+        new IntersectionObserver(function (entries) {
+            stickyBook.classList.toggle('is-visible', !entries[0].isIntersecting);
+        }).observe(hero);
+    }
+
+    // ── Active section in page nav ────────────────────────────────────────────
     var links = document.querySelectorAll('.sf-page-nav-link');
     if (!links.length) return;
 

@@ -15,6 +15,7 @@ use App\Services\Booking\AppointmentService;
 use App\Services\PaymentService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class BookingController extends Controller
@@ -49,7 +50,7 @@ class BookingController extends Controller
         return view('welcome', compact('profile', 'services', 'staff', 'reviews'));
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
         $businessId = app('current_business_id');
 
@@ -71,10 +72,18 @@ class BookingController extends Controller
             ->orderBy('sort_order')
             ->get();
 
+        $wizardPrefill = session('bookingWizardPrefill');
+        if (! $wizardPrefill && $request->filled('service') && is_numeric($request->query('service'))) {
+            $serviceId = (int) $request->query('service');
+            if ($services->contains('id', $serviceId)) {
+                $wizardPrefill = ['selectedServiceIds' => [$serviceId]];
+            }
+        }
+
         return view('portal.booking.index', [
             'services'      => $services,
             'staff'         => $staff,
-            'wizardPrefill' => session('bookingWizardPrefill'),
+            'wizardPrefill' => $wizardPrefill,
             'paymentMode'   => SystemSetting::getPaymentMode(),
         ]);
     }

@@ -235,6 +235,7 @@ body {
 .sf-logo-dark { display: none; }
 .mode-dark .sf-logo-light { display: none; }
 .mode-dark .sf-logo-dark { display: block; }
+.mode-dark .sf-logo-light.sf-logo-only { display: block; filter: brightness(0) invert(1); }
 #sf-nav-links { display: flex; gap: 28px; list-style: none; }
 #sf-nav-links a {
     font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
