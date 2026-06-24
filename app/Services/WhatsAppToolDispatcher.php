@@ -6,6 +6,7 @@ use App\Models\Appointment;
 use App\Models\IntegrationSetting;
 use App\Models\Service;
 use App\Models\User;
+use App\Models\UserPreference;
 use App\Services\Booking\AppointmentService;
 use App\Services\Booking\SlotCalculationService;
 use App\Services\WalkInService;
@@ -155,35 +156,24 @@ class WhatsAppToolDispatcher
 
     private function getNextAppointment(array &$state, int $businessId): array
     {
-        $phone = $state['customer_phone'] ?? '';
-        $user  = User::where('business_id', $businessId)
-            ->where('phone', $phone)
-            ->first();
-
-        if (! $user) {
-            return ['ok' => true, 'appointment' => null, 'message' => 'Nessun appuntamento trovato per questo numero.'];
+        $phone = $state['customer_phone'] ?? null;
+        if (! $phone) {
+            return ['ok' => false, 'code' => 'MISSING_CONFIRMATION', 'message' => 'Numero di telefono non disponibile.', 'alternatives' => []];
         }
 
-        $appointment = Appointment::where('user_id', $user->id)
-            ->where('business_id', $businessId)
-            ->where('status', '!=', 'cancelled')
-            ->upcoming()
-            ->orderBy('scheduled_date')
-            ->first();
-
-        if (! $appointment) {
-            return ['ok' => true, 'appointment' => null, 'message' => 'Nessun appuntamento futuro.'];
+        $userId = UserPreference::where('phone_number', $phone)->value('user_id');
+        if (! $userId) {
+            return ['ok' => true, 'data' => ['appointment' => null]];
         }
 
-        return [
-            'ok'          => true,
-            'appointment' => [
-                'id'           => $appointment->id,
-                'scheduled_at' => $appointment->scheduled_date->toIso8601String(),
-                'services'     => $appointment->services_label,
-                'status'       => $appointment->status,
-            ],
-        ];
+        $appointment = Appointment::where('business_id', $businessId)
+            ->where('user_id', $userId)
+            ->where('starts_at', '>', now())
+            ->whereNotIn('status', ['cancelled'])
+            ->orderBy('starts_at')
+            ->first();
+
+        return ['ok' => true, 'data' => ['appointment' => $appointment]];
     }
 
     private function cancelAppointment(array $input, array &$state, int $businessId): array
@@ -217,12 +207,14 @@ class WhatsAppToolDispatcher
 
         $setting = IntegrationSetting::where('business_id', $businessId)->first();
         if ($email = $setting?->getWhatsAppAiHandoffEmail()) {
-            Log::info('WhatsApp escalation requested', [
-                'business_id' => $businessId,
-                'phone'       => $state['customer_phone'],
-                'reason'      => $state['escalation_reason'],
-                'email'       => $email,
-            ]);
+            $lastMessages = array_slice($state['messages'] ?? [], -5);
+            $summary      = $state['escalation_summary'] ?? 'Nessun riepilogo disponibile.';
+            $phone        = $state['customer_phone'] ?? 'Sconosciuto';
+            $reason       = $state['escalation_reason'] ?? 'Non specificato';
+            $body         = "Richiesta di assistenza da: {$phone}\n\nMotivo: {$reason}\n\nRiepilogo: {$summary}\n\nUltimi messaggi:\n" . json_encode($lastMessages, JSON_PRETTY_PRINT);
+            \Illuminate\Support\Facades\Mail::raw($body, function ($m) use ($email) {
+                $m->to($email)->subject('Richiesta assistenza WhatsApp');
+            });
         }
 
         return ['ok' => true, 'message' => 'Escalation attivata. Il salone sarà notificato.'];

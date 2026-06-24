@@ -211,8 +211,8 @@ class WhatsAppConversationService
             $base .= "\n\n" . $customInstr;
         }
 
-        if ($state['summary']) {
-            $base = "Riepilogo conversazione precedente: {$state['summary']}\n\n" . $base;
+        if (! empty($state['summary'])) {
+            $base .= "\n\nRIEPILOGO CONVERSAZIONE PRECEDENTE:\n" . $state['summary'];
         }
 
         return $base;

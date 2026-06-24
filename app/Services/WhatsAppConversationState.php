@@ -60,16 +60,16 @@ class WhatsAppConversationState
 
     public function withLock(int $businessId, string $phoneNormalized, callable $fn): mixed
     {
-        return Cache::lock($this->lockKey($businessId, $phoneNormalized), 90)
-            ->block(10, function () use ($businessId, $phoneNormalized, $fn) {
-                return $fn();
-            }, function () use ($businessId, $phoneNormalized) {
-                Log::warning('WhatsApp conversation lock timeout', [
-                    'business_id' => $businessId,
-                    'phone' => $phoneNormalized,
-                ]);
-                return null;
-            });
+        $lock = Cache::lock($this->lockKey($businessId, $phoneNormalized), 90);
+        try {
+            return $lock->block(10, $fn);
+        } catch (\Illuminate\Contracts\Cache\LockTimeoutException) {
+            Log::warning('WhatsApp conversation lock timeout', [
+                'business_id'      => $businessId,
+                'phone_normalized' => $phoneNormalized,
+            ]);
+            return null;
+        }
     }
 
     public function fresh(string $phoneNormalized, string $waId = ''): array

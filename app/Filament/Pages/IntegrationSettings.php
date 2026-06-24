@@ -155,7 +155,9 @@ class IntegrationSettings extends Page
                         Placeholder::make('status_last_outbound')
                             ->label('Ultimo messaggio inviato')
                             ->content(function () {
-                                $msg = WhatsAppMessage::where('direction', 'outbound')
+                                $businessId = IntegrationSetting::current()->business_id;
+                                $msg        = WhatsAppMessage::where('business_id', $businessId)
+                                    ->where('direction', 'outbound')
                                     ->latest()
                                     ->first();
                                 return $msg ? $msg->created_at->format('d/m/Y H:i') : 'nessuno';
@@ -164,7 +166,9 @@ class IntegrationSettings extends Page
                         Placeholder::make('status_last_inbound')
                             ->label('Ultimo webhook ricevuto')
                             ->content(function () {
-                                $msg = WhatsAppMessage::where('direction', 'inbound')
+                                $businessId = IntegrationSetting::current()->business_id;
+                                $msg        = WhatsAppMessage::where('business_id', $businessId)
+                                    ->where('direction', 'inbound')
                                     ->latest()
                                     ->first();
                                 return $msg ? $msg->created_at->format('d/m/Y H:i') : 'nessuno';
@@ -173,7 +177,9 @@ class IntegrationSettings extends Page
                         Placeholder::make('status_last_error')
                             ->label('Ultimo errore')
                             ->content(function () {
-                                $msg = WhatsAppMessage::whereNotNull('error_code')
+                                $businessId = IntegrationSetting::current()->business_id;
+                                $msg        = WhatsAppMessage::where('business_id', $businessId)
+                                    ->whereNotNull('error_code')
                                     ->latest()
                                     ->first();
                                 return $msg ? "[{$msg->error_code}] " . ($msg->error_message ?? 'nessun dettaglio') : 'nessuno';
