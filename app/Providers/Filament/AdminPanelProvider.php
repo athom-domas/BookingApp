@@ -72,8 +72,9 @@ class AdminPanelProvider extends PanelProvider
             ->passwordReset()
             ->brandName(fn() => \App\Models\SalonProfile::current()->name ?? 'Booking App')
             ->brandLogo(asset('img/logo.png'))
+            ->darkModeBrandLogo(asset('img/logo_dark.png'))
             ->brandLogoHeight('2rem')
-            ->favicon(asset('img/logo.png'))
+            ->favicon(asset('img/logo_icon.png'))
             ->sidebarCollapsibleOnDesktop()
             ->colors([
                 'primary' => Color::hex('#2563eb'),

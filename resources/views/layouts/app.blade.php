@@ -87,7 +87,7 @@
                     @if($salonProfile->logoUrl())
                         <img src="{{ $salonProfile->logoUrl() }}" alt="" class="h-9 w-9 rounded-md object-contain">
                     @else
-                        <img src="{{ asset('img/logo.png') }}" alt="" class="h-9 w-9 rounded-md object-contain">
+                        <img src="{{ asset('img/logo_icon.png') }}" alt="" class="h-9 w-9 rounded-md object-contain">
                     @endif
                     <span class="truncate text-base font-semibold text-gray-950 dark:text-gray-50">{{ $salonProfile->name }}</span>
                 </a>

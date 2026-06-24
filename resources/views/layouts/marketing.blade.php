@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title') · BookingApp</title>
     <meta name="description" content="@yield('description', 'Software di gestione prenotazioni per saloni e centri estetici.')">
+    <link rel="icon" type="image/png" href="{{ asset('img/logo_icon.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -32,8 +33,11 @@
         class="fixed top-0 inset-x-0 z-50 transition-all duration-300 bg-cream/95 backdrop-blur-sm shadow-sm border-b border-warm-border">
 
     <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-        <a href="{{ url('/') }}" class="font-bold text-lg tracking-tight text-ink">
-            Booking<span class="text-primary font-normal">App</span>
+        <a href="{{ url('/') }}">
+            <picture>
+                <source srcset="{{ asset('img/logo_dark.png') }}" media="(prefers-color-scheme: dark)">
+                <img src="{{ asset('img/logo.png') }}" alt="BookingApp" style="height:2rem;">
+            </picture>
         </a>
 
         <nav class="hidden md:flex items-center gap-8">

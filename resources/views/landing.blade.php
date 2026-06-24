@@ -18,14 +18,15 @@
 
 {{-- NAV --}}
 <header x-data="{ open: false, scrolled: false }"
-        @scroll.window="scrolled = window.scrollY > 56"
+        @scroll.window="scrolled = window.scrollY > 20"
         class="fixed top-0 inset-x-0 z-50 transition-all duration-300"
         :class="scrolled ? 'bg-cream/95 backdrop-blur-sm shadow-sm border-b border-warm-border' : 'bg-transparent'">
 
     <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-        <a href="{{ url('/') }}" class="font-bold text-lg tracking-tight transition-colors"
-           :class="scrolled ? 'text-ink' : 'text-white'">
-            Booking<span class="font-normal text-primary">App</span>
+        <a href="{{ url('/') }}">
+            <img :src="scrolled ? '{{ asset('img/logo.png') }}' : '{{ asset('img/logo_dark.png') }}'"
+                 alt="BookingApp" style="height:2rem;">
+        </a>
         </a>
 
         <nav class="hidden md:flex items-center gap-8">
@@ -291,6 +292,16 @@ Offri prenotazioni online, pagamenti digitali, promemoria automatici e una gesti
                 <p class="text-sm text-ink-muted leading-relaxed max-w-xs">{{ $s['desc'] }}</p>
             </div>
             @endforeach
+        </div>
+
+        <div class="text-center mt-14" data-r style="--d:5">
+            <a href="{{ route('contact') }}"
+               class="shimmer inline-flex items-center gap-2 bg-primary hover:bg-primary/85 text-white font-semibold px-8 py-4 rounded-xl transition text-base shadow-lg shadow-primary/20">
+                Inizia gratis
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                </svg>
+            </a>
         </div>
     </div>
 </section>
