@@ -16,9 +16,10 @@ class SettingsController extends Controller
 {
     public function index(Request $request): View
     {
-        $preferences = $request->user()->preferences()->firstOrCreate([], [
-            'notification_channel' => 'email',
-        ]);
+        $preferences = \App\Models\UserPreference::firstOrCreate(
+            ['user_id' => $request->user()->id, 'business_id' => app('current_business_id')],
+            ['notification_channel' => 'email']
+        );
 
         if ($preferences->preferred_time_from) {
             $preferences->preferred_time_from = substr($preferences->preferred_time_from, 0, 5);

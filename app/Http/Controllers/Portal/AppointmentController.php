@@ -83,10 +83,8 @@ class AppointmentController extends Controller
                 $dt      = $appointment->scheduled_date;
                 $dow     = (int) $dt->format('w');
                 $slotMin = (int) $dt->format('H') * 60 + (int) $dt->format('i');
-                $fromMin = max(7 * 60, $slotMin - 60);
-                $toMin   = min(21 * 60, $slotMin + 60);
-                $fromMin = (int) (floor($fromMin / 30) * 30);
-                $toMin   = (int) (ceil($toMin / 30) * 30);
+                $fromMin = max(7 * 60, (int) (floor(($slotMin - 60) / 30) * 30));
+                $toMin   = min(21 * 60, (int) (ceil(($slotMin + 60) / 30) * 30));
 
                 $hour        = (int) $dt->format('H');
                 $fasciaLabel = match (true) {

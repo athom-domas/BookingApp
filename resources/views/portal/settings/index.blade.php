@@ -226,6 +226,7 @@
                             <option value="{{ $val }}" {{ ($preferences->preferred_time_from ?? '') === $val ? 'selected' : '' }}>{{ $label }}</option>
                         @endforeach
                     </select>
+                    @error('preferred_time_from')<p class="text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
                 <div>
                     <label class="block text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">Alle</label>
