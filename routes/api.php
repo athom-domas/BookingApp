@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('booking')->group(function () {
     Route::get('/slots', [BookingController::class, 'getAvailableSlots']);
     Route::get('/available-dates', [BookingController::class, 'getAvailableDates']);
+    Route::get('/suggested-slots', \App\Http\Controllers\Api\SuggestedSlotsController::class);
 });
 
 Route::get('/services', [ServiceController::class, 'index']);
