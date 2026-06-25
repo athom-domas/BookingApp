@@ -16,7 +16,7 @@ class SettingsController extends Controller
 {
     public function index(Request $request): View
     {
-        $preferences = \App\Models\UserPreference::firstOrCreate(
+        $preferences = UserPreference::firstOrCreate(
             ['user_id' => $request->user()->id, 'business_id' => app('current_business_id')],
             ['notification_channel' => 'email']
         );
