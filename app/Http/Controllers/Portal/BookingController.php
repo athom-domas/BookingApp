@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Portal;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Portal\StoreBookingRequest;
 use App\Models\Appointment;
+use App\Models\Business;
 use App\Models\SalonProfile;
 use App\Models\SalonReview;
 use App\Models\Service;
@@ -116,7 +117,7 @@ class BookingController extends Controller
             'services'           => $services,
             'staff'              => $staff,
             'wizardPrefill'      => $wizardPrefill,
-            'paymentMode'        => SystemSetting::getPaymentMode(),
+            'paymentMode'        => $this->resolvePaymentMode(),
             'bookingPreferences' => $bookingPreferences,
         ]);
     }
@@ -186,6 +187,19 @@ class BookingController extends Controller
         return redirect()
             ->route('portal.appointments.payment', $appointment)
             ->with('status', 'Prenotazione creata. Completa il pagamento per confermarla.');
+    }
+
+    private function resolvePaymentMode(): string
+    {
+        $configured = SystemSetting::getPaymentMode();
+        if ($configured === 'in_salon') {
+            return 'in_salon';
+        }
+        $business = Business::find(app()->bound('current_business_id') ? app('current_business_id') : null);
+        if (! $business || ! $business->canAcceptOnlinePayments()) {
+            return 'in_salon';
+        }
+        return $configured;
     }
 
     private function staffOrderRaw(): string
