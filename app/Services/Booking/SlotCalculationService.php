@@ -323,7 +323,7 @@ class SlotCalculationService
      *   Busy: 09:00-09:30, 10:00-10:30
      *   Free: 09:30-10:00, 10:30-13:00
      */
-    private function calculateFreeRanges(array $workRanges, array $occupations): array
+    public function calculateFreeRanges(array $workRanges, array $occupations): array
     {
         $freeRanges = [];
 
