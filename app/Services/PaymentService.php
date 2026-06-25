@@ -89,6 +89,10 @@ class PaymentService
         }
 
         if ($type === 'payment_intent.succeeded') {
+            $chargeId = $payload['data']['object']['latest_charge'] ?? null;
+            if ($chargeId) {
+                $payment->update(['stripe_charge_id' => $chargeId]);
+            }
             $this->markPaymentCompleted($payment);
         } elseif ($type === 'payment_intent.payment_failed') {
             $payment->update(['status' => 'failed']);
@@ -140,22 +144,7 @@ class PaymentService
     public function refundPayment(int $paymentId): Payment
     {
         $payment = Payment::findOrFail($paymentId);
-
-        if ($payment->status !== 'completed') {
-            throw new BookingException('Solo i pagamenti completati possono essere rimborsati.');
-        }
-
-        $refund = $this->stripe->refunds->create([
-            'payment_intent' => $payment->stripe_transaction_id,
-        ]);
-
-        $payment->update([
-            'status' => 'refunded',
-            'stripe_response' => $refund->toArray(),
-        ]);
-
-        PaymentRefunded::dispatch($payment);
-
+        app(\App\Services\RefundService::class)->refund($payment);
         return $payment->fresh();
     }
 

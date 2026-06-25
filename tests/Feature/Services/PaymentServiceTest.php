@@ -138,20 +138,19 @@ it('refundPayment updates status to refunded', function () {
     $payment = Payment::factory()->create([
         'status' => 'completed',
         'stripe_transaction_id' => 'pi_test_refund',
+        'stripe_charge_id'      => 'ch_test_refund',
     ]);
 
-    $fakeRefund = Refund::constructFrom([
-        'id' => 're_test_123',
-        'payment_intent' => 'pi_test_refund',
-        'status' => 'succeeded',
-    ]);
-
-    $mockRefunds = Mockery::mock();
-    $mockRefunds->shouldReceive('create')->once()->andReturn($fakeRefund);
+    $mockRefundService = Mockery::mock(\App\Services\RefundService::class);
+    $mockRefundService->shouldReceive('refund')->once()->withArgs(function ($p) use ($payment) {
+        return $p->id === $payment->id;
+    })->andReturnUsing(function ($p) {
+        $p->update(['status' => 'refunded']);
+        return new \App\Models\StripeRefund();
+    });
+    $this->app->instance(\App\Services\RefundService::class, $mockRefundService);
 
     $mockStripe = Mockery::mock(StripeClient::class);
-    $mockStripe->shouldReceive('getService')->with('refunds')->andReturn($mockRefunds);
-
     $result = ($this->makePaymentService)($mockStripe)->refundPayment($payment->id);
 
     expect($result->status)->toBe('refunded');
@@ -159,6 +158,10 @@ it('refundPayment updates status to refunded', function () {
 
 it('refundPayment throws BookingException if payment is not completed', function () {
     $payment = Payment::factory()->create(['status' => 'pending']);
+
+    $mockRefundService = Mockery::mock(\App\Services\RefundService::class);
+    $mockRefundService->shouldReceive('refund')->once()->andThrow(new \App\Exceptions\BookingException('Solo i pagamenti completati possono essere rimborsati.'));
+    $this->app->instance(\App\Services\RefundService::class, $mockRefundService);
 
     $mockStripe = Mockery::mock(StripeClient::class);
 

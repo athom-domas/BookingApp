@@ -43,6 +43,10 @@ class AppServiceProvider extends ServiceProvider
             return new \App\Services\StripeConnectService($app->make('platform.stripe'));
         });
 
+        $this->app->bind(\App\Services\RefundService::class, function ($app) {
+            return new \App\Services\RefundService($app->make('platform.stripe'));
+        });
+
         $this->app->bind(\App\Services\NotificationService::class, function () {
             $sid   = \App\Models\IntegrationSetting::getTwilioSid()   ?? config('services.twilio.sid');
             $token = \App\Models\IntegrationSetting::getTwilioToken() ?? config('services.twilio.token');

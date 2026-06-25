@@ -1,0 +1,88 @@
+<?php
+
+namespace App\Services;
+
+use App\Events\PaymentRefunded;
+use App\Exceptions\BookingException;
+use App\Models\Payment;
+use App\Models\StripeRefund;
+use Stripe\StripeClient;
+
+class RefundService
+{
+    public function __construct(private readonly ?StripeClient $stripe) {}
+
+    public function refund(Payment $payment, ?int $amountCents = null): StripeRefund
+    {
+        if ($payment->status !== 'completed') {
+            throw new BookingException('Solo i pagamenti completati possono essere rimborsati.');
+        }
+
+        $params = [
+            'charge'                 => $payment->stripe_charge_id,
+            'refund_application_fee' => true,
+            'reverse_transfer'       => true,
+        ];
+
+        if ($amountCents !== null) {
+            $params['amount'] = $amountCents;
+        }
+
+        $stripeRefund = $this->stripe->refunds->create($params);
+
+        $refundRecord = StripeRefund::create([
+            'payment_id'             => $payment->id,
+            'stripe_refund_id'       => $stripeRefund->id,
+            'amount'                 => $stripeRefund->amount,
+            'status'                 => $stripeRefund->status,
+            'reason'                 => $stripeRefund->reason ?? null,
+            'refund_application_fee' => true,
+            'reverse_transfer'       => true,
+            'payload'                => $stripeRefund->toArray(),
+        ]);
+
+        if ($stripeRefund->status === 'succeeded') {
+            $payment->update(['status' => 'refunded']);
+            PaymentRefunded::dispatch($payment);
+        }
+
+        return $refundRecord;
+    }
+
+    public function handleExternalRefund(array $chargePayload): void
+    {
+        $chargeId = $chargePayload['id'] ?? null;
+        if (! $chargeId) {
+            return;
+        }
+
+        $payment = Payment::where('stripe_charge_id', $chargeId)->first();
+        if (! $payment) {
+            return;
+        }
+
+        $refunds = $chargePayload['refunds']['data'] ?? [];
+        foreach ($refunds as $refundData) {
+            $refundId = $refundData['id'] ?? null;
+            if (! $refundId || StripeRefund::where('stripe_refund_id', $refundId)->exists()) {
+                continue;
+            }
+
+            StripeRefund::create([
+                'payment_id'             => $payment->id,
+                'stripe_refund_id'       => $refundId,
+                'amount'                 => $refundData['amount'],
+                'status'                 => $refundData['status'] ?? 'succeeded',
+                'reason'                 => $refundData['reason'] ?? null,
+                'refund_application_fee' => false,
+                'reverse_transfer'       => false,
+                'payload'                => $refundData,
+            ]);
+        }
+
+        if ($payment->status !== 'refunded') {
+            $payment->update(['status' => 'refunded']);
+            PaymentRefunded::dispatch($payment);
+        }
+    }
+}
