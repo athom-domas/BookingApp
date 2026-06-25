@@ -27,36 +27,7 @@ class AppointmentService
 
     public function getAvailableDates(array $params): array
     {
-        $month      = $params['month'];
-        $serviceIds = $params['serviceIds'];
-        $staffId    = $params['staffId'] ?? null;
-        $preference = $staffId ? 'specific' : 'any';
-
-        $start   = Carbon::createFromFormat('Y-m', $month)->startOfMonth();
-        $end     = $start->copy()->endOfMonth();
-        $today   = Carbon::today();
-        $maxDate = $today->copy()->addDays(SystemSetting::getBookingMaxDaysAhead());
-
-        $available = [];
-
-        for ($day = $start->copy(); $day->lte($end); $day->addDay()) {
-            if ($day->lt($today) || $day->gt($maxDate)) {
-                continue;
-            }
-
-            $slots = $this->slotService->getAvailableSlots([
-                'date'            => $day->toDateString(),
-                'serviceIds'      => $serviceIds,
-                'staffId'         => $staffId,
-                'staffPreference' => $preference,
-            ]);
-
-            if (! empty($slots)) {
-                $available[] = $day->toDateString();
-            }
-        }
-
-        return $available;
+        return $this->slotService->getAvailableDatesForMonth($params);
     }
 
     public function cancelAppointment(Appointment $appointment, ?string $reason = null): void

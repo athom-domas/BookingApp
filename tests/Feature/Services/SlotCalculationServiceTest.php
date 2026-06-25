@@ -10,19 +10,12 @@ use Carbon\Carbon;
 use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
+    $business = \App\Models\Business::factory()->create();
+    app()->instance('current_business_id', $business->id);
+
     Role::firstOrCreate(['name' => 'staff', 'guard_name' => 'web']);
     Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
     Role::firstOrCreate(['name' => 'customer', 'guard_name' => 'web']);
-
-    SystemSetting::create([
-        'id'                       => 1,
-        'business_id'              => 1,
-        'slot_generation_weeks'    => 4,
-        'slot_granularity_minutes' => 30,
-        'hold_duration_minutes'    => 5,
-        'hold_extension_minutes'   => 5,
-        'timezone'                 => 'Europe/Rome',
-    ]);
 });
 
 // ─── calculateTotalDuration ─────────────────────────────────────────────────

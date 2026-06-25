@@ -5,7 +5,6 @@ namespace App\Services\Booking;
 use App\Models\SystemSetting;
 use App\Models\User;
 use Carbon\Carbon;
-use Illuminate\Support\Collection;
 
 class OperatorScoringService
 {
@@ -29,19 +28,23 @@ class OperatorScoringService
             return null;
         }
 
-        if (count($availableOperatorIds) === 1) {
-            return User::find($availableOperatorIds[0]);
+        $operators = User::whereIn('id', $availableOperatorIds)->get()->keyBy('id');
+
+        if ($operators->count() === 1) {
+            return $operators->first();
         }
 
         $scores = [];
         foreach ($availableOperatorIds as $operatorId) {
-            $operator                = User::find($operatorId);
-            $scores[$operatorId]     = $this->score($operator, $slotStart, $duration, $date);
+            $operator = $operators->get($operatorId);
+            if ($operator) {
+                $scores[$operatorId] = $this->score($operator, $slotStart, $duration, $date);
+            }
         }
 
         asort($scores);
 
-        return User::find(array_key_first($scores));
+        return $operators->get(array_key_first($scores));
     }
 
     private function score(User $operator, Carbon $slotStart, int $duration, Carbon $date): float
