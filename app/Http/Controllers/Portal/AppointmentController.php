@@ -67,8 +67,49 @@ class AppointmentController extends Controller
     {
         $this->authorizeAppointment($request, $appointment);
 
+        $showPreferencePrompt = false;
+        $prefillPreferences   = null;
+
+        if (auth()->check()) {
+            $pref = \App\Models\UserPreference::where('user_id', auth()->id())
+                ->where('business_id', app('current_business_id'))
+                ->first();
+
+            $noPreferences = ! $pref || empty($pref->preferred_days);
+            $notDismissed  = ! $pref || ! $pref->booking_preference_prompt_dismissed;
+
+            if ($noPreferences && $notDismissed) {
+                $showPreferencePrompt = true;
+                $dt      = $appointment->scheduled_date;
+                $dow     = (int) $dt->format('w');
+                $slotMin = (int) $dt->format('H') * 60 + (int) $dt->format('i');
+                $fromMin = max(7 * 60, $slotMin - 60);
+                $toMin   = min(21 * 60, $slotMin + 60);
+                $fromMin = (int) (floor($fromMin / 30) * 30);
+                $toMin   = (int) (ceil($toMin / 30) * 30);
+
+                $hour        = (int) $dt->format('H');
+                $fasciaLabel = match (true) {
+                    $hour < 12 => 'mattina',
+                    $hour < 17 => 'pomeriggio',
+                    default    => 'sera',
+                };
+
+                $dayNames = [0 => 'domenica', 1 => 'lunedì', 2 => 'martedì', 3 => 'mercoledì', 4 => 'giovedì', 5 => 'venerdì', 6 => 'sabato'];
+
+                $prefillPreferences = [
+                    'preferred_days'      => [$dow],
+                    'preferred_time_from' => sprintf('%02d:%02d', intdiv($fromMin, 60), $fromMin % 60),
+                    'preferred_time_to'   => sprintf('%02d:%02d', intdiv($toMin, 60), $toMin % 60),
+                    'label'               => $dayNames[$dow] . ' ' . $fasciaLabel,
+                ];
+            }
+        }
+
         return view('portal.appointments.show', [
-            'appointment' => $appointment->load(['staff.media', 'payment']),
+            'appointment'          => $appointment->load(['staff.media', 'payment']),
+            'showPreferencePrompt' => $showPreferencePrompt,
+            'prefillPreferences'   => $prefillPreferences,
         ]);
     }
 
