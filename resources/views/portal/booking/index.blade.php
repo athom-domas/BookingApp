@@ -90,7 +90,8 @@
             x-data="bookingWizard(
                 {{ Illuminate\Support\Js::from($servicesJson) }},
                 {{ Illuminate\Support\Js::from($staffJson) }},
-                {{ Illuminate\Support\Js::from($bookingPreferences) }}
+                {{ Illuminate\Support\Js::from($bookingPreferences) }},
+                {{ Illuminate\Support\Js::from($paymentMode) }}
             )"
             class="space-y-3"
         >
@@ -422,80 +423,16 @@
                 </div>
             </div>
 
-            {{-- Step 4: Metodo di pagamento --}}
+            {{-- Step 4: Conferma --}}
             <div class="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm"
                  :class="!isCompleted(3) && !isOpen(4) ? 'opacity-50' : ''">
-                <button
-                    type="button"
-                    class="flex w-full items-center justify-between px-5 py-4 text-left"
-                    @click="isCompleted(4) && !isOpen(4) ? goTo(4) : null"
-                    :class="isCompleted(4) && !isOpen(4) ? 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800' : 'cursor-default'"
-                >
-                    <div class="flex items-center gap-3">
-                        <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold"
-                              :class="isCompleted(4) ? 'step-done text-white' : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'">
-                            <span x-show="!isCompleted(4)">4</span>
-                            <svg x-show="isCompleted(4)" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                        </span>
-                        <div>
-                            <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">Metodo di pagamento</p>
-                            <p x-show="isCompleted(4) && !isOpen(4)" class="text-xs text-gray-500 dark:text-gray-400" x-text="paymentSummary"></p>
-                        </div>
-                    </div>
-                    <svg x-show="isOpen(4)" class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>
-                    <svg x-show="!isOpen(4)" class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                </button>
-                <div x-show="isOpen(4)" class="border-t border-gray-100 dark:border-gray-700 px-5 pb-5 pt-4">
-                    <div class="space-y-3">
-                        @if($paymentMode !== 'in_salon')
-                        <button
-                            type="button"
-                            @click="paymentMethod = 'online'"
-                            class="w-full rounded border p-4 text-left transition-colors"
-                            :class="paymentMethod === 'online'
-                                ? 'opt-selected border-transparent'
-                                : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 hover:bg-gray-50 dark:hover:border-gray-600 dark:hover:bg-gray-800'"
-                        >
-                            <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">Paga ora</p>
-                            <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Pagamento online con carta — la prenotazione viene confermata solo al completamento del pagamento</p>
-                        </button>
-                        @endif
-                        @if($paymentMode !== 'online')
-                        <button
-                            type="button"
-                            @click="paymentMethod = 'in_salon'"
-                            class="w-full rounded border p-4 text-left transition-colors"
-                            :class="paymentMethod === 'in_salon'
-                                ? 'opt-selected border-transparent'
-                                : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 hover:bg-gray-50 dark:hover:border-gray-600 dark:hover:bg-gray-800'"
-                        >
-                            <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">Paga in salone</p>
-                            <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Paghi direttamente al momento del servizio — la prenotazione è confermata subito</p>
-                        </button>
-                        @endif
-                    </div>
-                    <div class="mt-4 flex justify-end">
-                        <button
-                            type="button"
-                            @click="completeStep(4)"
-                            :disabled="paymentMethod === null"
-                            class="btn-wiz"
-                        >
-                            Continua
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Step 5: Riepilogo e conferma --}}
-            <div class="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm"
-                 :class="!isCompleted(4) && !isOpen(5) ? 'opacity-50' : ''">
                 <div class="flex items-center gap-3 px-5 py-4">
-                    <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 text-xs font-bold text-gray-600 dark:text-gray-400">5</span>
-                    <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">Riepilogo e conferma</p>
+                    <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 text-xs font-bold text-gray-600 dark:text-gray-400">4</span>
+                    <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">Conferma</p>
                 </div>
-                <div x-show="isOpen(5)" class="border-t border-gray-100 dark:border-gray-700 px-5 pb-5 pt-4 space-y-4">
+                <div x-show="isOpen(4)" class="border-t border-gray-100 dark:border-gray-700 px-5 pb-5 pt-4 space-y-4">
                     @auth
+                        {{-- Riepilogo --}}
                         <dl class="divide-y divide-gray-100 dark:divide-gray-800 rounded bg-gray-50 dark:bg-gray-800 text-sm overflow-hidden">
                             <div class="flex justify-between px-4 py-3">
                                 <dt class="text-gray-500 dark:text-gray-400">Servizi</dt>
@@ -517,12 +454,38 @@
                                 <dt class="font-semibold text-gray-900 dark:text-gray-100">Totale</dt>
                                 <dd class="font-bold tabular-nums text-gray-900 dark:text-gray-100" x-text="'€ ' + totalPrice.toFixed(2).replace('.', ',')"></dd>
                             </div>
-                            <div class="flex justify-between px-4 py-3">
-                                <dt class="text-gray-500 dark:text-gray-400">Pagamento</dt>
-                                <dd class="font-medium text-gray-900 dark:text-gray-100" x-text="paymentSummary"></dd>
-                            </div>
                         </dl>
 
+                        {{-- Metodo di pagamento (solo quando entrambe le opzioni sono disponibili) --}}
+                        @if($paymentMode === 'both')
+                        <div class="space-y-2">
+                            <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">Come vuoi pagare?</p>
+                            <button
+                                type="button"
+                                @click="paymentMethod = 'online'"
+                                class="w-full rounded border p-4 text-left transition-colors"
+                                :class="paymentMethod === 'online'
+                                    ? 'opt-selected border-transparent'
+                                    : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 hover:bg-gray-50 dark:hover:border-gray-600 dark:hover:bg-gray-800'"
+                            >
+                                <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">Paga ora</p>
+                                <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Pagamento online con carta — la prenotazione viene confermata solo al completamento del pagamento</p>
+                            </button>
+                            <button
+                                type="button"
+                                @click="paymentMethod = 'in_salon'"
+                                class="w-full rounded border p-4 text-left transition-colors"
+                                :class="paymentMethod === 'in_salon'
+                                    ? 'opt-selected border-transparent'
+                                    : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 hover:bg-gray-50 dark:hover:border-gray-600 dark:hover:bg-gray-800'"
+                            >
+                                <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">Paga in salone</p>
+                                <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Paghi direttamente al momento del servizio — la prenotazione è confermata subito</p>
+                            </button>
+                        </div>
+                        @endif
+
+                        {{-- Note --}}
                         <div>
                             <label class="block text-sm font-medium text-gray-900 dark:text-gray-200 mb-1.5">Note (opzionale)</label>
                             <textarea
@@ -536,7 +499,7 @@
                         <button
                             type="button"
                             @click="submitBooking()"
-                            :disabled="submitting"
+                            :disabled="submitting || paymentMethod === null"
                             class="btn-wiz-full"
                         >
                             <svg x-show="submitting" class="spinner h-4 w-4" fill="none" viewBox="0 0 24 24">

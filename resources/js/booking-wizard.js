@@ -1,4 +1,4 @@
-export function bookingWizard(allServices, allStaff, bookingPreferences = null) {
+export function bookingWizard(allServices, allStaff, bookingPreferences = null, paymentMode = 'both') {
     return {
         // navigation
         step: 1,
@@ -7,6 +7,7 @@ export function bookingWizard(allServices, allStaff, bookingPreferences = null) 
         // data
         allServices,
         allStaff,
+        paymentMode,
 
         // step 1
         selectedServiceIds: [],
@@ -24,13 +25,9 @@ export function bookingWizard(allServices, allStaff, bookingPreferences = null) 
         availableSlots: [],
         loadingSlots: false,
 
-        // step 5
-        submitting: false,
-
         // step 4
+        submitting: false,
         paymentMethod: null,
-
-        // step 5
         notes: '',
 
         // waitlist offer source (null when booking directly)
@@ -61,7 +58,7 @@ export function bookingWizard(allServices, allStaff, bookingPreferences = null) 
                     this.paymentMethod      = s.paymentMethod ?? null;
                     this.notes              = (typeof s.notes === 'string') ? s.notes.slice(0, 1000) : '';
                     this.completed          = Array.isArray(s.completed) ? s.completed : [];
-                    this.step               = (Number.isInteger(s.step) && s.step >= 1 && s.step <= 5) ? s.step : 1;
+                    this.step               = (Number.isInteger(s.step) && s.step >= 1 && s.step <= 4) ? s.step : 1;
                     this.waitlistEntryId    = Number.isInteger(s.waitlistEntryId) ? s.waitlistEntryId : null;
                 } catch (_) {}
 
@@ -69,6 +66,10 @@ export function bookingWizard(allServices, allStaff, bookingPreferences = null) 
                     this.loadAvailableDates();
                     if (this.date) this.loadAvailableSlots();
                 }
+            }
+
+            if (this.paymentMode !== 'both' && !this.paymentMethod) {
+                this.paymentMethod = this.paymentMode;
             }
 
             this.$watch('step', (v) => {
@@ -107,6 +108,7 @@ export function bookingWizard(allServices, allStaff, bookingPreferences = null) 
             }
             this.step = n + 1;
             if (n === 2 && this.preferences) this.loadSuggestedSlots();
+            if (n === 3 && this.paymentMode !== 'both') this.paymentMethod = this.paymentMode;
         },
 
         goTo(n) {
@@ -120,7 +122,7 @@ export function bookingWizard(allServices, allStaff, bookingPreferences = null) 
                 this.availableDates = [];
             }
             if (n <= 3) {
-                this.paymentMethod = null;
+                this.paymentMethod = this.paymentMode !== 'both' ? this.paymentMode : null;
             }
             this.completed = this.completed.filter(s => s < n);
             this.step = n;
