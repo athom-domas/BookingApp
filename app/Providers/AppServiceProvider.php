@@ -24,8 +24,20 @@ class AppServiceProvider extends ServiceProvider
             return new StripeClient($secret);
         });
 
+        $this->app->bind('platform.stripe', function () {
+            $secret = config('services.stripe.secret');
+            if (empty($secret)) {
+                return null;
+            }
+            return new StripeClient($secret);
+        });
+
         $this->app->bind(PaymentService::class, function ($app) {
             return new PaymentService($app->make(StripeClient::class));
+        });
+
+        $this->app->bind(\App\Services\StripeConnectService::class, function ($app) {
+            return new \App\Services\StripeConnectService($app->make('platform.stripe'));
         });
 
         $this->app->bind(\App\Services\NotificationService::class, function () {

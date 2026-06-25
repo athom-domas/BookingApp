@@ -19,6 +19,7 @@ use App\Models\Business;
     'waitlist_offer_timeout_minutes',
     'review_request_enabled', 'review_request_delay_hours',
     'follow_up_reminders_enabled', 'follow_up_reminder_days',
+    'stripe_platform_fee_percent',
 ])]
 class SystemSetting extends Model
 {
@@ -45,6 +46,7 @@ class SystemSetting extends Model
             'review_request_delay_hours'   => 'integer',
             'follow_up_reminders_enabled'  => 'boolean',
             'follow_up_reminder_days'      => 'integer',
+            'stripe_platform_fee_percent'  => 'float',
         ];
     }
 
@@ -70,6 +72,7 @@ class SystemSetting extends Model
                 'loyalty_reward_percentage' => 10,
                 'follow_up_reminders_enabled' => false,
                 'follow_up_reminder_days'     => 30,
+                'stripe_platform_fee_percent' => null,
             ]);
         }
 
@@ -94,6 +97,7 @@ class SystemSetting extends Model
                 'loyalty_reward_percentage' => 10,
                 'follow_up_reminders_enabled' => false,
                 'follow_up_reminder_days'     => 30,
+                'stripe_platform_fee_percent' => null,
             ]
         );
     }
@@ -196,5 +200,11 @@ class SystemSetting extends Model
     public static function getFollowUpReminderDays(): int
     {
         return self::current()->follow_up_reminder_days ?? 30;
+    }
+
+    public static function getStripePlatformFeePercent(): ?float
+    {
+        $v = self::current()->stripe_platform_fee_percent;
+        return $v !== null ? (float) $v : null;
     }
 }
