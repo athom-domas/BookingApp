@@ -71,6 +71,15 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware(['auth', 'tenant.user', 'tenant.status'])->group(function () {
+    Route::get('/stripe/connect/start', [\App\Http\Controllers\StripeConnectController::class, 'start'])
+        ->name('stripe.connect.start');
+    Route::get('/stripe/connect/callback', [\App\Http\Controllers\StripeConnectController::class, 'callback'])
+        ->name('stripe.connect.callback');
+    Route::get('/stripe/connect/refresh', [\App\Http\Controllers\StripeConnectController::class, 'refresh'])
+        ->name('stripe.connect.refresh');
+    Route::get('/stripe/connect/dashboard', [\App\Http\Controllers\StripeConnectController::class, 'dashboardLink'])
+        ->name('stripe.connect.dashboard');
+
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 
     Route::get('/portal', [PortalAppointmentController::class, 'dashboard'])->name('portal.dashboard');
