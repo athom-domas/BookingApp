@@ -28,6 +28,11 @@ class UserPreference extends Model
         ];
     }
 
+    public function setNotificationChannelAttribute(?string $value): void
+    {
+        $this->attributes['notification_channel'] = $value ?? 'email';
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

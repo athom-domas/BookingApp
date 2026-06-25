@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
@@ -24,10 +23,6 @@ class PasswordResetLinkController extends Controller
             'email.required' => 'Inserisci il tuo indirizzo email.',
             'email.email'    => 'Inserisci un indirizzo email valido.',
         ]);
-
-        if (! User::where('email', $request->email)->exists()) {
-            return back()->withErrors(['email' => 'Nessun account trovato con questa email.'])->withInput();
-        }
 
         Password::sendResetLink($request->only('email'));
 

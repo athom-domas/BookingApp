@@ -13,6 +13,7 @@ use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
     Role::firstOrCreate(['name' => 'customer', 'guard_name' => 'web']);
+    $this->mock(NotificationService::class);
 });
 
 it('sets entry to notified with offered_slot', function () {

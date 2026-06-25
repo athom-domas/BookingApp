@@ -71,9 +71,6 @@ class StaffResource extends Resource
             ->with('roles')
             ->whereHas('roles', fn(Builder $query): Builder => $query
                 ->where('name', 'staff')
-                ->where('guard_name', 'web'))
-            ->whereDoesntHave('roles', fn(Builder $query): Builder => $query
-                ->where('name', 'admin')
                 ->where('guard_name', 'web'));
     }
 

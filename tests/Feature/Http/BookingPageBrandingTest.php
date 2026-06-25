@@ -22,9 +22,9 @@ it('booking page shows salon name from profile', function () {
 });
 
 it('booking page shows fallback logo when no logo is set', function () {
-    SalonProfile::current();
+    SalonProfile::current()->update(['logo_path' => null]);
 
-    $this->get('/')->assertSee('img/logo.png');
+    $this->get('/')->assertSee('img/logo.webp');
 });
 
 it('booking page shows contact footer when fields are set', function () {

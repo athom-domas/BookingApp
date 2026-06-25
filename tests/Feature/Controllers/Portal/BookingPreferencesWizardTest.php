@@ -5,8 +5,6 @@ use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
     Role::firstOrCreate(['name' => 'customer', 'guard_name' => 'web']);
-    $this->business = \App\Models\Business::factory()->create();
-    app()->instance('current_business_id', $this->business->id);
 });
 
 it('passes bookingPreferences to view when customer has preferences', function () {

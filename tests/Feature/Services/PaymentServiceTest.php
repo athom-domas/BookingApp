@@ -12,6 +12,9 @@ use Stripe\Refund;
 use Stripe\StripeClient;
 
 beforeEach(function () {
+    \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+    \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'staff', 'guard_name' => 'web']);
+    \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'customer', 'guard_name' => 'web']);
     Queue::fake();
     $this->makePaymentService = function (MockInterface $mockStripe): PaymentService {
         return new PaymentService($mockStripe);

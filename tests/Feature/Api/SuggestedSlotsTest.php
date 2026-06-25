@@ -9,8 +9,6 @@ use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
     Role::firstOrCreate(['name' => 'staff', 'guard_name' => 'web']);
-    $business = Business::factory()->create();
-    app()->instance('current_business_id', $business->id);
 });
 
 it('returns 422 when serviceIds is missing', function () {

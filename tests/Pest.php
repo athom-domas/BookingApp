@@ -17,7 +17,9 @@ use Tests\TestCase;
 pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
     ->beforeEach(function () {
-        app()->instance('current_business_id', 1);
+        $business = \App\Models\Business::factory()->create();
+        app()->instance('current_business_id', $business->id);
+        $this->business = $business;
     })
     ->in('Feature');
 

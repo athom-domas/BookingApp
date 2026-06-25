@@ -7,8 +7,6 @@ use Spatie\Permission\Models\Role;
 beforeEach(function () {
     $this->withoutMiddleware(PreventRequestForgery::class);
     Role::firstOrCreate(['name' => 'customer', 'guard_name' => 'web']);
-    $this->business = \App\Models\Business::factory()->create();
-    app()->instance('current_business_id', $this->business->id);
     AvailabilityRule::factory()->create([
         'business_id'  => $this->business->id,
         'day_of_week'  => 1,

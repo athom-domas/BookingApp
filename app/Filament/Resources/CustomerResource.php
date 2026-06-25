@@ -206,7 +206,6 @@ class CustomerResource extends Resource
                                     'whatsapp' => 'WhatsApp',
                                 ])
                                 ->default('email')
-                                ->required()
                                 ->live()
                                 ->validationMessages([
                                     'required' => 'Il canale notifiche è obbligatorio.',

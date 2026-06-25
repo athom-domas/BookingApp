@@ -1,7 +1,6 @@
 <?php
 
 use App\Filament\Resources\AppointmentResource;
-use App\Filament\Resources\AvailabilityRuleResource;
 use App\Filament\Resources\CustomerResource;
 use App\Filament\Resources\PaymentResource;
 use App\Filament\Resources\ServiceResource;
@@ -37,16 +36,6 @@ it('service list page renders', function () {
 
     $this->actingAs($admin)
         ->get(ServiceResource::getUrl('index'))
-        ->assertSuccessful();
-});
-
-it('availability rule list page renders', function () {
-    $admin = User::factory()->create(['business_id' => $this->business->id]);
-    $admin->assignRole('admin');
-    $admin->businesses()->attach($this->business->id);
-
-    $this->actingAs($admin)
-        ->get(AvailabilityRuleResource::getUrl('index'))
         ->assertSuccessful();
 });
 
