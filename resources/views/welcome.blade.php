@@ -207,7 +207,7 @@
 @media (min-width: 900px) { .sf-gallery-grid { columns: 4; } }
 .sf-gallery-item { break-inside: avoid; margin-bottom: 6px; overflow: hidden; cursor: pointer; }
 .sf-gallery-item img {
-    width: 100%; object-fit: cover; display: block;
+    width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block;
     transition: transform 0.35s ease, filter 0.35s ease;
 }
 .sf-gallery-item:hover img { transform: scale(1.04); filter: brightness(0.82); }
@@ -591,7 +591,7 @@ a.sf-svc-book-badge:hover {
                         <img src="{{ $item->getUrl('web') }}"
                              srcset="{{ $item->getUrl('gallery-sm') }} 576w, {{ $item->getUrl('web') }} 1200w"
                              sizes="(max-width: 640px) 288px, 400px"
-                             alt="" loading="lazy" width="874" height="800">
+                             alt="" loading="lazy" width="800" height="600">
                     </div>
                 @endforeach
             </div>
@@ -667,7 +667,7 @@ a.sf-svc-book-badge:hover {
                 <img src="{{ $item->getUrl('web') }}"
                      srcset="{{ $item->getUrl('gallery-sm') }} 576w, {{ $item->getUrl('web') }} 1200w"
                      sizes="(max-width: 640px) 50vw, (max-width: 900px) 33vw, 25vw"
-                     alt="Galleria {{ $loop->iteration }}" loading="lazy" width="874" height="800">
+                     alt="Galleria {{ $loop->iteration }}" loading="lazy" width="400" height="300">
             </div>
             @endforeach
         </div>
