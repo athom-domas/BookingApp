@@ -33,7 +33,10 @@ class AppServiceProvider extends ServiceProvider
         });
 
         $this->app->bind(PaymentService::class, function ($app) {
-            return new PaymentService($app->make(StripeClient::class));
+            return new PaymentService(
+                $app->make(StripeClient::class),
+                $app->make(\App\Services\StripeConnectService::class),
+            );
         });
 
         $this->app->bind(\App\Services\StripeConnectService::class, function ($app) {

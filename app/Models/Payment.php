@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['business_id', 'appointment_id', 'user_id', 'amount', 'status', 'payment_method', 'stripe_transaction_id', 'stripe_response', 'loyalty_discount_percentage', 'loyalty_original_amount'])]
+#[Fillable(['business_id', 'appointment_id', 'user_id', 'amount', 'status', 'payment_method', 'stripe_transaction_id', 'stripe_response', 'loyalty_discount_percentage', 'loyalty_original_amount', 'stripe_account_id', 'platform_fee_amount', 'platform_fee_percent', 'stripe_charge_id', 'stripe_application_fee_id', 'stripe_transfer_id'])]
 class Payment extends Model
 {
     /** @use HasFactory<\Database\Factories\PaymentFactory> */

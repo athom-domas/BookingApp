@@ -7,17 +7,29 @@ use App\Events\PaymentCompleted;
 use App\Events\PaymentRefunded;
 use App\Exceptions\BookingException;
 use App\Models\Appointment;
+use App\Models\Business;
 use App\Models\Payment;
 use Illuminate\Support\Facades\Log;
 use Stripe\StripeClient;
 
 class PaymentService
 {
-    public function __construct(private readonly ?StripeClient $stripe) {}
+    public function __construct(
+        private readonly ?StripeClient $stripe,
+        private readonly ?StripeConnectService $connectService = null,
+    ) {}
 
-    public function initiateStripePayment(int $appointmentId, int $amountCents): Payment
+    public function initiateStripePayment(int $appointmentId, int $amountCents, ?Business $business = null): Payment
     {
         $appointment = Appointment::findOrFail($appointmentId);
+        $business ??= Business::find(app()->bound('current_business_id') ? app('current_business_id') : null);
+
+        $connectAccount = $business?->stripeConnectAccount;
+        $hasConnect = $connectAccount && $connectAccount->isActive() && $this->connectService;
+
+        $fee = $hasConnect
+            ? $this->connectService->calculatePlatformFee($business, $amountCents)
+            : ['cents' => 0, 'percent' => null];
 
         $pmConfig = config('services.stripe.payment_method_configuration');
 
@@ -26,11 +38,16 @@ class PaymentService
             'currency' => 'eur',
             'metadata' => [
                 'appointment_id' => $appointmentId,
-                'business_id'    => app()->bound('current_business_id') ? app('current_business_id') : null,
+                'business_id'    => $business?->id,
             ],
         ];
 
-        if ($pmConfig) {
+        if ($hasConnect) {
+            $intentParams['on_behalf_of']               = $connectAccount->stripe_account_id;
+            $intentParams['application_fee_amount']     = $fee['cents'];
+            $intentParams['transfer_data']              = ['destination' => $connectAccount->stripe_account_id];
+            $intentParams['automatic_payment_methods']  = ['enabled' => true];
+        } elseif ($pmConfig) {
             $intentParams['payment_method_configuration'] = $pmConfig;
         } else {
             $intentParams['automatic_payment_methods'] = ['enabled' => true];
@@ -39,13 +56,16 @@ class PaymentService
         $paymentIntent = $this->stripe->paymentIntents->create($intentParams);
 
         $payment = Payment::create([
-            'appointment_id' => $appointmentId,
-            'user_id' => $appointment->user_id,
-            'amount' => $amountCents / 100,
-            'status' => 'pending',
-            'payment_method' => 'stripe',
+            'appointment_id'        => $appointmentId,
+            'user_id'               => $appointment->user_id,
+            'amount'                => $amountCents / 100,
+            'status'                => 'pending',
+            'payment_method'        => 'stripe',
             'stripe_transaction_id' => $paymentIntent->id,
-            'stripe_response' => $paymentIntent->toArray(),
+            'stripe_response'       => $paymentIntent->toArray(),
+            'stripe_account_id'     => $hasConnect ? $connectAccount->stripe_account_id : null,
+            'platform_fee_amount'   => $fee['cents'],
+            'platform_fee_percent'  => $fee['percent'],
         ]);
 
         return $payment;
