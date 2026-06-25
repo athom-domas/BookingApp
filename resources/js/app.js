@@ -59,7 +59,10 @@ ready(() => {
             clientSecret: stripeForm.dataset.clientSecret,
             appearance: { theme: isDark ? 'night' : 'stripe' },
         });
-        const paymentElement = elements.create('payment');
+        const paymentElement = elements.create('payment', {
+            wallets: { applePay: 'never', googlePay: 'never', link: 'never' },
+            defaultValues: { billingDetails: { address: { country: 'IT' } } },
+        });
         const errorTarget = stripeForm.querySelector('[data-payment-error]');
         const submitButton = stripeForm.querySelector('button[type="submit"]');
         const confirmForm = document.querySelector('[data-payment-confirm-form]');
@@ -82,7 +85,7 @@ ready(() => {
                 errorTarget.textContent = stripeErrorMessage(error);
                 errorTarget.classList.remove('hidden');
                 submitButton.disabled = false;
-                submitButton.textContent = 'Paga ora';
+                submitButton.textContent = submitButton.dataset.label;
                 return;
             }
 

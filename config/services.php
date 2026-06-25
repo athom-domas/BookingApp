@@ -39,6 +39,7 @@ return [
         'secret' => env('STRIPE_SECRET_KEY'),
         'public' => env('STRIPE_PUBLIC_KEY'),
         'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
+        'payment_method_configuration' => env('STRIPE_PAYMENT_METHOD_CONFIGURATION'),
     ],
 
     'twilio' => [

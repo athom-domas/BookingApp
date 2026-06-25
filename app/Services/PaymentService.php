@@ -19,15 +19,24 @@ class PaymentService
     {
         $appointment = Appointment::findOrFail($appointmentId);
 
-        $paymentIntent = $this->stripe->paymentIntents->create([
-            'amount' => $amountCents,
+        $pmConfig = config('services.stripe.payment_method_configuration');
+
+        $intentParams = [
+            'amount'   => $amountCents,
             'currency' => 'eur',
-            'automatic_payment_methods' => ['enabled' => true],
             'metadata' => [
                 'appointment_id' => $appointmentId,
                 'business_id'    => app()->bound('current_business_id') ? app('current_business_id') : null,
             ],
-        ]);
+        ];
+
+        if ($pmConfig) {
+            $intentParams['payment_method_configuration'] = $pmConfig;
+        } else {
+            $intentParams['automatic_payment_methods'] = ['enabled' => true];
+        }
+
+        $paymentIntent = $this->stripe->paymentIntents->create($intentParams);
 
         $payment = Payment::create([
             'appointment_id' => $appointmentId,
