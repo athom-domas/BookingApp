@@ -7,11 +7,14 @@ use App\Models\Appointment;
 use App\Models\FollowUpReminder;
 use App\Models\SystemSetting;
 use App\Services\LoyaltyService;
+use Illuminate\Support\Facades\Cache;
 
 class AppointmentObserver
 {
     public function created(Appointment $appointment): void
     {
+        $this->bustDateCache($appointment->business_id, $appointment->scheduled_date->format('Y-m'));
+
         if ($appointment->status !== 'confirmed') {
             return;
         }
@@ -21,6 +24,16 @@ class AppointmentObserver
 
     public function updated(Appointment $appointment): void
     {
+        if ($appointment->wasChanged('scheduled_date')) {
+            $this->bustDateCache($appointment->business_id, $appointment->scheduled_date->format('Y-m'));
+            $old = $appointment->getOriginal('scheduled_date');
+            if ($old) {
+                $this->bustDateCache($appointment->business_id, substr($old, 0, 7));
+            }
+        } elseif ($appointment->wasChanged('status')) {
+            $this->bustDateCache($appointment->business_id, $appointment->scheduled_date->format('Y-m'));
+        }
+
         if (! $appointment->wasChanged('status')) {
             return;
         }
@@ -76,6 +89,11 @@ class AppointmentObserver
         if ($payment && $payment->status === 'pending') {
             app(\App\Services\PaymentService::class)->cancelPendingPayment($payment);
         }
+    }
+
+    private function bustDateCache(int $businessId, string $month): void
+    {
+        Cache::increment("booking_dates_v:{$businessId}:{$month}");
     }
 
     private function scheduleFollowUpReminder(Appointment $appointment): void

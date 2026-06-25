@@ -11,6 +11,7 @@ use App\Models\Service;
 use App\Models\SystemSetting;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class AppointmentService
@@ -27,7 +28,23 @@ class AppointmentService
 
     public function getAvailableDates(array $params): array
     {
-        return $this->slotService->getAvailableDatesForMonth($params);
+        $businessId = app()->bound('current_business_id') ? app('current_business_id') : null;
+
+        if (! $businessId) {
+            return $this->slotService->getAvailableDatesForMonth($params);
+        }
+
+        $month   = $params['month'] ?? now()->format('Y-m');
+        $version = (int) Cache::get("booking_dates_v:{$businessId}:{$month}", 0);
+        $svcKey  = implode(',', collect($params['serviceIds'] ?? [])->sort()->values()->all());
+        $staffId = $params['staffId'] ?? 0;
+        $pref    = $params['staffPreference'] ?? 'any';
+
+        $key = "booking_dates:{$businessId}:{$month}:v{$version}:{$svcKey}:{$staffId}:{$pref}";
+
+        return Cache::remember($key, 300, fn () =>
+            $this->slotService->getAvailableDatesForMonth($params)
+        );
     }
 
     public function cancelAppointment(Appointment $appointment, ?string $reason = null): void
