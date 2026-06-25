@@ -85,7 +85,7 @@ class StripeConnectService
     public function calculatePlatformFee(Business $business, int $amountCents): array
     {
         $percent = $business->stripe_platform_fee_percent
-            ?? SystemSetting::current()->stripe_platform_fee_percent
+            ?? SystemSetting::getStripePlatformFeePercent()
             ?? (float) config('services.stripe.platform_fee_percent', 0);
 
         $cents = (int) round($amountCents * $percent / 100);
