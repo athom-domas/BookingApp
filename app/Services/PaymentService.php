@@ -10,7 +10,6 @@ use App\Models\Appointment;
 use App\Models\Payment;
 use Illuminate\Support\Facades\Log;
 use Stripe\StripeClient;
-use App\Services\LoyaltyService;
 
 class PaymentService
 {
@@ -39,10 +38,6 @@ class PaymentService
             'stripe_transaction_id' => $paymentIntent->id,
             'stripe_response' => $paymentIntent->toArray(),
         ]);
-
-        // Pre-accredito punti fedeltà subito, così sono già visibili sulla pagina di pagamento.
-        // Se il pagamento fallisce/viene cancellato, i punti vengono stornati (vedere handleStripeWebhook).
-        $this->preCreditLoyalty($appointment);
 
         return $payment;
     }
@@ -212,17 +207,4 @@ class PaymentService
         }
     }
 
-    private function preCreditLoyalty(Appointment $appointment): void
-    {
-        $price = (float) ($appointment->final_price ?? 0);
-        if ($price <= 0) {
-            return;
-        }
-
-        if (! app()->bound('current_business_id')) {
-            app()->instance('current_business_id', $appointment->business_id);
-        }
-
-        app(LoyaltyService::class)->accrue($appointment, $price);
-    }
 }

@@ -104,7 +104,11 @@
             <div class="rounded-lg border border-red-100 dark:border-red-900/40 bg-red-50 dark:bg-red-950/30 p-4">
                 <p class="text-sm font-medium text-red-800 dark:text-red-300">Non vuoi procedere?</p>
                 <p class="mt-1 text-sm text-red-600 dark:text-red-400">
-                    Annullando la prenotazione i punti fedeltà pre-accreditati verranno rimossi.
+                    @if($loyaltyEnabled && $pointsToEarn > 0)
+                        Completando il pagamento guadagnerai {{ $pointsToEarn }} {{ $pointsToEarn === 1 ? 'punto' : 'punti' }} fedeltà.
+                    @else
+                        Puoi annullare questa prenotazione se hai cambiato idea.
+                    @endif
                 </p>
                 <form method="POST" action="{{ route('portal.appointments.cancel', $appointment) }}" class="mt-3"
                       onsubmit="return confirm('Sei sicuro di voler annullare questa prenotazione?')">

@@ -32,6 +32,16 @@ it('non raddoppia i punti se il completamento viene rieseguito', function () {
         ->and(LoyaltyTransaction::where('appointment_id', $this->appointment->id)->where('type', 'earn')->count())->toBe(1);
 });
 
+it('non accredita i punti per appuntamenti in stato pending', function () {
+    Appointment::factory()->create([
+        'user_id'     => $this->customer->id,
+        'status'      => 'pending',
+        'final_price' => 75,
+    ]);
+
+    expect(LoyaltyAccount::where('user_id', $this->customer->id)->exists())->toBeFalse();
+});
+
 it('accredita i punti quando un appuntamento pending passa a confirmed', function () {
     $pending = Appointment::factory()->create([
         'user_id'     => $this->customer->id,

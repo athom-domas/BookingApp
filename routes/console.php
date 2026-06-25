@@ -2,6 +2,7 @@
 
 use App\Jobs\SendAppointmentReminder;
 use App\Jobs\SendFollowUpReminder;
+use App\Models\Appointment;
 use App\Models\AppointmentReminder;
 use App\Models\FollowUpReminder;
 use Illuminate\Foundation\Inspiring;
@@ -33,3 +34,13 @@ Schedule::call(function () {
 Schedule::call(function () {
     FollowUpReminder::stale()->update(['status' => 'pending', 'processing_at' => null]);
 })->hourly()->description('Recover stale follow-up reminders');
+
+Schedule::call(function () {
+    Appointment::withoutGlobalScopes()
+        ->pendingExpired()
+        ->chunkById(50, function ($appointments) {
+            foreach ($appointments as $appointment) {
+                $appointment->update(['status' => 'cancelled']);
+            }
+        });
+})->everyFifteenMinutes()->description('Expire unpaid pending appointments');

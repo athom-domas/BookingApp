@@ -81,6 +81,12 @@ class Appointment extends Model
         return $query->where('status', 'confirmed');
     }
 
+    public function scopePendingExpired(Builder $query, int $minutes = 30): Builder
+    {
+        return $query->where('status', 'pending')
+            ->where('created_at', '<', now()->subMinutes($minutes));
+    }
+
     public function isPast(): bool
     {
         return $this->scheduled_date->isPast();

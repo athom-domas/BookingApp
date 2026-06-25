@@ -140,6 +140,10 @@ class AppointmentController extends Controller
                 || $payment->loyalty_discount_percentage !== null;
         }
 
+        $pointsToEarn = $loyaltyEnabled
+            ? (int) floor((float) $appointment->final_price * SystemSetting::getLoyaltyPointsPerEuro())
+            : 0;
+
         return view('portal.appointments.payment', [
             'appointment'               => $appointment,
             'payment'                   => $payment,
@@ -153,6 +157,7 @@ class AppointmentController extends Controller
             'discountApplied'           => $payment->loyalty_discount_percentage !== null,
             'discountedAmount'          => (float) $payment->amount,
             'originalAmount'            => (float) ($payment->loyalty_original_amount ?? $payment->amount),
+            'pointsToEarn'              => $pointsToEarn,
         ]);
     }
 
