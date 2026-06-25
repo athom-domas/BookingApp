@@ -11,6 +11,7 @@ use App\Models\Service;
 use App\Models\SystemSetting;
 use App\Models\User;
 use App\Models\WaitlistEntry;
+use App\Events\AppointmentConfirmed;
 use App\Services\Booking\AppointmentService;
 use App\Services\PaymentService;
 use Carbon\Carbon;
@@ -105,7 +106,23 @@ class BookingController extends Controller
 
     public function store(StoreBookingRequest $request): RedirectResponse
     {
-        if (Appointment::where('user_id', $request->user()->id)->where('status', 'pending')->exists()) {
+        $pendingAppointment = Appointment::where('user_id', $request->user()->id)
+            ->where('status', 'pending')
+            ->first();
+
+        if ($pendingAppointment) {
+            if ($request->input('payment_method') === 'in_salon') {
+                $pendingAppointment->payment()
+                    ->where('status', 'pending')
+                    ->delete();
+                $pendingAppointment->update(['status' => 'confirmed']);
+                AppointmentConfirmed::dispatch($pendingAppointment->fresh());
+
+                return redirect()
+                    ->route('portal.appointments.show', $pendingAppointment)
+                    ->with('status', 'Prenotazione confermata. Ci vediamo in salone!');
+            }
+
             return back()->withInput()->withErrors([
                 'booking' => 'Hai una prenotazione in attesa di pagamento. Completala o annullala prima di prenotarne una nuova.',
             ]);
