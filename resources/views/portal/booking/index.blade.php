@@ -336,6 +336,7 @@
                         </div>
                     </div>
 
+                    <hr x-show="isCompleted(2)" class="mt-5 border-gray-100 dark:border-gray-700">
                     <div class="mt-4 flex justify-end">
                         <button
                             type="button"

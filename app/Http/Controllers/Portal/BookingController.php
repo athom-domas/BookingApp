@@ -79,6 +79,21 @@ class BookingController extends Controller
                 $wizardPrefill = ['selectedServiceIds' => [$serviceId]];
             }
         }
+        if (! $wizardPrefill && $request->has('service_ids')) {
+            $serviceIds = array_values(array_filter(
+                array_map('intval', (array) $request->query('service_ids')),
+                fn ($id) => $services->contains('id', $id),
+            ));
+            if ($serviceIds) {
+                $staffId = $request->filled('preferred_staff_id') && is_numeric($request->query('preferred_staff_id'))
+                    ? (int) $request->query('preferred_staff_id')
+                    : null;
+                if ($staffId && ! $staff->contains('id', $staffId)) {
+                    $staffId = null;
+                }
+                $wizardPrefill = ['selectedServiceIds' => $serviceIds, 'staffId' => $staffId, 'step' => 3, 'completed' => [1, 2]];
+            }
+        }
 
         return view('portal.booking.index', [
             'services'      => $services,

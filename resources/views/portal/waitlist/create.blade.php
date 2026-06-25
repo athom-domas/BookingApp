@@ -455,6 +455,22 @@
                     @error('preferred_days')
                         <p class="mt-2 text-xs text-red-600">{{ $message }}</p>
                     @enderror
+
+                    {{-- Prenotazione normale --}}
+                    <div class="mt-5 border-t border-gray-100 dark:border-gray-700 pt-4">
+                        <div class="flex items-start justify-between gap-4">
+                            <div>
+                                <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Preferisci scegliere tu la data?</p>
+                                <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Torna alla prenotazione normale e scegli subito uno slot disponibile.</p>
+                            </div>
+                            <a
+                                :href="'{{ route('booking.create') }}?' + selectedServices.map(id => 'service_ids[]=' + id).join('&') + (staffId !== null ? '&preferred_staff_id=' + staffId : '')"
+                                class="sf-accent-link shrink-0 text-sm font-semibold hover:underline whitespace-nowrap"
+                            >Prenotazione normale →</a>
+                        </div>
+                    </div>
+
+                    <hr class="mt-5 border-gray-100 dark:border-gray-700">
                     <div class="mt-4 flex justify-end">
                         <button
                             type="button"
@@ -607,5 +623,6 @@
 
             </form>
         </div>
+
     </div>
 @endsection
