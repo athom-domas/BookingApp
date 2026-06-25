@@ -1,0 +1,49 @@
+<?php
+
+namespace App\Filament\Pages;
+
+use App\Models\Business;
+use App\Models\StripeConnectAccount;
+use Filament\Pages\Page;
+
+class StripeConnectPage extends Page
+{
+    protected string $view = 'filament.pages.stripe-connect';
+
+    protected static ?string $navigationLabel = 'Pagamenti online';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-credit-card';
+    protected static string|\UnitEnum|null $navigationGroup = 'Impostazioni';
+    protected static ?int $navigationSort = 5;
+
+    public function getConnectAccount(): ?StripeConnectAccount
+    {
+        return StripeConnectAccount::where('business_id', Business::currentId())->first();
+    }
+
+    public function getUiState(): string
+    {
+        $account = $this->getConnectAccount();
+
+        if (! $account || ! $account->stripe_account_id) {
+            return 'not_connected';
+        }
+
+        if (! $account->details_submitted) {
+            return 'incomplete';
+        }
+
+        if ($account->status === 'disabled') {
+            return 'disabled';
+        }
+
+        if ($account->status === 'restricted') {
+            return 'restricted';
+        }
+
+        if ($account->charges_enabled) {
+            return 'active';
+        }
+
+        return 'pending_review';
+    }
+}

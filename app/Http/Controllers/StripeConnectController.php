@@ -34,7 +34,7 @@ class StripeConnectController extends Controller
             $this->connectService->syncFromStripe($account);
         }
 
-        return redirect('/admin')
+        return redirect(route('filament.admin.pages.stripe-connect'))
             ->with('status', 'Configurazione completata. Stripe sta verificando i tuoi dati.');
     }
 
