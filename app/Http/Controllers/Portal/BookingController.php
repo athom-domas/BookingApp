@@ -10,6 +10,7 @@ use App\Models\SalonReview;
 use App\Models\Service;
 use App\Models\SystemSetting;
 use App\Models\User;
+use App\Models\UserPreference;
 use App\Models\WaitlistEntry;
 use App\Events\AppointmentConfirmed;
 use App\Services\Booking\AppointmentService;
@@ -96,11 +97,27 @@ class BookingController extends Controller
             }
         }
 
+        $bookingPreferences = null;
+        if (auth()->check()) {
+            $pref = UserPreference::where('user_id', auth()->id())
+                ->where('business_id', $businessId)
+                ->first();
+            $hasPrefs = $pref && (! empty($pref->preferred_days) || $pref->preferred_time_from);
+            if ($hasPrefs) {
+                $bookingPreferences = [
+                    'days'     => $pref->preferred_days ?? [],
+                    'timeFrom' => $pref->preferred_time_from ? substr($pref->preferred_time_from, 0, 5) : null,
+                    'timeTo'   => $pref->preferred_time_to   ? substr($pref->preferred_time_to,   0, 5) : null,
+                ];
+            }
+        }
+
         return view('portal.booking.index', [
-            'services'      => $services,
-            'staff'         => $staff,
-            'wizardPrefill' => $wizardPrefill,
-            'paymentMode'   => SystemSetting::getPaymentMode(),
+            'services'           => $services,
+            'staff'              => $staff,
+            'wizardPrefill'      => $wizardPrefill,
+            'paymentMode'        => SystemSetting::getPaymentMode(),
+            'bookingPreferences' => $bookingPreferences,
         ]);
     }
 

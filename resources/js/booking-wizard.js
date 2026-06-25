@@ -1,4 +1,4 @@
-export function bookingWizard(allServices, allStaff) {
+export function bookingWizard(allServices, allStaff, bookingPreferences = null) {
     return {
         // navigation
         step: 1,
@@ -32,6 +32,12 @@ export function bookingWizard(allServices, allStaff) {
 
         // waitlist offer source (null when booking directly)
         waitlistEntryId: null,
+
+        // preferences & suggestions
+        preferences: bookingPreferences,
+        suggestedSlots: [],
+        suggestedSlotsLoaded: false,
+        showSuggestions: true,
 
         // ── init ──────────────────────────────────────────────────────────
         init() {
@@ -96,6 +102,7 @@ export function bookingWizard(allServices, allStaff) {
                 this.completed.push(n);
             }
             this.step = n + 1;
+            if (n === 2 && this.preferences) this.loadSuggestedSlots();
         },
 
         goTo(n) {
@@ -285,6 +292,66 @@ export function bookingWizard(allServices, allStaff) {
             } finally {
                 this.loadingSlots = false;
             }
+        },
+
+        // ── suggestions ───────────────────────────────────────────────────
+        toLocalIsoDate(date) {
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const d = String(date.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        },
+
+        isPreferredDay(iso) {
+            if (!this.preferences?.days?.length) return false;
+            const dow = new Date(iso + 'T00:00:00').getDay();
+            return this.preferences.days.includes(dow);
+        },
+
+        async loadSuggestedSlots() {
+            if (!this.preferences || !this.selectedServiceIds.length) return;
+            this.suggestedSlotsLoaded = false;
+            this.suggestedSlots = [];
+            this.showSuggestions = true;
+
+            const params = new URLSearchParams();
+            this.selectedServiceIds.forEach(id => params.append('serviceIds[]', id));
+            if (this.staffId) params.append('staffId', this.staffId);
+            if (this.preferences.days?.length) {
+                this.preferences.days.forEach(d => params.append('preferredDays[]', d));
+            }
+            if (this.preferences.timeFrom) params.append('timeFrom', this.preferences.timeFrom);
+            if (this.preferences.timeTo)   params.append('timeTo',   this.preferences.timeTo);
+            params.append('limit', '6');
+
+            try {
+                const res  = await fetch('/api/booking/suggested-slots?' + params.toString(), { headers: { Accept: 'application/json' } });
+                const data = await res.json();
+                this.suggestedSlots = data.data ?? [];
+            } catch (_) {}
+
+            this.suggestedSlotsLoaded = true;
+        },
+
+        get groupedSuggested() {
+            const map = {};
+            for (const s of this.suggestedSlots) {
+                if (!map[s.date]) map[s.date] = { date: s.date, slots: [] };
+                map[s.date].slots.push(s);
+            }
+            return Object.values(map).slice(0, 3);
+        },
+
+        selectSuggestedSlot(dateVal, timeVal) {
+            this.date          = dateVal;
+            this.slot          = timeVal;
+            this.calendarMonth = dateVal.slice(0, 7);
+            this.loadAvailableSlots();
+        },
+
+        formatSuggestedDate(iso) {
+            const s = new Date(iso + 'T00:00:00').toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' });
+            return s.charAt(0).toUpperCase() + s.slice(1);
         },
     };
 }

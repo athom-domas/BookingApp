@@ -80,7 +80,11 @@
         <script>sessionStorage.setItem('bookingWizardState', JSON.stringify({{ Illuminate\Support\Js::from($wizardPrefill) }}));</script>
         @endif
         <div
-            x-data="bookingWizard({{ Illuminate\Support\Js::from($servicesJson) }}, {{ Illuminate\Support\Js::from($staffJson) }})"
+            x-data="bookingWizard(
+                {{ Illuminate\Support\Js::from($servicesJson) }},
+                {{ Illuminate\Support\Js::from($staffJson) }},
+                {{ Illuminate\Support\Js::from($bookingPreferences) }}
+            )"
             class="space-y-3"
         >
             {{-- CSRF + hidden inputs --}}
@@ -262,6 +266,35 @@
                     <svg x-show="!isOpen(3)" class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                 </button>
                 <div x-show="isOpen(3)" class="border-t border-gray-100 dark:border-gray-700 px-5 pb-5 pt-4">
+                    {{-- Suggeriti per te --}}
+                    <div x-show="preferences && suggestedSlotsLoaded && suggestedSlots.length > 0 && showSuggestions"
+                         x-cloak
+                         class="mb-5 rounded-lg border border-primary/20 bg-primary/5 dark:bg-primary/10 p-4">
+                        <p class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1">✦ Suggeriti per te</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">In base alle tue preferenze</p>
+                        <div class="space-y-2">
+                            <template x-for="(group, idx) in groupedSuggested" :key="idx">
+                                <div class="flex items-start gap-3 flex-wrap">
+                                    <span class="text-xs font-medium text-gray-700 dark:text-gray-300 w-36 shrink-0 pt-1"
+                                          x-text="formatSuggestedDate(group.date)"></span>
+                                    <div class="flex flex-wrap gap-1.5">
+                                        <template x-for="s in group.slots" :key="s.time">
+                                            <button type="button"
+                                                    @click="selectSuggestedSlot(s.date, s.time)"
+                                                    class="rounded border px-3 py-1 text-xs font-medium transition-colors"
+                                                    :class="date === s.date && slot === s.time
+                                                        ? 'slot-active border-transparent'
+                                                        : 'border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-gray-400 hover:bg-gray-50 dark:hover:border-gray-500 dark:hover:bg-gray-800'"
+                                                    x-text="s.time"></button>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                        <button type="button" @click="showSuggestions = false"
+                                class="mt-3 text-xs text-gray-400 hover:underline">Vedi tutte le disponibilità ↓</button>
+                    </div>
+
                     <div class="mb-4 flex items-center justify-between">
                         <button type="button" @click="prevMonth()" class="rounded p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
                             <svg class="h-4 w-4 text-gray-600 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
@@ -277,7 +310,7 @@
                             <div class="py-1 text-xs font-medium text-gray-400 dark:text-gray-500" x-text="d"></div>
                         </template>
                         <template x-for="(cell, i) in calendarGrid" :key="i">
-                            <div>
+                            <div class="relative">
                                 <template x-if="cell === null">
                                     <div></div>
                                 </template>
@@ -294,6 +327,10 @@
                                         }"
                                         x-text="cell.split('-')[2]"
                                     ></button>
+                                </template>
+                                <template x-if="cell !== null">
+                                    <span x-show="isPreferredDay(cell)"
+                                          class="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary opacity-50 pointer-events-none"></span>
                                 </template>
                             </div>
                         </template>
