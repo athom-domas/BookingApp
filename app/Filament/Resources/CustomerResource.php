@@ -8,9 +8,11 @@ use App\Models\User;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Section;
@@ -130,6 +132,42 @@ class CustomerResource extends Resource
                 ->columnSpanFull()
                 ->helperText("Visibili solo nell'area admin. Non vengono mostrate al cliente."),
 
+            Section::make('Preferenze prenotazione')
+                ->schema([
+                    Group::make()
+                        ->relationship('preferences')
+                        ->schema([
+                            CheckboxList::make('preferred_days')
+                                ->label('Giorni preferiti')
+                                ->options(function () {
+                                    $dayLabels = [
+                                        0 => 'Domenica', 1 => 'Lunedì', 2 => 'Martedì',
+                                        3 => 'Mercoledì', 4 => 'Giovedì', 5 => 'Venerdì', 6 => 'Sabato',
+                                    ];
+                                    return collect(
+                                        \App\Models\AvailabilityRule::where('is_available', true)
+                                            ->distinct()->pluck('day_of_week')->sort()->values()->all()
+                                    )->mapWithKeys(fn ($d) => [$d => $dayLabels[$d]])->all();
+                                })
+                                ->columns(4)
+                                ->nullable(),
+                            Grid::make(2)->schema([
+                                Select::make('preferred_time_from')
+                                    ->label('Dalle')
+                                    ->options(self::timeOptions())
+                                    ->placeholder('Qualsiasi')
+                                    ->nullable(),
+                                Select::make('preferred_time_to')
+                                    ->label('Alle')
+                                    ->options(self::timeOptions())
+                                    ->placeholder('Qualsiasi')
+                                    ->nullable(),
+                            ]),
+                        ]),
+                ])
+                ->collapsible()
+                ->columnSpanFull(),
+
             Section::make('Preferenze notifiche')
                 ->schema([
                     Group::make()
@@ -192,6 +230,16 @@ class CustomerResource extends Resource
                 DeleteBulkAction::make()
                     ->hidden(fn() => ! auth()->user()?->isAdmin() && ! auth()->user()?->can('customers.delete')),
             ]);
+    }
+
+    private static function timeOptions(): array
+    {
+        $options = [];
+        for ($h = 7; $h <= 21; $h++) {
+            $options[sprintf('%02d:00', $h)] = sprintf('%02d:00', $h);
+            if ($h < 21) $options[sprintf('%02d:30', $h)] = sprintf('%02d:30', $h);
+        }
+        return $options;
     }
 
     public static function getRelations(): array
