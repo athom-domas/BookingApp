@@ -88,6 +88,8 @@ Route::middleware(['auth', 'tenant.user', 'tenant.status'])->group(function () {
     Route::patch('/portal/settings/profile', [SettingsController::class, 'updateProfile'])->name('portal.settings.profile');
     Route::patch('/portal/settings/notifications', [SettingsController::class, 'updateNotifications'])->name('portal.settings.notifications');
     Route::patch('/portal/settings/communications', [SettingsController::class, 'updateCommunications'])->name('portal.settings.communications');
+    Route::patch('/portal/settings/booking-preferences', [SettingsController::class, 'updateBookingPreferences'])->name('portal.settings.booking-preferences');
+    Route::post('/portal/settings/booking-preferences/dismiss', [SettingsController::class, 'dismissBookingPreferencePrompt'])->name('portal.settings.booking-preferences.dismiss');
 
     Route::post('/portal/waitlist', [WaitlistController::class, 'store'])->name('portal.waitlist.store');
     Route::delete('/portal/waitlist/{entry}', [WaitlistController::class, 'destroy'])->name('portal.waitlist.destroy');

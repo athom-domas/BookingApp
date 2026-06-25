@@ -180,5 +180,73 @@
             </form>
         </div>
     </div>
+
+    {{-- Preferenze prenotazione --}}
+    <div class="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm">
+        <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700">
+            <h2 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Preferenze prenotazione</h2>
+            <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Usiamo queste informazioni per suggerirti gli slot più adatti.</p>
+        </div>
+        <form method="POST" action="{{ route('portal.settings.booking-preferences') }}" class="px-5 py-5 space-y-5">
+            @csrf
+            @method('PATCH')
+
+            <div>
+                <p class="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3">Giorni preferiti</p>
+                @php
+                    $dayLabels = [0 => 'Dom', 1 => 'Lun', 2 => 'Mar', 3 => 'Mer', 4 => 'Gio', 5 => 'Ven', 6 => 'Sab'];
+                    $savedDays = $preferences->preferred_days ?? [];
+                @endphp
+                <div class="flex flex-wrap gap-2">
+                    @foreach($openDayNums as $num)
+                        <label class="flex items-center gap-1.5 cursor-pointer">
+                            <input type="checkbox" name="preferred_days[]" value="{{ $num }}"
+                                   {{ in_array($num, $savedDays) ? 'checked' : '' }}
+                                   class="rounded border-gray-300 dark:border-gray-600 text-primary focus:ring-primary">
+                            <span class="text-sm text-gray-900 dark:text-gray-100">{{ $dayLabels[$num] }}</span>
+                        </label>
+                    @endforeach
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                @php
+                    $timeOptions = [];
+                    for ($h = 7; $h <= 21; $h++) {
+                        $timeOptions[sprintf('%02d:00', $h)] = sprintf('%02d:00', $h);
+                        if ($h < 21) $timeOptions[sprintf('%02d:30', $h)] = sprintf('%02d:30', $h);
+                    }
+                @endphp
+                <div>
+                    <label class="block text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">Dalle</label>
+                    <select name="preferred_time_from"
+                        class="block w-full rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900 dark:focus:border-gray-200 dark:focus:ring-gray-200">
+                        <option value="">Qualsiasi</option>
+                        @foreach($timeOptions as $val => $label)
+                            <option value="{{ $val }}" {{ ($preferences->preferred_time_from ?? '') === $val ? 'selected' : '' }}>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">Alle</label>
+                    <select name="preferred_time_to"
+                        class="block w-full rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900 dark:focus:border-gray-200 dark:focus:ring-gray-200">
+                        <option value="">Qualsiasi</option>
+                        @foreach($timeOptions as $val => $label)
+                            <option value="{{ $val }}" {{ ($preferences->preferred_time_to ?? '') === $val ? 'selected' : '' }}>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+            @error('preferred_time_to')<p class="text-xs text-red-600">{{ $message }}</p>@enderror
+
+            <div class="flex justify-end">
+                <button type="submit"
+                    class="rounded-md bg-gray-900 dark:bg-gray-100 px-4 py-2 text-sm font-semibold text-white dark:text-gray-900 hover:opacity-90 transition-opacity">
+                    Salva preferenze
+                </button>
+            </div>
+        </form>
+    </div>
 </div>
 @endsection
