@@ -45,8 +45,15 @@
         border-radius: .375rem;
         width: 100%;
         transition: filter .15s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: .5rem;
     }
     .btn-wiz-full:hover { filter: brightness(0.85); }
+    .btn-wiz-full:disabled { opacity: .5; cursor: not-allowed; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner { animation: spin .7s linear infinite; }
 </style>
 @endpush
 
@@ -266,6 +273,22 @@
                     <svg x-show="!isOpen(3)" class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                 </button>
                 <div x-show="isOpen(3)" class="border-t border-gray-100 dark:border-gray-700 px-5 pb-5 pt-4">
+                    {{-- Suggeriti per te: skeleton durante il caricamento --}}
+                    <div x-show="preferences && loadingSuggested && showSuggestions"
+                         x-cloak
+                         class="mb-5 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-4 space-y-3">
+                        <div class="h-3 w-28 rounded bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
+                        <div class="flex gap-2">
+                            <div class="h-7 w-24 rounded bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
+                            <div class="h-7 w-16 rounded bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
+                            <div class="h-7 w-16 rounded bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
+                        </div>
+                        <div class="flex gap-2">
+                            <div class="h-7 w-24 rounded bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
+                            <div class="h-7 w-16 rounded bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
+                        </div>
+                    </div>
+
                     {{-- Suggeriti per te --}}
                     <div x-show="preferences && suggestedSlotsLoaded && suggestedSlots.length > 0 && showSuggestions"
                          x-cloak
@@ -296,16 +319,24 @@
                     </div>
 
                     <div class="mb-4 flex items-center justify-between">
-                        <button type="button" @click="prevMonth()" class="rounded p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                        <button type="button" @click="prevMonth()" :disabled="loadingDates"
+                                class="rounded p-1.5 transition-colors disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-800">
                             <svg class="h-4 w-4 text-gray-600 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
                         </button>
-                        <p class="text-sm font-semibold text-gray-900 dark:text-gray-100" x-text="monthLabel"></p>
-                        <button type="button" @click="nextMonth()" class="rounded p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                        <div class="flex items-center gap-2">
+                            <p class="text-sm font-semibold text-gray-900 dark:text-gray-100" x-text="monthLabel"></p>
+                            <svg x-show="loadingDates" class="spinner h-3.5 w-3.5 text-gray-400" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 22 6.373 22 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        </div>
+                        <button type="button" @click="nextMonth()" :disabled="loadingDates"
+                                class="rounded p-1.5 transition-colors disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-800">
                             <svg class="h-4 w-4 text-gray-600 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                         </button>
                     </div>
 
-                    <div class="grid grid-cols-7 gap-1 text-center">
+                    <div class="grid grid-cols-7 gap-1 text-center" :class="loadingDates ? 'opacity-40 pointer-events-none' : ''">
                         <template x-for="d in ['Lu','Ma','Me','Gi','Ve','Sa','Do']">
                             <div class="py-1 text-xs font-medium text-gray-400 dark:text-gray-500" x-text="d"></div>
                         </template>
@@ -336,11 +367,15 @@
                         </template>
                     </div>
 
-                    <div x-show="loadingDates" class="mt-3 text-center text-xs text-gray-500 dark:text-gray-400">Caricamento disponibilità...</div>
-
                     <div x-show="date !== null" class="mt-4">
                         <p class="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Orari disponibili</p>
-                        <div x-show="loadingSlots" class="text-xs text-gray-500 dark:text-gray-400">Caricamento orari...</div>
+                        <div x-show="loadingSlots" class="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500">
+                            <svg class="spinner h-3.5 w-3.5" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 22 6.373 22 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Caricamento orari...
+                        </div>
                         <div x-show="!loadingSlots && availableSlots.length === 0 && date !== null" class="text-xs text-gray-500 dark:text-gray-400">
                             Nessun orario disponibile per questa data.
                         </div>
@@ -500,10 +535,16 @@
 
                         <button
                             type="button"
-                            @click="$refs.bookingForm.submit()"
+                            @click="submitBooking()"
+                            :disabled="submitting"
                             class="btn-wiz-full"
-                            x-text="paymentMethod === 'online' ? 'Prenota e vai al pagamento' : 'Conferma prenotazione'"
-                        ></button>
+                        >
+                            <svg x-show="submitting" class="spinner h-4 w-4" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 22 6.373 22 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span x-text="submitting ? 'Invio in corso...' : (paymentMethod === 'online' ? 'Prenota e vai al pagamento' : 'Conferma prenotazione')"></span>
+                        </button>
                     @else
                         <p class="text-sm text-gray-600 dark:text-gray-400">Accedi o crea un account per completare la prenotazione.</p>
                         <div class="flex gap-3">

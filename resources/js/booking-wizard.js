@@ -24,6 +24,9 @@ export function bookingWizard(allServices, allStaff, bookingPreferences = null) 
         availableSlots: [],
         loadingSlots: false,
 
+        // step 5
+        submitting: false,
+
         // step 4
         paymentMethod: null,
 
@@ -37,6 +40,7 @@ export function bookingWizard(allServices, allStaff, bookingPreferences = null) 
         preferences: bookingPreferences,
         suggestedSlots: [],
         suggestedSlotsLoaded: false,
+        loadingSuggested: false,
         showSuggestions: true,
 
         // ── init ──────────────────────────────────────────────────────────
@@ -226,6 +230,7 @@ export function bookingWizard(allServices, allStaff, bookingPreferences = null) 
         },
 
         prevMonth() {
+            if (this.loadingDates) return;
             const [year, month] = this.calendarMonth.split('-').map(Number);
             const d = new Date(year, month - 2, 1);
             const newMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
@@ -236,6 +241,7 @@ export function bookingWizard(allServices, allStaff, bookingPreferences = null) 
         },
 
         nextMonth() {
+            if (this.loadingDates) return;
             const [year, month] = this.calendarMonth.split('-').map(Number);
             const d = new Date(year, month, 1);
             const limit = new Date();
@@ -311,6 +317,7 @@ export function bookingWizard(allServices, allStaff, bookingPreferences = null) 
         async loadSuggestedSlots() {
             if (!this.preferences || !this.selectedServiceIds.length) return;
             this.suggestedSlotsLoaded = false;
+            this.loadingSuggested = true;
             this.suggestedSlots = [];
             this.showSuggestions = true;
 
@@ -330,6 +337,7 @@ export function bookingWizard(allServices, allStaff, bookingPreferences = null) 
                 this.suggestedSlots = data.data ?? [];
             } catch (_) {}
 
+            this.loadingSuggested = false;
             this.suggestedSlotsLoaded = true;
         },
 
@@ -340,6 +348,12 @@ export function bookingWizard(allServices, allStaff, bookingPreferences = null) 
                 map[s.date].slots.push(s);
             }
             return Object.values(map).slice(0, 3);
+        },
+
+        submitBooking() {
+            if (this.submitting) return;
+            this.submitting = true;
+            this.$refs.bookingForm.submit();
         },
 
         selectSuggestedSlot(dateVal, timeVal) {
