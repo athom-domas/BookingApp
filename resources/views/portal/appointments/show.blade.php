@@ -82,8 +82,7 @@
                     @endforeach
                     <input type="hidden" name="preferred_time_from" value="{{ $prefillPreferences['preferred_time_from'] }}">
                     <input type="hidden" name="preferred_time_to"   value="{{ $prefillPreferences['preferred_time_to'] }}">
-                    <button type="submit"
-                        class="rounded-md bg-gray-900 dark:bg-gray-100 px-4 py-2 text-sm font-semibold text-white dark:text-gray-900 hover:opacity-90 transition-opacity">
+                    <button type="submit" class="btn-primary rounded px-4 py-2 text-sm font-semibold text-white">
                         Salva preferenza
                     </button>
                 </form>

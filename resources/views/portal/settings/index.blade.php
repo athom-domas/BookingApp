@@ -73,102 +73,146 @@
         </div>
     </div>
 
-    {{-- Notifiche --}}
+    {{-- Notifiche, Comunicazioni e Preferenze prenotazione --}}
     <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm"
          x-data="{ channel: '{{ old('notification_channel', $preferences->notification_channel) }}' }">
         <div class="border-b border-gray-100 dark:border-gray-800 px-6 py-4">
-            <h2 class="font-display text-xl font-semibold text-gray-950 dark:text-gray-50">Notifiche</h2>
+            <h2 class="font-display text-xl font-semibold text-gray-950 dark:text-gray-50">Preferenze</h2>
         </div>
         <div class="p-6">
-            @if (session('notifications_updated'))
+            @if (session('preferences_updated'))
                 <div class="mb-5 rounded border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950 px-4 py-3 text-sm text-green-800 dark:text-green-300">
-                    {{ session('notifications_updated') }}
+                    {{ session('preferences_updated') }}
                 </div>
             @endif
 
-            <form method="POST" action="{{ route('portal.settings.notifications') }}" class="max-w-md space-y-5">
+            <form method="POST" action="{{ route('portal.settings.preferences') }}" class="space-y-6">
                 @csrf
                 @method('PATCH')
 
-                <div>
-                    <label class="mb-3 block text-sm font-medium text-gray-700 dark:text-gray-300">Canale di notifica</label>
-                    <div class="space-y-2">
-                        <label class="flex cursor-pointer items-center gap-3">
-                            <input type="radio" name="notification_channel" value="email"
-                                x-model="channel"
-                                class="h-4 w-4 border-gray-300 dark:border-gray-600"
-                                style="accent-color: var(--color-primary)">
-                            <span class="text-sm text-gray-700 dark:text-gray-300">Email</span>
-                        </label>
-                        @if (\App\Models\IntegrationSetting::hasMetaWhatsApp())
-                        <label class="flex cursor-pointer items-center gap-3">
-                            <input type="radio" name="notification_channel" value="whatsapp"
-                                x-model="channel"
-                                class="h-4 w-4 border-gray-300 dark:border-gray-600"
-                                style="accent-color: var(--color-primary)">
-                            <span class="text-sm text-gray-700 dark:text-gray-300">WhatsApp</span>
-                        </label>
-                        @endif
-                    </div>
-                    @error('notification_channel')<p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
-                </div>
+                {{-- Notifiche --}}
+                <div class="space-y-4">
+                    <p class="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">Notifiche</p>
 
-                <div x-cloak x-show="channel === 'whatsapp'">
-                    <label for="phone_number" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                        Numero di telefono <span class="text-red-500">*</span>
-                    </label>
-                    <div class="flex rounded border border-gray-200 dark:border-gray-700 transition focus-within:border-gray-900 dark:focus-within:border-gray-200 focus-within:ring-1 focus-within:ring-gray-900 dark:focus-within:ring-gray-200">
-                        <span class="inline-flex items-center border-r border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-3 text-sm text-gray-500 dark:text-gray-400 rounded-l">
-                            +39
-                        </span>
-                        <input type="tel" id="phone_number" name="phone_number"
-                            value="{{ old('phone_number', $preferences->phone_number ? preg_replace('/^\+39/', '', $preferences->phone_number) : '') }}"
-                            placeholder="334 1234567"
-                            class="block w-full rounded-r border-0 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-950 dark:text-gray-50 focus:outline-none">
-                    </div>
-                    <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">Es. 334 1234567</p>
-                    @error('phone_number')<p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
-                </div>
-
-                <div>
-                    <button type="submit" class="btn-primary rounded px-5 py-2.5 text-sm font-semibold text-white">
-                        Salva notifiche
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    {{-- Comunicazioni --}}
-    <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm">
-        <div class="border-b border-gray-100 dark:border-gray-800 px-6 py-4">
-            <h2 class="font-display text-xl font-semibold text-gray-950 dark:text-gray-50">Comunicazioni</h2>
-        </div>
-        <div class="p-6">
-            @if (session('communications_updated'))
-                <div class="mb-5 rounded border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950 px-4 py-3 text-sm text-green-800 dark:text-green-300">
-                    {{ session('communications_updated') }}
-                </div>
-            @endif
-
-            <form method="POST" action="{{ route('portal.settings.communications') }}" class="max-w-md space-y-5">
-                @csrf
-                @method('PATCH')
-
-                <div class="flex items-start gap-3">
-                    <input type="hidden" name="follow_up_reminders_enabled" value="0">
-                    <input type="checkbox" id="follow_up_reminders_enabled" name="follow_up_reminders_enabled"
-                        value="1"
-                        {{ old('follow_up_reminders_enabled', $preferences->follow_up_reminders_enabled) ? 'checked' : '' }}
-                        class="mt-0.5 h-4 w-4 rounded border-gray-300 dark:border-gray-600"
-                        style="accent-color: var(--color-primary)">
                     <div>
-                        <label for="follow_up_reminders_enabled" class="block text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer">
-                            Ricevi promemoria per prenotare un nuovo appuntamento
+                        <label class="mb-3 block text-sm font-medium text-gray-700 dark:text-gray-300">Canale di notifica</label>
+                        <div class="space-y-2">
+                            <label class="flex cursor-pointer items-center gap-3">
+                                <input type="radio" name="notification_channel" value="email"
+                                    x-model="channel"
+                                    class="h-4 w-4 border-gray-300 dark:border-gray-600"
+                                    style="accent-color: var(--color-primary)">
+                                <span class="text-sm text-gray-700 dark:text-gray-300">Email</span>
+                            </label>
+                            @if (\App\Models\IntegrationSetting::hasMetaWhatsApp())
+                            <label class="flex cursor-pointer items-center gap-3">
+                                <input type="radio" name="notification_channel" value="whatsapp"
+                                    x-model="channel"
+                                    class="h-4 w-4 border-gray-300 dark:border-gray-600"
+                                    style="accent-color: var(--color-primary)">
+                                <span class="text-sm text-gray-700 dark:text-gray-300">WhatsApp</span>
+                            </label>
+                            @endif
+                        </div>
+                        @error('notification_channel')<p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
+                    </div>
+
+                    <div x-cloak x-show="channel === 'whatsapp'">
+                        <label for="phone_number" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                            Numero di telefono <span class="text-red-500">*</span>
                         </label>
-                        <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">
-                            Ti invieremo un promemoria se è passato un po' dal tuo ultimo appuntamento e non hai ancora una nuova prenotazione.
-                        </p>
+                        <div class="flex max-w-xs rounded border border-gray-200 dark:border-gray-700 transition focus-within:border-gray-900 dark:focus-within:border-gray-200 focus-within:ring-1 focus-within:ring-gray-900 dark:focus-within:ring-gray-200">
+                            <span class="inline-flex items-center border-r border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-3 text-sm text-gray-500 dark:text-gray-400 rounded-l">+39</span>
+                            <input type="tel" id="phone_number" name="phone_number"
+                                value="{{ old('phone_number', $preferences->phone_number ? preg_replace('/^\+39/', '', $preferences->phone_number) : '') }}"
+                                placeholder="334 1234567"
+                                class="block w-full rounded-r border-0 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-950 dark:text-gray-50 focus:outline-none">
+                        </div>
+                        <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">Es. 334 1234567</p>
+                        @error('phone_number')<p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
+                    </div>
+                </div>
+
+                <div class="border-t border-gray-100 dark:border-gray-800"></div>
+
+                {{-- Comunicazioni --}}
+                <div class="space-y-4">
+                    <p class="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">Comunicazioni</p>
+
+                    <div class="flex items-start gap-3">
+                        <input type="hidden" name="follow_up_reminders_enabled" value="0">
+                        <input type="checkbox" id="follow_up_reminders_enabled" name="follow_up_reminders_enabled"
+                            value="1"
+                            {{ old('follow_up_reminders_enabled', $preferences->follow_up_reminders_enabled) ? 'checked' : '' }}
+                            class="mt-0.5 h-4 w-4 rounded border-gray-300 dark:border-gray-600"
+                            style="accent-color: var(--color-primary)">
+                        <div>
+                            <label for="follow_up_reminders_enabled" class="block text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer">
+                                Ricevi promemoria per prenotare un nuovo appuntamento
+                            </label>
+                            <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">
+                                Ti invieremo un promemoria se è passato un po' dal tuo ultimo appuntamento e non hai ancora una nuova prenotazione.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="border-t border-gray-100 dark:border-gray-800"></div>
+
+                {{-- Preferenze prenotazione --}}
+                <div class="space-y-4">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">Prenotazione</p>
+                        <p class="mt-0.5 text-xs text-gray-400 dark:text-gray-500">Usiamo queste informazioni per suggerirti gli slot più adatti.</p>
+                    </div>
+
+                    @php
+                        $dayLabels   = [0 => 'Dom', 1 => 'Lun', 2 => 'Mar', 3 => 'Mer', 4 => 'Gio', 5 => 'Ven', 6 => 'Sab'];
+                        $savedDays   = $preferences->preferred_days ?? [];
+                        $timeOptions = [];
+                        for ($h = 7; $h <= 21; $h++) {
+                            $timeOptions[sprintf('%02d:00', $h)] = sprintf('%02d:00', $h);
+                            if ($h < 21) $timeOptions[sprintf('%02d:30', $h)] = sprintf('%02d:30', $h);
+                        }
+                    @endphp
+                    <div class="flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-6">
+                        <div class="flex-1">
+                            <p class="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3">Giorni preferiti</p>
+                            <div class="flex flex-wrap gap-2">
+                                @foreach($openDayNums as $num)
+                                    <label class="flex items-center gap-1.5 cursor-pointer">
+                                        <input type="checkbox" name="preferred_days[]" value="{{ $num }}"
+                                               {{ in_array($num, $savedDays) ? 'checked' : '' }}
+                                               class="rounded border-gray-300 dark:border-gray-600 text-primary focus:ring-primary">
+                                        <span class="text-sm text-gray-900 dark:text-gray-100">{{ $dayLabels[$num] }}</span>
+                                    </label>
+                                @endforeach
+                            </div>
+                        </div>
+                        <div class="flex items-end gap-3 sm:shrink-0">
+                            <div>
+                                <label class="block text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">Dalle</label>
+                                <select name="preferred_time_from"
+                                    class="block w-28 rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900 dark:focus:border-gray-200 dark:focus:ring-gray-200">
+                                    <option value="">—</option>
+                                    @foreach($timeOptions as $val => $label)
+                                        <option value="{{ $val }}" {{ ($preferences->preferred_time_from ?? '') === $val ? 'selected' : '' }}>{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                                @error('preferred_time_from')<p class="text-xs text-red-600 mt-1">{{ $message }}</p>@enderror
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">Alle</label>
+                                <select name="preferred_time_to"
+                                    class="block w-28 rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900 dark:focus:border-gray-200 dark:focus:ring-gray-200">
+                                    <option value="">—</option>
+                                    @foreach($timeOptions as $val => $label)
+                                        <option value="{{ $val }}" {{ ($preferences->preferred_time_to ?? '') === $val ? 'selected' : '' }}>{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                                @error('preferred_time_to')<p class="text-xs text-red-600 mt-1">{{ $message }}</p>@enderror
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -179,75 +223,6 @@
                 </div>
             </form>
         </div>
-    </div>
-
-    {{-- Preferenze prenotazione --}}
-    <div class="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm">
-        <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700">
-            <h2 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Preferenze prenotazione</h2>
-            <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Usiamo queste informazioni per suggerirti gli slot più adatti.</p>
-        </div>
-        <form method="POST" action="{{ route('portal.settings.booking-preferences') }}" class="px-5 py-5 space-y-5">
-            @csrf
-            @method('PATCH')
-
-            <div>
-                <p class="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3">Giorni preferiti</p>
-                @php
-                    $dayLabels = [0 => 'Dom', 1 => 'Lun', 2 => 'Mar', 3 => 'Mer', 4 => 'Gio', 5 => 'Ven', 6 => 'Sab'];
-                    $savedDays = $preferences->preferred_days ?? [];
-                @endphp
-                <div class="flex flex-wrap gap-2">
-                    @foreach($openDayNums as $num)
-                        <label class="flex items-center gap-1.5 cursor-pointer">
-                            <input type="checkbox" name="preferred_days[]" value="{{ $num }}"
-                                   {{ in_array($num, $savedDays) ? 'checked' : '' }}
-                                   class="rounded border-gray-300 dark:border-gray-600 text-primary focus:ring-primary">
-                            <span class="text-sm text-gray-900 dark:text-gray-100">{{ $dayLabels[$num] }}</span>
-                        </label>
-                    @endforeach
-                </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-4">
-                @php
-                    $timeOptions = [];
-                    for ($h = 7; $h <= 21; $h++) {
-                        $timeOptions[sprintf('%02d:00', $h)] = sprintf('%02d:00', $h);
-                        if ($h < 21) $timeOptions[sprintf('%02d:30', $h)] = sprintf('%02d:30', $h);
-                    }
-                @endphp
-                <div>
-                    <label class="block text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">Dalle</label>
-                    <select name="preferred_time_from"
-                        class="block w-full rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900 dark:focus:border-gray-200 dark:focus:ring-gray-200">
-                        <option value="">Qualsiasi</option>
-                        @foreach($timeOptions as $val => $label)
-                            <option value="{{ $val }}" {{ ($preferences->preferred_time_from ?? '') === $val ? 'selected' : '' }}>{{ $label }}</option>
-                        @endforeach
-                    </select>
-                    @error('preferred_time_from')<p class="text-xs text-red-600">{{ $message }}</p>@enderror
-                </div>
-                <div>
-                    <label class="block text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">Alle</label>
-                    <select name="preferred_time_to"
-                        class="block w-full rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900 dark:focus:border-gray-200 dark:focus:ring-gray-200">
-                        <option value="">Qualsiasi</option>
-                        @foreach($timeOptions as $val => $label)
-                            <option value="{{ $val }}" {{ ($preferences->preferred_time_to ?? '') === $val ? 'selected' : '' }}>{{ $label }}</option>
-                        @endforeach
-                    </select>
-                </div>
-            </div>
-            @error('preferred_time_to')<p class="text-xs text-red-600">{{ $message }}</p>@enderror
-
-            <div class="flex justify-end">
-                <button type="submit"
-                    class="rounded-md bg-gray-900 dark:bg-gray-100 px-4 py-2 text-sm font-semibold text-white dark:text-gray-900 hover:opacity-90 transition-opacity">
-                    Salva preferenze
-                </button>
-            </div>
-        </form>
     </div>
 </div>
 @endsection

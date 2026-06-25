@@ -9,6 +9,7 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\CheckboxList;
+use Filament\Forms\Components\ToggleButtons;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -126,46 +127,70 @@ class CustomerResource extends Resource
                 ->columns(2)
                 ->columnSpanFull(),
 
-            Textarea::make('internal_notes')
-                ->label('Note interne')
-                ->rows(8)
-                ->columnSpanFull()
-                ->helperText("Visibili solo nell'area admin. Non vengono mostrate al cliente."),
-
             Section::make('Preferenze prenotazione')
                 ->schema([
                     Group::make()
                         ->relationship('preferences')
+                        ->columns([
+                            'default' => 1,
+                            'md' => 4,
+                        ])
                         ->schema([
-                            CheckboxList::make('preferred_days')
+                            ToggleButtons::make('preferred_days')
                                 ->label('Giorni preferiti')
                                 ->options(function () {
                                     $dayLabels = [
-                                        0 => 'Domenica', 1 => 'Lunedì', 2 => 'Martedì',
-                                        3 => 'Mercoledì', 4 => 'Giovedì', 5 => 'Venerdì', 6 => 'Sabato',
+                                        0 => 'Dom',
+                                        1 => 'Lun',
+                                        2 => 'Mar',
+                                        3 => 'Mer',
+                                        4 => 'Gio',
+                                        5 => 'Ven',
+                                        6 => 'Sab',
                                     ];
+
                                     return collect(
                                         \App\Models\AvailabilityRule::where('is_available', true)
-                                            ->distinct()->pluck('day_of_week')->sort()->values()->all()
-                                    )->mapWithKeys(fn ($d) => [$d => $dayLabels[$d]])->all();
+                                            ->distinct()
+                                            ->pluck('day_of_week')
+                                            ->sort()
+                                            ->values()
+                                            ->all()
+                                    )->mapWithKeys(fn($d) => [$d => $dayLabels[$d]])->all();
                                 })
-                                ->columns(4)
-                                ->nullable(),
-                            Grid::make(2)->schema([
-                                Select::make('preferred_time_from')
-                                    ->label('Dalle')
-                                    ->options(self::timeOptions())
-                                    ->placeholder('Qualsiasi')
-                                    ->nullable(),
-                                Select::make('preferred_time_to')
-                                    ->label('Alle')
-                                    ->options(self::timeOptions())
-                                    ->placeholder('Qualsiasi')
-                                    ->nullable(),
-                            ]),
+                                ->multiple()
+                                ->inline()
+                                ->nullable()
+                                ->columnSpan([
+                                    'default' => 'full',
+                                    'md' => 2,
+                                ]),
+
+                            Grid::make([
+                                'default' => 1,
+                                'sm' => 2,
+                            ])
+                                ->schema([
+                                    Select::make('preferred_time_from')
+                                        ->label('Dalle')
+                                        ->options(self::timeOptions())
+                                        ->placeholder('Qualsiasi')
+                                        ->nullable(),
+
+                                    Select::make('preferred_time_to')
+                                        ->label('Alle')
+                                        ->options(self::timeOptions())
+                                        ->placeholder('Qualsiasi')
+                                        ->nullable(),
+                                ])
+                                ->columnSpan([
+                                    'default' => 'full',
+                                    'md' => 2,
+                                ]),
                         ]),
                 ])
                 ->collapsible()
+                ->collapsed()
                 ->columnSpanFull(),
 
             Section::make('Preferenze notifiche')
@@ -198,6 +223,12 @@ class CustomerResource extends Resource
                         ]),
                 ])
                 ->columnSpanFull(),
+
+            Textarea::make('internal_notes')
+                ->label('Note interne')
+                ->rows(8)
+                ->columnSpanFull()
+                ->helperText("Visibili solo nell'area admin. Non vengono mostrate al cliente."),
         ]);
     }
 
