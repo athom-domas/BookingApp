@@ -35,6 +35,10 @@ class StripeConnectAdminPage extends Page
 
     public function syncAccount(int $id): void
     {
+        if (! static::canAccess()) {
+            abort(403);
+        }
+
         $account = StripeConnectAccount::findOrFail($id);
         app(StripeConnectService::class)->syncFromStripe($account);
 

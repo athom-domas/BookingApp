@@ -22,11 +22,12 @@ class RefundService
             throw new \App\Exceptions\BookingException('Impossibile rimborsare: charge ID non ancora disponibile. Riprovare tra qualche istante.');
         }
 
-        $params = [
-            'charge'                 => $payment->stripe_charge_id,
-            'refund_application_fee' => true,
-            'reverse_transfer'       => true,
-        ];
+        $params = ['charge' => $payment->stripe_charge_id];
+
+        if ($payment->stripe_account_id !== null) {
+            $params['reverse_transfer']      = true;
+            $params['refund_application_fee'] = true;
+        }
 
         if ($amountCents !== null) {
             $params['amount'] = $amountCents;
@@ -34,14 +35,16 @@ class RefundService
 
         $stripeRefund = $this->stripe->refunds->create($params);
 
+        $isConnect = $payment->stripe_account_id !== null;
+
         $refundRecord = StripeRefund::create([
             'payment_id'             => $payment->id,
             'stripe_refund_id'       => $stripeRefund->id,
             'amount'                 => $stripeRefund->amount,
             'status'                 => $stripeRefund->status,
             'reason'                 => $stripeRefund->reason ?? null,
-            'refund_application_fee' => true,
-            'reverse_transfer'       => true,
+            'refund_application_fee' => $isConnect,
+            'reverse_transfer'       => $isConnect,
             'payload'                => $stripeRefund->toArray(),
         ]);
 

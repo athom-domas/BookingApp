@@ -19,7 +19,15 @@ class StripeConnectWebhookController extends Controller
     {
         $secret = config('services.stripe.connect_webhook_secret');
 
-        if ($secret) {
+        if (empty($secret)) {
+            if (app()->isProduction()) {
+                return response()->json(['error' => 'Webhook secret not configured'], 400);
+            }
+            $payload   = $request->all();
+            $eventId   = $payload['id'] ?? null;
+            $type      = $payload['type'] ?? null;
+            $accountId = $payload['account'] ?? null;
+        } else {
             try {
                 $event = Webhook::constructEvent(
                     $request->getContent(),
@@ -33,11 +41,6 @@ class StripeConnectWebhookController extends Controller
             $eventId   = $event->id;
             $type      = $event->type;
             $accountId = $event->account ?? null;
-        } else {
-            $payload   = $request->all();
-            $eventId   = $payload['id'] ?? null;
-            $type      = $payload['type'] ?? null;
-            $accountId = $payload['account'] ?? null;
         }
 
         if (! $eventId) {
