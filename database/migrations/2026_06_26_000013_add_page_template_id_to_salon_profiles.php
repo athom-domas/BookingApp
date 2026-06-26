@@ -15,7 +15,8 @@ return new class extends Migration {
     public function down(): void
     {
         Schema::table('salon_profiles', function (Blueprint $table) {
-            $table->dropForeignIdFor(\App\Models\PageTemplate::class);
+            $table->dropForeign(['page_template_id']);
+            $table->dropColumn('page_template_id');
         });
     }
 };
