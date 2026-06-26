@@ -88,7 +88,7 @@ class RefundService
 
             $totalRefunded = StripeRefund::where('payment_id', $payment->id)->sum('amount');
 
-            if ($totalRefunded >= $payment->amount) {
+            if ($totalRefunded >= (int) round((float) $payment->amount * 100)) {
                 $payment->update(['status' => 'refunded']);
                 PaymentRefunded::dispatch($payment);
             }
