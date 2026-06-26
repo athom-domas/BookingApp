@@ -91,6 +91,7 @@ class RefundService
             if ($totalRefunded >= (int) round((float) $payment->amount * 100)) {
                 $payment->update(['status' => 'refunded']);
                 PaymentRefunded::dispatch($payment);
+                break;
             }
         }
     }
