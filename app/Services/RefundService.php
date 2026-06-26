@@ -52,7 +52,7 @@ class RefundService
             'payload'                => $stripeRefund->toArray(),
         ]);
 
-        if ($stripeRefund->status === 'succeeded') {
+        if ($stripeRefund->status === 'succeeded' && $amountCents === null) {
             $payment->update(['status' => 'refunded']);
             PaymentRefunded::dispatch($payment);
         }
