@@ -8,7 +8,6 @@ use App\Models\PageTemplate;
 use App\PageBlocks\PageBlockRegistry;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
-use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -97,10 +96,14 @@ class PageTemplateResource extends Resource
                     }),
                 DeleteAction::make(),
             ])
-            ->bulkActions([DeleteBulkAction::make()]);
+            ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\DeleteBulkAction::make(),
+                ]),
+            ]);
     }
 
-    public static function getRelationManagers(): array
+    public static function getRelations(): array
     {
         return [RelationManagers\PageTemplateBlocksRelationManager::class];
     }
