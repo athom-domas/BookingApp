@@ -6,6 +6,7 @@ use App\Models\Business;
 use App\Models\Concerns\BelongsToBusiness;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Storage;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
@@ -22,6 +23,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
     'opening_hours',
     'instagram_url', 'facebook_url', 'tiktok_url', 'whatsapp_number',
     'email_greeting', 'email_footer_note', 'email_accent_color',
+    'page_template_id',
 ])]
 class SalonProfile extends Model implements HasMedia
 {
@@ -33,6 +35,11 @@ class SalonProfile extends Model implements HasMedia
             'opening_hours'       => 'array',
             'announcement_active' => 'boolean',
         ];
+    }
+
+    public function pageTemplate(): BelongsTo
+    {
+        return $this->belongsTo(PageTemplate::class);
     }
 
     public function bookingButtonLabel(): string
