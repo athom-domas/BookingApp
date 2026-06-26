@@ -42,6 +42,7 @@ return [
         'connect_webhook_secret'       => env('STRIPE_CONNECT_WEBHOOK_SECRET'),
         'payment_method_configuration' => env('STRIPE_PAYMENT_METHOD_CONFIGURATION'),
         'platform_fee_percent'         => env('STRIPE_PLATFORM_FEE_PERCENT', 2.5),
+        'super_admin_user_ids'         => env('SUPER_ADMIN_USER_IDS', ''),
     ],
 
     'twilio' => [

@@ -21,7 +21,7 @@ class StripeConnectAdminPage extends Page
         if (! auth()->user()?->isAdmin()) {
             return false;
         }
-        $superAdminIds = array_filter(array_map('intval', explode(',', env('SUPER_ADMIN_USER_IDS', ''))));
+        $superAdminIds = array_filter(array_map('intval', explode(',', config('services.stripe.super_admin_user_ids', ''))));
         if (empty($superAdminIds)) {
             return false;
         }

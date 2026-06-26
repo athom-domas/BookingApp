@@ -14,6 +14,8 @@ class StripeConnectController extends Controller
 
     public function start(Request $request): RedirectResponse
     {
+        abort_unless(auth()->user()?->isAdmin(), 403);
+
         $business = Business::findOrFail(Business::currentId());
         $account  = $this->connectService->createAccount($business);
 
@@ -34,7 +36,7 @@ class StripeConnectController extends Controller
             $this->connectService->syncFromStripe($account);
         }
 
-        return redirect(route('filament.admin.pages.stripe-connect'))
+        return redirect('/admin/stripe-connect-admin-page')
             ->with('status', 'Configurazione completata. Stripe sta verificando i tuoi dati.');
     }
 
@@ -45,6 +47,8 @@ class StripeConnectController extends Controller
 
     public function dashboardLink(Request $request): RedirectResponse
     {
+        abort_unless(auth()->user()?->isAdmin(), 403);
+
         $account = StripeConnectAccount::where('business_id', Business::currentId())
             ->whereNotNull('stripe_account_id')
             ->firstOrFail();

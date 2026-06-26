@@ -85,11 +85,13 @@ class RefundService
                 'reverse_transfer'       => false,
                 'payload'                => $refundData,
             ]);
-        }
 
-        if ($payment->status !== 'refunded') {
-            $payment->update(['status' => 'refunded']);
-            PaymentRefunded::dispatch($payment);
+            $totalRefunded = StripeRefund::where('payment_id', $payment->id)->sum('amount');
+
+            if ($totalRefunded >= $payment->amount) {
+                $payment->update(['status' => 'refunded']);
+                PaymentRefunded::dispatch($payment);
+            }
         }
     }
 }
