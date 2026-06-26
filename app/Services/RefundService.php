@@ -73,6 +73,7 @@ class RefundService
         }
 
         $refunds = $chargePayload['refunds']['data'] ?? [];
+        $alreadyMarkedRefunded = false;
         foreach ($refunds as $refundData) {
             $refundId = $refundData['id'] ?? null;
             if (! $refundId || StripeRefund::where('stripe_refund_id', $refundId)->exists()) {
@@ -90,12 +91,14 @@ class RefundService
                 'payload'                => $refundData,
             ]);
 
-            $totalRefunded = StripeRefund::where('payment_id', $payment->id)->sum('amount');
+            if (! $alreadyMarkedRefunded) {
+                $totalRefunded = StripeRefund::where('payment_id', $payment->id)->sum('amount');
 
-            if ($totalRefunded >= (int) round((float) $payment->amount * 100)) {
-                $payment->update(['status' => 'refunded']);
-                PaymentRefunded::dispatch($payment);
-                break;
+                if ($totalRefunded >= (int) round((float) $payment->amount * 100)) {
+                    $payment->update(['status' => 'refunded']);
+                    PaymentRefunded::dispatch($payment);
+                    $alreadyMarkedRefunded = true;
+                }
             }
         }
     }
