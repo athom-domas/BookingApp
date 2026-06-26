@@ -25,7 +25,7 @@ class SiteBuilderPage extends Page implements HasTable
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-globe-alt';
     protected static ?string $navigationLabel = 'Il mio sito';
     protected static ?string $title = 'Il mio sito';
-    protected static string $view = 'filament.pages.site-builder';
+    protected string $view = 'filament.pages.site-builder';
     protected static string|\UnitEnum|null $navigationGroup = 'Impostazioni';
     protected static ?int $navigationSort = 10;
 
