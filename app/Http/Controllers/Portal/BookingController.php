@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Portal\StoreBookingRequest;
 use App\Models\Appointment;
 use App\Models\Business;
+use App\Models\BusinessPageBlock;
 use App\Models\SalonProfile;
 use App\Models\SalonReview;
 use App\Models\Service;
@@ -19,6 +20,7 @@ use App\Services\PaymentService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 class BookingController extends Controller
@@ -35,15 +37,15 @@ class BookingController extends Controller
         }
 
         $businessId = app('current_business_id');
-        $business   = \App\Models\Business::find($businessId);
+        $business   = Business::find($businessId);
         $profile    = SalonProfile::current()->load('media');
 
-        $hasAnyBlocks = \App\Models\BusinessPageBlock::withoutGlobalScopes()
+        $hasAnyBlocks = BusinessPageBlock::withoutGlobalScopes()
             ->where('business_id', $businessId)
             ->exists();
 
         if (! $hasAnyBlocks) {
-            \Illuminate\Support\Facades\Log::warning('page-builder: business has no blocks, rendering legacy', [
+            Log::warning('page-builder: business has no blocks, rendering legacy', [
                 'business_id' => $businessId,
             ]);
             $services = Service::active()->orderBy('sort_order')->orderBy('name')->get();
@@ -64,7 +66,7 @@ class BookingController extends Controller
             return view('welcome-legacy', compact('profile', 'services', 'staff', 'reviews'));
         }
 
-        $blocks = \App\Models\BusinessPageBlock::withoutGlobalScopes()
+        $blocks = BusinessPageBlock::withoutGlobalScopes()
             ->where('business_id', $businessId)
             ->where('is_enabled', true)
             ->orderBy('sort_order')

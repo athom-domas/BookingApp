@@ -13,7 +13,7 @@
     @endforeach
 
     {{-- Sticky prenota button + page nav are not in blocks — render here --}}
-    <a href="{{ route('booking.create') }}" class="sf-sticky-book sf-btn">Prenota</a>
+    <a href="{{ route('booking.create') }}" class="sf-sticky-book sf-btn">{{ $profile->bookingButtonLabel() }}</a>
 @endsection
 
 @push('scripts')
