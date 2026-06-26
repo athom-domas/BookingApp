@@ -20,6 +20,17 @@ class StripeConnectPage extends Page
         return StripeConnectAccount::where('business_id', Business::currentId())->first();
     }
 
+    public function getEffectiveFeePercent(): float
+    {
+        $business = \App\Models\Business::find(\App\Models\Business::currentId());
+        if (! $business) {
+            return (float) config('services.stripe.platform_fee_percent', 2.5);
+        }
+        return $business->stripe_platform_fee_percent
+            ?? \App\Models\SystemSetting::getStripePlatformFeePercent()
+            ?? (float) config('services.stripe.platform_fee_percent', 2.5);
+    }
+
     public function getUiState(): string
     {
         $account = $this->getConnectAccount();

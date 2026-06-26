@@ -18,7 +18,14 @@ class StripeConnectAdminPage extends Page
 
     public static function canAccess(): bool
     {
-        return auth()->user()?->isAdmin() ?? false;
+        if (! auth()->user()?->isAdmin()) {
+            return false;
+        }
+        $superAdminIds = array_filter(array_map('intval', explode(',', env('SUPER_ADMIN_USER_IDS', ''))));
+        if (empty($superAdminIds)) {
+            return false;
+        }
+        return in_array(auth()->id(), $superAdminIds, true);
     }
 
     public function getAccounts()

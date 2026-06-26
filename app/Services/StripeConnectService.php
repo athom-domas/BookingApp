@@ -26,12 +26,16 @@ class StripeConnectService
             'metadata' => ['business_id' => $business->id],
         ]);
 
-        return StripeConnectAccount::create([
-            'business_id'       => $business->id,
-            'stripe_account_id' => $stripeAccount->id,
-            'mode'              => app()->environment('production') ? 'live' : 'test',
-            'status'            => 'pending',
-        ]);
+        try {
+            return StripeConnectAccount::create([
+                'business_id'       => $business->id,
+                'stripe_account_id' => $stripeAccount->id,
+                'mode'              => app()->environment('production') ? 'live' : 'test',
+                'status'            => 'pending',
+            ]);
+        } catch (\Illuminate\Database\UniqueConstraintViolationException) {
+            return StripeConnectAccount::where('business_id', $business->id)->firstOrFail();
+        }
     }
 
     public function createAccountLink(StripeConnectAccount $account, string $returnUrl, string $refreshUrl): string
@@ -55,6 +59,8 @@ class StripeConnectService
 
         if ($stripeAccount->charges_enabled) {
             $status = 'active';
+        } elseif ($requirements?->disabled_reason) {
+            $status = 'disabled';
         } elseif (! empty($requirements?->past_due)) {
             $status = 'restricted';
         } elseif ($stripeAccount->details_submitted) {

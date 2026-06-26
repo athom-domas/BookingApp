@@ -18,7 +18,7 @@
                         <li>I pagamenti online si attivano automaticamente</li>
                     </ol>
                     <p class="text-sm text-gray-500 dark:text-gray-400">
-                        Athomos trattiene il {{ number_format(config('services.stripe.platform_fee_percent', 2.5), 1) }}% come commissione su ogni pagamento online.<br>
+                        Athomos trattiene il {{ number_format($this->getEffectiveFeePercent(), 1) }}% come commissione su ogni pagamento online.<br>
                         Finché non configuri Stripe, i clienti possono prenotare solo con pagamento in salone.
                     </p>
                     <x-filament::button tag="a" href="{{ route('stripe.connect.start') }}" icon="heroicon-o-arrow-right">
@@ -63,7 +63,7 @@
                         </div>
                         <div class="flex gap-2">
                             <dt class="text-gray-500 dark:text-gray-400">Commissione piattaforma:</dt>
-                            <dd class="text-gray-900 dark:text-gray-100">{{ number_format(config('services.stripe.platform_fee_percent', 2.5), 1) }}%</dd>
+                            <dd class="text-gray-900 dark:text-gray-100">{{ number_format($this->getEffectiveFeePercent(), 1) }}%</dd>
                         </div>
                         @if ($account->onboarding_completed_at)
                         <div class="flex gap-2">

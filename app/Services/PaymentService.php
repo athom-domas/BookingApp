@@ -90,8 +90,13 @@ class PaymentService
 
         if ($type === 'payment_intent.succeeded') {
             $chargeId = $payload['data']['object']['latest_charge'] ?? null;
+            $appFeeId = $payload['data']['object']['application_fee'] ?? null;
             if ($chargeId) {
-                $payment->update(['stripe_charge_id' => $chargeId]);
+                $updates = ['stripe_charge_id' => $chargeId];
+                if ($appFeeId) {
+                    $updates['stripe_application_fee_id'] = $appFeeId;
+                }
+                $payment->update($updates);
             }
             $this->markPaymentCompleted($payment);
         } elseif ($type === 'payment_intent.payment_failed') {

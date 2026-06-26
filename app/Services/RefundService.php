@@ -18,6 +18,10 @@ class RefundService
             throw new BookingException('Solo i pagamenti completati possono essere rimborsati.');
         }
 
+        if (empty($payment->stripe_charge_id)) {
+            throw new \App\Exceptions\BookingException('Impossibile rimborsare: charge ID non ancora disponibile. Riprovare tra qualche istante.');
+        }
+
         $params = [
             'charge'                 => $payment->stripe_charge_id,
             'refund_application_fee' => true,
