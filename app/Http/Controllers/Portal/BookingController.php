@@ -34,23 +34,43 @@ class BookingController extends Controller
             return view('landing');
         }
 
-        $profile  = SalonProfile::current()->load('media');
-        $services = Service::active()->orderBy('sort_order')->orderBy('name')->get();
-        $staff    = User::whereHas('roles', fn ($q) => $q->where('name', 'staff')->where('guard_name', 'web'))
-            ->where('business_id', app('current_business_id'))
-            ->with('media')
-            ->where(fn ($q) => $q
-                ->whereNotNull('bio')
-                ->orWhereHas('media', fn ($m) => $m->where('collection_name', 'avatar'))
-            )
-            ->orderByRaw($this->staffOrderRaw())
+        $businessId = app('current_business_id');
+        $business   = \App\Models\Business::find($businessId);
+        $profile    = SalonProfile::current()->load('media');
+
+        $hasAnyBlocks = \App\Models\BusinessPageBlock::withoutGlobalScopes()
+            ->where('business_id', $businessId)
+            ->exists();
+
+        if (! $hasAnyBlocks) {
+            \Illuminate\Support\Facades\Log::warning('page-builder: business has no blocks, rendering legacy', [
+                'business_id' => $businessId,
+            ]);
+            $services = Service::active()->orderBy('sort_order')->orderBy('name')->get();
+            $staff    = User::whereHas('roles', fn ($q) => $q->where('name', 'staff')->where('guard_name', 'web'))
+                ->where('business_id', $businessId)
+                ->with('media')
+                ->where(fn ($q) => $q
+                    ->whereNotNull('bio')
+                    ->orWhereHas('media', fn ($m) => $m->where('collection_name', 'avatar'))
+                )
+                ->orderByRaw($this->staffOrderRaw())
+                ->orderBy('sort_order')
+                ->get();
+            $reviews = SystemSetting::isReviewsEnabled()
+                ? SalonReview::published()->ordered()->get()
+                : collect();
+
+            return view('welcome-legacy', compact('profile', 'services', 'staff', 'reviews'));
+        }
+
+        $blocks = \App\Models\BusinessPageBlock::withoutGlobalScopes()
+            ->where('business_id', $businessId)
+            ->where('is_enabled', true)
             ->orderBy('sort_order')
             ->get();
-        $reviews = SystemSetting::isReviewsEnabled()
-            ? SalonReview::published()->ordered()->get()
-            : collect();
 
-        return view('welcome', compact('profile', 'services', 'staff', 'reviews'));
+        return view('welcome', compact('business', 'blocks', 'profile'));
     }
 
     public function create(Request $request): View
