@@ -64,7 +64,7 @@ class PaymentService
             'stripe_transaction_id' => $paymentIntent->id,
             'stripe_response'       => $paymentIntent->toArray(),
             'stripe_account_id'     => $hasConnect ? $connectAccount->stripe_account_id : null,
-            'platform_fee_amount'   => $fee['cents'],
+            'platform_fee_amount'   => round($fee['cents'] / 100, 2),
             'platform_fee_percent'  => $fee['percent'],
         ]);
 

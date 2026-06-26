@@ -100,7 +100,13 @@ class StripeConnectService
             throw new \App\Exceptions\BookingException('Stripe non configurato. Verifica la chiave STRIPE_SECRET_KEY.');
         }
 
-        $link = $this->stripe->accounts->createLoginLink($account->stripe_account_id);
+        $link = $this->stripe->accountLinks->create([
+            'account'     => $account->stripe_account_id,
+            'refresh_url' => route('stripe.connect.refresh'),
+            'return_url'  => url('/admin/stripe-connect-page'),
+            'type'        => 'account_onboarding',
+        ]);
+
         return $link->url;
     }
 

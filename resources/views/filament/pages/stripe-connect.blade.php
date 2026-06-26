@@ -18,7 +18,7 @@
                         <li>I pagamenti online si attivano automaticamente</li>
                     </ol>
                     <p class="text-sm text-gray-500 dark:text-gray-400">
-                        Athomos trattiene il {{ number_format($this->getEffectiveFeePercent(), 1) }}% come commissione su ogni pagamento online.<br>
+                        BookingApp trattiene il {{ number_format($this->getEffectiveFeePercent(), 1) }}% come commissione su ogni pagamento online.<br>
                         Finché non configuri Stripe, i clienti possono prenotare solo con pagamento in salone.
                     </p>
                     <x-filament::button tag="a" href="{{ route('stripe.connect.start') }}" icon="heroicon-o-arrow-right">
@@ -98,7 +98,7 @@
                 <x-slot name="heading">Pagamenti online</x-slot>
                 <div class="space-y-4">
                     <x-filament::badge color="danger">Account disabilitato</x-filament::badge>
-                    <p class="text-sm text-gray-600 dark:text-gray-400">L'account Stripe è stato disabilitato. Contatta il supporto Athomos per assistenza.</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">L'account Stripe è stato disabilitato. Contatta il supporto BookingApp per assistenza.</p>
                 </div>
             </x-filament::section>
         @endif

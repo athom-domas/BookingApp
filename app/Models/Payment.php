@@ -19,6 +19,8 @@ class Payment extends Model
     {
         return [
             'amount'                      => 'decimal:2',
+            'platform_fee_amount'         => 'decimal:2',
+            'platform_fee_percent'        => 'float',
             'loyalty_original_amount'     => 'decimal:2',
             'loyalty_discount_percentage' => 'integer',
             'stripe_response'             => 'array',

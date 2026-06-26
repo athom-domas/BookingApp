@@ -62,7 +62,7 @@
             </p>
             <p class="text-sm text-gray-500">
                 Totale commissioni incassate:
-                <strong>€ {{ number_format(\App\Models\Payment::withoutGlobalScopes()->sum('platform_fee_amount') / 100, 2) }}</strong>
+                <strong>€ {{ number_format(\App\Models\Payment::withoutGlobalScopes()->sum('platform_fee_amount'), 2) }}</strong>
             </p>
         </x-filament::section>
     </div>
