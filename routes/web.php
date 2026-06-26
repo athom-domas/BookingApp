@@ -26,6 +26,11 @@ Route::middleware('storefront.access')->group(function () {
     })->name('booking.index');
     Route::get('/prenota', [BookingController::class, 'create'])->name('booking.create');
     Route::get('/portal/waitlist/create', [WaitlistController::class, 'create'])->name('portal.waitlist.create');
+
+    Route::get('/prodotti', [ProductController::class, 'index'])->name('shop.index');
+    Route::post('/prodotti/carrello', [ProductController::class, 'cartUpdate'])->name('shop.cart.update');
+    Route::delete('/prodotti/carrello/{productId}', [ProductController::class, 'cartRemove'])->name('shop.cart.remove');
+    Route::redirect('/portal/products', '/prodotti');
 });
 Route::get('/privacy', fn () => view('privacy'))->name('legal.privacy');
 Route::get('/termini', fn () => view('terms'))->name('legal.terms');
@@ -106,14 +111,11 @@ Route::middleware(['auth', 'tenant.user', 'tenant.status'])->group(function () {
     Route::post('/portal/waitlist', [WaitlistController::class, 'store'])->name('portal.waitlist.store');
     Route::delete('/portal/waitlist/{entry}', [WaitlistController::class, 'destroy'])->name('portal.waitlist.destroy');
 
-    Route::get('/portal/products', [ProductController::class, 'index'])->name('portal.products.index');
-    Route::post('/portal/cart', [ProductController::class, 'cartUpdate'])->name('portal.cart.update');
-    Route::delete('/portal/cart/{productId}', [ProductController::class, 'cartRemove'])->name('portal.cart.remove');
-    Route::get('/portal/products/checkout', [ProductController::class, 'checkout'])->name('portal.products.checkout');
-    Route::post('/portal/products/checkout', [ProductController::class, 'placeOrder'])->name('portal.products.order');
-    Route::get('/portal/products/{orderId}/payment', [ProductController::class, 'payment'])->name('portal.products.payment');
-    Route::get('/portal/products/{orderId}/stripe-confirm', [ProductController::class, 'confirmStripePayment'])->name('portal.products.stripe-confirm');
-    Route::get('/portal/products/{orderId}/confirmation', [ProductController::class, 'confirmation'])->name('portal.products.confirmation');
+    Route::get('/prodotti/checkout', [ProductController::class, 'checkout'])->name('shop.checkout');
+    Route::post('/prodotti/ordine', [ProductController::class, 'placeOrder'])->name('shop.order');
+    Route::get('/prodotti/ordine/{orderId}/pagamento', [ProductController::class, 'payment'])->name('shop.payment');
+    Route::get('/prodotti/ordine/{orderId}/stripe-confirm', [ProductController::class, 'confirmStripePayment'])->name('shop.stripe-confirm');
+    Route::get('/prodotti/ordine/{orderId}/conferma', [ProductController::class, 'confirmation'])->name('shop.confirmation');
 
     Route::get('/portal/orders', [ProductOrderController::class, 'index'])->name('portal.orders.index');
 });

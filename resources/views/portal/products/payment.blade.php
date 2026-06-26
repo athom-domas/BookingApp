@@ -35,7 +35,7 @@
         const { error } = await stripe.confirmPayment({
             elements,
             confirmParams: {
-                return_url: '{{ route('portal.products.stripe-confirm', $order->id) }}',
+                return_url: '{{ route('shop.stripe-confirm', $order->id) }}',
             },
         });
 

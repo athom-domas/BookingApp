@@ -46,7 +46,7 @@
     </div>
 
     <div class="flex justify-center gap-4">
-        <a href="{{ route('portal.products.index') }}" class="text-sm text-gray-600 hover:underline dark:text-gray-400">
+        <a href="{{ route('shop.index') }}" class="text-sm text-gray-600 hover:underline dark:text-gray-400">
             Continua gli acquisti
         </a>
         <a href="{{ route('portal.orders.index') }}" class="btn-primary rounded-md px-5 py-2 text-sm font-semibold text-white">

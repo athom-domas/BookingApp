@@ -121,6 +121,9 @@ $_radius      = $_radiusMap[$_border] ?? '0';
 
         <div class="sf-nav-right">
             {{-- Portal / auth links (desktop) --}}
+            @if (\App\Models\Product::inSale()->exists())
+                <a href="{{ route('shop.index') }}" class="sf-nav-link">Prodotti</a>
+            @endif
             @auth
                 <a href="{{ route('portal.appointments.index') }}" class="sf-nav-link">Area personale</a>
                 @if(auth()->user()->isAdmin() || auth()->user()->isStaff())
@@ -159,6 +162,9 @@ $_radius      = $_radiusMap[$_border] ?? '0';
             <button id="sf-mob-close" class="sf-mob-close" type="button">×</button>
         </div>
         {{-- portal / auth --}}
+        @if (\App\Models\Product::inSale()->exists())
+            <a href="{{ route('shop.index') }}">Prodotti</a>
+        @endif
         @auth
             <a href="{{ route('portal.appointments.index') }}">Appuntamenti</a>
             <a href="{{ route('portal.settings.index') }}">Impostazioni</a>

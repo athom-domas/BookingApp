@@ -49,7 +49,7 @@
         </table>
     </div>
 
-    <form method="POST" action="{{ route('portal.products.order') }}" class="space-y-6">
+    <form method="POST" action="{{ route('shop.order') }}" class="space-y-6">
         @csrf
 
         @if ($paymentMode === 'both')
@@ -82,7 +82,7 @@
         </div>
 
         <div class="flex items-center justify-between gap-4">
-            <a href="{{ route('portal.products.index') }}" class="text-sm text-gray-600 hover:underline dark:text-gray-400">
+            <a href="{{ route('shop.index') }}" class="text-sm text-gray-600 hover:underline dark:text-gray-400">
                 ← Torna ai prodotti
             </a>
             <button type="submit" class="btn-primary rounded-md px-6 py-2.5 text-sm font-semibold text-white">
