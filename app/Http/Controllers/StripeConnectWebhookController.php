@@ -47,16 +47,16 @@ class StripeConnectWebhookController extends Controller
             return response()->json(['received' => true]);
         }
 
-        if (StripeWebhookEvent::where('event_id', $eventId)->exists()) {
+        try {
+            StripeWebhookEvent::create([
+                'event_id'   => $eventId,
+                'account_id' => $accountId,
+                'type'       => $type,
+                'payload'    => $payload,
+            ]);
+        } catch (\Illuminate\Database\UniqueConstraintViolationException) {
             return response()->json(['received' => true]);
         }
-
-        StripeWebhookEvent::create([
-            'event_id'   => $eventId,
-            'account_id' => $accountId,
-            'type'       => $type,
-            'payload'    => $payload,
-        ]);
 
         if ($type === 'account.updated' && $accountId) {
             $account = StripeConnectAccount::where('stripe_account_id', $accountId)->first();
