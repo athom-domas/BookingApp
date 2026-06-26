@@ -27,8 +27,9 @@ class Business extends Model
     protected function casts(): array
     {
         return [
-            'status'        => BusinessStatus::class,
-            'trial_ends_at' => 'datetime',
+            'status'                    => BusinessStatus::class,
+            'trial_ends_at'             => 'datetime',
+            'stripe_platform_fee_percent' => 'float',
         ];
     }
 

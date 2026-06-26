@@ -14,6 +14,10 @@ class RefundService
 
     public function refund(Payment $payment, ?int $amountCents = null): StripeRefund
     {
+        if (! $this->stripe) {
+            throw new BookingException('Stripe non configurato. Verifica la chiave STRIPE_SECRET_KEY.');
+        }
+
         if ($payment->status !== 'completed') {
             throw new BookingException('Solo i pagamenti completati possono essere rimborsati.');
         }

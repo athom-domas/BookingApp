@@ -13,6 +13,10 @@ class StripeConnectService
 
     public function createAccount(Business $business): StripeConnectAccount
     {
+        if (! $this->stripe) {
+            throw new \App\Exceptions\BookingException('Stripe non configurato. Verifica la chiave STRIPE_SECRET_KEY.');
+        }
+
         $existing = StripeConnectAccount::where('business_id', $business->id)->first();
         if ($existing) {
             return $existing;
@@ -40,6 +44,10 @@ class StripeConnectService
 
     public function createAccountLink(StripeConnectAccount $account, string $returnUrl, string $refreshUrl): string
     {
+        if (! $this->stripe) {
+            throw new \App\Exceptions\BookingException('Stripe non configurato. Verifica la chiave STRIPE_SECRET_KEY.');
+        }
+
         $link = $this->stripe->accountLinks->create([
             'account'     => $account->stripe_account_id,
             'refresh_url' => $refreshUrl,
@@ -52,6 +60,10 @@ class StripeConnectService
 
     public function syncFromStripe(StripeConnectAccount $account): void
     {
+        if (! $this->stripe) {
+            throw new \App\Exceptions\BookingException('Stripe non configurato. Verifica la chiave STRIPE_SECRET_KEY.');
+        }
+
         $stripeAccount = $this->stripe->accounts->retrieve($account->stripe_account_id);
 
         $requirements = $stripeAccount->requirements ?? null;
@@ -84,6 +96,10 @@ class StripeConnectService
 
     public function createDashboardLink(StripeConnectAccount $account): string
     {
+        if (! $this->stripe) {
+            throw new \App\Exceptions\BookingException('Stripe non configurato. Verifica la chiave STRIPE_SECRET_KEY.');
+        }
+
         $link = $this->stripe->accounts->createLoginLink($account->stripe_account_id);
         return $link->url;
     }
