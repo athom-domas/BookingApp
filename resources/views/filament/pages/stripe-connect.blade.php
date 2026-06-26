@@ -61,10 +61,12 @@
                             <dt class="text-gray-500 dark:text-gray-400">Account:</dt>
                             <dd class="font-mono text-gray-900 dark:text-gray-100">{{ $account->stripe_account_id }}</dd>
                         </div>
+                        @if($this->getEffectiveFeePercent())
                         <div class="flex gap-2">
                             <dt class="text-gray-500 dark:text-gray-400">Commissione piattaforma:</dt>
                             <dd class="text-gray-900 dark:text-gray-100">{{ number_format($this->getEffectiveFeePercent(), 1) }}%</dd>
                         </div>
+                        @endif
                         @if ($account->onboarding_completed_at)
                         <div class="flex gap-2">
                             <dt class="text-gray-500 dark:text-gray-400">Attivo dal:</dt>
