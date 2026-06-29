@@ -166,6 +166,7 @@
     .sf-about-photos { grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 110px; }
     .sf-about-photo:first-child { grid-row: span 1; }
 }
+@media (max-width: 640px) { .sf-about-split-grid { grid-template-columns: 1fr; } }
 
 /* ── TEAM ─────────────────────────────────────────────────────────────────── */
 .sf-team-grid {

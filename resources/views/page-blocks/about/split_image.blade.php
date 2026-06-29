@@ -2,7 +2,7 @@
      $settings['alignment'], $block --}}
 <section id="about-{{ $block->id }}" class="sf-section">
     <div class="sf-inner">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:center;@media(max-width:640px){grid-template-columns:1fr}">
+        <div class="sf-about-split-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:center">
             @if(!empty($content['image']))
                 <div>
                     <img src="{{ \Illuminate\Support\Facades\Storage::url($content['image']) }}"

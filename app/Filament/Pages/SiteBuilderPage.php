@@ -54,7 +54,10 @@ class SiteBuilderPage extends Page implements HasTable
                     }),
                 ToggleColumn::make('is_enabled')
                     ->label('Visibile')
-                    ->disabled(fn ($record) => $record->is_required),
+                    ->disabled(fn (BusinessPageBlock $record): bool => $record->is_required)
+                    ->beforeStateUpdated(function (BusinessPageBlock $record, bool $state): void {
+                        abort_if($record->is_required, 403, 'Required blocks cannot be disabled.');
+                    }),
             ])
             ->actions([
                 \Filament\Tables\Actions\Action::make('edit')
@@ -89,11 +92,7 @@ class SiteBuilderPage extends Page implements HasTable
                         return $fields;
                     })
                     ->fillForm(function (BusinessPageBlock $record): array {
-                        return array_merge(
-                            ['variant' => $record->variant],
-                            $record->content ?? [],
-                            ['settings' => $record->settings ?? []]
-                        );
+                        return ['variant' => $record->variant, 'content' => $record->content ?? [], 'settings' => $record->settings ?? []];
                     })
                     ->action(function (BusinessPageBlock $record, array $data): void {
                         $blockClass = PageBlockRegistry::find($record->block_type);

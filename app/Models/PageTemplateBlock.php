@@ -19,12 +19,26 @@ class PageTemplateBlock extends Model
     protected function casts(): array
     {
         return [
-            'content'    => 'array',
-            'settings'   => 'array',
-            'is_enabled' => 'boolean',
-            'is_required'=> 'boolean',
-            'is_locked'  => 'boolean',
+            'content'     => 'array',
+            'settings'    => 'array',
+            'is_enabled'  => 'boolean',
+            'is_required' => 'boolean',
+            'is_locked'   => 'boolean',
         ];
+    }
+
+    public function getContentAttribute(mixed $value): array
+    {
+        if (is_array($value)) return $value;
+        if (is_string($value)) { $decoded = json_decode($value, true); return is_array($decoded) ? $decoded : []; }
+        return [];
+    }
+
+    public function getSettingsAttribute(mixed $value): array
+    {
+        if (is_array($value)) return $value;
+        if (is_string($value)) { $decoded = json_decode($value, true); return is_array($decoded) ? $decoded : []; }
+        return [];
     }
 
     public function pageTemplate(): BelongsTo
