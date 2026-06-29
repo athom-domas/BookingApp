@@ -7,7 +7,7 @@ use App\Models\PageTemplate;
 use App\PageBlocks\PageBlockRegistry;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Checkbox;
-use Filament\Forms\Components\Section;
+use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
