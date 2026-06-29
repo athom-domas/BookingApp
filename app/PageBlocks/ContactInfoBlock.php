@@ -5,6 +5,7 @@ namespace App\PageBlocks;
 use App\Models\Business;
 use App\Models\BusinessPageBlock;
 use App\Models\SalonProfile;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 
@@ -30,7 +31,7 @@ class ContactInfoBlock extends AbstractPageBlock
 
     public static function defaultSettings(): array
     {
-        return ['show_phone' => true, 'show_address' => true, 'show_hours' => true];
+        return ['show_phone' => true, 'show_address' => true, 'show_hours' => true, 'contacts_position' => 'right'];
     }
 
     public static function contentRules(): array
@@ -44,9 +45,10 @@ class ContactInfoBlock extends AbstractPageBlock
     public static function settingsRules(): array
     {
         return [
-            'settings.show_phone'   => ['boolean'],
-            'settings.show_address' => ['boolean'],
-            'settings.show_hours'   => ['boolean'],
+            'settings.show_phone'         => ['boolean'],
+            'settings.show_address'       => ['boolean'],
+            'settings.show_hours'         => ['boolean'],
+            'settings.contacts_position'  => ['in:right,below'],
         ];
     }
 
@@ -57,6 +59,10 @@ class ContactInfoBlock extends AbstractPageBlock
             Toggle::make('settings.show_phone')->label('Mostra telefono')->default(true),
             Toggle::make('settings.show_address')->label('Mostra indirizzo')->default(true),
             Toggle::make('settings.show_hours')->label('Mostra orari')->default(true),
+            Select::make('settings.contacts_position')
+                ->label('Posizione contatti')
+                ->options(['right' => 'Affiancati agli orari', 'below' => 'Sotto gli orari'])
+                ->default('right'),
         ];
     }
 

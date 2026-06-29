@@ -263,7 +263,7 @@
 .sf-contact-ico { color: var(--sf-gold); flex-shrink: 0; margin-top: 2px; opacity: 0.65; width: 16px; }
 .sf-contact-item a { color: inherit; text-decoration: none; }
 .sf-contact-item a:hover { color: var(--sf-gold); }
-.sf-map-wrap { margin-top: 24px; overflow: hidden; border: 1px solid var(--sf-border); height: 220px; position: relative; }
+.sf-map-wrap { overflow: hidden; border: 1px solid var(--sf-border); height: 240px; position: relative; }
 .sf-map-wrap iframe { width: 100%; height: 100%; border: 0; display: block; }
 .sf-map-placeholder { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; background: var(--sf-surface, #f5f0ea); cursor: pointer; border: 0; color: var(--sf-ink, #1C1410); font-size: 13px; }
 .sf-map-placeholder svg { color: var(--sf-ink, #1C1410); opacity: .55; }

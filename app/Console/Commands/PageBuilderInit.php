@@ -2,24 +2,24 @@
 
 namespace App\Console\Commands;
 
+use App\Models\BlockDefault;
 use App\Models\Business;
 use App\Models\BusinessPageBlock;
-use App\Models\PageTemplate;
-use App\Models\SalonProfile;
+use App\PageBlocks\PageBlockRegistry;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
 class PageBuilderInit extends Command
 {
     protected $signature   = 'page-builder:init {--business= : ID of a single business to initialize} {--force : Re-initialize businesses that already have blocks}';
-    protected $description = 'Initialize page builder blocks for businesses using the Default template snapshot.';
+    protected $description = 'Initialize page builder blocks for all businesses from block_defaults.';
 
     public function handle(): int
     {
-        $defaultTemplate = PageTemplate::where('is_default', true)->with('pageTemplateBlocks')->first();
+        $defaults = BlockDefault::orderBy('sort_order')->get();
 
-        if (! $defaultTemplate) {
-            $this->error('No default template found. Run: php artisan db:seed --class=PageBuilderSeeder');
+        if ($defaults->isEmpty()) {
+            $this->error('No block defaults found. Run: php artisan db:seed --class=PageBuilderSeeder');
             return self::FAILURE;
         }
 
@@ -54,33 +54,27 @@ class PageBuilderInit extends Command
 
         foreach ($businesses as $business) {
             try {
-                DB::transaction(function () use ($business, $defaultTemplate) {
+                DB::transaction(function () use ($business, $defaults): void {
                     if ($this->option('force')) {
                         BusinessPageBlock::withoutGlobalScopes()
                             ->where('business_id', $business->id)
                             ->delete();
                     }
 
-                    foreach ($defaultTemplate->pageTemplateBlocks as $templateBlock) {
+                    foreach ($defaults as $def) {
                         BusinessPageBlock::withoutGlobalScopes()->create([
-                            'business_id'            => $business->id,
-                            'page_template_id'       => $defaultTemplate->id,
-                            'page_template_block_id' => $templateBlock->id,
-                            'block_type'             => $templateBlock->block_type,
-                            'variant'                => $templateBlock->variant,
-                            'sort_order'             => $templateBlock->sort_order,
-                            'is_enabled'             => $templateBlock->is_enabled,
-                            'is_required'            => $templateBlock->is_required,
-                            'is_locked'              => $templateBlock->is_locked,
-                            'content'                => $templateBlock->content,
-                            'settings'               => $templateBlock->settings,
-                            'schema_version'         => $templateBlock->schema_version,
+                            'business_id'    => $business->id,
+                            'block_type'     => $def->block_type,
+                            'variant'        => $def->variant,
+                            'sort_order'     => $def->sort_order,
+                            'is_enabled'     => $def->is_enabled,
+                            'is_required'    => $def->is_required,
+                            'is_locked'      => $def->is_locked,
+                            'content'        => $def->content ?? [],
+                            'settings'       => $def->settings ?? [],
+                            'schema_version' => $def->schema_version,
                         ]);
                     }
-
-                    SalonProfile::withoutGlobalScopes()
-                        ->where('business_id', $business->id)
-                        ->update(['page_template_id' => $defaultTemplate->id]);
                 });
             } catch (\Throwable $e) {
                 $this->newLine();

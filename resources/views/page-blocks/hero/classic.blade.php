@@ -1,7 +1,9 @@
 {{-- Variables: $content['title'], $content['subtitle'], $content['cta_label'], $content['image'],
-     $settings['alignment'], $settings['show_cta'], $business, $block --}}
+     $settings['alignment'], $settings['show_cta'], $hero_preset_url, $business, $block --}}
 @php
-    $_heroImg = !empty($content['image']) ? \Illuminate\Support\Facades\Storage::url($content['image']) : null;
+    $_heroImg = !empty($content['image'])
+        ? \Illuminate\Support\Facades\Storage::url($content['image'])
+        : ($hero_preset_url ?? null);
 @endphp
 <section class="sf-hero {{ $_heroImg ? 'sf-hero--img' : 'sf-hero--no-img' }}">
     @if($_heroImg)

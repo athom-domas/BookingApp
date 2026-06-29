@@ -3,10 +3,8 @@
 namespace App\Filament\Pages;
 
 use App\Models\BusinessPageBlock;
-use App\Models\PageTemplate;
 use App\PageBlocks\PageBlockRegistry;
 use Filament\Actions\Action;
-use Filament\Forms\Components\Checkbox;
 use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
@@ -16,7 +14,6 @@ use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
-use Illuminate\Support\Facades\DB;
 
 class SiteBuilderPage extends Page implements HasTable
 {
@@ -137,62 +134,6 @@ class SiteBuilderPage extends Page implements HasTable
                 ->url(fn () => url('/'))
                 ->openUrlInNewTab(),
 
-            Action::make('changeTemplate')
-                ->label('Cambia template')
-                ->icon('heroicon-o-arrow-path')
-                ->color('warning')
-                ->form([
-                    Select::make('template_id')
-                        ->label('Template')
-                        ->options(fn () => PageTemplate::where('is_active', true)->pluck('name', 'id'))
-                        ->required(),
-                    Checkbox::make('confirm')
-                        ->label('Confermo: questa azione è irreversibile. Ordine, testi, immagini e varianti dei blocchi saranno reimpostati.')
-                        ->accepted()
-                        ->validationMessages(['accepted' => 'Devi confermare per procedere.']),
-                ])
-                ->modalHeading('Cambia template')
-                ->modalDescription('Cambiare template reimposterà l\'ordine, i testi, le immagini e le varianti dei blocchi. Questa azione non è reversibile.')
-                ->action(function (array $data): void {
-                    $businessId = app('current_business_id');
-                    $template   = PageTemplate::with('pageTemplateBlocks')->find($data['template_id']);
-
-                    if (! $template) {
-                        return;
-                    }
-
-                    DB::transaction(function () use ($businessId, $template): void {
-                        BusinessPageBlock::withoutGlobalScopes()
-                            ->where('business_id', $businessId)
-                            ->delete();
-
-                        foreach ($template->pageTemplateBlocks as $templateBlock) {
-                            BusinessPageBlock::withoutGlobalScopes()->create([
-                                'business_id'            => $businessId,
-                                'page_template_id'       => $template->id,
-                                'page_template_block_id' => $templateBlock->id,
-                                'block_type'             => $templateBlock->block_type,
-                                'variant'                => $templateBlock->variant,
-                                'sort_order'             => $templateBlock->sort_order,
-                                'is_enabled'             => $templateBlock->is_enabled,
-                                'is_required'            => $templateBlock->is_required,
-                                'is_locked'              => $templateBlock->is_locked,
-                                'content'                => $templateBlock->content,
-                                'settings'               => $templateBlock->settings,
-                                'schema_version'         => $templateBlock->schema_version,
-                            ]);
-                        }
-
-                        \App\Models\SalonProfile::withoutGlobalScopes()
-                            ->where('business_id', $businessId)
-                            ->update(['page_template_id' => $template->id]);
-                    });
-
-                    Notification::make()
-                        ->title('Template applicato. Le modifiche sono visibili subito sul sito.')
-                        ->success()
-                        ->send();
-                }),
         ];
     }
 

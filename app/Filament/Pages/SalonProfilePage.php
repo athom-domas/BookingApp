@@ -235,7 +235,7 @@ class SalonProfilePage extends Page
                             ->inline()
                             ->helperText('Il cliente può cambiare la modalità con il toggle sul sito.')
                             ->columnSpanFull(),
-                        Grid::make(3)->schema([
+                        Grid::make(2)->schema([
                             SpatieMediaLibraryFileUpload::make('logo')
                                 ->label('Logo (light mode)')
                                 ->collection('logo')
@@ -247,24 +247,7 @@ class SalonProfilePage extends Page
                                 ->image()
                                 ->maxSize(2048)
                                 ->helperText('Se non caricato, viene usato il logo principale.'),
-                            SpatieMediaLibraryFileUpload::make('cover')
-                                ->label('Immagine hero (carica la tua)')
-                                ->collection('cover')
-                                ->image()
-                                ->maxSize(5120)
-                                ->helperText('Ha priorità sulle immagini predefinite.'),
                         ]),
-                        Radio::make('hero_image_preset')
-                            ->label('Oppure scegli un\'immagine predefinita')
-                            ->options(
-                                array_merge(
-                                    ['' => 'Nessuna'],
-                                    array_map(fn($p) => $p['label'], \App\Models\SalonProfile::heroPresets())
-                                )
-                            )
-                            ->dehydrateStateUsing(fn($state) => $state ?: null)
-                            ->view('filament.forms.hero-preset-picker')
-                            ->columnSpanFull(),
                         Grid::make(2)->schema([
                             SpatieMediaLibraryFileUpload::make('favicon')
                                 ->label('Favicon')
