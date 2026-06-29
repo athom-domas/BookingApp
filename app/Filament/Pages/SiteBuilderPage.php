@@ -60,7 +60,7 @@ class SiteBuilderPage extends Page implements HasTable
                     }),
             ])
             ->actions([
-                \Filament\Tables\Actions\Action::make('edit')
+                Action::make('edit')
                     ->label('Modifica')
                     ->icon('heroicon-o-pencil')
                     ->slideOver()
