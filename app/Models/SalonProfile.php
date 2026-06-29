@@ -4,7 +4,9 @@ namespace App\Models;
 
 use App\Models\Business;
 use App\Models\Concerns\BelongsToBusiness;
+use Database\Factories\SalonProfileFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Storage;
@@ -27,7 +29,8 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 ])]
 class SalonProfile extends Model implements HasMedia
 {
-    use BelongsToBusiness, InteractsWithMedia;
+    /** @use HasFactory<SalonProfileFactory> */
+    use BelongsToBusiness, HasFactory, InteractsWithMedia;
 
     protected function casts(): array
     {

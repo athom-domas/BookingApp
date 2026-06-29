@@ -62,3 +62,41 @@ it('PageBuilderSeeder is idempotent', function () {
     expect(PageTemplate::where('slug', 'default')->count())->toBe(1);
     expect(PageTemplate::count())->toBe(3);
 });
+
+use App\Models\Business;
+use App\Models\BusinessPageBlock;
+use App\Models\SalonProfile;
+
+it('page-builder:init creates blocks for uninitialized businesses', function () {
+    $this->seed(PageBuilderSeeder::class);
+    $business = Business::factory()->create();
+    SalonProfile::factory()->create(['business_id' => $business->id]);
+
+    $this->artisan('page-builder:init')->assertSuccessful();
+
+    expect(BusinessPageBlock::withoutGlobalScopes()->where('business_id', $business->id)->count())->toBeGreaterThan(0);
+});
+
+it('page-builder:init skips already initialized businesses', function () {
+    $this->seed(PageBuilderSeeder::class);
+    $business = Business::factory()->create();
+    SalonProfile::factory()->create(['business_id' => $business->id]);
+    BusinessPageBlock::factory()->create(['business_id' => $business->id]);
+
+    $this->artisan('page-builder:init')->assertSuccessful();
+
+    expect(BusinessPageBlock::withoutGlobalScopes()->where('business_id', $business->id)->count())->toBe(1);
+});
+
+it('page-builder:init --business targets a single business', function () {
+    $this->seed(PageBuilderSeeder::class);
+    $b1 = Business::factory()->create();
+    $b2 = Business::factory()->create();
+    SalonProfile::factory()->create(['business_id' => $b1->id]);
+    SalonProfile::factory()->create(['business_id' => $b2->id]);
+
+    $this->artisan("page-builder:init --business={$b1->id}")->assertSuccessful();
+
+    expect(BusinessPageBlock::withoutGlobalScopes()->where('business_id', $b1->id)->count())->toBeGreaterThan(0);
+    expect(BusinessPageBlock::withoutGlobalScopes()->where('business_id', $b2->id)->count())->toBe(0);
+});
