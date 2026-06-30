@@ -598,4 +598,46 @@ a.sf-svc-book-badge:hover {
     .sf-accordion-body-grid,
     .sf-accordion-chevron { transition: none; }
 }
+
+/* ── PAGE NAV ────────────────────────────────────────────────────────────────── */
+.sf-page-nav {
+    position: sticky;
+    top: var(--sf-nav-h, 65px);
+    z-index: 99;
+    display: flex;
+    overflow-x: auto;
+    white-space: nowrap;
+    scrollbar-width: none;
+    background: var(--sf-bg);
+    border-bottom: 1px solid var(--sf-border);
+    padding: 0 48px;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+}
+.sf-page-nav::-webkit-scrollbar { display: none; }
+
+.sf-page-nav-link {
+    display: inline-block;
+    padding: 12px 0;
+    margin-right: 28px;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--sf-body);
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+    transition: color 0.2s, border-color 0.2s;
+    flex-shrink: 0;
+}
+.sf-page-nav-link:last-child { margin-right: 0; }
+.sf-page-nav-link:hover,
+.sf-page-nav-link.is-active {
+    color: var(--sf-gold);
+    border-bottom-color: var(--sf-gold);
+}
+
+@media (max-width: 640px) {
+    .sf-page-nav { padding: 0 20px; }
+    .sf-page-nav-link { margin-right: 20px; }
+}
 </style>
