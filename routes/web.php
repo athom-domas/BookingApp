@@ -25,15 +25,14 @@ Route::middleware('storefront.access')->group(function () {
         return app(BookingController::class)->index();
     })->name('booking.index');
     Route::get('/prenota', [BookingController::class, 'create'])->name('booking.create');
-    Route::get('/portal/waitlist/create', [WaitlistController::class, 'create'])->name('portal.waitlist.create');
+    Route::get('/portale/waitlist/create', [WaitlistController::class, 'create'])->name('portal.waitlist.create');
 
     Route::get('/prodotti', [ProductController::class, 'index'])->name('shop.index');
     Route::post('/prodotti/carrello', [ProductController::class, 'cartUpdate'])->name('shop.cart.update');
     Route::delete('/prodotti/carrello/{productId}', [ProductController::class, 'cartRemove'])->name('shop.cart.remove');
-    Route::redirect('/portal/products', '/prodotti');
 });
-Route::get('/privacy', fn () => view('privacy'))->name('legal.privacy');
-Route::get('/termini', fn () => view('terms'))->name('legal.terms');
+Route::get('/privacy', fn() => view('privacy'))->name('legal.privacy');
+Route::get('/termini', fn() => view('terms'))->name('legal.terms');
 Route::get('/contatti', [ContactController::class, 'create'])->name('contact');
 Route::post('/contatti', [ContactController::class, 'store'])->name('contact.store')->middleware('throttle:5,1');
 Route::post('/stripe/webhook', StripeWebhookController::class)->name('stripe.webhook');
@@ -89,33 +88,33 @@ Route::middleware(['auth', 'tenant.user', 'tenant.status'])->group(function () {
 
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 
-    Route::get('/portal', [PortalAppointmentController::class, 'dashboard'])->name('portal.dashboard');
-    Route::get('/portal/appointments', [PortalAppointmentController::class, 'index'])->name('portal.appointments.index');
-    Route::get('/portal/appointments/{appointment}', [PortalAppointmentController::class, 'show'])->name('portal.appointments.show');
-    Route::post('/portal/bookings', [BookingController::class, 'store'])->name('portal.bookings.store');
-    Route::get('/portal/appointments/{appointment}/payment', [PortalAppointmentController::class, 'payment'])->name('portal.appointments.payment');
-    Route::post('/portal/appointments/{appointment}/payment/confirm', [PortalAppointmentController::class, 'confirmPayment'])->name('portal.appointments.payment.confirm');
-    Route::post('/portal/appointments/{appointment}/payment/discount', [PortalAppointmentController::class, 'applyDiscount'])->name('portal.appointments.payment.discount');
-    Route::delete('/portal/appointments/{appointment}/payment/discount', [PortalAppointmentController::class, 'removeDiscount'])->name('portal.appointments.payment.discount.remove');
-    Route::post('/portal/appointments/{appointment}/cancel', [PortalAppointmentController::class, 'cancel'])->name('portal.appointments.cancel');
-    Route::get('/portal/appointments/{appointment}/review', [ReviewController::class, 'create'])->name('portal.appointments.review');
-    Route::post('/portal/reviews', [ReviewController::class, 'store'])->name('portal.reviews.store');
-    Route::get('/portal/settings', [SettingsController::class, 'index'])->name('portal.settings.index');
-    Route::patch('/portal/settings/profile', [SettingsController::class, 'updateProfile'])->name('portal.settings.profile');
-    Route::patch('/portal/settings/notifications', [SettingsController::class, 'updateNotifications'])->name('portal.settings.notifications');
-    Route::patch('/portal/settings/communications', [SettingsController::class, 'updateCommunications'])->name('portal.settings.communications');
-    Route::patch('/portal/settings/booking-preferences', [SettingsController::class, 'updateBookingPreferences'])->name('portal.settings.booking-preferences');
-    Route::patch('/portal/settings/preferences', [SettingsController::class, 'updatePreferences'])->name('portal.settings.preferences');
-    Route::post('/portal/settings/booking-preferences/dismiss', [SettingsController::class, 'dismissBookingPreferencePrompt'])->name('portal.settings.booking-preferences.dismiss');
+    Route::get('/portale', [PortalAppointmentController::class, 'dashboard'])->name('portal.dashboard');
+    Route::get('/portale/appuntamenti', [PortalAppointmentController::class, 'index'])->name('portal.appointments.index');
+    Route::get('/portale/appuntamenti/{appointment}', [PortalAppointmentController::class, 'show'])->name('portal.appointments.show');
+    Route::post('/portale/bookings', [BookingController::class, 'store'])->name('portal.bookings.store');
+    Route::get('/portale/appuntamenti/{appointment}/payment', [PortalAppointmentController::class, 'payment'])->name('portal.appointments.payment');
+    Route::post('/portale/appuntamenti/{appointment}/payment/confirm', [PortalAppointmentController::class, 'confirmPayment'])->name('portal.appointments.payment.confirm');
+    Route::post('/portale/appuntamenti/{appointment}/payment/discount', [PortalAppointmentController::class, 'applyDiscount'])->name('portal.appointments.payment.discount');
+    Route::delete('/portale/appuntamenti/{appointment}/payment/discount', [PortalAppointmentController::class, 'removeDiscount'])->name('portal.appointments.payment.discount.remove');
+    Route::post('/portale/appuntamenti/{appointment}/cancel', [PortalAppointmentController::class, 'cancel'])->name('portal.appointments.cancel');
+    Route::get('/portale/appuntamenti/{appointment}/review', [ReviewController::class, 'create'])->name('portal.appointments.review');
+    Route::post('/portale/reviews', [ReviewController::class, 'store'])->name('portal.reviews.store');
+    Route::get('/portale/impostazioni', [SettingsController::class, 'index'])->name('portal.settings.index');
+    Route::patch('/portale/impostazioni/profile', [SettingsController::class, 'updateProfile'])->name('portal.settings.profile');
+    Route::patch('/portale/impostazioni/notifications', [SettingsController::class, 'updateNotifications'])->name('portal.settings.notifications');
+    Route::patch('/portale/impostazioni/communications', [SettingsController::class, 'updateCommunications'])->name('portal.settings.communications');
+    Route::patch('/portale/impostazioni/booking-preferences', [SettingsController::class, 'updateBookingPreferences'])->name('portal.settings.booking-preferences');
+    Route::patch('/portale/impostazioni/preferences', [SettingsController::class, 'updatePreferences'])->name('portal.settings.preferences');
+    Route::post('/portale/impostazioni/booking-preferences/dismiss', [SettingsController::class, 'dismissBookingPreferencePrompt'])->name('portal.settings.booking-preferences.dismiss');
 
-    Route::post('/portal/waitlist', [WaitlistController::class, 'store'])->name('portal.waitlist.store');
-    Route::delete('/portal/waitlist/{entry}', [WaitlistController::class, 'destroy'])->name('portal.waitlist.destroy');
+    Route::post('/portale/waitlist', [WaitlistController::class, 'store'])->name('portal.waitlist.store');
+    Route::delete('/portale/waitlist/{entry}', [WaitlistController::class, 'destroy'])->name('portal.waitlist.destroy');
 
-    Route::get('/prodotti/checkout', [ProductController::class, 'checkout'])->name('shop.checkout');
-    Route::post('/prodotti/ordine', [ProductController::class, 'placeOrder'])->name('shop.order');
-    Route::get('/prodotti/ordine/{orderId}/pagamento', [ProductController::class, 'payment'])->name('shop.payment');
-    Route::get('/prodotti/ordine/{orderId}/stripe-confirm', [ProductController::class, 'confirmStripePayment'])->name('shop.stripe-confirm');
-    Route::get('/prodotti/ordine/{orderId}/conferma', [ProductController::class, 'confirmation'])->name('shop.confirmation');
+    Route::get('/checkout', [ProductController::class, 'checkout'])->name('shop.checkout');
+    Route::post('/ordine', [ProductController::class, 'placeOrder'])->name('shop.order');
+    Route::get('/ordine/{orderId}/pagamento', [ProductController::class, 'payment'])->name('shop.payment');
+    Route::get('/ordine/{orderId}/stripe-confirm', [ProductController::class, 'confirmStripePayment'])->name('shop.stripe-confirm');
+    Route::get('/ordine/{orderId}/conferma', [ProductController::class, 'confirmation'])->name('shop.confirmation');
 
-    Route::get('/portal/orders', [ProductOrderController::class, 'index'])->name('portal.orders.index');
+    Route::get('/portale/ordini', [ProductOrderController::class, 'index'])->name('portal.orders.index');
 });

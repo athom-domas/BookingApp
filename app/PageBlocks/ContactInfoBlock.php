@@ -19,8 +19,8 @@ class ContactInfoBlock extends AbstractPageBlock
     public static function variants(): array
     {
         return [
-            'simple'   => ['label' => 'Semplice',      'description' => 'Orari, telefono e indirizzo'],
-            'with_map' => ['label' => 'Con mappa',     'description' => 'Informazioni + mappa Google integrata'],
+            'simple'   => ['label' => 'Semplice',   'description' => 'Orari, telefono e indirizzo',             'preview' => '<svg viewBox="0 0 160 90" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="160" height="90" fill="#f8fafc" rx="3"/><rect x="20" y="12" width="60" height="7" fill="#334155" rx="2"/><rect x="20" y="26" width="55" height="4" fill="#cbd5e1" rx="1"/><rect x="20" y="34" width="50" height="4" fill="#cbd5e1" rx="1"/><rect x="20" y="42" width="55" height="4" fill="#cbd5e1" rx="1"/><rect x="20" y="50" width="45" height="4" fill="#cbd5e1" rx="1"/><rect x="90" y="26" width="50" height="4" fill="#cbd5e1" rx="1"/><rect x="90" y="34" width="45" height="4" fill="#cbd5e1" rx="1"/><rect x="90" y="42" width="50" height="4" fill="#cbd5e1" rx="1"/></svg>'],
+            'with_map' => ['label' => 'Con mappa', 'description' => 'Informazioni + mappa Google integrata', 'preview' => '<svg viewBox="0 0 160 90" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="160" height="90" fill="#f8fafc" rx="3"/><rect x="20" y="8" width="60" height="7" fill="#334155" rx="2"/><rect x="12" y="22" width="45" height="3" fill="#cbd5e1" rx="1"/><rect x="12" y="29" width="42" height="3" fill="#cbd5e1" rx="1"/><rect x="12" y="36" width="45" height="3" fill="#cbd5e1" rx="1"/><rect x="12" y="43" width="38" height="3" fill="#cbd5e1" rx="1"/><rect x="72" y="22" width="76" height="3" fill="#cbd5e1" rx="1"/><rect x="72" y="29" width="68" height="3" fill="#cbd5e1" rx="1"/><rect x="72" y="38" width="76" height="44" fill="#94a3b8" rx="2"/><circle cx="110" cy="60" r="6" fill="#ef4444"/><circle cx="110" cy="60" r="2.5" fill="white"/></svg>'],
         ];
     }
 
@@ -52,7 +52,7 @@ class ContactInfoBlock extends AbstractPageBlock
         ];
     }
 
-    public static function filamentFields(): array
+    public static function filamentFields(?\App\Models\BusinessPageBlock $record = null): array
     {
         return [
             TextInput::make('content.title')->label('Titolo sezione')->required()->maxLength(80),

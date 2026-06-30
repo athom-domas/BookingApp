@@ -85,7 +85,7 @@ class ProductController extends Controller
         $total       = $cartItems->sum(fn ($item) => $item['product']->price * $item['quantity']);
         $paymentMode = SystemSetting::getPaymentMode();
 
-        return view('portal.products.checkout', compact('cartItems', 'total', 'paymentMode'));
+        return view('shop.checkout', compact('cartItems', 'total', 'paymentMode'));
     }
 
     public function placeOrder(Request $request): RedirectResponse

@@ -18,7 +18,7 @@
         </div>
 
         @if ($errors->any())
-            <div style="background:rgba(220,38,38,0.08);border:1px solid rgba(220,38,38,0.2);border-radius:var(--sf-radius);padding:14px 18px;margin-bottom:24px;color:#dc2626;font-size:0.9rem">
+            <div style="background:rgba(220,38,38,0.08);border:1px solid rgba(220,38,38,0.2);border-radius:min(var(--sf-radius),12px);padding:14px 18px;margin-bottom:24px;color:#dc2626;font-size:0.9rem">
                 {{ $errors->first() }}
             </div>
         @endif
@@ -29,7 +29,7 @@
             <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:24px">
                 @foreach ($products as $product)
                     @php $inCart = $cartItems->firstWhere('product.id', $product->id); @endphp
-                    <div style="background:var(--sf-surface);border:1px solid var(--sf-border);border-radius:var(--sf-radius);overflow:hidden;display:flex;flex-direction:column">
+                    <div style="background:var(--sf-surface);border:1px solid var(--sf-border);border-radius:min(var(--sf-radius),16px);overflow:hidden;display:flex;flex-direction:column">
                         @if ($product->hasMedia('photo'))
                             <img src="{{ $product->getFirstMediaUrl('photo', 'thumb') }}" alt="{{ $product->name }}"
                                  style="width:100%;height:220px;object-fit:cover;display:block">
@@ -46,37 +46,41 @@
                                     <p style="color:var(--sf-body);font-size:0.875rem;margin:0;line-height:1.5">{{ $product->description }}</p>
                                 @endif
                             </div>
-                            <p style="font-size:1.2rem;font-weight:700;color:var(--sf-accent);margin:0">
-                                {{ number_format($product->price, 2, ',', '.') }} €
-                            </p>
-
-                            @if ($product->stock === 0)
-                                <span style="display:inline-block;background:var(--sf-bg-alt);border:1px solid var(--sf-border);border-radius:100px;padding:4px 14px;font-size:0.8rem;color:var(--sf-body)">
-                                    Esaurito
-                                </span>
-                            @else
-                                <form method="POST" action="{{ route('shop.cart.update') }}" style="margin-top:auto">
-                                    @csrf
-                                    <input type="hidden" name="product_id" value="{{ $product->id }}">
-                                    <div style="display:flex;align-items:center;gap:10px">
-                                        <input type="number" name="quantity" value="{{ $inCart['quantity'] ?? 1 }}"
-                                               min="1" max="{{ $product->stock }}"
-                                               style="width:72px;border:1px solid var(--sf-border);border-radius:var(--sf-radius);padding:8px 10px;font-size:0.875rem;background:var(--sf-bg);color:var(--sf-ink)">
-                                        <button type="submit" class="sf-btn" style="flex:1;text-align:center">
-                                            {{ $inCart ? 'Aggiorna' : 'Aggiungi' }}
-                                        </button>
-                                    </div>
-                                </form>
+                            <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px">
+                                <p style="font-size:1.2rem;font-weight:700;color:var(--sf-accent);margin:0">
+                                    {{ number_format($product->price, 2, ',', '.') }} €
+                                </p>
                                 @if ($inCart)
-                                    <form method="POST" action="{{ route('shop.cart.remove', $product->id) }}">
+                                    <form method="POST" action="{{ route('shop.cart.remove', $product->id) }}" style="display:inline;flex-shrink:0">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" style="background:none;border:none;cursor:pointer;font-size:0.8rem;color:var(--sf-body);text-decoration:underline;padding:0">
-                                            Rimuovi dal carrello
+                                        <button type="submit" style="background:none;border:none;cursor:pointer;font-size:0.78rem;color:var(--sf-muted);padding:0;text-decoration:underline;text-underline-offset:2px">
+                                            Rimuovi
                                         </button>
                                     </form>
                                 @endif
-                            @endif
+                            </div>
+
+                            <div style="margin-top:auto">
+                                @if ($product->stock === 0)
+                                    <span style="display:inline-block;background:var(--sf-bg-alt);border:1px solid var(--sf-border);border-radius:100px;padding:6px 14px;font-size:0.8rem;color:var(--sf-body)">
+                                        Esaurito
+                                    </span>
+                                @else
+                                    <form method="POST" action="{{ route('shop.cart.update') }}">
+                                        @csrf
+                                        <input type="hidden" name="product_id" value="{{ $product->id }}">
+                                        <div style="display:flex;align-items:center;gap:10px">
+                                            <input type="number" name="quantity" value="{{ $inCart['quantity'] ?? 1 }}"
+                                                   min="1" max="{{ $product->stock }}"
+                                                   style="width:72px;border:1px solid var(--sf-border);border-radius:min(var(--sf-radius),20px);padding:8px 10px;font-size:0.875rem;background:var(--sf-bg);color:var(--sf-ink)">
+                                            <button type="submit" class="sf-btn" style="flex:1;text-align:center">
+                                                {{ $inCart ? 'Aggiorna' : 'Aggiungi' }}
+                                            </button>
+                                        </div>
+                                    </form>
+                                @endif
+                            </div>
                         </div>
                     </div>
                 @endforeach

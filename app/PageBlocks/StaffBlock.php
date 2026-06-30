@@ -18,9 +18,9 @@ class StaffBlock extends AbstractPageBlock
     public static function variants(): array
     {
         return [
-            'cards'       => ['label' => 'Card con foto',     'description' => 'Card con avatar, nome e bio'],
-            'simple_list' => ['label' => 'Lista semplice',    'description' => 'Elenco nomi e ruoli senza foto'],
-            'editorial'   => ['label' => 'Layout editoriale', 'description' => 'Foto grande con bio estesa'],
+            'cards'       => ['label' => 'Card con foto',     'description' => 'Card con avatar, nome e bio',    'preview' => '<svg viewBox="0 0 160 90" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="160" height="90" fill="#f8fafc" rx="3"/><rect x="8" y="8" width="44" height="74" fill="white" stroke="#e2e8f0" stroke-width="1" rx="2"/><rect x="8" y="8" width="44" height="30" fill="#94a3b8" rx="2"/><circle cx="30" cy="38" r="10" fill="#e0e7ef" stroke="white" stroke-width="2"/><rect x="13" y="52" width="34" height="5" fill="#334155" rx="1"/><rect x="16" y="61" width="28" height="3" fill="#cbd5e1" rx="1"/><rect x="13" y="68" width="34" height="3" fill="#e2e8f0" rx="1"/><rect x="58" y="8" width="44" height="74" fill="white" stroke="#e2e8f0" stroke-width="1" rx="2"/><rect x="58" y="8" width="44" height="30" fill="#94a3b8" rx="2"/><circle cx="80" cy="38" r="10" fill="#e0e7ef" stroke="white" stroke-width="2"/><rect x="63" y="52" width="34" height="5" fill="#334155" rx="1"/><rect x="66" y="61" width="28" height="3" fill="#cbd5e1" rx="1"/><rect x="63" y="68" width="34" height="3" fill="#e2e8f0" rx="1"/><rect x="108" y="8" width="44" height="74" fill="white" stroke="#e2e8f0" stroke-width="1" rx="2"/><rect x="108" y="8" width="44" height="30" fill="#94a3b8" rx="2"/><circle cx="130" cy="38" r="10" fill="#e0e7ef" stroke="white" stroke-width="2"/><rect x="113" y="52" width="34" height="5" fill="#334155" rx="1"/><rect x="116" y="61" width="28" height="3" fill="#cbd5e1" rx="1"/><rect x="113" y="68" width="34" height="3" fill="#e2e8f0" rx="1"/></svg>'],
+            'simple_list' => ['label' => 'Lista semplice',    'description' => 'Elenco con foto, nome e bio',   'preview' => '<svg viewBox="0 0 160 90" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="160" height="90" fill="#f8fafc" rx="3"/><rect x="12" y="10" width="136" height="14" fill="white" stroke="#e2e8f0" stroke-width="1" rx="2"/><circle cx="22" cy="17" r="5" fill="#e0e7ef"/><rect x="32" y="14" width="55" height="5" fill="#334155" rx="1"/><rect x="100" y="15" width="38" height="3" fill="#cbd5e1" rx="1"/><rect x="12" y="28" width="136" height="14" fill="white" stroke="#e2e8f0" stroke-width="1" rx="2"/><circle cx="22" cy="35" r="5" fill="#e0e7ef"/><rect x="32" y="32" width="50" height="5" fill="#334155" rx="1"/><rect x="100" y="33" width="42" height="3" fill="#cbd5e1" rx="1"/><rect x="12" y="46" width="136" height="14" fill="white" stroke="#e2e8f0" stroke-width="1" rx="2"/><circle cx="22" cy="53" r="5" fill="#e0e7ef"/><rect x="32" y="50" width="55" height="5" fill="#334155" rx="1"/><rect x="100" y="51" width="38" height="3" fill="#cbd5e1" rx="1"/><rect x="12" y="64" width="136" height="14" fill="white" stroke="#e2e8f0" stroke-width="1" rx="2"/><circle cx="22" cy="71" r="5" fill="#e0e7ef"/><rect x="32" y="68" width="48" height="5" fill="#334155" rx="1"/><rect x="100" y="69" width="40" height="3" fill="#cbd5e1" rx="1"/></svg>'],
+            'editorial'   => ['label' => 'Layout editoriale', 'description' => 'Griglia 3 colonne con cerchio foto e bio', 'preview' => '<svg viewBox="0 0 160 90" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="160" height="90" fill="#f8fafc" rx="3"/><circle cx="14" cy="22" r="9" fill="#94a3b8"/><rect x="27" y="14" width="24" height="5" fill="#334155" rx="1"/><rect x="27" y="22" width="20" height="3" fill="#cbd5e1" rx="1"/><rect x="27" y="28" width="16" height="3" fill="#cbd5e1" rx="1"/><circle cx="67" cy="22" r="9" fill="#94a3b8"/><rect x="80" y="14" width="24" height="5" fill="#334155" rx="1"/><rect x="80" y="22" width="20" height="3" fill="#cbd5e1" rx="1"/><rect x="80" y="28" width="16" height="3" fill="#cbd5e1" rx="1"/><circle cx="120" cy="22" r="9" fill="#94a3b8"/><rect x="133" y="14" width="20" height="5" fill="#334155" rx="1"/><rect x="133" y="22" width="16" height="3" fill="#cbd5e1" rx="1"/><rect x="133" y="28" width="14" height="3" fill="#cbd5e1" rx="1"/><circle cx="14" cy="65" r="9" fill="#94a3b8"/><rect x="27" y="57" width="24" height="5" fill="#334155" rx="1"/><rect x="27" y="65" width="20" height="3" fill="#cbd5e1" rx="1"/><rect x="27" y="71" width="16" height="3" fill="#cbd5e1" rx="1"/></svg>'],
         ];
     }
 
@@ -37,7 +37,7 @@ class StaffBlock extends AbstractPageBlock
         ];
     }
 
-    public static function filamentFields(): array
+    public static function filamentFields(?\App\Models\BusinessPageBlock $record = null): array
     {
         return [
             TextInput::make('content.title')->label('Titolo sezione')->required()->maxLength(80),
@@ -50,7 +50,6 @@ class StaffBlock extends AbstractPageBlock
         $staff = User::withoutGlobalScopes()
             ->where('business_id', $business->id)
             ->whereHas('roles', fn ($q) => $q->where('name', 'staff')->where('guard_name', 'web'))
-            ->with('media')
             ->orderBy('sort_order')
             ->get();
 

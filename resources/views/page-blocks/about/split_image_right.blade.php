@@ -10,16 +10,6 @@
 }">
     <div class="sf-inner">
         <div class="{{ !empty($images) ? 'sf-about-grid' : '' }}">
-            @if(!empty($images))
-                <div class="sf-about-photos">
-                    @foreach($images as $i => $img)
-                        <div class="sf-about-photo" @click="idx = {{ $i }}">
-                            <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($img) }}"
-                                 alt="" loading="lazy" width="800" height="600">
-                        </div>
-                    @endforeach
-                </div>
-            @endif
             <div>
                 @if(!empty($content['title']))
                     <h2 class="sf-heading">{{ $content['title'] }}</h2>
@@ -32,6 +22,16 @@
                     <p class="sf-about-signature">{{ $content['owner_signature'] }}</p>
                 @endif
             </div>
+            @if(!empty($images))
+                <div class="sf-about-photos">
+                    @foreach($images as $i => $img)
+                        <div class="sf-about-photo" @click="idx = {{ $i }}">
+                            <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($img) }}"
+                                 alt="" loading="lazy" width="800" height="600">
+                        </div>
+                    @endforeach
+                </div>
+            @endif
         </div>
     </div>
     @if(!empty($images))

@@ -7,6 +7,7 @@ use App\Models\Service;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -23,7 +24,7 @@ class ServiceResource extends Resource
     protected static ?string $model = Service::class;
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-wrench-screwdriver';
     protected static string|\UnitEnum|null $navigationGroup = 'Salone';
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 3;
     protected static ?string $modelLabel = 'servizio';
     protected static ?string $pluralModelLabel = 'servizi';
 
@@ -84,6 +85,18 @@ class ServiceResource extends Resource
                         ]),
                 ])
                 ->columns(2)
+                ->columnSpanFull(),
+
+            Section::make('Immagine')
+                ->schema([
+                    FileUpload::make('image_path')
+                        ->label('Foto del servizio')
+                        ->disk('public')
+                        ->image()
+                        ->maxSize(10240)
+                        ->saveUploadedFileUsing(fn ($file) => \App\PageBlocks\AbstractPageBlock::storeAsWebp($file, 'site-builder/services'))
+                        ->columnSpanFull(),
+                ])
                 ->columnSpanFull(),
 
             Section::make('Impostazioni')

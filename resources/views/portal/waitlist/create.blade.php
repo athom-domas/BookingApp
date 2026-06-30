@@ -366,7 +366,7 @@
                             <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Verrai avvisato per il primo operatore libero</p>
                         </button>
                         @foreach($staff as $member)
-                            @php $avatarUrl = $member->getFirstMediaUrl('avatar', 'thumb'); @endphp
+                            @php $avatarUrl = $member->avatarUrl(); @endphp
                             <button
                                 type="button"
                                 @click="staffId = {{ $member->id }}"

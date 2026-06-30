@@ -627,7 +627,7 @@ a.sf-svc-book-badge:hover {
         <div class="sf-rule"></div>
         <div class="sf-team-grid">
             @foreach($staff as $member)
-            @php $avatarUrl = $member->getFirstMediaUrl('avatar', 'thumb'); @endphp
+            @php $avatarUrl = $member->avatarUrl(); @endphp
             <div class="sf-team-card">
                 <div class="sf-team-avatar">
                     @if($avatarUrl)

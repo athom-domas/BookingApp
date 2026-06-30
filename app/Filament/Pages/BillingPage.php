@@ -13,7 +13,7 @@ class BillingPage extends Page
     protected static ?string $navigationLabel = 'Abbonamento';
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-credit-card';
     protected static ?string $slug = 'abbonamento';
-    protected static ?int $navigationSort = 99;
+    protected static ?int $navigationSort = 4;
 
     protected string $view = 'filament.pages.billing';
 

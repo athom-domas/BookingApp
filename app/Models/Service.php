@@ -9,8 +9,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
 
-#[Fillable(['business_id', 'name', 'description', 'duration_minutes', 'price', 'active', 'featured', 'sort_order'])]
+#[Fillable(['business_id', 'name', 'description', 'duration_minutes', 'price', 'active', 'featured', 'sort_order', 'image_path'])]
 class Service extends Model
 {
     /** @use HasFactory<\Database\Factories\ServiceFactory> */
@@ -22,6 +23,14 @@ class Service extends Model
             'active'   => 'boolean',
             'featured' => 'boolean',
         ];
+    }
+
+    public function imageUrl(): ?string
+    {
+        if ($this->image_path) {
+            return Storage::disk('public')->url($this->image_path);
+        }
+        return null;
     }
 
     public function staff(): BelongsToMany

@@ -17,8 +17,8 @@ class IntegrationSettings extends Page
     protected static ?string $navigationLabel = 'Integrazioni';
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-puzzle-piece';
-    protected static string|\UnitEnum|null $navigationGroup = 'Impostazioni';
-    protected static ?int $navigationSort = 4;
+    protected static string|\UnitEnum|null $navigationGroup = 'Configurazioni';
+    protected static ?int $navigationSort = 5;
 
     public ?array $data = [];
 

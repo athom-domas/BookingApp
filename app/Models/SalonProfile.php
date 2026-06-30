@@ -16,12 +16,12 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 #[Fillable([
     'business_id',
-    'name', 'tagline', 'logo_path', 'theme', 'theme_mode', 'hero_image_preset',
-    'announcement_active', 'announcement_text', 'booking_button_label',
-    'meta_description', 'owner_signature',
+    'name', 'logo_path', 'theme', 'theme_mode', 'hero_image_preset',
+    'announcement_active', 'announcement_text',
+    'meta_description',
     'font_pair', 'border_style', 'bg_texture',
     'phone', 'address',
-    'description', 'google_maps_embed',
+    'google_maps_embed',
     'opening_hours',
     'instagram_url', 'facebook_url', 'tiktok_url', 'whatsapp_number',
     'email_greeting', 'email_footer_note', 'email_accent_color',
@@ -44,22 +44,9 @@ class SalonProfile extends Model implements HasMedia
         return $this->belongsTo(PageTemplate::class);
     }
 
-    public function bookingButtonLabel(): string
-    {
-        return trim((string) $this->booking_button_label) ?: 'Prenota un appuntamento';
-    }
-
     public function metaDescription(): ?string
     {
-        if ($this->meta_description) {
-            return $this->meta_description;
-        }
-        if ($this->tagline) {
-            return $this->tagline;
-        }
-        $plain = trim(preg_replace('/\s+/', ' ', strip_tags((string) $this->description)));
-
-        return $plain !== '' ? \Illuminate\Support\Str::limit($plain, 160) : null;
+        return $this->meta_description ?: null;
     }
 
     public static function current(): self
@@ -82,8 +69,6 @@ class SalonProfile extends Model implements HasMedia
         $this->addMediaCollection('logo_dark')->singleFile()->useDisk('public');
         $this->addMediaCollection('cover')->singleFile()->useDisk('public');
         $this->addMediaCollection('favicon')->singleFile()->useDisk('public');
-        $this->addMediaCollection('gallery')->useDisk('public');
-        $this->addMediaCollection('portfolio')->useDisk('public');
     }
 
     public function registerMediaConversions(?Media $media = null): void
@@ -102,14 +87,8 @@ class SalonProfile extends Model implements HasMedia
             ->format('webp')
             ->quality(82)
             ->nonQueued()
-            ->performOnCollections('gallery', 'portfolio', 'cover');
+            ->performOnCollections('cover');
 
-        $this->addMediaConversion('gallery-sm')
-            ->width(576)
-            ->format('webp')
-            ->quality(80)
-            ->nonQueued()
-            ->performOnCollections('gallery', 'portfolio');
     }
 
     public function logoUrl(): ?string

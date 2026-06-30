@@ -70,8 +70,21 @@
     opacity: 1;
 }
 
+/* Editorial hero grid */
+.sf-hero-editorial-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    align-items: center;
+    width: 100%;
+}
+
 @media (max-width: 640px) {
-    .sf-hero { padding: 72px 28px; }
+    .sf-hero { padding: 56px 20px; }
+    .sf-hero-editorial-grid { grid-template-columns: 1fr; gap: 24px; }
+    .sf-hero-editorial-img { order: -1; }
+    .sf-hero-editorial-img img { aspect-ratio: 4/3; max-height: 220px; }
+    .sf-hero--editorial .sf-hero-inner { align-items: center !important; text-align: center !important; }
 }
 @media (prefers-reduced-motion: reduce) {
     .sf-hero--no-img::before { display: none; }
@@ -122,6 +135,70 @@
     white-space: nowrap;
 }
 
+/* ── SERVICE CARDS ────────────────────────────────────────────────────────── */
+.sf-svc-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 20px;
+}
+.sf-svc-card {
+    background: var(--sf-bg-card, #fff);
+    border: 1px solid var(--sf-border);
+    border-radius: min(var(--sf-radius, 8px), 16px);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+.sf-svc-card-img {
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    background: var(--sf-surface, #f5f0ea);
+    flex-shrink: 0;
+}
+.sf-svc-card-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.4s ease;
+}
+.sf-svc-card:hover .sf-svc-card-img img { transform: scale(1.04); }
+.sf-svc-card-body {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+.sf-svc-card-name {
+    font-family: var(--sf-font-display);
+    font-size: 17px;
+    color: var(--sf-gold-lt);
+    margin-bottom: 6px;
+    line-height: 1.2;
+}
+.sf-svc-card-desc {
+    font-size: 12px;
+    color: var(--sf-body);
+    line-height: 1.65;
+    flex: 1;
+    margin-bottom: 0;
+}
+.sf-svc-card-foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid var(--sf-border);
+    gap: 8px;
+}
+.sf-svc-card-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.sf-svc-card-meta .sf-svc-item-price { font-size: 18px; }
+
 /* ── ABOUT ────────────────────────────────────────────────────────────────── */
 .sf-about-grid {
     display: grid;
@@ -156,9 +233,7 @@
     height: 100%;
     object-fit: cover;
     display: block;
-    transition: transform 0.4s ease;
 }
-.sf-about-photo:hover img { transform: scale(1.04); }
 .sf-about-photo:first-child { grid-row: span 2; }
 
 @media (max-width: 820px) {
@@ -171,21 +246,29 @@
 /* ── TEAM ─────────────────────────────────────────────────────────────────── */
 .sf-team-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 36px 40px;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 24px;
 }
-.sf-team-card { display: flex; gap: 20px; align-items: flex-start; }
-.sf-team-avatar {
-    width: 72px; height: 72px;
-    border-radius: 50%;
-    overflow: hidden;
-    flex-shrink: 0;
+.sf-team-card {
+    background: var(--sf-bg-card, #fff);
     border: 1px solid var(--sf-border);
-    background: var(--sf-bg-card);
-    display: flex; align-items: center; justify-content: center;
+    border-radius: min(var(--sf-radius, 8px), 12px);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+.sf-team-avatar {
+    aspect-ratio: 1;
+    overflow: hidden;
+    background: var(--sf-surface, #f5f0ea);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
 }
 .sf-team-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.sf-team-initial { font-family: var(--sf-font-display); font-size: 28px; color: var(--sf-gold); }
+.sf-team-initial { font-family: var(--sf-font-display); font-size: 48px; color: var(--sf-gold); }
+.sf-team-card-body { padding: 16px; }
 .sf-team-name {
     font-family: var(--sf-font-display);
     font-size: 17px;
@@ -194,8 +277,31 @@
     line-height: 1.2;
 }
 .sf-team-bio { font-size: 12px; color: var(--sf-body); line-height: 1.65; }
-
-@media (max-width: 480px) { .sf-team-grid { grid-template-columns: 1fr; } }
+.sf-team-editorial-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 40px 56px;
+}
+.sf-team-editorial-item { display: flex; gap: 20px; align-items: flex-start; }
+.sf-team-editorial-avatar {
+    width: 100px; height: 100px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: var(--sf-surface, #f5f0ea);
+    border: 1px solid var(--sf-border);
+    display: flex; align-items: center; justify-content: center;
+}
+.sf-team-editorial-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.sf-team-editorial-name {
+    font-family: var(--sf-font-display);
+    font-size: 18px;
+    color: var(--sf-gold-lt);
+    margin-bottom: 10px;
+    line-height: 1.2;
+}
+@media (max-width: 820px) { .sf-team-editorial-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 520px)  { .sf-team-editorial-grid { grid-template-columns: 1fr; } }
 
 /* ── GALLERY ──────────────────────────────────────────────────────────────── */
 .sf-gallery-grid { columns: 2; gap: 6px; }
@@ -229,6 +335,39 @@
 .sf-lightbox-nav:hover { background: rgba(255,255,255,0.22); }
 .sf-lightbox-prev { left: 16px; }
 .sf-lightbox-next { right: 16px; }
+
+/* ── GALLERY SLIDER ───────────────────────────────────────────────────────── */
+.sf-slider-track {
+    display: flex; overflow-x: scroll; scroll-snap-type: x mandatory;
+    scrollbar-width: none; cursor: grab; -webkit-overflow-scrolling: touch;
+}
+.sf-slider-track::-webkit-scrollbar { display: none; }
+.sf-slider-track.is-dragging { cursor: grabbing; scroll-snap-type: none; }
+.sf-slider-nav {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    background: rgba(0,0,0,0.35); backdrop-filter: blur(4px);
+    border: 1px solid rgba(255,255,255,0.18); border-radius: 50%;
+    color: #fff; font-size: 28px; line-height: 1;
+    width: 44px; height: 44px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s, opacity 0.15s;
+    padding: 0;
+}
+.sf-slider-nav:hover { background: rgba(0,0,0,0.6); }
+.sf-slider-nav:disabled { opacity: 0.25; cursor: default; }
+.sf-slider-prev { left: 14px; }
+.sf-slider-next { right: 14px; }
+.sf-slider-dots { display: none; justify-content: center; align-items: center; gap: 6px; margin-top: 14px; }
+@media (max-width: 767px) { .sf-slider-dots { display: flex; } }
+.sf-slider-dot {
+    height: 8px; border: none; border-radius: 4px; padding: 0; cursor: pointer;
+    background: var(--sf-border); width: 8px;
+    transition: width 0.25s ease, background 0.25s ease;
+}
+.sf-slider-dot.is-active { background: var(--sf-gold); width: 22px; }
+@media (max-width: 640px) {
+    .sf-slider-nav { width: 36px; height: 36px; font-size: 22px; }
+}
 
 /* ── HOURS + CONTACTS ─────────────────────────────────────────────────────── */
 .sf-info-grid { display: grid; gap: 72px; }
@@ -323,6 +462,15 @@
 .sf-cta { text-align: center; border-top: 1px solid var(--sf-border); }
 .sf-cta .sf-rule { margin-left: auto; margin-right: auto; }
 .sf-cta p { font-size: 14px; color: var(--sf-body); max-width: 400px; margin: 0 auto 40px; line-height: 1.75; }
+
+.sf-section-cta .sf-inner {
+    display: flex; flex-direction: column; align-items: center; gap: 20px;
+    max-width: 640px; margin: 0 auto;
+}
+.sf-section-cta .sf-heading { margin: 0; }
+.sf-section-cta p { margin: 0; opacity: .75; }
+.sf-section-cta--img .sf-heading,
+.sf-section-cta--img p { color: #fff; opacity: 1; }
 
 /* ── HEADING UTILITIES ────────────────────────────────────────────────────── */
 .sf-heading { text-wrap: balance; }
@@ -430,6 +578,10 @@ a.sf-svc-book-badge:hover {
         transform: translateY(0);
     }
 }
+
+/* ── AUTO-ALTERNATING SECTION BACKGROUNDS ────────────────────────────────── */
+.sf-blocks > section:nth-child(even)  { background: var(--sf-bg); }
+.sf-blocks > section:nth-child(odd) { background: var(--sf-bg-alt); }
 
 /* ── REDUCED MOTION ───────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {

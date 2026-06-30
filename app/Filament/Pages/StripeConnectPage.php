@@ -12,8 +12,8 @@ class StripeConnectPage extends Page
 
     protected static ?string $navigationLabel = 'Pagamenti online';
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-credit-card';
-    protected static string|\UnitEnum|null $navigationGroup = 'Impostazioni';
-    protected static ?int $navigationSort = 5;
+    protected static string|\UnitEnum|null $navigationGroup = 'Configurazioni';
+    protected static ?int $navigationSort = 4;
 
     public function getConnectAccount(): ?StripeConnectAccount
     {

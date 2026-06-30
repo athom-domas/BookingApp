@@ -13,7 +13,7 @@ class HelpPage extends Page
     protected static ?string $navigationLabel = 'Aiuto';
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-question-mark-circle';
     protected static ?string $slug = 'aiuto';
-    protected static ?int $navigationSort = 100;
+    protected static ?int $navigationSort = 5;
 
     protected string $view = 'filament.pages.help';
 

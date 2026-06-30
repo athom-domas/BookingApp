@@ -45,7 +45,7 @@
         </table>
     </div>
 
-    <div class="flex justify-center gap-4">
+    <div class="flex justify-center items-center gap-4">
         <a href="{{ route('shop.index') }}" class="text-sm text-gray-600 hover:underline dark:text-gray-400">
             Continua gli acquisti
         </a>

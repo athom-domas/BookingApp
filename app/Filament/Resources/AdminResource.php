@@ -6,7 +6,7 @@ use App\Filament\Resources\AdminResource\Pages;
 use App\Models\User;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
@@ -26,7 +26,7 @@ class AdminResource extends Resource
 
     protected static ?string $navigationLabel = 'Amministratori';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Impostazioni';
+    protected static string|\UnitEnum|null $navigationGroup = 'Configurazioni';
     protected static ?int $navigationSort = 1;
 
     protected static ?string $modelLabel = 'amministratore';
@@ -141,11 +141,12 @@ class AdminResource extends Resource
                         ->live()
                         ->columnSpanFull(),
 
-                    SpatieMediaLibraryFileUpload::make('avatar')
+                    FileUpload::make('avatar_path')
                         ->label('Foto profilo')
-                        ->collection('avatar')
+                        ->disk('public')
                         ->image()
                         ->maxSize(2048)
+                        ->saveUploadedFileUsing(fn ($file) => \App\PageBlocks\AbstractPageBlock::storeAsWebp($file, 'site-builder/avatars'))
                         ->visible(fn(Get $get): bool => (bool) $get('works_as_staff'))
                         ->columnSpanFull(),
 

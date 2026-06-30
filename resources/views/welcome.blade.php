@@ -8,12 +8,14 @@
 @endpush
 
 @section('content')
-    @foreach($blocks as $block)
-        <x-page-block :business="$business" :block="$block" />
-    @endforeach
+    <div class="sf-blocks">
+        @foreach($blocks as $block)
+            <x-page-block :business="$business" :block="$block" />
+        @endforeach
+    </div>
 
     {{-- Sticky prenota button + page nav are not in blocks — render here --}}
-    <a href="{{ route('booking.create') }}" class="sf-sticky-book sf-btn">{{ $profile->bookingButtonLabel() }}</a>
+    <a href="{{ route('booking.create') }}" class="sf-sticky-book sf-btn">Prenota un appuntamento</a>
 @endsection
 
 @push('scripts')

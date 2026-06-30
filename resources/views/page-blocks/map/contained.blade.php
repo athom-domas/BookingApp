@@ -8,7 +8,7 @@
                 <h2 class="sf-heading" style="margin-bottom:1rem">{{ $content['title'] }}</h2>
             @endif
             @php $mapHeight = match($settings['height'] ?? 'md') { 'sm' => '240px', 'lg' => '600px', default => '400px' }; @endphp
-            <div x-data="{ loaded: false }" style="width:100%;height:{{ $mapHeight }};position:relative;border-radius:var(--sf-radius,8px);overflow:hidden">
+            <div x-data="{ loaded: false }" style="width:100%;height:{{ $mapHeight }};position:relative;border-radius:min(var(--sf-radius,8px),16px);overflow:hidden">
                 {{-- google_maps_embed is admin-entered; stores a URL, not customer input --}}
                 <template x-if="loaded">
                     <iframe src="{{ $profile->google_maps_embed }}"
@@ -22,11 +22,6 @@
                     <span>Clicca per vedere la mappa</span>
                 </button>
             </div>
-            @if($settings['show_directions_link'] ?? true)
-                <div style="margin-top:0.75rem">
-                    <a href="https://maps.google.com/?q={{ urlencode($profile->address ?? $profile->name) }}" target="_blank" rel="noopener">Ottieni indicazioni →</a>
-                </div>
-            @endif
         </div>
     </div>
 </section>

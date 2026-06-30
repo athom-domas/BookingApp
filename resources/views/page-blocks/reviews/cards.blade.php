@@ -3,6 +3,7 @@
 <section class="sf-section" id="recensioni">
     <div class="sf-inner">
         <h2 class="sf-heading">{{ $content['title'] ?? 'Cosa dicono di noi' }}</h2>
+        <div class="sf-rule"></div>
         @if(!empty($content['subtitle']))
             <p class="sf-hero-tagline" style="margin:0 0 16px">{{ $content['subtitle'] }}</p>
         @endif

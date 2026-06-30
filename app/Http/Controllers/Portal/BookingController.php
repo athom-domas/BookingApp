@@ -49,12 +49,13 @@ class BookingController extends Controller
                 'business_id' => $businessId,
             ]);
             $services = Service::active()->orderBy('sort_order')->orderBy('name')->get();
-            $staff    = User::whereHas('roles', fn ($q) => $q->where('name', 'staff')->where('guard_name', 'web'))
+            $staff    = User::whereHas('roles', fn($q) => $q->where('name', 'staff')->where('guard_name', 'web'))
                 ->where('business_id', $businessId)
                 ->with('media')
-                ->where(fn ($q) => $q
-                    ->whereNotNull('bio')
-                    ->orWhereHas('media', fn ($m) => $m->where('collection_name', 'avatar'))
+                ->where(
+                    fn($q) => $q
+                        ->whereNotNull('bio')
+                        ->orWhereHas('media', fn($m) => $m->where('collection_name', 'avatar'))
                 )
                 ->orderByRaw($this->staffOrderRaw())
                 ->orderBy('sort_order')
@@ -80,8 +81,8 @@ class BookingController extends Controller
         $businessId = app('current_business_id');
 
         $services = Service::active()
-            ->with(['staff' => fn ($q) => $q
-                ->whereHas('roles', fn ($r) => $r->where('name', 'staff')->where('guard_name', 'web'))
+            ->with(['staff' => fn($q) => $q
+                ->whereHas('roles', fn($r) => $r->where('name', 'staff')->where('guard_name', 'web'))
                 ->where('business_id', $businessId)
                 ->orderByRaw($this->staffOrderRaw())
                 ->orderBy('sort_order')])
@@ -89,10 +90,10 @@ class BookingController extends Controller
             ->orderBy('name')
             ->get();
 
-        $staff = User::whereHas('roles', fn ($q) => $q->where('name', 'staff')->where('guard_name', 'web'))
+        $staff = User::whereHas('roles', fn($q) => $q->where('name', 'staff')->where('guard_name', 'web'))
             ->where('business_id', $businessId)
-            ->whereHas('services', fn ($q) => $q->active())
-            ->with(['services' => fn ($q) => $q->active()->select('services.id', 'services.name'), 'media'])
+            ->whereHas('services', fn($q) => $q->active())
+            ->with(['services' => fn($q) => $q->active()->select('services.id', 'services.name')])
             ->orderByRaw($this->staffOrderRaw())
             ->orderBy('sort_order')
             ->get();
@@ -107,7 +108,7 @@ class BookingController extends Controller
         if (! $wizardPrefill && $request->has('service_ids')) {
             $serviceIds = array_values(array_filter(
                 array_map('intval', (array) $request->query('service_ids')),
-                fn ($id) => $services->contains('id', $id),
+                fn($id) => $services->contains('id', $id),
             ));
             if ($serviceIds) {
                 $staffId = $request->filled('preferred_staff_id') && is_numeric($request->query('preferred_staff_id'))

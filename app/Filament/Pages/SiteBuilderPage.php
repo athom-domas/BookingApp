@@ -6,9 +6,11 @@ use App\Models\BusinessPageBlock;
 use App\PageBlocks\PageBlockRegistry;
 use Filament\Actions\Action;
 use Filament\Schemas\Components\Section;
-use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Radio;
+use Illuminate\Support\Facades\Auth;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Illuminate\Support\HtmlString;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
@@ -23,8 +25,8 @@ class SiteBuilderPage extends Page implements HasTable
     protected static ?string $navigationLabel = 'Il mio sito';
     protected static ?string $title = 'Il mio sito';
     protected string $view = 'filament.pages.site-builder';
-    protected static string|\UnitEnum|null $navigationGroup = 'Impostazioni';
-    protected static ?int $navigationSort = 10;
+    protected static string|\UnitEnum|null $navigationGroup = 'Configurazioni';
+    protected static ?int $navigationSort = 3;
 
     public function table(Table $table): Table
     {
@@ -36,6 +38,17 @@ class SiteBuilderPage extends Page implements HasTable
             )
             ->reorderable('sort_order')
             ->columns([
+                TextColumn::make('variant_preview')
+                    ->label('')
+                    ->getStateUsing(function ($record): HtmlString {
+                        $class = PageBlockRegistry::find($record->block_type);
+                        if (! $class) return new HtmlString('');
+                        $preview = $class::variants()[$record->variant]['preview'] ?? null;
+                        if (! $preview) {
+                            return new HtmlString('<div style="width:64px;height:36px;border-radius:4px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;color:#94a3b8"><svg xmlns="http://www.w3.org/2000/svg" style="width:20px;height:20px" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm0 8a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zm12 0a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/></svg></div>');
+                        }
+                        return new HtmlString(preg_replace('/<svg/', '<svg style="width:64px;height:36px;border-radius:4px;display:block;"', $preview, 1));
+                    }),
                 TextColumn::make('block_type')
                     ->label('Blocco')
                     ->formatStateUsing(function ($state): string {
@@ -51,7 +64,7 @@ class SiteBuilderPage extends Page implements HasTable
                     }),
                 ToggleColumn::make('is_enabled')
                     ->label('Visibile')
-                    ->disabled(fn (BusinessPageBlock $record): bool => $record->is_required)
+                    ->disabled(fn(BusinessPageBlock $record): bool => $record->is_required)
                     ->beforeStateUpdated(function (BusinessPageBlock $record, bool $state): void {
                         abort_if($record->is_required, 403, 'Required blocks cannot be disabled.');
                     }),
@@ -61,26 +74,21 @@ class SiteBuilderPage extends Page implements HasTable
                     ->label('Modifica')
                     ->icon('heroicon-o-pencil')
                     ->slideOver()
-                    ->visible(fn ($record) => ! $record->is_locked)
+                    ->visible(fn($record) => ! $record->is_locked)
                     ->form(function (BusinessPageBlock $record): array {
                         $blockClass = PageBlockRegistry::find($record->block_type);
 
                         $fields = [
-                            Select::make('variant')
+                            Radio::make('variant')
                                 ->label('Variante layout')
-                                ->options(function () use ($blockClass): array {
-                                    if (! $blockClass) {
-                                        return [];
-                                    }
-                                    return collect($blockClass::variants())
-                                        ->mapWithKeys(fn ($v, $k) => [$k => $v['label']])
-                                        ->all();
-                                })
+                                ->options($blockClass ? collect($blockClass::variants())->mapWithKeys(fn($v, $k) => [$k => $v['label']])->all() : [])
+                                ->extraAttributes(['data-block-class' => $blockClass ?? ''])
+                                ->view('filament.forms.variant-picker')
                                 ->required(),
                         ];
 
                         if ($blockClass) {
-                            $blockFields = $blockClass::filamentFields();
+                            $blockFields = $blockClass::filamentFields($record);
                             if (! empty($blockFields)) {
                                 $fields[] = Section::make('Contenuto')->schema($blockFields);
                             }
@@ -131,7 +139,7 @@ class SiteBuilderPage extends Page implements HasTable
             Action::make('openSite')
                 ->label('Apri sito pubblico')
                 ->icon('heroicon-o-arrow-top-right-on-square')
-                ->url(fn () => url('/'))
+                ->url(fn() => url('/'))
                 ->openUrlInNewTab(),
 
         ];
@@ -139,6 +147,7 @@ class SiteBuilderPage extends Page implements HasTable
 
     public static function canAccess(): bool
     {
-        return auth()->user()?->isAdmin() ?? false;
+        $user = Auth::user();
+        return $user instanceof \App\Models\User && $user->isAdmin();
     }
 }

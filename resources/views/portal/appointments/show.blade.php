@@ -18,7 +18,7 @@
                 <div>
                     <dt class="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">Staff</dt>
                     <dd class="mt-1.5 flex items-center gap-3">
-                        @php $avatarUrl = $appointment->staff->getFirstMediaUrl('avatar', 'thumb'); @endphp
+                        @php $avatarUrl = $appointment->staff->avatarUrl(); @endphp
                         @if ($avatarUrl)
                             <img src="{{ $avatarUrl }}" alt="{{ $appointment->staff->name }}" class="w-10 h-10 rounded-full object-cover shrink-0">
                         @else

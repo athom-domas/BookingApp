@@ -109,11 +109,9 @@ class StagingSeeder extends Seeder
         );
 
         $profile->update([
-            'name'        => 'Demo Barber Shop',
-            'tagline'     => "L'arte del barbiere tradizionale — ambiente di test",
-            'phone'       => '349 00 00 000',
-            'address'     => 'Via Demo, 1 - Città di Test',
-            'description' => '<p><strong>Demo Barber Shop</strong> è il salone di test dello staging. Usa questo ambiente per verificare modifiche al layout, performance Lighthouse e funzionalità prima di andare in produzione.</p>',
+            'name'          => 'Demo Barber Shop',
+            'phone'         => '349 00 00 000',
+            'address'       => 'Via Demo, 1 - Città di Test',
             'opening_hours' => [
                 'mon' => ['type' => 'closed'],
                 'tue' => ['type' => 'split', 'morning_open' => '09:00', 'morning_close' => '13:00', 'afternoon_open' => '15:30', 'afternoon_close' => '21:00'],
@@ -123,26 +121,15 @@ class StagingSeeder extends Seeder
                 'sat' => ['type' => 'split', 'morning_open' => '09:00', 'morning_close' => '13:00', 'afternoon_open' => '14:30', 'afternoon_close' => '21:00'],
                 'sun' => ['type' => 'closed'],
             ],
-            'booking_button_label' => 'Prenota il tuo taglio',
-            'theme'                => 'luxury',
-            'theme_mode'           => 'light',
-            'border_style'         => 'rounded',
-            'email_greeting'       => 'Ciao {nome},',
-            'email_footer_note'    => 'Grazie per aver scelto Demo Barber Shop.',
-            'owner_signature'      => "Admin\nDemo Barber Shop\nVia Demo, 1",
+            'theme'             => 'luxury',
+            'theme_mode'        => 'light',
+            'border_style'      => 'rounded',
+            'email_greeting'    => 'Ciao {nome},',
+            'email_footer_note' => 'Grazie per aver scelto Demo Barber Shop.',
         ]);
 
         $this->addMediaSafely($profile, 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=1920&h=640&fit=crop&q=80', 'cover', 'cover.jpg');
         $this->addMediaSafely($profile, 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=200&h=200&fit=crop&q=80', 'logo', 'logo.jpg');
-
-        foreach ([
-            'https://images.unsplash.com/photo-1621605815971-fbc98d665033?w=800&h=600&fit=crop&q=80',
-            'https://images.unsplash.com/photo-1622286342621-4bd786c2447c?w=800&h=600&fit=crop&q=80',
-            'https://images.unsplash.com/photo-1599351431202-1e0f0137899a?w=800&h=600&fit=crop&q=80',
-            'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=800&h=600&fit=crop&q=80',
-        ] as $i => $url) {
-            $this->addMediaSafely($profile, $url, 'gallery', "gallery_{$i}.jpg");
-        }
     }
 
     private function seedAdmin(int $businessId): User

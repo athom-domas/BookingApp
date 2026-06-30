@@ -7,7 +7,6 @@ use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -31,7 +30,7 @@ class SalonProfilePage extends Page
     protected static ?string $navigationLabel = 'Profilo Salone';
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-building-storefront';
-    protected static string|\UnitEnum|null $navigationGroup = 'Impostazioni';
+    protected static string|\UnitEnum|null $navigationGroup = 'Configurazioni';
     protected static ?int $navigationSort = 2;
 
     public ?array $data = [];
@@ -43,22 +42,18 @@ class SalonProfilePage extends Page
 
         $formData = [
             'name'                 => $profile->name,
-            'tagline'              => $profile->tagline,
             'theme'                => $profile->theme             ?? 'luxury',
             'theme_mode'           => $profile->theme_mode        ?? 'light',
             'hero_image_preset'    => $profile->hero_image_preset ?? '',
             'announcement_active'  => (bool) $profile->announcement_active,
             'announcement_text'    => $profile->announcement_text,
-            'booking_button_label' => $profile->booking_button_label,
             'meta_description'     => $profile->meta_description,
-            'owner_signature'      => $profile->owner_signature,
             'font_pair'            => $profile->font_pair  ?? 'classic',
             'border_style'         => $profile->border_style ?? 'sharp',
 
             'phone'                => $profile->phone,
             'address'              => $profile->address,
 
-            'description'          => $profile->description,
             'google_maps_embed'    => $profile->google_maps_embed,
 
             'instagram_url'        => $profile->instagram_url,
@@ -190,18 +185,9 @@ class SalonProfilePage extends Page
                 Tabs::make()->tabs([
 
                     Tab::make('Identità')->schema([
-                        Grid::make(2)->schema([
-                            TextInput::make('name')
-                                ->label('Nome del salone')
-                                ->required(),
-                            TextInput::make('tagline')
-                                ->label('Tagline'),
-                        ]),
-                        TextInput::make('booking_button_label')
-                            ->label('Testo del pulsante "Prenota"')
-                            ->placeholder('Prenota un appuntamento')
-                            ->helperText('Lascia vuoto per usare il testo predefinito.')
-                            ->columnSpanFull(),
+                        TextInput::make('name')
+                            ->label('Nome del salone')
+                            ->required(),
                         Toggle::make('announcement_active')
                             ->label('Mostra banner avvisi')
                             ->helperText('Una striscia in cima alla vetrina per ferie, promozioni o comunicazioni.')
@@ -283,42 +269,6 @@ class SalonProfilePage extends Page
                             ->columnSpanFull(),
                     ]),
 
-                    Tab::make('Descrizione')->schema([
-                        RichEditor::make('description')
-                            ->label('Chi siamo')
-                            ->columnSpanFull(),
-                        TextInput::make('owner_signature')
-                            ->label('Firma del titolare')
-                            ->placeholder('es. Con cura, Giulia e il team')
-                            ->helperText('Una firma breve mostrata in fondo alla sezione "Il salone".')
-                            ->maxLength(120)
-                            ->columnSpanFull(),
-                    ]),
-
-                    Tab::make('Galleria')->schema([
-                        SpatieMediaLibraryFileUpload::make('gallery')
-                            ->label('Foto salone')
-                            ->helperText('Vengono mostrate fino a 3 immagini nella vetrina pubblica (nella sezione "Il salone").')
-                            ->collection('gallery')
-                            ->conversion('web')
-                            ->multiple()
-                            ->maxFiles(3)
-                            ->reorderable()
-                            ->image()
-                            ->maxSize(10240)
-                            ->columnSpanFull(),
-                        SpatieMediaLibraryFileUpload::make('portfolio')
-                            ->label('Foto lavori')
-                            ->helperText('Risultati, trasformazioni e lavori realizzati dallo staff.')
-                            ->collection('portfolio')
-                            ->conversion('web')
-                            ->multiple()
-                            ->reorderable()
-                            ->image()
-                            ->maxSize(10240)
-                            ->columnSpanFull(),
-                    ]),
-
                     Tab::make('Orari')->schema($hoursFields),
 
                     Tab::make('Contatti & Social')->schema([
@@ -369,7 +319,7 @@ class SalonProfilePage extends Page
                         Textarea::make('meta_description')
                             ->label('Descrizione per la condivisione')
                             ->placeholder('es. Parrucchiere e centro estetico nel cuore di Milano. Prenota online.')
-                            ->helperText('Testo che appare quando il link viene condiviso su WhatsApp, Facebook e Instagram. Lascia vuoto per usare automaticamente la tagline o la descrizione.')
+                            ->helperText('Testo che appare quando il link viene condiviso su WhatsApp, Facebook e Instagram.')
                             ->maxLength(160)
                             ->rows(2)
                             ->columnSpanFull(),

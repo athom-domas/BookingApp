@@ -29,7 +29,7 @@ interface PageBlockContract
     public static function settingsRules(): array;
 
     /** Filament form fields. Fields use state paths content.* and settings.* */
-    public static function filamentFields(): array;
+    public static function filamentFields(?BusinessPageBlock $record = null): array;
 
     /** Blade view path for the given variant, e.g. 'page-blocks.hero.classic' */
     public static function viewFor(string $variant): string;

@@ -396,7 +396,7 @@
         ->get()
         ->mapWithKeys(fn($u) => [(string)$u->id => [
             'name'   => $u->name,
-            'avatar' => $u->getFirstMediaUrl('avatar') ?: null,
+            'avatar' => $u->avatarUrl(),
         ]])
         ->toArray();
 @endphp

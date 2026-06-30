@@ -8,10 +8,10 @@ $_themeClass  = 'sf-' . $_family;
 $_defaultMode = $salonProfile->theme_mode ?? 'light';
 
 $_fontUrls = [
-    'classic' => 'https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&display=swap',
-    'modern'  => 'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap',
-    'elegant' => 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Nunito:wght@300;400;500;600&display=swap',
-    'minimal' => 'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap',
+    'classic' => 'https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&display=optional',
+    'modern'  => 'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=optional',
+    'elegant' => 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Nunito:wght@300;400;500;600&display=optional',
+    'minimal' => 'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=optional',
 ];
 $_fontVars = [
     'classic' => ["'DM Serif Display', Georgia, serif", "'Inter', sans-serif"],
@@ -73,20 +73,17 @@ $_radius      = $_radiusMap[$_border] ?? '0';
     {{-- preconnect to both Google Fonts origins before the CSS request --}}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    {{-- preconnect to Unsplash if using preset hero images --}}
-    <link rel="preconnect" href="https://images.unsplash.com" crossorigin>
+    @if($salonProfile->hero_image_preset)
+        <link rel="preconnect" href="https://images.unsplash.com" crossorigin>
+    @endif
     {{-- non-blocking font load: media=print trick hands off to all once loaded --}}
     <link rel="preload" as="style" href="{{ $_fontUrl }}">
     <link rel="stylesheet" href="{{ $_fontUrl }}" media="print" onload="this.media='all'">
     <noscript><link rel="stylesheet" href="{{ $_fontUrl }}"></noscript>
+    {{-- hero image preload pushed by the active hero block variant --}}
+    @stack('preload')
 
     @vite('resources/scss/storefront.scss')
-
-    {{-- hero image preload: hints browser as early as possible, img tag in body does the rest --}}
-    @php $_heroImg = $salonProfile->heroImageUrl(); @endphp
-    @if($_heroImg)
-        <link rel="preload" as="image" href="{{ $_heroImg }}" fetchpriority="high">
-    @endif
 
     @if(!request()->routeIs('booking.index'))
         @vite('resources/css/app.css')

@@ -1,5 +1,3 @@
-{{-- Variables: $content['title'], $content['subtitle'], $settings['show_prices'],
-     $settings['show_duration'], $services (Collection), $business, $block --}}
 @if($services->isNotEmpty())
 <section class="sf-section-alt" id="servizi">
     <div class="sf-inner">
@@ -9,27 +7,68 @@
         @endif
         <div class="sf-rule"></div>
         @php
-            $showPrices   = $settings['show_prices'] ?? true;
-            $showDuration = $settings['show_duration'] ?? true;
+            $featuredOnly     = $settings['featured_only'] ?? false;
+            $featuredServices = $featuredOnly ? $services->where('featured', true) : collect();
+            $otherServices    = $featuredOnly ? $services->where('featured', false) : collect();
+            $showPrices       = $settings['show_prices'] ?? true;
+            $showDuration     = $settings['show_duration'] ?? true;
         @endphp
         <ul class="sf-svc-list">
-            @foreach($services as $service)
-            <li class="sf-svc-item" style="align-items:center">
+            @foreach($featuredOnly ? $featuredServices : $services as $service)
+            <li class="sf-svc-item">
                 <div class="sf-svc-item-main">
                     <div class="sf-svc-item-name">{{ $service->name }}</div>
+                    @if($service->description)
+                        <div class="sf-svc-item-desc">{{ $service->description }}</div>
+                    @endif
                 </div>
-                <div class="sf-svc-item-meta" style="flex-direction:row;align-items:center;gap:12px">
+                <div class="sf-svc-item-meta">
+                    @if($showPrices)
+                        <span class="sf-svc-item-price">€{{ number_format((float) $service->price, 0, ',', '.') }}</span>
+                    @endif
                     @if($showDuration)
                         <span class="sf-svc-item-dur">{{ $service->duration_minutes }}&thinsp;min</span>
                     @endif
-                    @if($showPrices)
-                        <span class="sf-svc-item-price" style="font-size:16px">€{{ number_format((float) $service->price, 0, ',', '.') }}</span>
-                    @endif
-                    <a href="{{ route('booking.create') }}?service={{ $service->id }}" class="sf-svc-book-badge" aria-label="Prenota {{ $service->name }}">Prenota &rarr;</a>
+                    <a href="{{ route('booking.create') }}?service={{ $service->id }}"
+                       class="sf-svc-book-badge" aria-label="Prenota {{ $service->name }}">Prenota &rarr;</a>
                 </div>
             </li>
             @endforeach
         </ul>
+        @if($featuredOnly && $otherServices->isNotEmpty())
+            <div x-data="{ open: false }">
+                <div x-show="open" x-transition>
+                    <ul class="sf-svc-list sf-svc-list--more">
+                        @foreach($otherServices as $service)
+                        <li class="sf-svc-item">
+                            <div class="sf-svc-item-main">
+                                <div class="sf-svc-item-name">{{ $service->name }}</div>
+                                @if($service->description)
+                                    <div class="sf-svc-item-desc">{{ $service->description }}</div>
+                                @endif
+                            </div>
+                            <div class="sf-svc-item-meta">
+                                @if($showPrices)
+                                    <span class="sf-svc-item-price">€{{ number_format((float) $service->price, 0, ',', '.') }}</span>
+                                @endif
+                                @if($showDuration)
+                                    <span class="sf-svc-item-dur">{{ $service->duration_minutes }}&thinsp;min</span>
+                                @endif
+                                <a href="{{ route('booking.create') }}?service={{ $service->id }}"
+                                   class="sf-svc-book-badge" aria-label="Prenota {{ $service->name }}">Prenota &rarr;</a>
+                            </div>
+                        </li>
+                        @endforeach
+                    </ul>
+                </div>
+                <button x-show="!open" @click="open = true" class="sf-show-more" style="margin-top:24px">
+                    Mostra tutti i servizi <span class="sf-show-more-count">({{ $otherServices->count() }})</span>
+                </button>
+                <button x-show="open" @click="open = false" class="sf-show-more" style="margin-top:24px">
+                    Riduci ai servizi in evidenza
+                </button>
+            </div>
+        @endif
     </div>
 </section>
 @endif

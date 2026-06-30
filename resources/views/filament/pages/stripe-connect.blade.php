@@ -17,10 +17,12 @@
                         <li>Stripe verifica i tuoi dati — di solito poche ore</li>
                         <li>I pagamenti online si attivano automaticamente</li>
                     </ol>
+                    @if($this->getEffectiveFeePercent())
                     <p class="text-sm text-gray-500 dark:text-gray-400">
                         BookingApp trattiene il {{ number_format($this->getEffectiveFeePercent(), 1) }}% come commissione su ogni pagamento online.<br>
                         Finché non configuri Stripe, i clienti possono prenotare solo con pagamento in salone.
                     </p>
+                    @endif
                     <x-filament::button tag="a" href="{{ route('stripe.connect.start') }}" icon="heroicon-o-arrow-right">
                         Collega Stripe
                     </x-filament::button>

@@ -1,8 +1,8 @@
-{{-- Variables: $content['title'], $content['subtitle'], $images (Spatie MediaLibrary Collection), $business, $block --}}
+{{-- Variables: $content['title'], $content['subtitle'], $images (Collection of URLs), $business, $block --}}
 @if($images->isNotEmpty())
-@php $imageUrls = $images->map(fn($m) => $m->getUrl('web'))->values()->toArray(); @endphp
+@php $imageUrls = $images->values()->toArray(); @endphp
 <section class="sf-section" id="galleria" x-data="{
-    images: {{ json_encode($imageUrls) }},
+    images: {{ \Illuminate\Support\Js::from($imageUrls) }},
     idx: -1,
     prev() { this.idx = (this.idx - 1 + this.images.length) % this.images.length; },
     next() { this.idx = (this.idx + 1) % this.images.length; },
@@ -14,15 +14,12 @@
         @endif
         <div class="sf-rule"></div>
         <div style="columns:3;gap:1rem">
-            @foreach($images as $item)
+            @foreach($images as $url)
             <div style="break-inside:avoid;margin-bottom:1rem;overflow:hidden;cursor:pointer" @click="idx = {{ $loop->index }}">
-                <img src="{{ $item->getUrl('web') }}"
-                     srcset="{{ $item->getUrl('gallery-sm') }} 576w, {{ $item->getUrl('web') }} 1200w"
-                     sizes="(max-width: 640px) 50vw, (max-width: 900px) 33vw, 33vw"
-                     alt="Galleria {{ $loop->iteration }}" loading="lazy" width="400" height="300"
-                     style="width:100%;display:block;object-fit:cover;transition:transform 0.35s ease,filter 0.35s ease"
-                     @mouseenter="$el.style.transform='scale(1.04)';$el.style.filter='brightness(0.82)'"
-                     @mouseleave="$el.style.transform='';$el.style.filter=''">
+                <img src="{{ $url }}" alt="Galleria {{ $loop->iteration }}" loading="lazy"
+                     style="width:100%;display:block;transition:filter 0.35s ease"
+                     @mouseenter="$el.style.filter='brightness(0.82)'"
+                     @mouseleave="$el.style.filter=''">
             </div>
             @endforeach
         </div>

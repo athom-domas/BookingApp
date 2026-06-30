@@ -9,7 +9,7 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -31,7 +31,7 @@ class StaffResource extends Resource
     protected static ?string $navigationLabel = 'Staff';
 
     protected static string|\UnitEnum|null $navigationGroup = 'Salone';
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 2;
 
     protected static ?string $modelLabel = 'membro staff';
 
@@ -101,11 +101,12 @@ class StaffResource extends Resource
                             'max'      => 'L\'email non può superare 255 caratteri.',
                         ]),
 
-                    SpatieMediaLibraryFileUpload::make('avatar')
+                    FileUpload::make('avatar_path')
                         ->label('Foto profilo')
-                        ->collection('avatar')
+                        ->disk('public')
                         ->image()
                         ->maxSize(2048)
+                        ->saveUploadedFileUsing(fn ($file) => \App\PageBlocks\AbstractPageBlock::storeAsWebp($file, 'site-builder/avatars'))
                         ->columnSpanFull(),
 
                     Textarea::make('bio')

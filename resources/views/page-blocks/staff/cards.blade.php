@@ -9,16 +9,16 @@
         <div class="sf-rule"></div>
         <div class="sf-team-grid">
             @foreach($staff as $member)
-            @php $avatarUrl = $member->getFirstMediaUrl('avatar', 'thumb'); @endphp
+            @php $avatarUrl = $member->avatarUrl(); @endphp
             <div class="sf-team-card">
                 <div class="sf-team-avatar">
                     @if($avatarUrl)
-                        <img src="{{ $avatarUrl }}" alt="{{ $member->name }}" loading="lazy" width="72" height="72">
+                        <img src="{{ $avatarUrl }}" alt="{{ $member->name }}" loading="lazy">
                     @else
                         <span class="sf-team-initial" aria-hidden="true">{{ strtoupper(mb_substr($member->name, 0, 1)) }}</span>
                     @endif
                 </div>
-                <div>
+                <div class="sf-team-card-body">
                     <div class="sf-team-name">{{ $member->name }}</div>
                     @if($member->bio)
                         <div class="sf-team-bio">{{ $member->bio }}</div>

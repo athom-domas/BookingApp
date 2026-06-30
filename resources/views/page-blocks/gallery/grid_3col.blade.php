@@ -1,8 +1,8 @@
-{{-- Variables: $content['title'], $content['subtitle'], $images (Spatie MediaLibrary Collection), $business, $block --}}
+{{-- Variables: $content['title'], $content['subtitle'], $images (Collection of URLs), $business, $block --}}
 @if($images->isNotEmpty())
-@php $imageUrls = $images->map(fn($m) => $m->getUrl('web'))->values()->toArray(); @endphp
+@php $imageUrls = $images->values()->toArray(); @endphp
 <section class="sf-section" id="galleria" x-data="{
-    images: {{ json_encode($imageUrls) }},
+    images: {{ \Illuminate\Support\Js::from($imageUrls) }},
     idx: -1,
     prev() { this.idx = (this.idx - 1 + this.images.length) % this.images.length; },
     next() { this.idx = (this.idx + 1) % this.images.length; },
@@ -13,13 +13,10 @@
             <p class="sf-hero-tagline" style="margin:0 0 16px">{{ $content['subtitle'] }}</p>
         @endif
         <div class="sf-rule"></div>
-        <div class="sf-gallery-grid" style="columns:3;gap:6px">
-            @foreach($images as $item)
+        <div class="sf-gallery-grid">
+            @foreach($images as $url)
             <div class="sf-gallery-item" @click="idx = {{ $loop->index }}">
-                <img src="{{ $item->getUrl('web') }}"
-                     srcset="{{ $item->getUrl('gallery-sm') }} 576w, {{ $item->getUrl('web') }} 1200w"
-                     sizes="(max-width: 640px) 50vw, (max-width: 900px) 33vw, 33vw"
-                     alt="Galleria {{ $loop->iteration }}" loading="lazy" width="400" height="300">
+                <img src="{{ $url }}" alt="Galleria {{ $loop->iteration }}" loading="lazy">
             </div>
             @endforeach
         </div>

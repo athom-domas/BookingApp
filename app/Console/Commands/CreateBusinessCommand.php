@@ -8,6 +8,7 @@ use App\Models\SalonProfile;
 use App\Models\SystemSetting;
 use App\Models\User;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Hash;
 
 class CreateBusinessCommand extends Command
@@ -83,6 +84,8 @@ class CreateBusinessCommand extends Command
             'business_id' => $business->id,
             'name'        => $name,
         ]);
+
+        Artisan::call('page-builder:init', ['--business' => $business->id]);
 
         $this->info('');
         $this->info('✓ Business creato con successo!');

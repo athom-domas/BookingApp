@@ -22,10 +22,5 @@
             <span>Clicca per vedere la mappa</span>
         </button>
     </div>
-    @if($settings['show_directions_link'] ?? true)
-        <div class="sf-inner" style="padding-top:1rem;padding-bottom:1rem">
-            <a href="https://maps.google.com/?q={{ urlencode($profile->address ?? $profile->name) }}" target="_blank" rel="noopener">Ottieni indicazioni →</a>
-        </div>
-    @endif
 </section>
 @endif

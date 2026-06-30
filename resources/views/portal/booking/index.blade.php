@@ -72,7 +72,7 @@
         $staffJson = $staff->map(fn ($m) => [
             'id'          => $m->id,
             'name'        => $m->name,
-            'avatar_url'  => $m->getFirstMediaUrl('avatar', 'thumb'),
+            'avatar_url'  => $m->avatarUrl(),
             'service_ids' => $m->services->pluck('id')->values()->all(),
         ])->values()->all();
     @endphp

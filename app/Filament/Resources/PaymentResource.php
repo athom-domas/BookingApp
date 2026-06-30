@@ -21,7 +21,7 @@ class PaymentResource extends Resource
     protected static ?string $model = Payment::class;
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-credit-card';
     protected static string|\UnitEnum|null $navigationGroup = 'Prenotazioni';
-    protected static ?int $navigationSort = 3;
+    protected static ?int $navigationSort = 2;
     protected static ?string $modelLabel = 'pagamento';
     protected static ?string $pluralModelLabel = 'pagamenti';
 
