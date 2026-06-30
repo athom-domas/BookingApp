@@ -25,16 +25,23 @@ Il sistema di prenotazione gestisce servizi per-business (massaggi, unghie, ecc.
 - business_id (FK → businesses, cascade delete)
 - name (string)
 - description (text, nullable)
-- image_path (string, nullable)
+- image_path (string, nullable) — post-MVP
 - sort_order (unsigned int, default 0)
+- is_active (boolean, default true)
 - created_at, updated_at
 ```
 
-Index: `[business_id, sort_order]`
+Vincoli e indici:
+- `UNIQUE (business_id, name)`
+- `INDEX (business_id, is_active, sort_order)`
 
 ### Modifica tabella `services`
 
 Nuova colonna: `service_category_id` (nullable FK → service_categories, `nullOnDelete`).
+
+Nuovi indici:
+- `INDEX (business_id, service_category_id)`
+- `INDEX (business_id, service_category_id, sort_order)`
 
 Nullable perché i servizi esistenti non hanno categoria e un servizio senza categoria è valido.
 
@@ -44,9 +51,11 @@ Nullable perché i servizi esistenti non hanno categoria e un servizio senza cat
 
 - Trait `BelongsToBusiness` — auto-scoping per `business_id`, stesso pattern di `Service`
 - Trait `HasFactory`
-- Fillable: `business_id`, `name`, `description`, `image_path`, `sort_order`
+- Fillable: `business_id`, `name`, `description`, `image_path`, `sort_order`, `is_active`
+- Cast: `is_active` → boolean
 - Relazione `services()` → `HasMany(Service::class)`
-- Metodo `imageUrl()` — stesso pattern di `Service` (public disk)
+- Scope `active()` → filtra `is_active = true`
+- Metodo `imageUrl()` — stesso pattern di `Service` (post-MVP)
 
 ### `Service` (modifiche)
 
@@ -66,7 +75,9 @@ Nullable perché i servizi esistenti non hanno categoria e un servizio senza cat
 |-------|------|------|
 | `name` | TextInput | Obbligatorio, unico per business |
 | `description` | Textarea | Opzionale, 3 righe |
-| `image_path` | FileUpload | Opzionale, WebP via `AbstractPageBlock::storeAsWebp()`, max 10MB |
+| `is_active` | Toggle | Default true |
+
+`image_path` (FileUpload WebP) — post-MVP.
 
 ### Tabella
 
@@ -74,36 +85,51 @@ Nullable perché i servizi esistenti non hanno categoria e un servizio senza cat
 |---------|------|
 | `name` | Ricercabile, ordinabile |
 | Conteggio servizi | `withCount('services')` |
+| `is_active` | ToggleColumn |
 
 - Riordinabile drag-and-drop su `sort_order`
-- Action Delete: la FK `nullOnDelete` imposta automaticamente `service_category_id = null` sui servizi associati
+- Action Delete: la FK `nullOnDelete` imposta automaticamente `service_category_id = null` sui servizi associati — i servizi restano visibili come "senza categoria"
 
 ## Filament: ServiceResource (modifiche)
 
 Nella sezione "Informazioni" del form aggiungo un `Select` per `service_category_id`:
 
-- Label: "Categoria"
-- Nullable (non obbligatorio, placeholder "Nessuna categoria")
-- Opzioni: `ServiceCategory::orderBy('sort_order')->pluck('name', 'id')` — già scopate al business corrente via `BelongsToBusiness`
-- **Nascosto** (`->hidden(fn() => ServiceCategory::count() === 0)`) — non compare nei saloni senza categorie
-- In tabella: colonna `category.name` opzionale, non visibile di default
+```php
+Select::make('service_category_id')
+    ->label('Categoria')
+    ->relationship('category', 'name') // già scoped al business corrente via BelongsToBusiness
+    ->options(fn () => ServiceCategory::orderBy('sort_order')->pluck('name', 'id'))
+    ->searchable()
+    ->preload()
+    ->nullable()
+    ->placeholder('Nessuna categoria')
+    ->rule(Rule::exists('service_categories', 'id')->where('business_id', app('current_business_id')))
+    ->hidden(fn () => ServiceCategory::count() === 0)
+```
+
+La `Rule::exists` con `business_id` protegge il boundary tenant lato backend: anche se un attore malevolo inviasse un `service_category_id` di un altro business, la validazione lo rigetta.
+
+In tabella: colonna `category.name` opzionale, non visibile di default.
 
 ## Pagina pubblica di prenotazione
 
 ### `BookingController::create()`
 
-Aggiunge al payload della view:
-
 ```php
-$categories = ServiceCategory::orderBy('sort_order')->get();
+$categories = ServiceCategory::active()
+    ->whereHas('services', fn ($q) => $q->where('active', true))
+    ->orderBy('sort_order')
+    ->get();
 ```
+
+Solo categorie attive con almeno un servizio attivo — evita di mostrare tab vuote.
 
 ### Step 1 — Selezione servizio (Blade + Alpine)
 
 Se `$categories` non è vuota:
-- Mostro tab/sezioni sopra la griglia dei servizi (una per categoria + eventuale "Altri" per servizi senza categoria)
+- Tab sopra la griglia: "Tutti" + una tab per categoria + "Altri" (solo se esistono servizi con `service_category_id = null`)
 - Alpine gestisce `selectedCategory` nello state per filtrare i servizi mostrati
-- Cliccando "Tutti" si torna alla vista completa
+- "Tutti" mostra tutti i servizi
 
 Se `$categories` è vuota: nessuna modifica visiva, comportamento identico all'attuale.
 
@@ -111,22 +137,40 @@ Se `$categories` è vuota: nessuna modifica visiva, comportamento identico all'a
 
 - Un servizio appartiene a zero o una categoria.
 - Le categorie sono per-business: un salone non vede le categorie di un altro.
-- La cancellazione di una categoria non cancella i servizi: imposta `service_category_id = null`.
+- Un servizio non può essere associato a una categoria di un altro business (validato lato backend con `Rule::exists`).
+- La cancellazione di una categoria imposta `service_category_id = null` sui servizi — non li cancella.
 - I saloni senza categorie non vedono il campo categoria nel form dei servizi.
+- Nel pubblico compaiono solo categorie attive con almeno un servizio attivo.
+- "Altri" compare nel pubblico solo se esistono servizi senza categoria.
+
+## Scope MVP / Post-MVP
+
+**MVP:**
+- Tabella `service_categories` (senza `image_path`)
+- Relazione opzionale `services.service_category_id`
+- `ServiceCategoryResource` con `is_active`, `sort_order`, validazione tenant-safe
+- Select categoria su `ServiceResource`
+- Filtro/tab categorie nella pagina pubblica
+- Gruppo "Altri"
+
+**Post-MVP:**
+- `image_path` su categoria (upload WebP, storage, preview)
+- Slug pubblico + SEO per categoria
+- Descrizione categoria mostrata nel booking
 
 ## File coinvolti
 
 | File | Azione |
 |------|--------|
 | `database/migrations/YYYY_MM_DD_create_service_categories_table.php` | Nuova tabella |
-| `database/migrations/YYYY_MM_DD_add_service_category_id_to_services.php` | FK nullable |
+| `database/migrations/YYYY_MM_DD_add_service_category_id_to_services.php` | FK nullable + indici |
 | `app/Models/ServiceCategory.php` | Nuovo modello |
 | `app/Models/Service.php` | Fillable + relazione `category()` |
 | `app/Filament/Resources/ServiceCategoryResource.php` | Nuova resource |
 | `app/Filament/Resources/ServiceCategoryResource/Pages/ListServiceCategories.php` | List page |
 | `app/Filament/Resources/ServiceCategoryResource/Pages/CreateServiceCategory.php` | Create page |
 | `app/Filament/Resources/ServiceCategoryResource/Pages/EditServiceCategory.php` | Edit page |
-| `app/Filament/Resources/ServiceResource.php` | Aggiunge Select categoria |
+| `app/Filament/Resources/ServiceResource.php` | Aggiunge Select categoria con validazione |
 | `app/Http/Controllers/Portal/BookingController.php` | Carica categorie |
 | `resources/views/portal/booking/index.blade.php` | Tab/filtro categorie in Step 1 |
 | `database/factories/ServiceCategoryFactory.php` | Factory per test |
@@ -135,9 +179,13 @@ Se `$categories` è vuota: nessuna modifica visiva, comportamento identico all'a
 
 - Categoria può essere creata, modificata, eliminata per un business
 - Un business non vede le categorie di un altro business
-- Un servizio può essere associato a una categoria
-- Cancellare una categoria imposta `service_category_id = null` sui servizi (non li cancella)
+- Un servizio può essere associato a una categoria dello stesso business
+- Un servizio non può essere associato a una categoria di un altro business
+- Cancellare una categoria imposta `service_category_id = null` sui servizi — i servizi restano visibili
 - Il campo categoria non appare nel form servizi se non esistono categorie
 - Il campo categoria appare nel form servizi se esiste almeno una categoria
-- La pagina pubblica non mostra tab categorie se non esistono categorie
-- La pagina pubblica mostra tab categorie e filtra i servizi correttamente se esistono categorie
+- Il riordino aggiorna `sort_order` correttamente
+- La pagina pubblica non mostra tab categorie se non esistono categorie attive con servizi attivi
+- La pagina pubblica mostra tab categorie e filtra i servizi correttamente
+- Il gruppo "Altri" compare solo se esistono servizi senza categoria
+- Disattivare una categoria (`is_active = false`) la nasconde nel pubblico senza scollegar i servizi
