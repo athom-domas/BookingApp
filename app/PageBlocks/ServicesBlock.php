@@ -16,6 +16,7 @@ class ServicesBlock extends AbstractPageBlock
     public static function label(): string { return 'Servizi'; }
     public static function description(): string { return 'Elenco dei servizi con prezzo e durata.'; }
     public static function icon(): string { return 'heroicon-o-scissors'; }
+    public static function navLabel(): ?string { return 'Servizi'; }
 
     public static function variants(): array
     {

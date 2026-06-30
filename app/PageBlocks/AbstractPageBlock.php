@@ -16,6 +16,11 @@ abstract class AbstractPageBlock implements PageBlockContract
         return '';
     }
 
+    public static function navLabel(): ?string
+    {
+        return null;
+    }
+
     public static function icon(): string
     {
         return 'heroicon-o-squares-2x2';

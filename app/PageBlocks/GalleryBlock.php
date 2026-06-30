@@ -15,6 +15,7 @@ class GalleryBlock extends AbstractPageBlock
     public static function label(): string { return 'Galleria'; }
     public static function description(): string { return 'Galleria immagini portfolio del salone.'; }
     public static function icon(): string { return 'heroicon-o-photo'; }
+    public static function navLabel(): ?string { return 'Galleria'; }
 
     public static function variants(): array
     {

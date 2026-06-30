@@ -14,6 +14,7 @@ class StaffBlock extends AbstractPageBlock
     public static function label(): string { return 'Team'; }
     public static function description(): string { return 'Presentazione del personale con foto e bio.'; }
     public static function icon(): string { return 'heroicon-o-user-group'; }
+    public static function navLabel(): ?string { return 'Il team'; }
 
     public static function variants(): array
     {

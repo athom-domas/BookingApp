@@ -14,6 +14,7 @@ class ReviewsBlock extends AbstractPageBlock
     public static function label(): string { return 'Recensioni'; }
     public static function description(): string { return 'Testimonianze e recensioni dei clienti.'; }
     public static function icon(): string { return 'heroicon-o-star'; }
+    public static function navLabel(): ?string { return 'Recensioni'; }
 
     public static function variants(): array
     {

@@ -28,6 +28,8 @@ class AboutBlock extends AbstractPageBlock
         return 'heroicon-o-building-storefront';
     }
 
+    public static function navLabel(): ?string { return 'Il salone'; }
+
     public static function variants(): array
     {
         return [

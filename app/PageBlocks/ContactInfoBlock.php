@@ -15,6 +15,7 @@ class ContactInfoBlock extends AbstractPageBlock
     public static function label(): string { return 'Orari & Contatti'; }
     public static function description(): string { return 'Orari di apertura, telefono, indirizzo e mappa.'; }
     public static function icon(): string { return 'heroicon-o-clock'; }
+    public static function navLabel(): ?string { return 'Contatti'; }
 
     public static function variants(): array
     {

@@ -28,6 +28,8 @@ class FaqBlock extends AbstractPageBlock
         return 'heroicon-o-question-mark-circle';
     }
 
+    public static function navLabel(): ?string { return 'FAQ'; }
+
     public static function variants(): array
     {
         return [
