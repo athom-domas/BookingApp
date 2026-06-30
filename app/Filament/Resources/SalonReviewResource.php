@@ -25,7 +25,7 @@ class SalonReviewResource extends Resource
 
     protected static ?string $navigationLabel = 'Recensioni';
     protected static string|\UnitEnum|null $navigationGroup = 'Salone';
-    protected static ?int $navigationSort = 6;
+    protected static ?int $navigationSort = 7;
 
     public static function form(Schema $schema): Schema
     {

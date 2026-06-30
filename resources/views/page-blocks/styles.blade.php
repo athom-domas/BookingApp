@@ -91,6 +91,15 @@
 }
 
 /* ── SERVICES ─────────────────────────────────────────────────────────────── */
+.sf-svc-category-heading {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--sf-text, #1e293b);
+    margin: 32px 0 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--sf-border, #e2e8f0);
+}
+.sf-svc-category-heading:first-child { margin-top: 0; }
 .sf-svc-list { list-style: none; }
 .sf-svc-item {
     display: flex;
@@ -100,7 +109,6 @@
     padding: 24px 0;
     border-bottom: 1px solid var(--sf-border);
 }
-.sf-svc-item:first-child { border-top: 1px solid var(--sf-border); }
 .sf-svc-item-main { flex: 1; min-width: 0; }
 .sf-svc-item-name {
     font-family: var(--sf-font-display);

@@ -5,6 +5,7 @@ namespace App\PageBlocks;
 use App\Models\Business;
 use App\Models\BusinessPageBlock;
 use App\Models\Service;
+use App\Models\ServiceCategory;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -67,12 +68,39 @@ class ServicesBlock extends AbstractPageBlock
 
     public static function resolveData(Business $business, BusinessPageBlock $block): array
     {
-        $query = Service::withoutGlobalScope('business')
+        $services = Service::withoutGlobalScope('business')
             ->where('business_id', $business->id)
             ->where('active', true)
+            ->with('category')
             ->orderBy('sort_order')
-            ->orderBy('name');
+            ->orderBy('name')
+            ->get();
 
-        return ['services' => $query->get()];
+        $categories = ServiceCategory::withoutGlobalScope('business')
+            ->where('business_id', $business->id)
+            ->where('is_active', true)
+            ->whereHas('services', fn ($q) => $q
+                ->where('business_id', $business->id)
+                ->where('active', true))
+            ->orderBy('sort_order')
+            ->get();
+
+        if ($categories->isEmpty()) {
+            $grouped = [['category' => null, 'services' => $services]];
+        } else {
+            $grouped = [];
+            foreach ($categories as $cat) {
+                $catServices = $services->where('service_category_id', $cat->id)->values();
+                if ($catServices->isNotEmpty()) {
+                    $grouped[] = ['category' => $cat, 'services' => $catServices];
+                }
+            }
+            $uncategorized = $services->whereNull('service_category_id')->values();
+            if ($uncategorized->isNotEmpty()) {
+                $grouped[] = ['category' => null, 'services' => $uncategorized];
+            }
+        }
+
+        return ['services' => $services, 'grouped_services' => $grouped];
     }
 }

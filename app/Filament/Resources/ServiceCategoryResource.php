@@ -22,7 +22,7 @@ class ServiceCategoryResource extends Resource
     protected static ?string $model = ServiceCategory::class;
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-tag';
     protected static string|\UnitEnum|null $navigationGroup = 'Salone';
-    protected static ?int $navigationSort = 4;
+    protected static ?int $navigationSort = 3;
     protected static ?string $modelLabel = 'categoria';
     protected static ?string $pluralModelLabel = 'categorie';
 
