@@ -487,44 +487,6 @@
 .sf-subheading--spaced { margin-top: 48px; }
 .sf-svc-cta { margin-top: 44px; }
 
-/* ── PAGE NAV ─────────────────────────────────────────────────────────────── */
-.sf-page-nav {
-    position: sticky;
-    top: var(--sf-nav-h, 0px);
-    z-index: 90;
-    background: var(--sf-bg-alt);
-    border-bottom: 1px solid var(--sf-border);
-    padding: 0 48px;
-}
-.sf-page-nav-list {
-    list-style: none;
-    display: flex;
-    gap: 0;
-    overflow-x: auto;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-    max-width: 1080px;
-    margin: 0 auto;
-}
-.sf-page-nav-list::-webkit-scrollbar { display: none; }
-.sf-page-nav-link {
-    display: block;
-    padding: 13px 18px;
-    font-size: 10px;
-    letter-spacing: 1.8px;
-    text-transform: uppercase;
-    color: var(--sf-body);
-    text-decoration: none;
-    white-space: nowrap;
-    border-bottom: 1.5px solid transparent;
-    transition: color 0.2s, border-color 0.2s;
-}
-.sf-page-nav-link:hover,
-.sf-page-nav-link.active {
-    color: var(--sf-gold);
-    border-bottom-color: var(--sf-gold);
-}
-@media (max-width: 768px) { .sf-page-nav { padding: 0 20px; } }
 
 /* ── SERVICE ITEM BADGE ───────────────────────────────────────────────────── */
 .sf-svc-book-badge {
@@ -604,17 +566,23 @@ a.sf-svc-book-badge:hover {
     position: sticky;
     top: var(--sf-nav-h, 65px);
     z-index: 99;
-    display: flex;
     overflow-x: auto;
-    white-space: nowrap;
     scrollbar-width: none;
     background: var(--sf-bg);
     border-bottom: 1px solid var(--sf-border);
-    padding: 0 48px;
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
 }
 .sf-page-nav::-webkit-scrollbar { display: none; }
+
+.sf-page-nav-inner {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 0 48px;
+    display: flex;
+    white-space: nowrap;
+    min-width: max-content;
+}
 
 .sf-page-nav-link {
     display: inline-block;
@@ -629,15 +597,24 @@ a.sf-svc-book-badge:hover {
     transition: color 0.2s, border-color 0.2s;
     flex-shrink: 0;
 }
-.sf-page-nav-link:last-child { margin-right: 0; }
-.sf-page-nav-link:hover,
+@media (hover: hover) and (pointer: fine) {
+    .sf-page-nav-link:hover {
+        color: var(--sf-gold);
+        border-bottom-color: var(--sf-gold);
+    }
+}
 .sf-page-nav-link.is-active {
     color: var(--sf-gold);
     border-bottom-color: var(--sf-gold);
 }
 
+.sf-section,
+.sf-section-alt {
+    scroll-margin-top: calc(var(--sf-nav-h, 65px) + 30px);
+}
+
 @media (max-width: 640px) {
-    .sf-page-nav { padding: 0 20px; }
+    .sf-page-nav-inner { padding: 0 20px; }
     .sf-page-nav-link { margin-right: 20px; }
 }
 </style>

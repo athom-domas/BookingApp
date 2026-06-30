@@ -27,11 +27,13 @@
             <x-page-block :business="$business" :block="$block" />
             @if($block->block_type === 'hero' && $navLinks->count() >= 2)
                 <nav class="sf-page-nav" aria-label="Sezioni">
-                    @foreach($navLinks as $link)
-                        <a href="{{ $link['href'] }}"
-                           class="sf-page-nav-link"
-                           data-section="{{ $link['type'] }}">{{ $link['label'] }}</a>
-                    @endforeach
+                    <div class="sf-page-nav-inner">
+                        @foreach($navLinks as $link)
+                            <a href="{{ $link['href'] }}"
+                               class="sf-page-nav-link"
+                               data-section="{{ $link['type'] }}">{{ $link['label'] }}</a>
+                        @endforeach
+                    </div>
                 </nav>
             @endif
         @endforeach
@@ -53,32 +55,50 @@
 })();
 
 (function () {
-    var sfNav = document.getElementById('sf-nav');
-    if (sfNav) {
-        document.documentElement.style.setProperty('--sf-nav-h', sfNav.offsetHeight + 'px');
+    var sfNav   = document.getElementById('sf-nav');
+    var pageNav = document.querySelector('.sf-page-nav');
+
+    function syncTop() {
+        if (!sfNav) return;
+        var h = sfNav.offsetHeight;
+        document.documentElement.style.setProperty('--sf-nav-h', h + 'px');
+        if (pageNav) pageNav.style.top = h + 'px';
     }
+    syncTop();
+    window.addEventListener('resize', syncTop, { passive: true });
 
     var links = document.querySelectorAll('.sf-page-nav-link');
     if (!links.length) return;
 
-    var sectionMap = {};
+    var items = [];
     links.forEach(function (link) {
         var section = document.getElementById(link.dataset.section);
-        if (section) sectionMap[link.dataset.section] = { link: link, section: section };
+        if (section) items.push({ link: link, section: section });
     });
+    if (!items.length) return;
 
-    var observer = new IntersectionObserver(function (entries) {
-        entries.forEach(function (entry) {
-            var key = entry.target.id;
-            if (sectionMap[key]) {
-                sectionMap[key].link.classList.toggle('is-active', entry.isIntersecting);
-            }
+    function updateActive() {
+        var offset = (sfNav ? sfNav.offsetHeight : 65) + (pageNav ? pageNav.offsetHeight : 41) + 8;
+        var active = null;
+        items.forEach(function (item) {
+            if (item.section.getBoundingClientRect().top <= offset) active = item;
         });
-    }, { rootMargin: '-20% 0px -60% 0px' });
+        items.forEach(function (item) {
+            item.link.classList.toggle('is-active', item === active);
+        });
+    }
 
-    Object.values(sectionMap).forEach(function (item) {
-        observer.observe(item.section);
+    items.forEach(function (item) {
+        item.link.addEventListener('click', function () {
+            items.forEach(function (i) { i.link.classList.remove('is-active'); });
+            setTimeout(updateActive, 500);
+        });
     });
+
+    window.addEventListener('scroll', updateActive, { passive: true });
+    window.addEventListener('touchmove', updateActive, { passive: true });
+    window.addEventListener('touchend', function () { setTimeout(updateActive, 300); }, { passive: true });
+    updateActive();
 })();
 </script>
 @endpush
