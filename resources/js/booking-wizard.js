@@ -1,4 +1,4 @@
-export function bookingWizard(allServices, allStaff, bookingPreferences = null, paymentMode = 'both') {
+export function bookingWizard(allServices, allStaff, bookingPreferences = null, paymentMode = 'both', categories = []) {
     return {
         // navigation
         step: 1,
@@ -12,6 +12,8 @@ export function bookingWizard(allServices, allStaff, bookingPreferences = null, 
         // step 1
         selectedServiceIds: [],
         showAllServices: false,
+        categories,
+        selectedCategory: null,
 
         // step 2
         staffId: null,
@@ -144,14 +146,25 @@ export function bookingWizard(allServices, allStaff, bookingPreferences = null, 
         },
 
         get visibleServices() {
+            if (this.selectedCategory !== null) {
+                if (this.selectedCategory === 'altri') {
+                    return this.allServices.filter(s => s.category_id === null);
+                }
+                return this.allServices.filter(s => s.category_id === this.selectedCategory);
+            }
             if (this.showAllServices) return this.allServices;
             const featured = this.allServices.filter(s => s.featured);
             return featured.length > 0 ? featured : this.allServices;
         },
 
         get hasMoreServices() {
+            if (this.selectedCategory !== null) return false;
             const featured = this.allServices.filter(s => s.featured);
             return featured.length > 0 && featured.length < this.allServices.length;
+        },
+
+        get hasUncategorized() {
+            return this.categories.length > 0 && this.allServices.some(s => s.category_id === null);
         },
 
         get filteredStaff() {

@@ -10,6 +10,7 @@ use App\Models\BusinessPageBlock;
 use App\Models\SalonProfile;
 use App\Models\SalonReview;
 use App\Models\Service;
+use App\Models\ServiceCategory;
 use App\Models\SystemSetting;
 use App\Models\User;
 use App\Models\UserPreference;
@@ -89,6 +90,11 @@ class BookingController extends Controller
             ->orderBy('name')
             ->get();
 
+        $categories = ServiceCategory::active()
+            ->whereHas('services', fn ($q) => $q->where('active', true))
+            ->orderBy('sort_order')
+            ->get();
+
         $staff = User::whereHas('roles', fn($q) => $q->where('name', 'staff')->where('guard_name', 'web'))
             ->where('business_id', $businessId)
             ->whereHas('services', fn($q) => $q->active())
@@ -138,6 +144,7 @@ class BookingController extends Controller
         return view('portal.booking.index', [
             'services'           => $services,
             'staff'              => $staff,
+            'categories'         => $categories,
             'wizardPrefill'      => $wizardPrefill,
             'paymentMode'        => $this->resolvePaymentMode(),
             'bookingPreferences' => $bookingPreferences,

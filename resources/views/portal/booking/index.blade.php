@@ -67,6 +67,12 @@
             'price'       => (float) $s->price,
             'featured'    => (bool) $s->featured,
             'staff_ids'   => $s->staff->pluck('id')->values()->all(),
+            'category_id' => $s->service_category_id,
+        ])->values()->all();
+
+        $categoriesJson = $categories->map(fn ($c) => [
+            'id'   => $c->id,
+            'name' => $c->name,
         ])->values()->all();
 
         $staffJson = $staff->map(fn ($m) => [
@@ -91,7 +97,8 @@
                 {{ Illuminate\Support\Js::from($servicesJson) }},
                 {{ Illuminate\Support\Js::from($staffJson) }},
                 {{ Illuminate\Support\Js::from($bookingPreferences) }},
-                {{ Illuminate\Support\Js::from($paymentMode) }}
+                {{ Illuminate\Support\Js::from($paymentMode) }},
+                {{ Illuminate\Support\Js::from($categoriesJson) }}
             )"
             class="space-y-3"
         >
@@ -131,6 +138,38 @@
                     <svg x-show="!isOpen(1)" class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                 </button>
                 <div x-show="isOpen(1)" class="border-t border-gray-100 dark:border-gray-700 px-5 pb-5 pt-4">
+                    @if($categories->isNotEmpty())
+                    <div class="mb-3 flex flex-wrap gap-2">
+                        <button
+                            type="button"
+                            @click="selectedCategory = null; showAllServices = false"
+                            :class="selectedCategory === null
+                                ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'"
+                            class="rounded-full px-3 py-1 text-xs font-semibold transition-colors"
+                        >Tutti</button>
+                        <template x-for="cat in categories" :key="cat.id">
+                            <button
+                                type="button"
+                                @click="selectedCategory = cat.id; showAllServices = false"
+                                :class="selectedCategory === cat.id
+                                    ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900'
+                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'"
+                                class="rounded-full px-3 py-1 text-xs font-semibold transition-colors"
+                                x-text="cat.name"
+                            ></button>
+                        </template>
+                        <button
+                            x-show="hasUncategorized"
+                            type="button"
+                            @click="selectedCategory = 'altri'; showAllServices = false"
+                            :class="selectedCategory === 'altri'
+                                ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'"
+                            class="rounded-full px-3 py-1 text-xs font-semibold transition-colors"
+                        >Altri</button>
+                    </div>
+                    @endif
                     <div class="grid gap-3 sm:grid-cols-2">
                         <template x-for="service in visibleServices" :key="service.id">
                             <button
