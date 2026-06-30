@@ -410,6 +410,7 @@ class AppointmentResource extends Resource
                                     'loyalty_discount_percentage' => $discountPct,
                                     'loyalty_original_amount'     => $originalAmount,
                                 ]);
+                                $record->update(['loyalty_discounted_price' => $amount]);
                             }
                         } catch (\App\Exceptions\BookingException $e) {
                             Notification::make()

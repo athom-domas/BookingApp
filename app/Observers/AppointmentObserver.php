@@ -14,12 +14,6 @@ class AppointmentObserver
     public function created(Appointment $appointment): void
     {
         $this->bustDateCache($appointment->business_id, $appointment->scheduled_date->format('Y-m'));
-
-        if ($appointment->status !== 'confirmed') {
-            return;
-        }
-
-        $this->accrue($appointment);
     }
 
     public function updated(Appointment $appointment): void
@@ -38,11 +32,10 @@ class AppointmentObserver
             return;
         }
 
-        if ($appointment->status === 'confirmed') {
-            $this->accrue($appointment);
-        } elseif ($appointment->status === 'cancelled') {
+        if ($appointment->status === 'cancelled') {
             $this->reverse($appointment);
         } elseif ($appointment->status === 'completed') {
+            $this->accrue($appointment);
             $this->scheduleReviewRequest($appointment);
             $this->scheduleFollowUpReminder($appointment);
         }
