@@ -31,7 +31,7 @@ class AppointmentController extends Controller
     public function index(Request $request): View
     {
         $appointments = Appointment::where('user_id', $request->user()->id)
-            ->with(['staff.media', 'payment'])
+            ->with(['staff', 'payment'])
             ->oldest('scheduled_date')
             ->get();
 
@@ -52,8 +52,8 @@ class AppointmentController extends Controller
             ->all();
 
         return view('portal.appointments.index', [
-            'upcomingAppointments'   => $appointments->filter(fn (Appointment $appointment) => $appointment->isUpcoming())->values(),
-            'pastAppointments'       => $appointments->filter(fn (Appointment $appointment) => $appointment->isPast())->sortByDesc('scheduled_date')->values(),
+            'upcomingAppointments'   => $appointments->filter(fn(Appointment $appointment) => $appointment->isUpcoming())->values(),
+            'pastAppointments'       => $appointments->filter(fn(Appointment $appointment) => $appointment->isPast())->sortByDesc('scheduled_date')->values(),
             'waitlistEntries'        => $waitlistEntries,
             'loyaltyEnabled'         => $loyaltyEnabled,
             'loyaltyPoints'          => (int) $loyaltyPoints,
@@ -105,7 +105,7 @@ class AppointmentController extends Controller
         }
 
         return view('portal.appointments.show', [
-            'appointment'          => $appointment->load(['staff.media', 'payment']),
+            'appointment'          => $appointment->load(['staff', 'payment']),
             'showPreferencePrompt' => $showPreferencePrompt,
             'prefillPreferences'   => $prefillPreferences,
         ]);
@@ -115,7 +115,7 @@ class AppointmentController extends Controller
     {
         $this->authorizeAppointment($request, $appointment);
 
-        $appointment->load(['staff.media', 'payment']);
+        $appointment->load(['staff', 'payment']);
 
         if (! $appointment->payment) {
             return redirect()

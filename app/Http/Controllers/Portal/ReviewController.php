@@ -23,7 +23,7 @@ class ReviewController extends Controller
         }
 
         return view('portal.appointments.review', [
-            'appointment' => $appointment->load('staff.media'),
+            'appointment' => $appointment->load('staff'),
         ]);
     }
 

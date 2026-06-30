@@ -51,11 +51,10 @@ class BookingController extends Controller
             $services = Service::active()->orderBy('sort_order')->orderBy('name')->get();
             $staff    = User::whereHas('roles', fn($q) => $q->where('name', 'staff')->where('guard_name', 'web'))
                 ->where('business_id', $businessId)
-                ->with('media')
                 ->where(
                     fn($q) => $q
                         ->whereNotNull('bio')
-                        ->orWhereHas('media', fn($m) => $m->where('collection_name', 'avatar'))
+                        ->orWhereNotNull('avatar_path')
                 )
                 ->orderByRaw($this->staffOrderRaw())
                 ->orderBy('sort_order')

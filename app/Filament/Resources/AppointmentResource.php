@@ -188,6 +188,9 @@ class AppointmentResource extends Resource
                     Hidden::make('customer_loyalty_points')
                         ->dehydrated(false),
 
+                    Hidden::make('pre_discount_amount')
+                        ->dehydrated(false),
+
                     Select::make('payment_method')
                         ->label('Metodo di pagamento')
                         ->options(['cash' => 'Contanti', 'pos' => 'POS (carta)'])
@@ -231,12 +234,12 @@ class AppointmentResource extends Resource
                         ->dehydrated(true)
                         ->dehydratedWhenHidden(true)
                         ->afterStateUpdated(function (bool $state, Set $set, Get $get, ?Appointment $record): void {
-                            $original = (float) ($record?->final_price ?? $get('payment_amount'));
                             if ($state) {
-                                $pct = SystemSetting::getLoyaltyRewardPercentage();
-                                $set('payment_amount', round($original * (1 - $pct / 100), 2));
+                                $base = (float) ($get('payment_amount') ?: ($record?->final_price ?? 0));
+                                $set('pre_discount_amount', $base);
+                                $set('payment_amount', round($base * (1 - SystemSetting::getLoyaltyRewardPercentage() / 100), 2));
                             } else {
-                                $set('payment_amount', $original);
+                                $set('payment_amount', (float) ($get('pre_discount_amount') ?: ($record?->final_price ?? 0)));
                             }
                         })
                         ->visible(function (Get $get): bool {
@@ -366,17 +369,18 @@ class AppointmentResource extends Resource
                                 'numeric'  => 'Il valore deve essere un numero.',
                                 'min'      => 'L\'importo minimo è 0,01.',
                             ]),
+                        Hidden::make('pre_discount_amount'),
                         Toggle::make('apply_loyalty_discount')
                             ->label(fn(): string => 'Applica sconto fedeltà ' . SystemSetting::getLoyaltyRewardPercentage() . '% (−' . SystemSetting::getLoyaltyRewardThreshold() . ' punti)')
                             ->default(false)
                             ->live()
                             ->afterStateUpdated(function (bool $state, Set $set, Get $get, Appointment $record): void {
-                                $original = (float) ($record->final_price ?? $get('amount'));
                                 if ($state) {
-                                    $pct = SystemSetting::getLoyaltyRewardPercentage();
-                                    $set('amount', round($original * (1 - $pct / 100), 2));
+                                    $base = (float) ($get('amount') ?: ($record->final_price ?? 0));
+                                    $set('pre_discount_amount', $base);
+                                    $set('amount', round($base * (1 - SystemSetting::getLoyaltyRewardPercentage() / 100), 2));
                                 } else {
-                                    $set('amount', $original);
+                                    $set('amount', (float) ($get('pre_discount_amount') ?: ($record->final_price ?? 0)));
                                 }
                             })
                             ->visible(
