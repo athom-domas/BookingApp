@@ -54,6 +54,7 @@ class StagingSeeder extends Seeder
 
         $this->seedSystemSettings($business->id);
         $this->seedSalonProfile();
+        $this->call(PageBuilderSeeder::class);
         $admin    = $this->seedAdmin($business->id);
         $staff    = $this->seedStaff($business->id);
         $allStaff = array_merge(['nicola' => $admin], $staff);

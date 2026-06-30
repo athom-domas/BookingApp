@@ -483,10 +483,7 @@ a.sf-svc-book-badge:hover {
             <span class="sf-hero-dot"></span>
             <span class="sf-hero-line"></span>
         </div>
-        @if($profile->tagline)
-            <p class="sf-hero-tagline">{{ $profile->tagline }}</p>
-        @endif
-        <a href="{{ route('booking.create') }}" class="sf-btn sf-btn-lg">{{ $profile->bookingButtonLabel() }}</a>
+        <a href="{{ route('booking.create') }}" class="sf-btn sf-btn-lg">Prenota ora</a>
     </div>
 </section>
 
@@ -502,7 +499,7 @@ a.sf-svc-book-badge:hover {
 @endif
 
 {{-- STICKY PRENOTA (appare quando sf-hero esce dal viewport) --}}
-<a href="{{ route('booking.create') }}" class="sf-sticky-book sf-btn">{{ $profile->bookingButtonLabel() }}</a>
+<a href="{{ route('booking.create') }}" class="sf-sticky-book sf-btn">Prenota ora</a>
 
 {{-- 2. SERVIZI --}}
 @if($services->isNotEmpty())
