@@ -76,7 +76,7 @@
                         </div>
                         @endif
                     </dl>
-                    <x-filament::button tag="a" href="{{ route('stripe.connect.dashboard') }}" icon="heroicon-o-arrow-top-right-on-square" color="gray" outlined>
+                    <x-filament::button wire:click="openDashboard" icon="heroicon-o-arrow-top-right-on-square" color="gray" outlined>
                         Gestisci account Stripe
                     </x-filament::button>
                 </div>

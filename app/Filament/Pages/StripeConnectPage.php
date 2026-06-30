@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\Business;
 use App\Models\StripeConnectAccount;
+use App\Services\StripeConnectService;
 use Filament\Pages\Page;
 
 class StripeConnectPage extends Page
@@ -29,6 +30,16 @@ class StripeConnectPage extends Page
         return $business->stripe_platform_fee_percent
             ?? \App\Models\SystemSetting::getStripePlatformFeePercent()
             ?? (float) config('services.stripe.platform_fee_percent', 2.5);
+    }
+
+    public function openDashboard(): void
+    {
+        $account = $this->getConnectAccount();
+        abort_unless($account, 403);
+
+        $url = app(StripeConnectService::class)->createDashboardLink($account);
+
+        $this->js("window.open(" . json_encode($url) . ", '_blank')");
     }
 
     public function getUiState(): string

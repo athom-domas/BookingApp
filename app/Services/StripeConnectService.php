@@ -100,14 +100,14 @@ class StripeConnectService
             throw new \App\Exceptions\BookingException('Stripe non configurato. Verifica la chiave STRIPE_SECRET_KEY.');
         }
 
-        $link = $this->stripe->accountLinks->create([
-            'account'     => $account->stripe_account_id,
-            'refresh_url' => route('stripe.connect.refresh'),
-            'return_url'  => url('/admin/stripe-connect-page'),
-            'type'        => 'account_onboarding',
-        ]);
+        $stripeAccount = $this->stripe->accounts->retrieve($account->stripe_account_id);
 
-        return $link->url;
+        if ($stripeAccount->controller?->type === 'account' || $stripeAccount->type === 'express') {
+            $loginLink = $this->stripe->accounts->createLoginLink($account->stripe_account_id);
+            return $loginLink->url;
+        }
+
+        return 'https://dashboard.stripe.com';
     }
 
     public function calculatePlatformFee(Business $business, int $amountCents): array
