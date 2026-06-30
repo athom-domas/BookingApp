@@ -4,13 +4,16 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ServiceResource\Pages;
 use App\Models\Service;
+use App\Models\ServiceCategory;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Illuminate\Validation\Rule;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -83,6 +86,21 @@ class ServiceResource extends Resource
                             'numeric'  => 'Il prezzo deve essere un numero.',
                             'min'      => 'Il prezzo deve essere maggiore di zero.',
                         ]),
+
+                    Select::make('service_category_id')
+                        ->label('Categoria')
+                        ->options(fn () => ServiceCategory::orderBy('sort_order')->pluck('name', 'id'))
+                        ->searchable()
+                        ->preload()
+                        ->nullable()
+                        ->placeholder('Nessuna categoria')
+                        ->rules([
+                            'nullable',
+                            Rule::exists('service_categories', 'id')
+                                ->where('business_id', \App\Models\Business::currentId()),
+                        ])
+                        ->hidden(fn () => ServiceCategory::count() === 0)
+                        ->columnSpanFull(),
                 ])
                 ->columns(2)
                 ->columnSpanFull(),
