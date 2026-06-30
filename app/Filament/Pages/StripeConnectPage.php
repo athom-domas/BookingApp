@@ -25,11 +25,11 @@ class StripeConnectPage extends Page
     {
         $business = \App\Models\Business::find(\App\Models\Business::currentId());
         if (! $business) {
-            return (float) config('services.stripe.platform_fee_percent', 2.5);
+            return (float) config('services.stripe.platform_fee_percent', 0);
         }
         return $business->stripe_platform_fee_percent
             ?? \App\Models\SystemSetting::getStripePlatformFeePercent()
-            ?? (float) config('services.stripe.platform_fee_percent', 2.5);
+            ?? (float) config('services.stripe.platform_fee_percent', 0);
     }
 
     public function openDashboard(): void
