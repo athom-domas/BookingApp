@@ -1,7 +1,7 @@
 {{-- Variables: $content['title'], $content['subtitle'], $images (Collection of URLs), $business, $block --}}
 @if($images->isNotEmpty())
 @php $total = $images->count(); @endphp
-<section class="sf-section" id="galleria" x-data="{
+<section class="sf-section" id="{{ $block->block_type }}" x-data="{
     idx: 0,
     total: {{ $total }},
     itemW: 316,

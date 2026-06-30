@@ -1,6 +1,6 @@
 {{-- Variables: $content['title'], $content['subtitle'], $content['button_label'], $content['image'],
      $settings['alignment'], $block --}}
-<section id="cta-{{ $block->id }}" class="sf-section sf-section-cta {{ !empty($content['image']) ? 'sf-section-cta--img' : '' }}"
+<section id="{{ $block->block_type }}" class="sf-section sf-section-cta {{ !empty($content['image']) ? 'sf-section-cta--img' : '' }}"
     style="text-align:{{ $settings['alignment'] ?? 'center' }};position:relative;overflow:hidden;{{ !empty($content['image']) ? 'background-image:url(' . \Illuminate\Support\Facades\Storage::disk('public')->url($content['image']) . ');background-size:cover;background-position:center' : '' }}">
     @if(!empty($content['image']))
         <div style="position:absolute;inset:0;background:rgba(0,0,0,0.5)"></div>

@@ -1,7 +1,7 @@
 {{-- Variables: $content['title'], $content['subtitle'], $content['cta_label'],
      $settings['show_prices'], $settings['show_duration'], $services (Collection), $grouped_services, $business, $block --}}
 @if($services->isNotEmpty())
-<section class="sf-section-alt" id="servizi">
+<section class="sf-section-alt" id="{{ $block->block_type }}">
     <div class="sf-inner">
         <h2 class="sf-heading">{{ $content['title'] ?? 'I nostri servizi' }}</h2>
         @if(!empty($content['subtitle']))

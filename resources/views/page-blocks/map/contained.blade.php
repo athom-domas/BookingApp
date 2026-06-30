@@ -1,7 +1,7 @@
 {{-- Variables: $content['title'], $settings['height'] (sm/md/lg), $settings['show_directions_link'],
      $profile (SalonProfile, may be null), $block --}}
 @if($profile?->google_maps_embed)
-<section id="map-{{ $block->id }}" class="sf-section">
+<section id="{{ $block->block_type }}" class="sf-section">
     <div class="sf-inner">
         <div style="max-width:900px;margin:auto">
             @if(!empty($content['title']))

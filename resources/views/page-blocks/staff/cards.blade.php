@@ -1,6 +1,6 @@
 {{-- Variables: $content['title'], $content['subtitle'], $staff (Collection of User), $business, $block --}}
 @if($staff->isNotEmpty())
-<section class="sf-section-alt" id="team">
+<section class="sf-section-alt" id="{{ $block->block_type }}">
     <div class="sf-inner">
         <h2 class="sf-heading">{{ $content['title'] ?? 'Il nostro team' }}</h2>
         @if(!empty($content['subtitle']))

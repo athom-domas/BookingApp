@@ -1,6 +1,6 @@
 {{-- Variables: $content['title'], $content['subtitle'], $reviews (Collection), $business, $block --}}
 @if($reviews->isNotEmpty())
-<section class="sf-section" id="recensioni">
+<section class="sf-section" id="{{ $block->block_type }}">
     <div class="sf-inner">
         <h2 class="sf-heading">{{ $content['title'] ?? 'Cosa dicono di noi' }}</h2>
         <div class="sf-rule"></div>

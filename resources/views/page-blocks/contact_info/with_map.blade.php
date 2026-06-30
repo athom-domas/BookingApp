@@ -3,7 +3,7 @@
 @php
     $contactsRight = ($settings['contacts_position'] ?? 'right') === 'right';
 @endphp
-<section id="contact-{{ $block->id }}" class="sf-section sf-section-alt">
+<section id="{{ $block->block_type }}" class="sf-section sf-section-alt">
     <div class="sf-inner">
         @if(!empty($content['title']))
             <h2 class="sf-heading">{{ $content['title'] }}</h2>

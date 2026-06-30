@@ -2,7 +2,7 @@
     $images = array_values(array_filter((array) ($content['images'] ?? $content['image'] ?? [])));
     $imageUrls = array_map(fn($img) => \Illuminate\Support\Facades\Storage::disk('public')->url($img), $images);
 @endphp
-<section id="about-{{ $block->id }}" class="sf-section" x-data="{
+<section id="{{ $block->block_type }}" class="sf-section" x-data="{
     images: {{ \Illuminate\Support\Js::from($imageUrls) }},
     idx: -1,
     prev() { this.idx = (this.idx - 1 + this.images.length) % this.images.length; },

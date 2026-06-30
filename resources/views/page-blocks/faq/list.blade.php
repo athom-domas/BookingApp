@@ -1,5 +1,5 @@
 {{-- Variables: $content['title'], $content['items'] (array of {question, answer}), $block --}}
-<section id="faq-{{ $block->id }}" class="sf-section sf-section-alt">
+<section id="{{ $block->block_type }}" class="sf-section sf-section-alt">
     <div class="sf-inner" style="max-width:720px">
         @if(!empty($content['title']))
             <h2 class="sf-heading">{{ $content['title'] }}</h2>
