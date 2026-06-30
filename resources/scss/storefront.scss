@@ -231,7 +231,7 @@ body {
     text-decoration: none; flex-shrink: 0;
     display: flex; align-items: center; gap: 10px;
 }
-.sf-logo img { height: 28px; object-fit: contain; }
+.sf-logo img { height: 28px; width: auto; object-fit: contain; }
 .sf-logo-dark { display: none; }
 .mode-dark .sf-logo-light { display: none; }
 .mode-dark .sf-logo-dark { display: block; }
