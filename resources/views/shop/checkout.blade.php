@@ -58,17 +58,17 @@
                 <div class="space-y-2">
                     <label class="flex items-center gap-3 cursor-pointer">
                         <input type="radio" name="payment_method" value="stripe" checked class="text-primary-600">
-                        <span class="text-sm text-gray-700 dark:text-gray-300">Online con carta (Stripe)</span>
+                        <span class="text-sm text-gray-700 dark:text-gray-300">Online con carta</span>
                     </label>
                     <label class="flex items-center gap-3 cursor-pointer">
                         <input type="radio" name="payment_method" value="cash" class="text-primary-600">
-                        <span class="text-sm text-gray-700 dark:text-gray-300">Al ritiro in salone (contanti)</span>
+                        <span class="text-sm text-gray-700 dark:text-gray-300">Al ritiro in salone</span>
                     </label>
                 </div>
             </div>
         @elseif ($paymentMode === 'online')
             <input type="hidden" name="payment_method" value="stripe">
-            <p class="text-sm text-gray-600 dark:text-gray-400">Pagamento online con carta.</p>
+            <p class="text-sm text-gray-600 dark:text-gray-400">Pagamento online.</p>
         @else
             <input type="hidden" name="payment_method" value="cash">
             <p class="text-sm text-gray-600 dark:text-gray-400">Pagamento al ritiro in salone.</p>
