@@ -321,6 +321,15 @@
     transition: transform 0.35s ease, filter 0.35s ease;
 }
 .sf-gallery-item:hover img { transform: scale(1.04); filter: brightness(0.82); }
+
+/* ── GALLERY MASONRY ──────────────────────────────────────────────────────── */
+.sf-masonry-grid { columns: 2; gap: 1rem; }
+@media (min-width: 640px) { .sf-masonry-grid { columns: 3; } }
+@media (min-width: 1024px) { .sf-masonry-grid { columns: 4; } }
+.sf-masonry-item { break-inside: avoid; margin-bottom: 1rem; cursor: pointer; }
+.sf-masonry-item-inner { overflow: hidden; }
+.sf-masonry-item img { width: 100%; display: block; transition: filter 0.35s ease, transform 0.35s ease; }
+.sf-masonry-item:hover img { filter: brightness(0.82); transform: scale(1.03); }
 .sf-lightbox {
     position: fixed; inset: 0; z-index: 200;
     background: rgba(0,0,0,0.92);

@@ -13,13 +13,12 @@
             <p class="sf-hero-tagline" style="margin:0 0 16px">{{ $content['subtitle'] }}</p>
         @endif
         <div class="sf-rule"></div>
-        <div style="columns:3;gap:1rem">
+        <div class="sf-masonry-grid">
             @foreach($images as $url)
-            <div style="break-inside:avoid;margin-bottom:1rem;overflow:hidden;cursor:pointer" @click="idx = {{ $loop->index }}">
-                <img src="{{ $url }}" alt="Galleria {{ $loop->iteration }}" loading="lazy"
-                     style="width:100%;display:block;transition:filter 0.35s ease"
-                     @mouseenter="$el.style.filter='brightness(0.82)'"
-                     @mouseleave="$el.style.filter=''">
+            <div class="sf-masonry-item" @click="idx = {{ $loop->index }}">
+                <div class="sf-masonry-item-inner">
+                    <img src="{{ $url }}" alt="Galleria {{ $loop->iteration }}" loading="lazy">
+                </div>
             </div>
             @endforeach
         </div>
