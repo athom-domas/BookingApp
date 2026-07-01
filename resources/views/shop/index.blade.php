@@ -4,8 +4,9 @@
 
 @section('content')
 @php
-    $shopProfile = \App\Models\SalonProfile::current();
-    $shopVariant = $shopProfile->shop_header_variant ?? 'classic';
+    $shopVariant = in_array($shopProfile->shop_header_variant, ['classic', 'editorial', 'centered'])
+        ? $shopProfile->shop_header_variant
+        : 'classic';
     $_shopContent = [
         'title'        => $shopProfile->shop_header_title ?? 'Prodotti',
         'subtitle'     => $shopProfile->shop_header_subtitle ?? 'Acquista i prodotti del salone con ritiro in sede.',

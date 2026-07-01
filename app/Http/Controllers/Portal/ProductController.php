@@ -6,6 +6,7 @@ use App\Exceptions\ProductOrderException;
 use App\Http\Controllers\Controller;
 use App\Models\Business;
 use App\Models\IntegrationSetting;
+use App\Models\SalonProfile;
 use App\Models\Product;
 use App\Models\ProductOrder;
 use App\Models\SystemSetting;
@@ -24,16 +25,17 @@ class ProductController extends Controller
 
     public function index(): View
     {
-        $products = Product::inSale()->with('media')->orderBy('name')->get();
-        $cart     = session('product_cart', []);
-        $business = Business::find(Business::currentId());
+        $products    = Product::inSale()->with('media')->orderBy('name')->get();
+        $cart        = session('product_cart', []);
+        $business    = Business::find(Business::currentId());
+        $shopProfile = SalonProfile::current();
 
         $cartItems = collect($cart)->map(function (int $qty, int $productId) use ($products) {
             $product = $products->firstWhere('id', $productId);
             return $product ? ['product' => $product, 'quantity' => $qty] : null;
         })->filter()->values();
 
-        return view('shop.index', compact('products', 'cartItems', 'business'));
+        return view('shop.index', compact('products', 'cartItems', 'business', 'shopProfile'));
     }
 
     public function cartUpdate(Request $request): RedirectResponse

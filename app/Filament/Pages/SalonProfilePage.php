@@ -371,6 +371,7 @@ class SalonProfilePage extends Page
                             ->label('Immagine desktop')
                             ->image()
                             ->disk('public')
+                            ->storeFiles(false)
                             ->saveUploadedFileUsing(fn ($file) => \App\PageBlocks\AbstractPageBlock::storeAsWebp($file, 'site-builder/shop-header'))
                             ->helperText('Mostrata su tutti i dispositivi se non viene caricata un\'immagine mobile.'),
 
@@ -378,6 +379,7 @@ class SalonProfilePage extends Page
                             ->label('Immagine mobile (opzionale)')
                             ->image()
                             ->disk('public')
+                            ->storeFiles(false)
                             ->saveUploadedFileUsing(fn ($file) => \App\PageBlocks\AbstractPageBlock::storeAsWebp($file, 'site-builder/shop-header'))
                             ->helperText('Sostituisce l\'immagine desktop su schermi ≤ 640px. Usa formato verticale o quadrato.'),
 
