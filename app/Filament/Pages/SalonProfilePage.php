@@ -302,49 +302,6 @@ class SalonProfilePage extends Page
 
                     ]),
 
-                    Tab::make('Email')->schema([
-                        Textarea::make('email_greeting')
-                            ->label('Messaggio di benvenuto')
-                            ->placeholder('es. Grazie per aver scelto il nostro salone! Non vediamo l\'ora di vederti.')
-                            ->helperText('Appare come testo introduttivo in tutte le email ai clienti. Usa {nome} per inserire automaticamente il nome del cliente.')
-                            ->rows(3)
-                            ->columnSpanFull(),
-
-                        Textarea::make('email_footer_note')
-                            ->label('Nota nel footer')
-                            ->placeholder('es. Per qualsiasi informazione contattaci al numero...')
-                            ->helperText('Appare in fondo a tutte le email, sotto i dati del salone. Puoi usare {nome} per il nome del cliente.')
-                            ->rows(2)
-                            ->columnSpanFull(),
-
-                        ColorPicker::make('email_accent_color')
-                            ->label('Colore header email (override)')
-                            ->helperText('Lascia vuoto per usare automaticamente il colore del tema selezionato. Imposta solo se vuoi un colore diverso.')
-                            ->columnSpanFull(),
-                    ]),
-
-                    Tab::make('Anteprima & Condivisione')->schema([
-                        Textarea::make('meta_description')
-                            ->label('Descrizione per la condivisione')
-                            ->placeholder('es. Parrucchiere e centro estetico nel cuore di Milano. Prenota online.')
-                            ->helperText('Testo che appare quando il link viene condiviso su WhatsApp, Facebook e Instagram.')
-                            ->maxLength(160)
-                            ->rows(2)
-                            ->columnSpanFull(),
-                        Placeholder::make('preview_link')
-                            ->label('')
-                            ->content(function (): HtmlString {
-                                $subdomain = \Filament\Facades\Filament::getTenant()?->subdomain;
-                                $baseDomain = config('app.base_domain');
-                                $url = ($subdomain && $baseDomain)
-                                    ? 'http://' . $subdomain . '.' . $baseDomain . '/'
-                                    : url('/');
-                                return new HtmlString(
-                                    '<a href="' . e($url) . '" target="_blank" class="text-primary-600 underline font-medium">Apri la vetrina pubblica →</a>'
-                                );
-                            }),
-                    ]),
-
                     Tab::make('Shop')->schema([
                         Radio::make('shop_header_variant')
                             ->label('Layout header shop')
@@ -391,6 +348,49 @@ class SalonProfilePage extends Page
                             ))
                             ->dehydrateStateUsing(fn ($state) => $state ?: null)
                             ->view('filament.forms.hero-preset-picker'),
+                    ]),
+
+                    Tab::make('Email')->schema([
+                        Textarea::make('email_greeting')
+                            ->label('Messaggio di benvenuto')
+                            ->placeholder('es. Grazie per aver scelto il nostro salone! Non vediamo l\'ora di vederti.')
+                            ->helperText('Appare come testo introduttivo in tutte le email ai clienti. Usa {nome} per inserire automaticamente il nome del cliente.')
+                            ->rows(3)
+                            ->columnSpanFull(),
+
+                        Textarea::make('email_footer_note')
+                            ->label('Nota nel footer')
+                            ->placeholder('es. Per qualsiasi informazione contattaci al numero...')
+                            ->helperText('Appare in fondo a tutte le email, sotto i dati del salone. Puoi usare {nome} per il nome del cliente.')
+                            ->rows(2)
+                            ->columnSpanFull(),
+
+                        ColorPicker::make('email_accent_color')
+                            ->label('Colore header email (override)')
+                            ->helperText('Lascia vuoto per usare automaticamente il colore del tema selezionato. Imposta solo se vuoi un colore diverso.')
+                            ->columnSpanFull(),
+                    ]),
+
+                    Tab::make('Anteprima & Condivisione')->schema([
+                        Textarea::make('meta_description')
+                            ->label('Descrizione per la condivisione')
+                            ->placeholder('es. Parrucchiere e centro estetico nel cuore di Milano. Prenota online.')
+                            ->helperText('Testo che appare quando il link viene condiviso su WhatsApp, Facebook e Instagram.')
+                            ->maxLength(160)
+                            ->rows(2)
+                            ->columnSpanFull(),
+                        Placeholder::make('preview_link')
+                            ->label('')
+                            ->content(function (): HtmlString {
+                                $subdomain = \Filament\Facades\Filament::getTenant()?->subdomain;
+                                $baseDomain = config('app.base_domain');
+                                $url = ($subdomain && $baseDomain)
+                                    ? 'http://' . $subdomain . '.' . $baseDomain . '/'
+                                    : url('/');
+                                return new HtmlString(
+                                    '<a href="' . e($url) . '" target="_blank" class="text-primary-600 underline font-medium">Apri la vetrina pubblica →</a>'
+                                );
+                            }),
                     ]),
                 ]),
             ]);

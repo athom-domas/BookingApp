@@ -420,11 +420,11 @@ a.sf-svc-book-badge:hover {
         display: block;
         position: fixed;
         bottom: 20px;
-        right: 20px;
+        left: 50%; right: auto;
+        transform: translateX(-50%);
         z-index: 95;
         opacity: 0;
         pointer-events: none;
-        transform: translateY(10px);
         transition: opacity 0.2s, transform 0.2s;
         box-shadow: 0 4px 24px rgba(0,0,0,0.2);
     }

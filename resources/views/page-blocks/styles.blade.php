@@ -543,18 +543,23 @@ a.sf-svc-book-badge:hover {
         display: block;
         position: fixed;
         bottom: 20px;
-        right: 20px;
+        left: 50%;
         z-index: 95;
         opacity: 0;
+        border-radius: var(--sf-radius);
         pointer-events: none;
-        transform: translateY(10px);
+        transform: translateX(-50%) translateY(10px);
         transition: opacity 0.2s, transform 0.2s;
         box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+        white-space: nowrap;
+        padding: 10px 30px;
+        font-size: 11px;
+        letter-spacing: 2.5px;
     }
     .sf-sticky-book.is-visible {
         opacity: 1;
         pointer-events: auto;
-        transform: translateY(0);
+        transform: translateX(-50%) translateY(0);
     }
 }
 
