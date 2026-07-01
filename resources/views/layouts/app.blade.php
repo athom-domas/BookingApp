@@ -94,9 +94,13 @@
 
                 {{-- Desktop nav --}}
                 <nav class="hidden sm:flex items-center gap-2 text-sm font-medium">
+                    <a href="{{ route('booking.index') }}" class="rounded-md px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-950 dark:hover:text-gray-50">Home</a>
                     <a href="{{ route('booking.create') }}" class="rounded-md px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-950 dark:hover:text-gray-50">Prenota</a>
                     @auth
                         <a href="{{ route('portal.appointments.index') }}" class="rounded-md px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-950 dark:hover:text-gray-50">Appuntamenti</a>
+                        @if (\App\Models\Product::inSale()->exists())
+                            <a href="{{ route('shop.index') }}" class="rounded-md px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-950 dark:hover:text-gray-50">Prodotti</a>
+                        @endif
                         @if (\App\Models\ProductOrder::where('user_id', auth()->id())->exists())
                             <a href="{{ route('portal.orders.index') }}" class="rounded-md px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-950 dark:hover:text-gray-50">Ordini</a>
                         @endif
@@ -160,9 +164,13 @@
 
             {{-- Mobile menu --}}
             <div x-show="open" x-cloak class="sm:hidden border-t border-gray-200 dark:border-gray-700 px-4 py-2 flex flex-col text-sm font-medium">
+                <a href="{{ route('booking.index') }}" class="rounded-md px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">Home</a>
                 <a href="{{ route('booking.create') }}" class="rounded-md px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">Prenota</a>
                 @auth
                     <a href="{{ route('portal.appointments.index') }}" class="rounded-md px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">Appuntamenti</a>
+                    @if (\App\Models\Product::inSale()->exists())
+                        <a href="{{ route('shop.index') }}" class="rounded-md px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">Prodotti</a>
+                    @endif
                     @if (\App\Models\ProductOrder::where('user_id', auth()->id())->exists())
                         <a href="{{ route('portal.orders.index') }}" class="rounded-md px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">Ordini</a>
                     @endif

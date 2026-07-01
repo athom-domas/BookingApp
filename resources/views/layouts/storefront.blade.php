@@ -118,18 +118,15 @@ $_radius      = $_radiusMap[$_border] ?? '0';
 
         <div class="sf-nav-right">
             {{-- Portal / auth links (desktop) --}}
+            <a href="{{ route('booking.index') }}" class="sf-nav-link">Home</a>
             @if (\App\Models\Product::inSale()->exists())
                 <a href="{{ route('shop.index') }}" class="sf-nav-link">Prodotti</a>
             @endif
             @auth
-                <a href="{{ route('portal.appointments.index') }}" class="sf-nav-link">Area personale</a>
+                <a href="{{ route('portal.appointments.index') }}" class="sf-nav-link">Area cliente</a>
                 @if(auth()->user()->isAdmin() || auth()->user()->isStaff())
                     <a href="{{ url('/admin') }}" class="sf-nav-link">Admin</a>
                 @endif
-                <form method="POST" action="{{ route('logout') }}" style="margin-bottom: 3px;display:inline">
-                    @csrf
-                    <button type="submit" class="sf-nav-link" style="background:none;border:none;cursor:pointer;">Esci</button>
-                </form>
             @else
                 <a href="{{ route('login') }}" class="sf-nav-link">Accedi</a>
                 <a href="{{ route('register') }}" class="sf-nav-link sf-nav-link--cta">Registrati</a>
@@ -159,19 +156,15 @@ $_radius      = $_radiusMap[$_border] ?? '0';
             <button id="sf-mob-close" class="sf-mob-close" type="button">×</button>
         </div>
         {{-- portal / auth --}}
+        <a href="{{ route('booking.index') }}">Home</a>
         @if (\App\Models\Product::inSale()->exists())
             <a href="{{ route('shop.index') }}">Prodotti</a>
         @endif
         @auth
-            <a href="{{ route('portal.appointments.index') }}">Appuntamenti</a>
-            <a href="{{ route('portal.settings.index') }}">Impostazioni</a>
+            <a href="{{ route('portal.appointments.index') }}">Area cliente</a>
             @if(auth()->user()->isAdmin() || auth()->user()->isStaff())
                 <a href="{{ url('/admin') }}">Admin</a>
             @endif
-            <form method="POST" action="{{ route('logout') }}" style="padding:16px 0;border-bottom:1px solid var(--sf-border)">
-                @csrf
-                <button type="submit" style="background:none;border:none;cursor:pointer;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--sf-body)">Esci</button>
-            </form>
         @else
             <a href="{{ route('login') }}">Accedi</a>
             <a href="{{ route('register') }}">Registrati</a>

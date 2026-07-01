@@ -14,7 +14,7 @@ use Stripe\StripeClient;
 
 class ProductOrderService
 {
-    public function __construct(private readonly StripeClient $stripe) {}
+    public function __construct(private readonly ?StripeClient $stripe) {}
 
     public function createOrder(int $userId, array $items, string $paymentMethod, ?string $notes = null): ProductOrder
     {
