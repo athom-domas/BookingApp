@@ -7,6 +7,7 @@ use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -64,6 +65,13 @@ class SalonProfilePage extends Page
             'email_greeting'     => $profile->email_greeting     ?? "Ciao {nome},\nhai un nuovo appuntamento confermato.",
             'email_footer_note'  => $profile->email_footer_note  ?? 'Puoi gestire l\'appuntamento dall\'area riservata.',
             'email_accent_color' => $profile->email_accent_color,
+
+            'shop_header_variant'      => $profile->shop_header_variant      ?? 'classic',
+            'shop_header_title'        => $profile->shop_header_title,
+            'shop_header_subtitle'     => $profile->shop_header_subtitle,
+            'shop_header_image'        => $profile->shop_header_image,
+            'shop_header_image_mobile' => $profile->shop_header_image_mobile,
+            'shop_header_image_preset' => $profile->shop_header_image_preset ?? '',
         ];
 
         foreach (['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as $day) {
@@ -335,6 +343,52 @@ class SalonProfilePage extends Page
                                     '<a href="' . e($url) . '" target="_blank" class="text-primary-600 underline font-medium">Apri la vetrina pubblica →</a>'
                                 );
                             }),
+                    ]),
+
+                    Tab::make('Shop')->schema([
+                        Radio::make('shop_header_variant')
+                            ->label('Layout header shop')
+                            ->options([
+                                'classic'   => 'Sfondo immagine piena con testo centrato',
+                                'editorial' => 'Immagine laterale con testo a sinistra',
+                                'centered'  => 'Sfondo tinta unita con testo centrato',
+                            ])
+                            ->default('classic')
+                            ->columnSpanFull(),
+
+                        TextInput::make('shop_header_title')
+                            ->label('Titolo')
+                            ->placeholder('Prodotti')
+                            ->maxLength(120),
+
+                        Textarea::make('shop_header_subtitle')
+                            ->label('Sottotitolo')
+                            ->placeholder('Acquista i prodotti del salone con ritiro in sede.')
+                            ->maxLength(200)
+                            ->rows(2),
+
+                        FileUpload::make('shop_header_image')
+                            ->label('Immagine desktop')
+                            ->image()
+                            ->disk('public')
+                            ->saveUploadedFileUsing(fn ($file) => \App\PageBlocks\AbstractPageBlock::storeAsWebp($file, 'site-builder/shop-header'))
+                            ->helperText('Mostrata su tutti i dispositivi se non viene caricata un\'immagine mobile.'),
+
+                        FileUpload::make('shop_header_image_mobile')
+                            ->label('Immagine mobile (opzionale)')
+                            ->image()
+                            ->disk('public')
+                            ->saveUploadedFileUsing(fn ($file) => \App\PageBlocks\AbstractPageBlock::storeAsWebp($file, 'site-builder/shop-header'))
+                            ->helperText('Sostituisce l\'immagine desktop su schermi ≤ 640px. Usa formato verticale o quadrato.'),
+
+                        Radio::make('shop_header_image_preset')
+                            ->label('Oppure scegli immagine predefinita')
+                            ->options(array_merge(
+                                ['' => 'Nessuna'],
+                                array_map(fn ($p) => $p['label'], SalonProfile::heroPresets())
+                            ))
+                            ->dehydrateStateUsing(fn ($state) => $state ?: null)
+                            ->view('filament.forms.hero-preset-picker'),
                     ]),
                 ]),
             ]);
