@@ -3,19 +3,37 @@
 @section('title', 'Prodotti')
 
 @section('content')
+@php
+    $shopProfile = \App\Models\SalonProfile::current();
+    $shopVariant = $shopProfile->shop_header_variant ?? 'classic';
+    $_shopContent = [
+        'title'        => $shopProfile->shop_header_title ?? 'Prodotti',
+        'subtitle'     => $shopProfile->shop_header_subtitle ?? 'Acquista i prodotti del salone con ritiro in sede.',
+        'image'        => $shopProfile->shop_header_image,
+        'image_mobile' => $shopProfile->shop_header_image_mobile,
+        'cta_label'    => '',
+    ];
+    $_shopSettings  = ['show_cta' => false];
+    $_shopPreset    = $shopProfile->shop_header_image_preset;
+    $_heroPresetUrl = $_shopPreset ? (\App\Models\SalonProfile::heroPresets()[$_shopPreset]['url'] ?? null) : null;
+@endphp
+@include("page-blocks.hero.{$shopVariant}", [
+    'content'         => $_shopContent,
+    'settings'        => $_shopSettings,
+    'hero_preset_url' => $_heroPresetUrl,
+    'business'        => $business,
+    'block'           => null,
+])
+
 <section class="sf-section">
     <div style="max-width:1100px;margin:0 auto">
-        <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:40px">
-            <div>
-                <h1 style="font-size:clamp(1.75rem,4vw,2.5rem);font-family:var(--sf-font-display);font-weight:600;color:var(--sf-ink);margin:0 0 8px">Prodotti</h1>
-                <p style="color:var(--sf-body);font-size:0.95rem;margin:0">Acquista i prodotti del salone con ritiro in sede.</p>
-            </div>
-            @if ($cartItems->isNotEmpty())
+        @if ($cartItems->isNotEmpty())
+            <div style="display:flex;justify-content:flex-end;margin-bottom:40px">
                 <a href="{{ route('shop.checkout') }}" class="sf-btn" style="text-decoration:none">
                     Vai al checkout ({{ $cartItems->sum('quantity') }})
                 </a>
-            @endif
-        </div>
+            </div>
+        @endif
 
         @if ($errors->any())
             <div style="background:rgba(220,38,38,0.08);border:1px solid rgba(220,38,38,0.2);border-radius:min(var(--sf-radius),12px);padding:14px 18px;margin-bottom:24px;color:#dc2626;font-size:0.9rem">

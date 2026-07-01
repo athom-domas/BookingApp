@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Portal;
 
 use App\Exceptions\ProductOrderException;
 use App\Http\Controllers\Controller;
+use App\Models\Business;
 use App\Models\IntegrationSetting;
 use App\Models\Product;
 use App\Models\ProductOrder;
@@ -25,13 +26,14 @@ class ProductController extends Controller
     {
         $products = Product::inSale()->with('media')->orderBy('name')->get();
         $cart     = session('product_cart', []);
+        $business = Business::find(Business::currentId());
 
         $cartItems = collect($cart)->map(function (int $qty, int $productId) use ($products) {
             $product = $products->firstWhere('id', $productId);
             return $product ? ['product' => $product, 'quantity' => $qty] : null;
         })->filter()->values();
 
-        return view('shop.index', compact('products', 'cartItems'));
+        return view('shop.index', compact('products', 'cartItems', 'business'));
     }
 
     public function cartUpdate(Request $request): RedirectResponse
