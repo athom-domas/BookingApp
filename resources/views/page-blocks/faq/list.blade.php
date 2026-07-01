@@ -11,5 +11,11 @@
             <p>{{ $item['answer'] }}</p>
         </div>
         @endforeach
+        @if(!empty($settings['include_cancellation_policy']))
+        <div style="margin-bottom:1.5rem">
+            <h3 style="margin-bottom:0.5rem;font-size:1.05rem">Politica di cancellazione</h3>
+            {!! $business->salonProfile->cancellationPolicyHtml() !!}
+        </div>
+        @endif
     </div>
 </section>

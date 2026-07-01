@@ -5,6 +5,7 @@ namespace App\PageBlocks;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 
 class FaqBlock extends AbstractPageBlock
 {
@@ -45,7 +46,7 @@ class FaqBlock extends AbstractPageBlock
 
     public static function defaultSettings(): array
     {
-        return [];
+        return ['include_cancellation_policy' => false];
     }
 
     public static function contentRules(): array
@@ -60,7 +61,7 @@ class FaqBlock extends AbstractPageBlock
 
     public static function settingsRules(): array
     {
-        return [];
+        return ['settings.include_cancellation_policy' => ['boolean']];
     }
 
     public static function filamentFields(?\App\Models\BusinessPageBlock $record = null): array
@@ -76,6 +77,10 @@ class FaqBlock extends AbstractPageBlock
                 ->defaultItems(0)
                 ->collapsible()
                 ->addActionLabel('Aggiungi domanda'),
+            Toggle::make('settings.include_cancellation_policy')
+                ->label('Mostra politica di cancellazione')
+                ->helperText('Aggiunge automaticamente la politica di cancellazione in fondo alla sezione FAQ.')
+                ->default(false),
         ];
     }
 }
