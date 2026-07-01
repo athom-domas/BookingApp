@@ -48,7 +48,7 @@ Campi del tab:
 
 3. **Sottotitolo** — `Textarea`, maxLength 200, rows 2, placeholder testo default
 
-4. **Immagine desktop** — `FileUpload`, `disk('public')`, conversione webp via `AbstractPageBlock::storeAsWebp($file, 'site-builder/shop-header')`
+4. **Immagine desktop** — `FileUpload` (non Spatie), `disk('public')`, con `saveUploadedFileUsing` che chiama `AbstractPageBlock::storeAsWebp($file, 'site-builder/shop-header')` e restituisce il path stringa. Il path fluisce in `$profile->update()` come tutti gli altri campi scalari — non va nella lista di esclusioni del `save()`.
 
 5. **Immagine mobile (opzionale)** — `FileUpload`, stesso pattern, helperText "Sostituisce l'immagine desktop su schermi ≤ 640px"
 
@@ -94,9 +94,9 @@ Le view hero esistenti gestiscono già:
 
 ### 5. Controller — `ProductController@index`
 
-Passare `$business` alla view (se non già presente). Il profilo viene caricato direttamente nella view tramite `SalonProfile::current()` per evitare accoppiamento.
+Il controller non passa attualmente `$business` alla view. Le view hero lo usano come fallback per il titolo (`$content['title'] ?? $business->name`). Siccome il titolo viene sempre fornito come stringa non nulla, il fallback non triggera, ma la view andrà in errore se `$business` è undefined.
 
-Verificare se `$business` è già disponibile nella view tramite il middleware tenant; se sì, nessuna modifica al controller.
+**Aggiungere** `$business = Business::current()` (o equivalente già usato altrove nel progetto) e passarlo alla view tramite `compact()`.
 
 ---
 
