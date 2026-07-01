@@ -71,3 +71,26 @@ it('redirects to products page when cart is empty on checkout', function () {
         ->get('/portal/products/checkout')
         ->assertRedirect('/portal/products');
 });
+
+it('can store and retrieve shop header fields on salon profile', function () {
+    $profile = \App\Models\SalonProfile::firstOrCreate(
+        ['business_id' => $this->business->id],
+        ['name' => 'Test Salone']
+    );
+
+    $profile->update([
+        'shop_header_variant'  => 'editorial',
+        'shop_header_title'    => 'I nostri prodotti',
+        'shop_header_subtitle' => 'Spedizione gratuita sopra i 50€',
+        'shop_header_image'    => 'site-builder/shop-header/test.webp',
+    ]);
+
+    $profile->refresh();
+
+    expect($profile->shop_header_variant)->toBe('editorial')
+        ->and($profile->shop_header_title)->toBe('I nostri prodotti')
+        ->and($profile->shop_header_subtitle)->toBe('Spedizione gratuita sopra i 50€')
+        ->and($profile->shop_header_image)->toBe('site-builder/shop-header/test.webp')
+        ->and($profile->shop_header_image_mobile)->toBeNull()
+        ->and($profile->shop_header_image_preset)->toBeNull();
+});

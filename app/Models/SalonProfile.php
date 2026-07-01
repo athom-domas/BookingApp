@@ -25,6 +25,8 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
     'opening_hours',
     'instagram_url', 'facebook_url', 'tiktok_url', 'whatsapp_number',
     'email_greeting', 'email_footer_note', 'email_accent_color',
+    'shop_header_variant', 'shop_header_title', 'shop_header_subtitle',
+    'shop_header_image', 'shop_header_image_mobile', 'shop_header_image_preset',
 ])]
 class SalonProfile extends Model implements HasMedia
 {
