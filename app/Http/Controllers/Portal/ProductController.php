@@ -11,6 +11,7 @@ use App\Models\Product;
 use App\Models\ProductOrder;
 use App\Models\SystemSetting;
 use App\Services\ProductOrderService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -38,7 +39,7 @@ class ProductController extends Controller
         return view('shop.index', compact('products', 'cartItems', 'business', 'shopProfile'));
     }
 
-    public function cartUpdate(Request $request): RedirectResponse
+    public function cartUpdate(Request $request): RedirectResponse|JsonResponse
     {
         $validated = $request->validate([
             'product_id' => ['required', 'integer', 'exists:products,id'],
@@ -48,6 +49,9 @@ class ProductController extends Controller
         $product = Product::find($validated['product_id']);
 
         if (! $product || ! $product->isAvailable() || $product->stock < $validated['quantity']) {
+            if ($request->wantsJson()) {
+                return response()->json(['error' => 'Quantità non disponibile per questo prodotto.'], 422);
+            }
             return back()->withErrors(['cart' => 'Quantità non disponibile per questo prodotto.']);
         }
 
@@ -55,14 +59,29 @@ class ProductController extends Controller
         $cart[$product->id] = $validated['quantity'];
         session(['product_cart' => $cart]);
 
+        if ($request->wantsJson()) {
+            return response()->json([
+                'cartCount' => array_sum($cart),
+                'productId' => $product->id,
+                'quantity'  => $validated['quantity'],
+            ]);
+        }
+
         return redirect()->route('shop.index');
     }
 
-    public function cartRemove(int $productId): RedirectResponse
+    public function cartRemove(int $productId): RedirectResponse|JsonResponse
     {
         $cart = session('product_cart', []);
         unset($cart[$productId]);
         session(['product_cart' => $cart]);
+
+        if (request()->wantsJson()) {
+            return response()->json([
+                'cartCount' => array_sum($cart),
+                'productId' => $productId,
+            ]);
+        }
 
         return back();
     }
