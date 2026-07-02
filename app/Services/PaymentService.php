@@ -112,7 +112,7 @@ class PaymentService
             $payment->update(['status' => 'cancelled']);
             PaymentRefunded::dispatch($payment);
         } elseif ($type === 'charge.refunded') {
-            app(RefundService::class)->handleExternalRefund($payload['data']['object']);
+            app(RefundService::class)->handleExternalRefund($payload['data']['object'], $accountId);
         }
     }
 
