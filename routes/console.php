@@ -44,3 +44,5 @@ Schedule::call(function () {
             }
         });
 })->everyFifteenMinutes()->description('Expire unpaid pending appointments');
+
+Schedule::command('activitylog:clean')->daily()->description('Clean old activity log entries');

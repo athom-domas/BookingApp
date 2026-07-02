@@ -30,13 +30,18 @@ class PlatformLogsPage extends Page implements HasTable
     public function table(Table $table): Table
     {
         return $table
-            ->query(ActivityLog::query()->whereNull('business_id'))
+            ->query(ActivityLog::query())
             ->defaultSort('created_at', 'desc')
             ->columns([
                 TextColumn::make('created_at')
                     ->label('Data')
                     ->dateTime('d/m/Y H:i:s')
                     ->sortable(),
+
+                TextColumn::make('business.name')
+                    ->label('Salone')
+                    ->placeholder('Piattaforma')
+                    ->searchable(),
 
                 TextColumn::make('type')
                     ->label('Tipo')
