@@ -44,13 +44,20 @@ Abbonamenti piattaforma — gestito da Laravel Cashier.
 
 ## 4 — Webhook Connect
 
-Account connessi — saloni registrati come connected accounts.
+Account connessi — saloni registrati come connected accounts. Gestisce sia gli aggiornamenti account che i pagamenti diretti (direct charges).
 
 1. **Developers → Webhooks → Add destination**
 2. Tipo: **Account connessi**
 3. URL: `https://booking-app.it/stripe/connect/webhook`
-4. Events: **Accounts → account.updated**
+4. Events — seleziona questi specifici:
+   - **Accounts → `account.updated`**
+   - **Payments → `payment_intent.succeeded`**
+   - **Payments → `payment_intent.payment_failed`**
+   - **Payments → `payment_intent.canceled`**
+   - **Charges → `charge.refunded`**
 5. Copia il **Signing secret** → `STRIPE_CONNECT_WEBHOOK_SECRET`
+
+> I 4 eventi payment sono necessari per aggiornare lo stato degli appuntamenti pagati tramite Stripe Connect (direct charges). Senza di essi il pagamento viene addebitato correttamente sul salone ma lo stato nell'app rimane `pending`.
 
 ---
 
