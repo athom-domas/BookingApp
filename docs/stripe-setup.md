@@ -130,7 +130,7 @@ STRIPE_WEBHOOK_SECRET=whsec_...
 make deploy
 ```
 
-Copia `.env.production` sul server, sincronizza il codice, lancia le migration e ricostruisce la config cache.
+Copia `.env.production` sul server sia come `.env` sia come `.env.production`, sincronizza il codice, lancia le migration e ricostruisce la config cache.
 
 ---
 
@@ -144,7 +144,13 @@ Copia `.env.production` sul server, sincronizza il codice, lancia le migration e
    ```
    Deve restituire una stringa non vuota.
 
-3. Verifica che l'abbonamento sia in DB dopo la creazione:
+3. Verifica che la secret key piattaforma sia nella config cache:
+   ```bash
+   php85 artisan tinker --execute="var_export(['services_secret' => config('services.stripe.secret') ? 'set' : 'empty', 'cashier_secret' => config('cashier.secret') ? 'set' : 'empty', 'cached' => app()->configurationIsCached() ? 'yes' : 'no']);"
+   ```
+   `services_secret` e `cashier_secret` devono risultare `set`.
+
+4. Verifica che l'abbonamento sia in DB dopo la creazione:
    ```bash
    php85 artisan tinker --execute="var_dump(\App\Models\Business::find(1)->subscriptions()->get()->toArray());"
    ```

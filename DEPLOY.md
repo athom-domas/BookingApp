@@ -101,16 +101,22 @@ Per i deploy automatici via terminale usare il `Makefile` (vedi sezione 5).
 Richiede `.env.production` compilato localmente (vedi sezione 6).
 
 ```bash
-make deploy          # tutto: env + assets + codice + cache clear
-make deploy-env      # solo .env → server
+make deploy          # tutto: env + assets + codice + cache rebuild
+make deploy-env      # solo .env e .env.production → server
 make deploy-assets   # solo build CSS/JS (npm build + rsync)
 make deploy-code     # solo PHP (app/, routes/, config/, resources/)
 ```
 
 Dopo ogni deploy il Makefile esegue automaticamente su server:
 ```bash
-php85 artisan config:clear && php85 artisan route:clear && php85 artisan view:clear
+php85 artisan migrate --force
+php85 artisan optimize:clear
+php85 artisan config:cache
+php85 artisan route:cache
+php85 artisan view:cache
 ```
+
+`make deploy-env` copia `.env.production` sia in `/home/www/.env` sia in `/home/www/.env.production`. Questo evita che Laravel carichi un vecchio `.env.production` quando l'ambiente PHP imposta `APP_ENV=production`.
 
 Per deploy di singoli file (rapido):
 ```bash
@@ -164,6 +170,8 @@ STRIPE_PUBLIC_KEY=
 STRIPE_SECRET_KEY=
 STRIPE_PRICE_ID=
 STRIPE_BILLING_WEBHOOK_SECRET=
+STRIPE_CONNECT_WEBHOOK_SECRET=
+STRIPE_WEBHOOK_SECRET=
 
 TWILIO_SID=
 TWILIO_TOKEN=
@@ -237,7 +245,15 @@ Questo attiva l'invio automatico dei reminder email agli appuntamenti.
 
 ## Problemi noti e fix applicati
 
-**Stripe non configurato**: se `STRIPE_SECRET_KEY` è vuota, il middleware `CheckSubscription` crasha con 500 sull'admin panel. Fix temporaneo: estendere il trial (vedi sezione 8).
+**Stripe non configurato**: se `STRIPE_SECRET_KEY` è vuota o la config cache è stata generata da un env sbagliato, Stripe Connect solleva `Stripe non configurato. Verifica la chiave STRIPE_SECRET_KEY.`. Verificare:
+```bash
+/usr/bin/php8.5 artisan tinker --execute="var_export(['stripe_secret' => config('services.stripe.secret') ? 'set' : 'empty', 'cashier_secret' => config('cashier.secret') ? 'set' : 'empty', 'cached' => app()->configurationIsCached() ? 'yes' : 'no']);"
+```
+Se risulta `empty`, correggere `.env.production`, rieseguire `make deploy-env`, poi sul server:
+```bash
+/usr/bin/php8.5 artisan optimize:clear
+/usr/bin/php8.5 artisan config:cache
+```
 
 **PHP su SSH**: usare sempre `/usr/bin/php8.5`, non `php` (punta a 8.3). Il Makefile usa l'alias `php85` — se il server cambia configurazione, verificare.
 

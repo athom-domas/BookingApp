@@ -2,13 +2,14 @@ SSH_HOST     = su814880@access-5020661163.webspace-host.com
 SSH_PATH     = ~
 SSH_PHP      = /usr/bin/php8.5
 STAGING_PATH = ~/staging
+REQUIRED_PROD_ENV = APP_KEY APP_URL APP_BASE_DOMAIN DB_DATABASE DB_USERNAME DB_PASSWORD STRIPE_PUBLIC_KEY STRIPE_SECRET_KEY STRIPE_PRICE_ID STRIPE_BILLING_WEBHOOK_SECRET STRIPE_CONNECT_WEBHOOK_SECRET STRIPE_WEBHOOK_SECRET
 
 .PHONY: up down build restart logs shell \
         migrate migrate-fresh migrate-rollback seed \
         test test-filter \
         composer npm-install npm-dev npm-build vite \
         artisan tinker cache-clear queue-work \
-        deploy deploy-env deploy-assets deploy-code \
+        validate-prod-env deploy deploy-env deploy-assets deploy-code \
         staging-setup deploy-staging deploy-staging-env deploy-staging-assets deploy-staging-code
 
 up:
@@ -90,8 +91,19 @@ deploy: deploy-env deploy-assets deploy-code
 	ssh $(SSH_HOST) "cd $(SSH_PATH) && $(SSH_PHP) artisan migrate --force && $(SSH_PHP) artisan optimize:clear && $(SSH_PHP) artisan config:cache && $(SSH_PHP) artisan route:cache && $(SSH_PHP) artisan view:cache && touch public/index.php"
 	@echo "Deploy completato."
 
-deploy-env:
+validate-prod-env:
+	@test -f .env.production || (echo "Errore: manca .env.production"; exit 1)
+	@missing=0; for key in $(REQUIRED_PROD_ENV); do \
+		if ! grep -Eq "^$${key}=.+" .env.production; then \
+			echo "Errore: $${key} mancante o vuota in .env.production"; \
+			missing=1; \
+		fi; \
+	done; exit $$missing
+
+deploy-env: validate-prod-env
 	scp .env.production $(SSH_HOST):$(SSH_PATH)/.env
+	scp .env.production $(SSH_HOST):$(SSH_PATH)/.env.production
+	ssh $(SSH_HOST) "chmod 640 $(SSH_PATH)/.env $(SSH_PATH)/.env.production"
 
 deploy-assets:
 	docker compose run --rm --no-deps app npm run build
