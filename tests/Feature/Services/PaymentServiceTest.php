@@ -400,6 +400,34 @@ it('removeLoyaltyDiscount ripristina application_fee_amount e passa stripe_accou
     expect($capturedOpts['stripe_account'])->toBe('acct_loyalty');
 });
 
+it('handleStripeWebhook usa stripe_account_id nel lookup quando accountId fornito', function () {
+    $appointment = Appointment::factory()->create(['business_id' => $this->business->id]);
+
+    $otherBusiness = \App\Models\Business::factory()->create();
+    $decoy = \App\Models\Payment::factory()->create([
+        'appointment_id'        => Appointment::factory()->create(['business_id' => $otherBusiness->id]),
+        'stripe_transaction_id' => 'pi_multi_test',
+        'stripe_account_id'     => 'acct_other',
+        'status'                => 'pending',
+    ]);
+
+    $target = \App\Models\Payment::factory()->create([
+        'appointment_id'        => $appointment->id,
+        'stripe_transaction_id' => 'pi_multi_test',
+        'stripe_account_id'     => 'acct_target',
+        'status'                => 'pending',
+    ]);
+
+    $mockStripe = Mockery::mock(\Stripe\StripeClient::class);
+    ($this->makePaymentService)($mockStripe)->handleStripeWebhook([
+        'type' => 'payment_intent.succeeded',
+        'data' => ['object' => ['id' => 'pi_multi_test', 'latest_charge' => 'ch_target']],
+    ], 'acct_target');
+
+    expect($target->fresh()->status)->toBe('completed');
+    expect($decoy->fresh()->status)->toBe('pending');
+});
+
 it('initiateStripePayment non aggiunge destination params se business non ha account attivo', function () {
     $appointment = Appointment::factory()->create(['business_id' => $this->business->id]);
 

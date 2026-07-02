@@ -73,7 +73,7 @@ class PaymentService
         return $payment;
     }
 
-    public function handleStripeWebhook(array $payload): void
+    public function handleStripeWebhook(array $payload, ?string $accountId = null): void
     {
         $type = $payload['type'] ?? '';
         $transactionId = $payload['data']['object']['id'] ?? null;
@@ -84,7 +84,11 @@ class PaymentService
             return;
         }
 
-        $payment = Payment::where('stripe_transaction_id', $transactionId)->first();
+        $query = Payment::withoutGlobalScopes()->where('stripe_transaction_id', $transactionId);
+        if ($accountId !== null) {
+            $query->where('stripe_account_id', $accountId);
+        }
+        $payment = $query->first();
 
         if (! $payment) {
             return;
