@@ -71,6 +71,16 @@ class BusinessResource extends Resource
                         ->options(['active' => 'Attivo', 'suspended' => 'Sospeso'])
                         ->required()
                         ->visibleOn('edit'),
+
+                    TextInput::make('stripe_platform_fee_percent')
+                        ->label('Fee piattaforma (%)')
+                        ->numeric()
+                        ->minValue(0)
+                        ->maxValue(100)
+                        ->step(0.1)
+                        ->placeholder(fn() => config('services.stripe.platform_fee_percent', 0) . ' (default globale)')
+                        ->helperText('Lascia vuoto per usare il default globale da .env (STRIPE_PLATFORM_FEE_PERCENT).')
+                        ->visibleOn('edit'),
                 ])
                 ->columns(2)
                 ->columnSpanFull(),
