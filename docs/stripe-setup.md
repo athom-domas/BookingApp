@@ -29,7 +29,15 @@ Abbonamenti piattaforma — gestito da Laravel Cashier.
 1. **Developers → Webhooks → Add destination**
 2. Tipo: **Il tuo account** (non "Account connessi")
 3. URL: `https://booking-app.it/stripe/billing-webhook`
-4. Events: seleziona il gruppo **Abbonamenti** (18 eventi)
+4. Events: seleziona il gruppo **Abbonamenti** (18 eventi — include `subscription.*`, `invoice.*`, `customer.*`). Se il gruppo non è disponibile, seleziona manualmente:
+   - `customer.subscription.created`
+   - `customer.subscription.updated`
+   - `customer.subscription.deleted`
+   - `customer.subscription.trial_will_end`
+   - `invoice.payment_succeeded`
+   - `invoice.payment_failed`
+   - `invoice.payment_action_required`
+   - `payment_method.automatically_updated`
 5. Copia il **Signing secret** → `STRIPE_BILLING_WEBHOOK_SECRET`
 
 ---
@@ -41,7 +49,7 @@ Account connessi — saloni registrati come connected accounts.
 1. **Developers → Webhooks → Add destination**
 2. Tipo: **Account connessi**
 3. URL: `https://booking-app.it/stripe/connect/webhook`
-4. Events: **Accounts v2 → account.updated**
+4. Events: **Accounts → account.updated**
 5. Copia il **Signing secret** → `STRIPE_CONNECT_WEBHOOK_SECRET`
 
 ---

@@ -8,6 +8,7 @@ use App\Models\SalonProfile;
 use App\Models\Service;
 use App\Models\SystemSetting;
 use App\Models\User;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -51,13 +52,20 @@ class BusinessProvisioningService
             'slot_generation_weeks'       => 4,
             'slot_granularity_minutes'    => 15,
             'timezone'                    => 'Europe/Rome',
-            'booking_max_days_ahead'      => 30,
+            'booking_max_days_ahead'      => 60,
             'cancellation_deadline_hours' => 24,
             'reminder_count'              => 1,
             'reminder_1_hours'            => 24,
             'reminder_2_hours'            => 2,
             'payment_mode'                => 'both',
             'reviews_enabled'             => true,
+            'review_request_enabled'      => false,
+            'loyalty_enabled'             => false,
+            'loyalty_points_per_euro'     => 1,
+            'loyalty_reward_threshold'    => 100,
+            'loyalty_reward_percentage'   => 10,
+            'follow_up_reminders_enabled' => false,
+            'follow_up_reminder_days'     => 30,
         ]);
 
         SalonProfile::create([
@@ -77,5 +85,7 @@ class BusinessProvisioningService
                 'featured'         => $i === 0,
             ]);
         }
+
+        Artisan::call('page-builder:init', ['--business' => $business->id]);
     }
 }

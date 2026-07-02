@@ -17,7 +17,13 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(\App\Services\Booking\AppointmentService::class);
 
         $this->app->bind(StripeClient::class, function () {
-            $secret = \App\Models\IntegrationSetting::getStripeSecretKey() ?? config('services.stripe.secret');
+            try {
+                $secret = \App\Models\IntegrationSetting::getStripeSecretKey();
+            } catch (\Throwable) {
+                $secret = null;
+            }
+            $secret ??= config('services.stripe.secret');
+            $secret ??= config('cashier.secret');
             if (empty($secret)) {
                 return null;
             }
