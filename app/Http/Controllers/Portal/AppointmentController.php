@@ -149,6 +149,7 @@ class AppointmentController extends Controller
             'payment'                   => $payment,
             'stripePublicKey'           => \App\Models\IntegrationSetting::getStripePublicKey() ?? config('services.stripe.public'),
             'clientSecret'              => $payment->stripe_response['client_secret'] ?? null,
+            'stripeAccountId'           => $payment->stripe_account_id,
             'loyaltyEnabled'            => $loyaltyEnabled,
             'loyaltyEligible'           => $loyaltyEligible,
             'loyaltyPoints'             => $loyaltyPoints,

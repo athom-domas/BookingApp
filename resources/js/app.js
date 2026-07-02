@@ -53,7 +53,9 @@ ready(() => {
     const stripeForm = document.querySelector('[data-stripe-payment]');
 
     if (stripeForm && window.Stripe) {
-        const stripe = window.Stripe(stripeForm.dataset.publicKey);
+        const stripeAccountId = stripeForm.dataset.stripeAccount;
+        const stripeOptions = stripeAccountId ? { stripeAccount: stripeAccountId } : {};
+        const stripe = window.Stripe(stripeForm.dataset.publicKey, stripeOptions);
         const isDark = document.documentElement.classList.contains('dark');
         const elements = stripe.elements({
             clientSecret: stripeForm.dataset.clientSecret,

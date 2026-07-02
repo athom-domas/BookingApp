@@ -82,7 +82,7 @@
         <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6 shadow-sm">
             @if ($stripePublicKey && $clientSecret)
                 <p class="mb-4 text-sm font-semibold text-gray-950 dark:text-gray-50">Dati di pagamento</p>
-                <form data-stripe-payment data-public-key="{{ $stripePublicKey }}" data-client-secret="{{ $clientSecret }}" class="space-y-4">
+                <form data-stripe-payment data-public-key="{{ $stripePublicKey }}" data-client-secret="{{ $clientSecret }}" data-stripe-account="{{ $stripeAccountId ?? '' }}" class="space-y-4">
                     <div id="payment-element"></div>
                     <p class="hidden text-sm text-red-700 dark:text-red-400" data-payment-error></p>
                     <button type="submit"
