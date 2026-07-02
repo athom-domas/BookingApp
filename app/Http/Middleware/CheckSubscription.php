@@ -17,7 +17,7 @@ class CheckSubscription
 
         $business = Business::find(app('current_business_id'));
 
-        if ($request->routeIs('filament.admin.pages.abbonamento')) {
+        if ($request->routeIs('filament.admin.pages.abbonamento', 'filament.admin.auth.logout', 'logout')) {
             return $next($request);
         }
 

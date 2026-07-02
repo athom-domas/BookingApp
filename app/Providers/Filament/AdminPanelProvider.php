@@ -39,6 +39,24 @@ class AdminPanelProvider extends PanelProvider
         FilamentView::registerRenderHook(
             PanelsRenderHook::HEAD_END,
             function (): HtmlString {
+                if (! app()->bound('current_business_id')) {
+                    return new HtmlString('');
+                }
+                $business = Business::find(app('current_business_id'));
+                if (! $business || $business->hasAccess()) {
+                    return new HtmlString('');
+                }
+                return new HtmlString('<style>
+                    li.fi-sidebar-item:not(:has(a[href*="abbonamento"])){display:none!important}
+                    li.fi-sidebar-group{display:none!important}
+                    .fi-topbar-end>[wire\:id]{display:none!important}
+                </style>');
+            }
+        );
+
+        FilamentView::registerRenderHook(
+            PanelsRenderHook::HEAD_END,
+            function (): HtmlString {
                 try {
                     $palette = Color::hex('#334155');
                     $vars = implode('', array_map(
