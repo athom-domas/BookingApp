@@ -45,7 +45,7 @@ class StripeWebhookController extends Controller
         if ($payableType === 'product_order') {
             $this->productOrderService->handleStripeWebhook($event->toArray());
         } else {
-            $this->paymentService->handleStripeWebhook($event->toArray());
+            $this->paymentService->handleStripeWebhook($event->toArray(), $event->account ?? null);
         }
 
         return response()->json(['received' => true]);
