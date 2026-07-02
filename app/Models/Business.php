@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\BusinessStatus;
+use App\Models\ActivityLog;
 use App\Models\StripeConnectAccount;
 use Database\Factories\BusinessFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -79,5 +80,10 @@ class Business extends Model
     {
         $account = $this->stripeConnectAccount;
         return $account !== null && $account->isActive();
+    }
+
+    public function activityLogs(): HasMany
+    {
+        return $this->hasMany(ActivityLog::class);
     }
 }
