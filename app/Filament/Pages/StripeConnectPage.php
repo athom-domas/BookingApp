@@ -32,6 +32,16 @@ class StripeConnectPage extends Page
             ?? (float) config('services.stripe.platform_fee_percent', 0);
     }
 
+    public function startConnect(): void
+    {
+        $this->redirect(route('stripe.connect.start'), navigate: false);
+    }
+
+    public function refreshConnect(): void
+    {
+        $this->redirect(route('stripe.connect.refresh'), navigate: false);
+    }
+
     public function openDashboard(): void
     {
         $account = $this->getConnectAccount();

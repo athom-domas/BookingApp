@@ -23,7 +23,7 @@
                         Finché non configuri Stripe, i clienti possono prenotare solo con pagamento in salone.
                     </p>
                     @endif
-                    <x-filament::button tag="a" href="{{ route('stripe.connect.start') }}" icon="heroicon-o-arrow-right">
+                    <x-filament::button wire:click="startConnect" icon="heroicon-o-arrow-right">
                         Collega Stripe
                     </x-filament::button>
                 </div>
@@ -35,7 +35,7 @@
                 <div class="space-y-4">
                     <x-filament::badge color="warning">Configurazione incompleta</x-filament::badge>
                     <p class="text-sm text-gray-600 dark:text-gray-400">Hai avviato la configurazione ma non l'hai completata. Clicca per riprendere dal punto in cui ti sei fermato.</p>
-                    <x-filament::button tag="a" href="{{ route('stripe.connect.refresh') }}" icon="heroicon-o-arrow-path">
+                    <x-filament::button wire:click="refreshConnect" icon="heroicon-o-arrow-path">
                         Riprendi configurazione
                     </x-filament::button>
                 </div>
@@ -91,7 +91,7 @@
                         Stripe richiede ulteriori informazioni per mantenere attivo il tuo account.
                         Clicca per accedere e risolvere i requisiti mancanti.
                     </p>
-                    <x-filament::button tag="a" href="{{ route('stripe.connect.refresh') }}" icon="heroicon-o-exclamation-triangle" color="danger">
+                    <x-filament::button wire:click="refreshConnect" icon="heroicon-o-exclamation-triangle" color="danger">
                         Risolvi su Stripe
                     </x-filament::button>
                 </div>

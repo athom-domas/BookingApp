@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Filament\Pages\StripeConnectPage;
 use App\Models\Business;
 use App\Models\StripeConnectAccount;
 use App\Services\StripeConnectService;
@@ -36,7 +37,9 @@ class StripeConnectController extends Controller
             $this->connectService->syncFromStripe($account);
         }
 
-        return redirect('/admin/stripe-connect-page')
+        $business = Business::find(Business::currentId());
+
+        return redirect(StripeConnectPage::getUrl(tenant: $business))
             ->with('status', 'Configurazione completata. Stripe sta verificando i tuoi dati.');
     }
 
