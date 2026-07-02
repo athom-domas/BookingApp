@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\StripeConnectAccount;
 use App\Models\StripeWebhookEvent;
+use App\Services\PaymentService;
+use App\Services\RefundService;
 use App\Services\StripeConnectService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -13,7 +15,11 @@ use UnexpectedValueException;
 
 class StripeConnectWebhookController extends Controller
 {
-    public function __construct(private readonly StripeConnectService $connectService) {}
+    public function __construct(
+        private readonly StripeConnectService $connectService,
+        private readonly PaymentService $paymentService,
+        private readonly RefundService $refundService,
+    ) {}
 
     public function __invoke(Request $request): JsonResponse
     {
@@ -69,6 +75,22 @@ class StripeConnectWebhookController extends Controller
                     StripeWebhookEvent::where('event_id', $eventId)
                         ->update(['failed_at' => now(), 'error_message' => $e->getMessage()]);
                 }
+            }
+        } elseif (in_array($type, ['payment_intent.succeeded', 'payment_intent.payment_failed', 'payment_intent.canceled'])) {
+            try {
+                $this->paymentService->handleStripeWebhook($payload, $accountId);
+                StripeWebhookEvent::where('event_id', $eventId)->update(['processed_at' => now()]);
+            } catch (\Throwable $e) {
+                StripeWebhookEvent::where('event_id', $eventId)
+                    ->update(['failed_at' => now(), 'error_message' => $e->getMessage()]);
+            }
+        } elseif ($type === 'charge.refunded') {
+            try {
+                $this->refundService->handleExternalRefund($payload['data']['object'], $accountId);
+                StripeWebhookEvent::where('event_id', $eventId)->update(['processed_at' => now()]);
+            } catch (\Throwable $e) {
+                StripeWebhookEvent::where('event_id', $eventId)
+                    ->update(['failed_at' => now(), 'error_message' => $e->getMessage()]);
             }
         } else {
             StripeWebhookEvent::where('event_id', $eventId)->update(['processed_at' => now()]);
