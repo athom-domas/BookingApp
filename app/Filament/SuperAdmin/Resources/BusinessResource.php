@@ -231,6 +231,7 @@ class BusinessResource extends Resource
     {
         return [
             \App\Filament\SuperAdmin\Resources\BusinessResource\RelationManagers\BusinessAdminsRelationManager::class,
+            \App\Filament\SuperAdmin\Resources\BusinessResource\RelationManagers\ActivityLogRelationManager::class,
         ];
     }
 
