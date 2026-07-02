@@ -19,7 +19,8 @@
 .sf-cart-fab-count {
     position: absolute; top: -10px; right: -10px;
     min-width: 20px; height: 20px; padding: 0 5px;
-    background: var(--sf-gold); color: #000;
+    background: var(--sf-btn-fg); color: var(--sf-btn-bg);
+    outline: 2px solid var(--sf-btn-bg);
     border-radius: 100px; font-size: 10px; font-weight: 700;
     line-height: 20px; text-align: center;
     font-family: var(--sf-font-body); letter-spacing: 0;
