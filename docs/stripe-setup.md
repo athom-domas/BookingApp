@@ -1,6 +1,27 @@
 # Stripe Setup — Booking App
 
-Configurazione completa per ricevere pagamenti di abbonamenti in produzione.
+Configurazione completa per abbonamenti piattaforma e pagamenti diretti tra clienti e saloni (Stripe Connect).
+
+---
+
+## 0 — Configurare Stripe Connect sulla piattaforma
+
+Da fare **una sola volta** prima di poter connettere qualsiasi salone.
+
+1. Vai su **Settings → Connect settings** nel dashboard Stripe
+2. Clicca **Get started** per attivare Connect
+3. Rispondi alle domande di configurazione:
+
+   | Domanda | Risposta |
+   |---------|----------|
+   | Come avverrà il flusso di fondi? | **I venditori riscuoteranno i pagamenti direttamente** (direct charges) |
+   | Settore | **Software di gestione aziendale** |
+   | Dove creeranno i venditori il proprio account? | **Onboarding gestito da Stripe** |
+   | Dove potranno i venditori gestire il proprio account? | **Pannello di controllo Express** |
+
+4. Completa la configurazione e torna al dashboard
+
+> Dopo questo step i saloni potranno collegare il proprio account Stripe tramite il pannello admin dell'app (Impostazioni → Pagamenti online → Collega Stripe).
 
 ---
 
