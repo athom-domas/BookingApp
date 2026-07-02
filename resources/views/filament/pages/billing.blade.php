@@ -16,6 +16,16 @@
             try { $stripeData = $sub->asStripeSubscription(); } catch (\Exception) {}
         }
 
+        $renewalDate = null;
+        if ($stripeData) {
+            $periodEnd = $stripeData->items->data[0]->current_period_end
+                ?? $stripeData->current_period_end
+                ?? null;
+            if ($periodEnd) {
+                $renewalDate = \Carbon\Carbon::createFromTimestamp($periodEnd);
+            }
+        }
+
         $isAdmin = auth()->user()?->isAdmin();
     @endphp
 
@@ -75,7 +85,6 @@
                         <p class="text-sm text-green-700 dark:text-green-400 mt-0.5">€29/mese · IVA esclusa · Cancellazione in qualsiasi momento</p>
                     </div>
                 </div>
-                @php $renewalDate = $stripeData?->current_period_end ? \Carbon\Carbon::createFromTimestamp($stripeData->current_period_end) : null; @endphp
                 <div class="grid grid-cols-2 sm:grid-cols-{{ $renewalDate ? '3' : '2' }} gap-4 pt-4 border-t border-green-200 dark:border-green-800">
                     <div>
                         <p class="text-xs font-medium text-green-600 dark:text-green-500 uppercase tracking-wide">Attivato il</p>
