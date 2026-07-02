@@ -121,9 +121,21 @@ class PaymentService
             throw new BookingException('Nessun pagamento trovato per questo appuntamento.');
         }
 
-        $paymentIntent = $this->stripe->paymentIntents->retrieve($payment->stripe_transaction_id);
+        $opts = $payment->stripe_account_id
+            ? ['stripe_account' => $payment->stripe_account_id]
+            : [];
+
+        $paymentIntent = $this->stripe->paymentIntents->retrieve(
+            $payment->stripe_transaction_id,
+            [],
+            $opts
+        );
 
         if ($paymentIntent->status === 'succeeded') {
+            $chargeId = $paymentIntent->latest_charge ?? null;
+            if ($chargeId && ! $payment->stripe_charge_id) {
+                $payment->update(['stripe_charge_id' => $chargeId]);
+            }
             $this->markPaymentCompleted($payment);
         } elseif (in_array($paymentIntent->status, ['canceled', 'requires_payment_method'], true)) {
             throw new BookingException('Il pagamento non è andato a buon fine.');

@@ -122,7 +122,9 @@ it('confirmPayment marks payment and appointment as completed when Stripe succee
     ]);
 
     $mockPaymentIntents = Mockery::mock();
-    $mockPaymentIntents->shouldReceive('retrieve')->once()->with('pi_test_confirm')->andReturn($fakeIntent);
+    $mockPaymentIntents->shouldReceive('retrieve')->once()->withArgs(function ($id, $params, $opts) {
+        return $id === 'pi_test_confirm';
+    })->andReturn($fakeIntent);
 
     $mockStripe = Mockery::mock(StripeClient::class);
     $mockStripe->shouldReceive('getService')->with('paymentIntents')->andReturn($mockPaymentIntents);
@@ -268,6 +270,43 @@ it('initiateStripePayment usa direct charge con stripe_account option se busines
     expect($capturedOpts['stripe_account'])->toBe('acct_direct_test');
     expect($payment->stripe_account_id)->toBe('acct_direct_test');
     expect((float) $payment->platform_fee_amount)->toBe(5.0);
+});
+
+it('confirmPayment passa stripe_account option e salva latest_charge', function () {
+    $appointment = Appointment::factory()->create(['business_id' => $this->business->id]);
+    $payment = \App\Models\Payment::factory()->create([
+        'appointment_id'        => $appointment->id,
+        'stripe_transaction_id' => 'pi_confirm_direct',
+        'stripe_account_id'     => 'acct_confirm',
+        'status'                => 'pending',
+    ]);
+
+    $fakeIntent = \Stripe\PaymentIntent::constructFrom([
+        'id'            => 'pi_confirm_direct',
+        'object'        => 'payment_intent',
+        'status'        => 'succeeded',
+        'latest_charge' => 'ch_direct_001',
+        'amount'        => 5000,
+        'currency'      => 'eur',
+    ]);
+
+    $capturedOpts = null;
+    $mockPaymentIntents = Mockery::mock();
+    $mockPaymentIntents->shouldReceive('retrieve')
+        ->once()
+        ->withArgs(function ($id, $params, $opts) use (&$capturedOpts) {
+            $capturedOpts = $opts;
+            return true;
+        })
+        ->andReturn($fakeIntent);
+
+    $mockStripe = Mockery::mock(\Stripe\StripeClient::class);
+    $mockStripe->shouldReceive('getService')->with('paymentIntents')->andReturn($mockPaymentIntents);
+
+    ($this->makePaymentService)($mockStripe)->confirmPayment($appointment->id);
+
+    expect($capturedOpts['stripe_account'])->toBe('acct_confirm');
+    expect($payment->fresh()->stripe_charge_id)->toBe('ch_direct_001');
 });
 
 it('initiateStripePayment non aggiunge destination params se business non ha account attivo', function () {
