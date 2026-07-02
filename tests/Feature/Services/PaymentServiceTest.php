@@ -222,35 +222,38 @@ it('recordInPersonPayment throws BookingException if a completed payment already
         ->toThrow(BookingException::class);
 });
 
-it('initiateStripePayment aggiunge destination charge params se business ha account attivo', function () {
+it('initiateStripePayment usa direct charge con stripe_account option se business ha account attivo', function () {
     $account = \App\Models\StripeConnectAccount::factory()->create([
         'business_id'       => $this->business->id,
-        'stripe_account_id' => 'acct_destination',
+        'stripe_account_id' => 'acct_direct_test',
     ]);
 
     $appointment = Appointment::factory()->create(['business_id' => $this->business->id]);
     $this->business->update(['stripe_platform_fee_percent' => 5.0]);
 
-    $fakeIntent = PaymentIntent::constructFrom([
-        'id'           => 'pi_connect_test',
-        'object'       => 'payment_intent',
-        'amount'       => 10000,
-        'currency'     => 'eur',
-        'status'       => 'requires_payment_method',
-        'client_secret'=> 'pi_connect_test_secret',
+    $fakeIntent = \Stripe\PaymentIntent::constructFrom([
+        'id'            => 'pi_direct_test',
+        'object'        => 'payment_intent',
+        'amount'        => 10000,
+        'currency'      => 'eur',
+        'status'        => 'requires_payment_method',
+        'client_secret' => 'pi_direct_test_secret',
     ]);
 
     $capturedParams = null;
+    $capturedOpts   = null;
+
     $mockPaymentIntents = Mockery::mock();
     $mockPaymentIntents->shouldReceive('create')
         ->once()
-        ->withArgs(function ($params) use (&$capturedParams) {
+        ->withArgs(function ($params, $opts = []) use (&$capturedParams, &$capturedOpts) {
             $capturedParams = $params;
+            $capturedOpts   = $opts;
             return true;
         })
         ->andReturn($fakeIntent);
 
-    $mockStripe = Mockery::mock(StripeClient::class);
+    $mockStripe = Mockery::mock(\Stripe\StripeClient::class);
     $mockStripe->shouldReceive('getService')->with('paymentIntents')->andReturn($mockPaymentIntents);
 
     $service = new \App\Services\PaymentService(
@@ -259,12 +262,12 @@ it('initiateStripePayment aggiunge destination charge params se business ha acco
     );
     $payment = $service->initiateStripePayment($appointment->id, 10000, $this->business);
 
-    expect($capturedParams['on_behalf_of'])->toBe('acct_destination');
-    expect($capturedParams['transfer_data']['destination'])->toBe('acct_destination');
+    expect(array_key_exists('on_behalf_of', $capturedParams))->toBeFalse();
+    expect(array_key_exists('transfer_data', $capturedParams))->toBeFalse();
     expect($capturedParams['application_fee_amount'])->toBe(500);
-    expect($payment->platform_fee_amount)->toBe(500);
-    expect((float) $payment->platform_fee_percent)->toBe(5.0);
-    expect($payment->stripe_account_id)->toBe('acct_destination');
+    expect($capturedOpts['stripe_account'])->toBe('acct_direct_test');
+    expect($payment->stripe_account_id)->toBe('acct_direct_test');
+    expect((float) $payment->platform_fee_amount)->toBe(5.0);
 });
 
 it('initiateStripePayment non aggiunge destination params se business non ha account attivo', function () {
@@ -299,5 +302,5 @@ it('initiateStripePayment non aggiunge destination params se business non ha acc
 
     expect(array_key_exists('on_behalf_of', $capturedParams))->toBeFalse();
     expect(array_key_exists('application_fee_amount', $capturedParams))->toBeFalse();
-    expect($payment->platform_fee_amount)->toBe(0);
+    expect((float) $payment->platform_fee_amount)->toBe(0.0);
 });

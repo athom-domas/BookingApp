@@ -43,17 +43,19 @@ class PaymentService
         ];
 
         if ($hasConnect) {
-            $intentParams['on_behalf_of']               = $connectAccount->stripe_account_id;
-            $intentParams['application_fee_amount']     = $fee['cents'];
-            $intentParams['transfer_data']              = ['destination' => $connectAccount->stripe_account_id];
-            $intentParams['automatic_payment_methods']  = ['enabled' => true];
+            $intentParams['application_fee_amount']    = $fee['cents'];
+            $intentParams['automatic_payment_methods'] = ['enabled' => true];
+            $paymentIntent = $this->stripe->paymentIntents->create(
+                $intentParams,
+                ['stripe_account' => $connectAccount->stripe_account_id]
+            );
         } elseif ($pmConfig) {
             $intentParams['payment_method_configuration'] = $pmConfig;
+            $paymentIntent = $this->stripe->paymentIntents->create($intentParams);
         } else {
             $intentParams['automatic_payment_methods'] = ['enabled' => true];
+            $paymentIntent = $this->stripe->paymentIntents->create($intentParams);
         }
-
-        $paymentIntent = $this->stripe->paymentIntents->create($intentParams);
 
         $payment = Payment::create([
             'appointment_id'        => $appointmentId,
