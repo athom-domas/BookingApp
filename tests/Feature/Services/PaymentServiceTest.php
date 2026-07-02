@@ -309,6 +309,34 @@ it('confirmPayment passa stripe_account option e salva latest_charge', function 
     expect($payment->fresh()->stripe_charge_id)->toBe('ch_direct_001');
 });
 
+it('cancelPendingPayment passa stripe_account option per direct charge', function () {
+    $appointment = Appointment::factory()->create(['business_id' => $this->business->id]);
+    $payment = \App\Models\Payment::factory()->create([
+        'appointment_id'        => $appointment->id,
+        'stripe_transaction_id' => 'pi_cancel_direct',
+        'stripe_account_id'    => 'acct_cancel',
+        'status'               => 'pending',
+        'payment_method'       => 'stripe',
+    ]);
+
+    $capturedOpts = null;
+    $mockPaymentIntents = Mockery::mock();
+    $mockPaymentIntents->shouldReceive('cancel')
+        ->once()
+        ->withArgs(function ($id, $params, $opts) use (&$capturedOpts) {
+            $capturedOpts = $opts;
+            return true;
+        });
+
+    $mockStripe = Mockery::mock(\Stripe\StripeClient::class);
+    $mockStripe->shouldReceive('getService')->with('paymentIntents')->andReturn($mockPaymentIntents);
+
+    ($this->makePaymentService)($mockStripe)->cancelPendingPayment($payment);
+
+    expect($capturedOpts['stripe_account'])->toBe('acct_cancel');
+    expect($payment->fresh()->status)->toBe('cancelled');
+});
+
 it('initiateStripePayment non aggiunge destination params se business non ha account attivo', function () {
     $appointment = Appointment::factory()->create(['business_id' => $this->business->id]);
 

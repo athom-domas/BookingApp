@@ -152,7 +152,10 @@ class PaymentService
 
         if ($payment->payment_method === 'stripe' && $payment->stripe_transaction_id) {
             try {
-                $this->stripe->paymentIntents->cancel($payment->stripe_transaction_id);
+                $opts = $payment->stripe_account_id
+                    ? ['stripe_account' => $payment->stripe_account_id]
+                    : [];
+                $this->stripe->paymentIntents->cancel($payment->stripe_transaction_id, [], $opts);
             } catch (\Throwable) {
                 // PaymentIntent già cancellato o scaduto: nessuna azione necessaria
             }
