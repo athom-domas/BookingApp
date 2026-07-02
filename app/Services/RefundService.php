@@ -27,17 +27,18 @@ class RefundService
         }
 
         $params = ['charge' => $payment->stripe_charge_id];
+        $opts   = [];
 
         if ($payment->stripe_account_id !== null) {
-            $params['reverse_transfer']      = true;
             $params['refund_application_fee'] = true;
+            $opts['stripe_account']           = $payment->stripe_account_id;
         }
 
         if ($amountCents !== null) {
             $params['amount'] = $amountCents;
         }
 
-        $stripeRefund = $this->stripe->refunds->create($params);
+        $stripeRefund = $this->stripe->refunds->create($params, $opts);
 
         $isConnect = $payment->stripe_account_id !== null;
 
@@ -48,7 +49,7 @@ class RefundService
             'status'                 => $stripeRefund->status,
             'reason'                 => $stripeRefund->reason ?? null,
             'refund_application_fee' => $isConnect,
-            'reverse_transfer'       => $isConnect,
+            'reverse_transfer'       => false,
             'payload'                => $stripeRefund->toArray(),
         ]);
 
@@ -60,14 +61,18 @@ class RefundService
         return $refundRecord;
     }
 
-    public function handleExternalRefund(array $chargePayload): void
+    public function handleExternalRefund(array $chargePayload, ?string $accountId = null): void
     {
         $chargeId = $chargePayload['id'] ?? null;
         if (! $chargeId) {
             return;
         }
 
-        $payment = Payment::where('stripe_charge_id', $chargeId)->first();
+        $query = Payment::withoutGlobalScopes()->where('stripe_charge_id', $chargeId);
+        if ($accountId !== null) {
+            $query->where('stripe_account_id', $accountId);
+        }
+        $payment = $query->first();
         if (! $payment) {
             return;
         }

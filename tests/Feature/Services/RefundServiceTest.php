@@ -39,11 +39,12 @@ it('rimborsa un pagamento completato e crea un StripeRefund record', function ()
 
     $mockRefunds = Mockery::mock();
     $mockRefunds->shouldReceive('create')
-        ->with(Mockery::on(fn ($p) =>
-            $p['charge'] === 'ch_test_refund'
-            && $p['refund_application_fee'] === true
-            && $p['reverse_transfer'] === true
-        ))
+        ->withArgs(function ($params, $opts) {
+            return $params['charge'] === 'ch_test_refund'
+                && $params['refund_application_fee'] === true
+                && ! array_key_exists('reverse_transfer', $params)
+                && $opts['stripe_account'] === 'acct_test';
+        })
         ->andReturn($fakeRefund);
 
     $mockStripe = Mockery::mock(StripeClient::class);
@@ -54,7 +55,7 @@ it('rimborsa un pagamento completato e crea un StripeRefund record', function ()
     expect($refundRecord->stripe_refund_id)->toBe('re_test_001');
     expect($refundRecord->status)->toBe('succeeded');
     expect($refundRecord->refund_application_fee)->toBeTrue();
-    expect($refundRecord->reverse_transfer)->toBeTrue();
+    expect($refundRecord->reverse_transfer)->toBeFalse();
     expect($payment->fresh()->status)->toBe('refunded');
     Event::assertDispatched(PaymentRefunded::class);
 });
@@ -119,4 +120,73 @@ it('handleExternalRefund sincronizza rimborso arrivato via webhook', function ()
     expect($payment->fresh()->status)->toBe('refunded');
     expect(StripeRefund::where('stripe_refund_id', 're_external_001')->exists())->toBeTrue();
     Event::assertDispatched(PaymentRefunded::class);
+});
+
+it('refund non usa reverse_transfer e passa stripe_account per direct charge', function () {
+    $appointment = Appointment::factory()->create(['business_id' => $this->business->id]);
+    $payment = Payment::factory()->create([
+        'appointment_id'    => $appointment->id,
+        'stripe_account_id' => 'acct_refund',
+        'stripe_charge_id'  => 'ch_direct_refund',
+        'status'            => 'completed',
+        'amount'            => 50.0,
+    ]);
+
+    $fakeRefund = \Stripe\Refund::constructFrom([
+        'id'     => 're_direct',
+        'amount' => 5000,
+        'status' => 'succeeded',
+        'reason' => null,
+    ]);
+
+    $capturedParams = null;
+    $capturedOpts   = null;
+    $mockRefunds = Mockery::mock();
+    $mockRefunds->shouldReceive('create')
+        ->once()
+        ->withArgs(function ($params, $opts) use (&$capturedParams, &$capturedOpts) {
+            $capturedParams = $params;
+            $capturedOpts   = $opts;
+            return true;
+        })
+        ->andReturn($fakeRefund);
+
+    $mockStripe = Mockery::mock(\Stripe\StripeClient::class);
+    $mockStripe->shouldReceive('getService')->with('refunds')->andReturn($mockRefunds);
+
+    (new \App\Services\RefundService($mockStripe))->refund($payment);
+
+    expect(array_key_exists('reverse_transfer', $capturedParams))->toBeFalse();
+    expect($capturedParams['refund_application_fee'])->toBeTrue();
+    expect($capturedOpts['stripe_account'])->toBe('acct_refund');
+});
+
+it('handleExternalRefund filtra per stripe_account_id quando accountId fornito', function () {
+    $appointment = Appointment::factory()->create(['business_id' => $this->business->id]);
+
+    $otherBusiness = \App\Models\Business::factory()->create();
+    $decoy = Payment::factory()->create([
+        'appointment_id'    => Appointment::factory()->create(['business_id' => $otherBusiness->id]),
+        'stripe_charge_id'  => 'ch_external_shared',
+        'stripe_account_id' => 'acct_other',
+        'status'            => 'completed',
+        'amount'            => 50.0,
+    ]);
+
+    $target = Payment::factory()->create([
+        'appointment_id'    => $appointment->id,
+        'stripe_charge_id'  => 'ch_external_shared',
+        'stripe_account_id' => 'acct_target',
+        'status'            => 'completed',
+        'amount'            => 50.0,
+    ]);
+
+    $mockStripe = Mockery::mock(\Stripe\StripeClient::class);
+    (new \App\Services\RefundService($mockStripe))->handleExternalRefund([
+        'id'      => 'ch_external_shared',
+        'refunds' => ['data' => [['id' => 're_ext_001', 'amount' => 5000, 'status' => 'succeeded']]],
+    ], 'acct_target');
+
+    expect($target->fresh()->status)->toBe('refunded');
+    expect($decoy->fresh()->status)->toBe('completed');
 });
