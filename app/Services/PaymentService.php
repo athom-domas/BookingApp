@@ -196,11 +196,19 @@ class PaymentService
 
     public function applyLoyaltyDiscount(Payment $payment, int $percentage, float $originalAmount): void
     {
-        $discounted = round($originalAmount * (1 - $percentage / 100), 2);
+        $discounted     = round($originalAmount * (1 - $percentage / 100), 2);
+        $newAmountCents = (int) round($discounted * 100);
 
-        $this->stripe->paymentIntents->update($payment->stripe_transaction_id, [
-            'amount' => (int) round($discounted * 100),
-        ]);
+        $updateParams = ['amount' => $newAmountCents];
+        if ($payment->stripe_account_id && $payment->platform_fee_percent) {
+            $updateParams['application_fee_amount'] = (int) round($newAmountCents * $payment->platform_fee_percent / 100);
+        }
+
+        $opts = $payment->stripe_account_id
+            ? ['stripe_account' => $payment->stripe_account_id]
+            : [];
+
+        $this->stripe->paymentIntents->update($payment->stripe_transaction_id, $updateParams, $opts);
 
         $payment->update([
             'amount'                      => $discounted,
@@ -211,11 +219,19 @@ class PaymentService
 
     public function removeLoyaltyDiscount(Payment $payment): void
     {
-        $original = (float) $payment->loyalty_original_amount;
+        $original      = (float) $payment->loyalty_original_amount;
+        $originalCents = (int) round($original * 100);
 
-        $this->stripe->paymentIntents->update($payment->stripe_transaction_id, [
-            'amount' => (int) round($original * 100),
-        ]);
+        $updateParams = ['amount' => $originalCents];
+        if ($payment->stripe_account_id && $payment->platform_fee_percent) {
+            $updateParams['application_fee_amount'] = (int) round($originalCents * $payment->platform_fee_percent / 100);
+        }
+
+        $opts = $payment->stripe_account_id
+            ? ['stripe_account' => $payment->stripe_account_id]
+            : [];
+
+        $this->stripe->paymentIntents->update($payment->stripe_transaction_id, $updateParams, $opts);
 
         $payment->update([
             'amount'                      => $original,

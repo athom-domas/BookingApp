@@ -337,6 +337,69 @@ it('cancelPendingPayment passa stripe_account option per direct charge', functio
     expect($payment->fresh()->status)->toBe('cancelled');
 });
 
+it('applyLoyaltyDiscount ricalcola application_fee_amount e passa stripe_account', function () {
+    $appointment = Appointment::factory()->create(['business_id' => $this->business->id]);
+    $payment = \App\Models\Payment::factory()->create([
+        'appointment_id'        => $appointment->id,
+        'stripe_transaction_id' => 'pi_loyalty_test',
+        'stripe_account_id'     => 'acct_loyalty',
+        'platform_fee_percent'  => 5.0,
+        'status'                => 'pending',
+    ]);
+
+    $capturedParams = null;
+    $capturedOpts   = null;
+    $mockPaymentIntents = Mockery::mock();
+    $mockPaymentIntents->shouldReceive('update')
+        ->once()
+        ->withArgs(function ($id, $params, $opts) use (&$capturedParams, &$capturedOpts) {
+            $capturedParams = $params;
+            $capturedOpts   = $opts;
+            return true;
+        });
+
+    $mockStripe = Mockery::mock(\Stripe\StripeClient::class);
+    $mockStripe->shouldReceive('getService')->with('paymentIntents')->andReturn($mockPaymentIntents);
+
+    ($this->makePaymentService)($mockStripe)->applyLoyaltyDiscount($payment, 20, 50.0);
+
+    expect($capturedParams['amount'])->toBe(4000);
+    expect($capturedParams['application_fee_amount'])->toBe(200);
+    expect($capturedOpts['stripe_account'])->toBe('acct_loyalty');
+});
+
+it('removeLoyaltyDiscount ripristina application_fee_amount e passa stripe_account', function () {
+    $appointment = Appointment::factory()->create(['business_id' => $this->business->id]);
+    $payment = \App\Models\Payment::factory()->create([
+        'appointment_id'          => $appointment->id,
+        'stripe_transaction_id'   => 'pi_remove_loyalty',
+        'stripe_account_id'       => 'acct_loyalty',
+        'platform_fee_percent'    => 5.0,
+        'loyalty_original_amount' => 50.0,
+        'status'                  => 'pending',
+    ]);
+
+    $capturedParams = null;
+    $capturedOpts   = null;
+    $mockPaymentIntents = Mockery::mock();
+    $mockPaymentIntents->shouldReceive('update')
+        ->once()
+        ->withArgs(function ($id, $params, $opts) use (&$capturedParams, &$capturedOpts) {
+            $capturedParams = $params;
+            $capturedOpts   = $opts;
+            return true;
+        });
+
+    $mockStripe = Mockery::mock(\Stripe\StripeClient::class);
+    $mockStripe->shouldReceive('getService')->with('paymentIntents')->andReturn($mockPaymentIntents);
+
+    ($this->makePaymentService)($mockStripe)->removeLoyaltyDiscount($payment);
+
+    expect($capturedParams['amount'])->toBe(5000);
+    expect($capturedParams['application_fee_amount'])->toBe(250);
+    expect($capturedOpts['stripe_account'])->toBe('acct_loyalty');
+});
+
 it('initiateStripePayment non aggiunge destination params se business non ha account attivo', function () {
     $appointment = Appointment::factory()->create(['business_id' => $this->business->id]);
 
