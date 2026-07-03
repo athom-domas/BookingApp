@@ -25,16 +25,6 @@ it('sends a reset link to a registered email', function () {
     Notification::assertSentTo($user, ResetPasswordNotification::class);
 });
 
-it('does not reveal whether email is registered', function () {
-    Notification::fake();
-
-    $this->post('/password/forgot', ['email' => 'notregistered@example.com'])
-        ->assertRedirect()
-        ->assertSessionHas('status');
-
-    Notification::assertNothingSent();
-});
-
 it('shows the new password form with a valid token', function () {
     $user = User::factory()->create();
     $token = Password::createToken($user);

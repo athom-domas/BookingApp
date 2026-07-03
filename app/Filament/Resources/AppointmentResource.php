@@ -73,6 +73,13 @@ class AppointmentResource extends Resource
 
     public static function canCreate(): bool
     {
+        $user = auth()->user();
+        if ($user?->isAdmin()) {
+            return true;
+        }
+        if ($user?->isStaff() && $user->can('appointments.create')) {
+            return true;
+        }
         return false;
     }
 

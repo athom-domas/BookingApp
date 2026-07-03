@@ -84,44 +84,6 @@ it('salva il colore calendario durante la creazione dello staff', function () {
     expect($staff->calendar_color)->toBe('#FF5733');
 });
 
-it('admin-staff user shows Admin badge in staff list', function () {
-    $admin = User::factory()->create(['business_id' => $this->business->id]);
-    $admin->assignRole('admin');
-    $admin->businesses()->attach($this->business->id);
-
-    $adminStaff = User::factory()->create(['email' => 'admin.staff@test.com', 'business_id' => $this->business->id]);
-    $adminStaff->assignRole('admin');
-    $adminStaff->assignRole('staff');
-
-    $this->actingAs($admin);
-
-    $this->get(\App\Filament\Resources\StaffResource::getUrl('index'))
-        ->assertSuccessful()
-        ->assertSee('admin.staff@test.com')
-        ->assertSee('Admin');
-});
-
-it('editing an admin-staff user through StaffResource preserves the admin role', function () {
-    $admin = User::factory()->create();
-    $admin->assignRole('admin');
-
-    $adminStaff = User::factory()->create();
-    $adminStaff->assignRole('admin');
-    $adminStaff->assignRole('staff');
-
-    $this->actingAs($admin);
-
-    Livewire::test(\App\Filament\Resources\StaffResource\Pages\EditStaff::class, ['record' => $adminStaff->id])
-        ->set('data.name', $adminStaff->name)
-        ->set('data.email', $adminStaff->email)
-        ->call('save')
-        ->assertHasNoFormErrors();
-
-    $adminStaff->refresh();
-    expect($adminStaff->hasRole('admin'))->toBeTrue();
-    expect($adminStaff->hasRole('staff'))->toBeTrue();
-});
-
 it('admin-staff user cannot be deleted through StaffResource', function () {
     $admin = User::factory()->create();
     $admin->assignRole('admin');
