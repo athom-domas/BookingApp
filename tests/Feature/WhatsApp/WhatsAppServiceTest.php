@@ -39,7 +39,7 @@ it('throws WhatsAppWindowExpiredException when outside 24h window', function () 
     ))->toThrow(WhatsAppWindowExpiredException::class);
 });
 
-it('sends template with language and category', function () {
+it('sends template and returns wamid', function () {
     Http::fake(['https://graph.facebook.com/*' => Http::response(['messages' => [['id' => 'wamid.2']]], 200)]);
 
     $result = app(WhatsAppService::class)->sendTemplate(
@@ -51,5 +51,20 @@ it('sends template with language and category', function () {
         app('current_business_id'),
     );
 
-    expect($result)->toBeTrue();
+    expect($result)->toBe('wamid.2');
+});
+
+it('sendTemplate returns null on api error', function () {
+    Http::fake(['https://graph.facebook.com/*' => Http::response(['error' => ['message' => 'Invalid token']], 400)]);
+
+    $result = app(WhatsAppService::class)->sendTemplate(
+        '+393401234567',
+        'appointment_confirmation',
+        'it',
+        'UTILITY',
+        ['Mario Rossi'],
+        app('current_business_id'),
+    );
+
+    expect($result)->toBeNull();
 });

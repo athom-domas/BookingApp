@@ -60,14 +60,14 @@ class WhatsAppService
         return true;
     }
 
-    public function sendTemplate(string $phone, string $templateName, string $language, string $category, array $params, int $businessId): bool
+    public function sendTemplate(string $phone, string $templateName, string $language, string $category, array $params, int $businessId): ?string
     {
         $setting = $this->getSettings($businessId);
         $token   = $setting->meta_whatsapp_token;
         $phoneId = $setting->meta_whatsapp_phone_id;
 
         if (! $token || ! $phoneId) {
-            return false;
+            return null;
         }
 
         $response = Http::withToken($token)
@@ -90,10 +90,10 @@ class WhatsAppService
 
         if (! $response->successful()) {
             Log::error('WhatsApp sendTemplate error', ['status' => $response->status(), 'body' => $response->json()]);
-            return false;
+            return null;
         }
 
-        return true;
+        return $response->json('messages.0.id', '');
     }
 
     public function sendTemplateDefault(string $phone, array $parameters): bool
@@ -106,6 +106,6 @@ class WhatsAppService
             return false;
         }
 
-        return $this->sendTemplate($phone, $template, 'it', 'UTILITY', $parameters, $businessId);
+        return $this->sendTemplate($phone, $template, 'it', 'UTILITY', $parameters, $businessId) !== null;
     }
 }
