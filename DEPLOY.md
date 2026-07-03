@@ -101,22 +101,51 @@ Per i deploy automatici via terminale usare il `Makefile` (vedi sezione 5).
 Richiede `.env.production` compilato localmente (vedi sezione 6).
 
 ```bash
-make deploy          # tutto: env + assets + codice + cache rebuild
-make deploy-env      # solo .env e .env.production → server
-make deploy-assets   # solo build CSS/JS (npm build + rsync)
-make deploy-code     # solo PHP (app/, routes/, config/, resources/)
+make deploy          # produzione: preflight + build + env + codice + vendor + cache + healthcheck
+make deploy-staging  # staging: stesso flusso production-like, senza reset database
+
+make deploy-env      # solo .env e .env.production → produzione
+make deploy-assets   # solo build + asset pubblici → produzione
+make deploy-code     # solo codice Laravel → produzione
+make deploy-vendor   # solo composer install da composer.lock → produzione
 ```
+
+Il Makefile:
+- valida `composer.json` dentro Docker prima del deploy
+- crea un lock remoto `.deploy.lock` per evitare deploy concorrenti
+- manda l'app in maintenance mode durante sync/migrazioni/cache
+- sincronizza codice Laravel, `bootstrap/`, `lang/`, `public/` e `public/build/`
+- non copia `vendor/` dal locale: esegue sempre `composer install` sul server da `composer.lock`
+- rimuove `public/hot` dal server per evitare asset Vite dev in produzione
+- esegue healthcheck HTTP finale sugli URL configurati nel `Makefile`
 
 Dopo ogni deploy il Makefile esegue automaticamente su server:
 ```bash
-php85 artisan migrate --force
-php85 artisan optimize:clear
-php85 artisan config:cache
-php85 artisan route:cache
-php85 artisan view:cache
+/usr/bin/php8.5 artisan optimize:clear
+/usr/bin/php8.5 artisan migrate --force
+/usr/bin/php8.5 artisan config:cache
+/usr/bin/php8.5 artisan route:cache
+/usr/bin/php8.5 artisan view:cache
+/usr/bin/php8.5 artisan storage:link
+/usr/bin/php8.5 artisan queue:restart
 ```
 
 `make deploy-env` copia `.env.production` sia in `/home/www/.env` sia in `/home/www/.env.production`. Questo evita che Laravel carichi un vecchio `.env.production` quando l'ambiente PHP imposta `APP_ENV=production`.
+
+Per resettare staging intenzionalmente:
+
+```bash
+make staging-reset-db
+```
+
+Il reset staging non è più parte di `make deploy-staging`: staging deve restare il più simile possibile alla produzione, salvo reset esplicito.
+
+Se un deploy viene interrotto e resta un lock remoto, verificare prima che non ci sia davvero un deploy in corso, poi sbloccare con:
+
+```bash
+make deploy-unlock-prod
+make deploy-unlock-staging
+```
 
 Per deploy di singoli file (rapido):
 ```bash
