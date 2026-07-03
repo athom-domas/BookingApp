@@ -76,6 +76,29 @@ it('marks message as failed on Claude API error', function () {
     expect($message->error_code)->toBe('CLAUDE_ERROR');
 });
 
+it('stops conversation when turn_count exceeds max_turns', function () {
+    $businessId = app('current_business_id');
+
+    IntegrationSetting::current()->update(['whatsapp_ai_max_turns' => 3]);
+
+    $stateService = app(WhatsAppConversationState::class);
+    $state = $stateService->get($businessId, '+393401234567');
+    $state['turn_count'] = 3; // already at limit; next message pushes it over
+    $stateService->set($businessId, '+393401234567', $state);
+
+    $message = makeInboundMessage($businessId, 'Quarto turno');
+
+    Http::fake([
+        'https://graph.facebook.com/*' => Http::response(['messages' => [['id' => 'wamid.out']]], 200),
+    ]);
+
+    app(WhatsAppConversationService::class)->handle($message->id, $businessId);
+
+    $message->refresh();
+    expect($message->processed_at)->not->toBeNull();
+    Http::assertSentCount(1); // limit message sent to Meta, no Anthropic call
+});
+
 it('sends acknowledgement when escalated', function () {
     $businessId = app('current_business_id');
     $message    = makeInboundMessage($businessId, 'ancora non ho capito');

@@ -38,6 +38,8 @@ class ProcessWhatsAppMessageJob implements ShouldQueue
             return; // already processed — idempotent
         }
 
+        app()->instance('current_business_id', $message->business_id);
+
         $service->handle($this->messageId, $message->business_id);
     }
 

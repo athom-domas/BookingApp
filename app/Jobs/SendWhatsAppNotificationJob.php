@@ -27,6 +27,8 @@ class SendWhatsAppNotificationJob implements ShouldQueue
             return;
         }
 
+        app()->instance('current_business_id', $message->business_id);
+
         $settings = IntegrationSetting::withoutGlobalScope('business')
             ->where('business_id', $message->business_id)
             ->first();
@@ -54,6 +56,7 @@ class SendWhatsAppNotificationJob implements ShouldQueue
             $message->update([
                 'status'        => 'failed',
                 'failed_at'     => now(),
+                'error_code'    => 'SEND_FAILED',
                 'error_message' => 'Meta API send failed',
             ]);
 
@@ -69,6 +72,7 @@ class SendWhatsAppNotificationJob implements ShouldQueue
         WhatsAppMessage::where('id', $this->whatsappMessageId)->update([
             'status'        => 'failed',
             'failed_at'     => now(),
+            'error_code'    => 'JOB_FAILED',
             'error_message' => $e->getMessage(),
         ]);
     }

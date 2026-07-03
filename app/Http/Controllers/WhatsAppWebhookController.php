@@ -59,6 +59,10 @@ class WhatsAppWebhookController extends Controller
     {
         $appSecret = config('services.whatsapp.app_secret');
         if (! $appSecret) {
+            if (app()->isProduction()) {
+                Log::critical('WhatsApp app_secret not configured — rejecting webhook in production');
+                abort(403, 'Webhook secret not configured');
+            }
             return;
         }
 
@@ -85,10 +89,15 @@ class WhatsAppWebhookController extends Controller
 
     private function saveStatus(array $statusData): void
     {
+        $wamid  = $statusData['id'] ?? '';
+        $status = $statusData['status'] ?? 'sent';
+        $parent = WhatsAppMessage::findByWamid($wamid);
+
         try {
             WhatsAppMessageStatus::create([
-                'provider_message_id' => $statusData['id'] ?? '',
-                'status'              => $statusData['status'] ?? 'sent',
+                'whatsapp_message_id' => $parent?->id,
+                'provider_message_id' => $wamid,
+                'status'              => $status,
                 'payload'             => $statusData,
                 'occurred_at'         => isset($statusData['timestamp'])
                     ? \Carbon\Carbon::createFromTimestamp($statusData['timestamp'])
@@ -96,6 +105,14 @@ class WhatsAppWebhookController extends Controller
             ]);
         } catch (\Illuminate\Database\QueryException) {
             // Duplicate status event — swallowed silently
+        }
+
+        if ($status === 'failed' && $parent && $parent->status === 'sent') {
+            $parent->update([
+                'status'        => 'failed',
+                'failed_at'     => now(),
+                'error_message' => $statusData['errors'][0]['title'] ?? ($statusData['error_message'] ?? null),
+            ]);
         }
     }
 
@@ -105,7 +122,10 @@ class WhatsAppWebhookController extends Controller
         $waId    = $messageData['from'] ?? '';
 
         if (empty($waId)) {
-            Log::warning('WhatsApp webhook received message with empty waId', ['messageData' => $messageData]);
+            Log::warning('WhatsApp webhook received message with empty waId', [
+                'type'            => $messageData['type'] ?? null,
+                'phone_number_id' => data_get($value, 'metadata.phone_number_id'),
+            ]);
             return;
         }
 

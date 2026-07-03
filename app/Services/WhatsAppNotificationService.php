@@ -56,7 +56,7 @@ class WhatsAppNotificationService
             'status'           => 'queued',
         ]);
 
-        SendWhatsAppNotificationJob::dispatch($message->id);
+        SendWhatsAppNotificationJob::dispatch($message->id)->afterCommit();
 
         return $message;
     }

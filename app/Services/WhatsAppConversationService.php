@@ -50,11 +50,12 @@ class WhatsAppConversationService
 
                 $text = data_get($message->payload, 'text.body', '');
                 $state['messages'][] = ['role' => 'user', 'content' => $text];
+                $state['turn_count'] = ($state['turn_count'] ?? 0) + 1;
 
                 $setting = IntegrationSetting::where('business_id', $businessId)->first();
                 $maxTurns = $setting?->getWhatsAppAiMaxTurns() ?? 12;
 
-                if (count($state['messages']) > $maxTurns * 2) {
+                if ($state['turn_count'] > $maxTurns) {
                     $this->send($phone, 'Abbiamo raggiunto il limite di messaggi per questa conversazione. Contatta direttamente il salone.', $state, $businessId);
                     $message->update(['processed_at' => now()]);
                     $this->stateService->set($businessId, $phone, $state);

@@ -12,7 +12,9 @@ class WhatsAppService
 {
     private function getSettings(int $businessId): IntegrationSetting
     {
-        return IntegrationSetting::where('business_id', $businessId)->firstOrNew(['business_id' => $businessId]);
+        return IntegrationSetting::withoutGlobalScope('business')
+            ->where('business_id', $businessId)
+            ->firstOrNew(['business_id' => $businessId]);
     }
 
     private function graphUrl(string $phoneId, string $path = 'messages'): string

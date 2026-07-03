@@ -2,6 +2,7 @@
 use App\Models\Business;
 use App\Models\IntegrationSetting;
 use App\Models\WhatsAppMessage;
+use App\Models\WhatsAppMessageStatus;
 use App\Jobs\ProcessWhatsAppMessageJob;
 use Illuminate\Support\Facades\Queue;
 
@@ -144,4 +145,55 @@ it('saves message but skips job when whatsapp_ai_enabled is false', function () 
     $response->assertStatus(200);
     expect(WhatsAppMessage::where('wamid', 'wamid.noai')->exists())->toBeTrue();
     Queue::assertNotPushed(ProcessWhatsAppMessageJob::class);
+});
+
+it('status webhook links to parent message and flips sent notification to failed', function () {
+    $parent = WhatsAppMessage::create([
+        'business_id'      => app('current_business_id'),
+        'wamid'            => 'wamid.notify1',
+        'phone'            => '+393401234567',
+        'phone_normalized' => '+393401234567',
+        'direction'        => 'outbound',
+        'type'             => 'template',
+        'template_name'    => 'appointment_reminder',
+        'status'           => 'sent',
+        'payload'          => [],
+    ]);
+
+    $statusPayload = [
+        'object' => 'whatsapp_business_account',
+        'entry'  => [[
+            'changes' => [[
+                'value' => [
+                    'messaging_product' => 'whatsapp',
+                    'metadata'          => ['phone_number_id' => '111222333'],
+                    'statuses'          => [[
+                        'id'        => 'wamid.notify1',
+                        'status'    => 'failed',
+                        'timestamp' => (string) now()->timestamp,
+                        'errors'    => [['title' => 'Message undeliverable']],
+                    ]],
+                ],
+                'field' => 'messages',
+            ]],
+        ]],
+    ];
+
+    $body   = json_encode($statusPayload);
+    $secret = 'test-app-secret';
+    config(['services.whatsapp.app_secret' => $secret]);
+    $sig = 'sha256=' . hash_hmac('sha256', $body, $secret);
+
+    $response = $this->postJson('/whatsapp/webhook', $statusPayload, ['X-Hub-Signature-256' => $sig]);
+
+    $response->assertStatus(200);
+
+    $status = WhatsAppMessageStatus::where('provider_message_id', 'wamid.notify1')->first();
+    expect($status)->not->toBeNull();
+    expect($status->whatsapp_message_id)->toBe($parent->id);
+
+    $parent->refresh();
+    expect($parent->status)->toBe('failed');
+    expect($parent->failed_at)->not->toBeNull();
+    expect($parent->error_message)->toBe('Message undeliverable');
 });

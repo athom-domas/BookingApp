@@ -101,7 +101,7 @@ class WhatsAppToolDispatcher
         }
 
         $generatedAt = $state['last_available_slots_generated_at'] ?? null;
-        if (! $generatedAt || now()->diffInMinutes(Carbon::parse($generatedAt)) > 15) {
+        if (! $generatedAt || Carbon::parse($generatedAt)->diffInMinutes(now()) > 15) {
             $state['last_available_slots']              = [];
             $state['last_available_slots_generated_at'] = null;
             return ['ok' => false, 'code' => 'SLOTS_EXPIRED', 'message' => 'Gli slot proposti sono scaduti. Richiedi nuovi slot.', 'alternatives' => []];
@@ -161,19 +161,32 @@ class WhatsAppToolDispatcher
             return ['ok' => false, 'code' => 'MISSING_CONFIRMATION', 'message' => 'Numero di telefono non disponibile.', 'alternatives' => []];
         }
 
-        $userId = UserPreference::where('phone_number', $phone)->value('user_id');
+        $userId = UserPreference::withoutGlobalScope('business')
+            ->where('phone_number', $phone)
+            ->where('business_id', $businessId)
+            ->value('user_id');
         if (! $userId) {
             return ['ok' => true, 'data' => ['appointment' => null]];
         }
 
         $appointment = Appointment::where('business_id', $businessId)
             ->where('user_id', $userId)
-            ->where('starts_at', '>', now())
+            ->upcoming()
             ->whereNotIn('status', ['cancelled'])
-            ->orderBy('starts_at')
+            ->orderBy('scheduled_date')
             ->first();
 
-        return ['ok' => true, 'data' => ['appointment' => $appointment]];
+        if (! $appointment) {
+            return ['ok' => true, 'data' => ['appointment' => null]];
+        }
+
+        return ['ok' => true, 'data' => ['appointment' => [
+            'id'             => $appointment->id,
+            'scheduled_at'   => $appointment->scheduled_date->toIso8601String(),
+            'services'       => $appointment->services->pluck('name'),
+            'staff_name'     => $appointment->staff?->name,
+            'status'         => $appointment->status,
+        ]]];
     }
 
     private function cancelAppointment(array $input, array &$state, int $businessId): array

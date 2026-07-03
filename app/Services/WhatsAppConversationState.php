@@ -103,6 +103,7 @@ class WhatsAppConversationState
             'escalation_summary'                => null,
             'last_tool_call'                    => null,
             'error_count'                       => 0,
+            'turn_count'                        => 0,
         ];
     }
 }

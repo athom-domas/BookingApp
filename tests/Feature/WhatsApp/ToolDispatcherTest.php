@@ -1,8 +1,10 @@
 <?php
 
+use App\Models\Appointment;
 use App\Models\Business;
 use App\Models\IntegrationSetting;
 use App\Models\Service;
+use App\Models\UserPreference;
 use App\Services\WhatsAppConversationState;
 use App\Services\WhatsAppToolDispatcher;
 use Spatie\Permission\Models\Role;
@@ -86,6 +88,38 @@ it('refuses book_appointment when slot not in last_available_slots', function ()
 
     expect($result['ok'])->toBeFalse();
     expect($result['code'])->toBe('SLOT_NO_LONGER_AVAILABLE');
+});
+
+it('get_next_appointment returns appointment data for matched customer', function () {
+    $businessId = app('current_business_id');
+    $phone      = '+393401234567';
+
+    $appointment = Appointment::factory()->create([
+        'business_id'    => $businessId,
+        'scheduled_date' => now()->addDays(3),
+        'status'         => 'confirmed',
+    ]);
+
+    UserPreference::factory()->create([
+        'business_id'  => $businessId,
+        'user_id'      => $appointment->user_id,
+        'phone_number' => $phone,
+    ]);
+
+    $dispatcher = app(WhatsAppToolDispatcher::class);
+    $state      = app(WhatsAppConversationState::class)->fresh($phone);
+
+    $result = $dispatcher->dispatch(
+        ['name' => 'get_next_appointment', 'input' => []],
+        $state,
+        $businessId,
+    );
+
+    expect($result['ok'])->toBeTrue();
+    expect($result['data']['appointment'])->not->toBeNull();
+    expect($result['data']['appointment']['id'])->toBe($appointment->id);
+    expect($result['data']['appointment'])->not->toHaveKey('notes');
+    expect($result['data']['appointment'])->not->toHaveKey('final_price');
 });
 
 it('refuses cancel_appointment when cancellation is disabled', function () {
