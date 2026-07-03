@@ -8,10 +8,10 @@ $_themeClass  = 'sf-' . $_family;
 $_defaultMode = $salonProfile->theme_mode ?? 'light';
 
 $_fontUrls = [
-    'classic' => 'https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&display=swap',
-    'modern'  => 'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap',
-    'elegant' => 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Nunito:wght@300;400;500;600&display=swap',
-    'minimal' => 'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap',
+    'classic' => 'https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&display=optional',
+    'modern'  => 'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=optional',
+    'elegant' => 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Nunito:wght@300;400;500;600&display=optional',
+    'minimal' => 'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=optional',
 ];
 $_fontVars = [
     'classic' => ["'DM Serif Display', Georgia, serif", "'Inter', sans-serif"],
@@ -63,19 +63,31 @@ $_radius      = $_radiusMap[$_border] ?? '0';
         <meta name="twitter:description" content="{{ $_ogDesc }}">
     @endif
 
-    @if($salonProfile->faviconUrl())
-        <link rel="icon" href="{{ $salonProfile->faviconUrl() }}">
-    @endif
+    @php
+        $_faviconUrl = $salonProfile->faviconUrl()
+            ?: $salonProfile->getFirstMediaUrl('logo', 'thumb')
+            ?: asset('img/logo_icon.webp');
+    @endphp
+    <link rel="icon" href="{{ $_faviconUrl }}">
 
+    {{-- preconnect to both Google Fonts origins before the CSS request --}}
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="{{ $_fontUrl }}" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    @if($salonProfile->hero_image_preset)
+        <link rel="preconnect" href="https://images.unsplash.com" crossorigin>
+    @endif
+    {{-- non-blocking font load: media=print trick hands off to all once loaded --}}
+    <link rel="preload" as="style" href="{{ $_fontUrl }}">
+    <link rel="stylesheet" href="{{ $_fontUrl }}" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="{{ $_fontUrl }}"></noscript>
+    {{-- hero image preload pushed by the active hero block variant --}}
+    @stack('preload')
 
     @vite('resources/scss/storefront.scss')
 
-    @fonts
-    @filamentStyles
-    @vite('resources/scss/filament/admin/theme.scss')
-    @vite('resources/css/app.css')
+    @if(!request()->routeIs('booking.index'))
+        @vite('resources/css/app.css')
+    @endif
     @stack('head')
     <script>
         (function(){
@@ -96,24 +108,25 @@ $_radius      = $_radiusMap[$_border] ?? '0';
     <nav id="sf-nav">
         @php $logoDarkUrl = $salonProfile->logoDarkUrl(); @endphp
         <a href="{{ route('booking.index') }}" class="sf-logo">
-            <img src="{{ $salonProfile->logoUrl() ?? asset('img/logo.png') }}" alt="{{ $salonProfile->name }}"
-                 @if($logoDarkUrl) class="sf-logo-light" @endif>
+            <img src="{{ $salonProfile->logoUrl() ?? asset('img/logo.webp') }}" alt="{{ $salonProfile->name }}"
+                 width="120" height="28"
+                 class="sf-logo-light{{ $logoDarkUrl ? '' : ' sf-logo-only' }}">
             @if($logoDarkUrl)
-                <img src="{{ $logoDarkUrl }}" alt="{{ $salonProfile->name }}" class="sf-logo-dark">
+                <img src="{{ $logoDarkUrl }}" alt="{{ $salonProfile->name }}" width="120" height="28" class="sf-logo-dark">
             @endif
         </a>
 
         <div class="sf-nav-right">
             {{-- Portal / auth links (desktop) --}}
+            <a href="{{ route('booking.index') }}" class="sf-nav-link">Home</a>
+            @if (\App\Models\Product::inSale()->exists())
+                <a href="{{ route('shop.index') }}" class="sf-nav-link">Prodotti</a>
+            @endif
             @auth
-                <a href="{{ route('portal.appointments.index') }}" class="sf-nav-link">Area personale</a>
+                <a href="{{ route('portal.appointments.index') }}" class="sf-nav-link">Area cliente</a>
                 @if(auth()->user()->isAdmin() || auth()->user()->isStaff())
                     <a href="{{ url('/admin') }}" class="sf-nav-link">Admin</a>
                 @endif
-                <form method="POST" action="{{ route('logout') }}" style="margin-bottom: 3px;display:inline">
-                    @csrf
-                    <button type="submit" class="sf-nav-link" style="background:none;border:none;cursor:pointer;">Esci</button>
-                </form>
             @else
                 <a href="{{ route('login') }}" class="sf-nav-link">Accedi</a>
                 <a href="{{ route('register') }}" class="sf-nav-link sf-nav-link--cta">Registrati</a>
@@ -143,16 +156,15 @@ $_radius      = $_radiusMap[$_border] ?? '0';
             <button id="sf-mob-close" class="sf-mob-close" type="button">×</button>
         </div>
         {{-- portal / auth --}}
+        <a href="{{ route('booking.index') }}">Home</a>
+        @if (\App\Models\Product::inSale()->exists())
+            <a href="{{ route('shop.index') }}">Prodotti</a>
+        @endif
         @auth
-            <a href="{{ route('portal.appointments.index') }}">Appuntamenti</a>
-            <a href="{{ route('portal.settings.index') }}">Impostazioni</a>
+            <a href="{{ route('portal.appointments.index') }}">Area cliente</a>
             @if(auth()->user()->isAdmin() || auth()->user()->isStaff())
                 <a href="{{ url('/admin') }}">Admin</a>
             @endif
-            <form method="POST" action="{{ route('logout') }}" style="padding:16px 0;border-bottom:1px solid var(--sf-border)">
-                @csrf
-                <button type="submit" style="background:none;border:none;cursor:pointer;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--sf-body)">Esci</button>
-            </form>
         @else
             <a href="{{ route('login') }}">Accedi</a>
             <a href="{{ route('register') }}">Registrati</a>
@@ -160,7 +172,9 @@ $_radius      = $_radiusMap[$_border] ?? '0';
         <a href="{{ route('booking.create') }}" class="sf-btn sf-mob-cta">Prenota ora</a>
     </div>
 
-    @yield('content')
+    <main>
+        @yield('content')
+    </main>
 
     {{-- FOOTER --}}
     <footer id="sf-footer">

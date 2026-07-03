@@ -45,8 +45,15 @@
         border-radius: .375rem;
         width: 100%;
         transition: filter .15s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: .5rem;
     }
     .btn-wiz-full:hover { filter: brightness(0.85); }
+    .btn-wiz-full:disabled { opacity: .5; cursor: not-allowed; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner { animation: spin .7s linear infinite; }
 </style>
 @endpush
 
@@ -60,12 +67,18 @@
             'price'       => (float) $s->price,
             'featured'    => (bool) $s->featured,
             'staff_ids'   => $s->staff->pluck('id')->values()->all(),
+            'category_id' => $s->service_category_id,
+        ])->values()->all();
+
+        $categoriesJson = $categories->map(fn ($c) => [
+            'id'   => $c->id,
+            'name' => $c->name,
         ])->values()->all();
 
         $staffJson = $staff->map(fn ($m) => [
             'id'          => $m->id,
             'name'        => $m->name,
-            'avatar_url'  => $m->getFirstMediaUrl('avatar', 'thumb'),
+            'avatar_url'  => $m->avatarUrl(),
             'service_ids' => $m->services->pluck('id')->values()->all(),
         ])->values()->all();
     @endphp
@@ -80,7 +93,13 @@
         <script>sessionStorage.setItem('bookingWizardState', JSON.stringify({{ Illuminate\Support\Js::from($wizardPrefill) }}));</script>
         @endif
         <div
-            x-data="bookingWizard({{ Illuminate\Support\Js::from($servicesJson) }}, {{ Illuminate\Support\Js::from($staffJson) }})"
+            x-data="bookingWizard(
+                {{ Illuminate\Support\Js::from($servicesJson) }},
+                {{ Illuminate\Support\Js::from($staffJson) }},
+                {{ Illuminate\Support\Js::from($bookingPreferences) }},
+                {{ Illuminate\Support\Js::from($paymentMode) }},
+                {{ Illuminate\Support\Js::from($categoriesJson) }}
+            )"
             class="space-y-3"
         >
             {{-- CSRF + hidden inputs --}}
@@ -119,6 +138,38 @@
                     <svg x-show="!isOpen(1)" class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                 </button>
                 <div x-show="isOpen(1)" class="border-t border-gray-100 dark:border-gray-700 px-5 pb-5 pt-4">
+                    @if($categories->isNotEmpty())
+                    <div class="mb-3 flex flex-wrap gap-2">
+                        <button
+                            type="button"
+                            @click="selectedCategory = null; showAllServices = false"
+                            :class="selectedCategory === null
+                                ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'"
+                            class="rounded-full px-3 py-1 text-xs font-semibold transition-colors"
+                        >Tutti</button>
+                        <template x-for="cat in categories" :key="cat.id">
+                            <button
+                                type="button"
+                                @click="selectedCategory = cat.id; showAllServices = false"
+                                :class="selectedCategory === cat.id
+                                    ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900'
+                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'"
+                                class="rounded-full px-3 py-1 text-xs font-semibold transition-colors"
+                                x-text="cat.name"
+                            ></button>
+                        </template>
+                        <button
+                            x-show="hasUncategorized"
+                            type="button"
+                            @click="selectedCategory = 'altri'; showAllServices = false"
+                            :class="selectedCategory === 'altri'
+                                ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'"
+                            class="rounded-full px-3 py-1 text-xs font-semibold transition-colors"
+                        >Altri</button>
+                    </div>
+                    @endif
                     <div class="grid gap-3 sm:grid-cols-2">
                         <template x-for="service in visibleServices" :key="service.id">
                             <button
@@ -144,7 +195,15 @@
                             type="button"
                             @click="showAllServices = true"
                             class="text-xs font-semibold text-gray-500 dark:text-gray-400 underline underline-offset-2 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
-                            x-text="'Mostra tutti i servizi (' + allServices.length + ')'">
+                            x-text="'Mostra tutti i servizi (' + (allServices.length - visibleServices.length) + ')'">
+                        </button>
+                    </div>
+                    <div x-show="hasMoreServices && showAllServices" class="mt-3">
+                        <button
+                            type="button"
+                            @click="showAllServices = false"
+                            class="text-xs font-semibold text-gray-500 dark:text-gray-400 underline underline-offset-2 hover:text-gray-700 dark:hover:text-gray-200 transition-colors">
+                            Riduci ai servizi in evidenza
                         </button>
                     </div>
                     <div class="mt-4 flex items-center justify-between">
@@ -254,22 +313,75 @@
                     <svg x-show="!isOpen(3)" class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                 </button>
                 <div x-show="isOpen(3)" class="border-t border-gray-100 dark:border-gray-700 px-5 pb-5 pt-4">
+                    {{-- Suggeriti per te: skeleton durante il caricamento --}}
+                    <div x-show="preferences && loadingSuggested && showSuggestions"
+                         x-cloak
+                         class="mb-5 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-4 space-y-3">
+                        <div class="h-3 w-28 rounded bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
+                        <div class="flex gap-2">
+                            <div class="h-7 w-24 rounded bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
+                            <div class="h-7 w-16 rounded bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
+                            <div class="h-7 w-16 rounded bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
+                        </div>
+                        <div class="flex gap-2">
+                            <div class="h-7 w-24 rounded bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
+                            <div class="h-7 w-16 rounded bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
+                        </div>
+                    </div>
+
+                    {{-- Suggeriti per te --}}
+                    <div x-show="preferences && suggestedSlotsLoaded && suggestedSlots.length > 0 && showSuggestions"
+                         x-cloak
+                         class="mb-5 rounded-lg border border-primary/20 bg-primary/5 dark:bg-primary/10 p-4">
+                        <p class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1">✦ Suggeriti per te</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">In base alle tue preferenze</p>
+                        <div class="space-y-2">
+                            <template x-for="(group, idx) in groupedSuggested" :key="idx">
+                                <div class="flex items-start gap-3 flex-wrap">
+                                    <span class="text-xs font-medium text-gray-700 dark:text-gray-300 w-36 shrink-0 pt-1"
+                                          x-text="formatSuggestedDate(group.date)"></span>
+                                    <div class="flex flex-wrap gap-1.5">
+                                        <template x-for="s in group.slots" :key="s.time">
+                                            <button type="button"
+                                                    @click="selectSuggestedSlot(s.date, s.time)"
+                                                    class="rounded border px-3 py-1 text-xs font-medium transition-colors"
+                                                    :class="date === s.date && slot === s.time
+                                                        ? 'slot-active border-transparent'
+                                                        : 'border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-gray-400 hover:bg-gray-50 dark:hover:border-gray-500 dark:hover:bg-gray-800'"
+                                                    x-text="s.time"></button>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                        <button type="button" @click="showSuggestions = false"
+                                class="mt-3 text-xs text-gray-400 hover:underline">Vedi tutte le disponibilità ↓</button>
+                    </div>
+
                     <div class="mb-4 flex items-center justify-between">
-                        <button type="button" @click="prevMonth()" class="rounded p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                        <button type="button" @click="prevMonth()" :disabled="loadingDates"
+                                class="rounded p-1.5 transition-colors disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-800">
                             <svg class="h-4 w-4 text-gray-600 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
                         </button>
-                        <p class="text-sm font-semibold text-gray-900 dark:text-gray-100" x-text="monthLabel"></p>
-                        <button type="button" @click="nextMonth()" class="rounded p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                        <div class="flex items-center gap-2">
+                            <p class="text-sm font-semibold text-gray-900 dark:text-gray-100" x-text="monthLabel"></p>
+                            <svg x-show="loadingDates" class="spinner h-3.5 w-3.5 text-gray-400" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 22 6.373 22 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        </div>
+                        <button type="button" @click="nextMonth()" :disabled="loadingDates"
+                                class="rounded p-1.5 transition-colors disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-800">
                             <svg class="h-4 w-4 text-gray-600 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                         </button>
                     </div>
 
-                    <div class="grid grid-cols-7 gap-1 text-center">
+                    <div class="grid grid-cols-7 gap-1 text-center" :class="loadingDates ? 'opacity-40 pointer-events-none' : ''">
                         <template x-for="d in ['Lu','Ma','Me','Gi','Ve','Sa','Do']">
                             <div class="py-1 text-xs font-medium text-gray-400 dark:text-gray-500" x-text="d"></div>
                         </template>
                         <template x-for="(cell, i) in calendarGrid" :key="i">
-                            <div>
+                            <div class="relative">
                                 <template x-if="cell === null">
                                     <div></div>
                                 </template>
@@ -287,15 +399,23 @@
                                         x-text="cell.split('-')[2]"
                                     ></button>
                                 </template>
+                                <template x-if="cell !== null">
+                                    <span x-show="isPreferredDay(cell)"
+                                          class="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary opacity-50 pointer-events-none"></span>
+                                </template>
                             </div>
                         </template>
                     </div>
 
-                    <div x-show="loadingDates" class="mt-3 text-center text-xs text-gray-500 dark:text-gray-400">Caricamento disponibilità...</div>
-
                     <div x-show="date !== null" class="mt-4">
                         <p class="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Orari disponibili</p>
-                        <div x-show="loadingSlots" class="text-xs text-gray-500 dark:text-gray-400">Caricamento orari...</div>
+                        <div x-show="loadingSlots" class="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500">
+                            <svg class="spinner h-3.5 w-3.5" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 22 6.373 22 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Caricamento orari...
+                        </div>
                         <div x-show="!loadingSlots && availableSlots.length === 0 && date !== null" class="text-xs text-gray-500 dark:text-gray-400">
                             Nessun orario disponibile per questa data.
                         </div>
@@ -328,6 +448,7 @@
                         </div>
                     </div>
 
+                    <hr x-show="isCompleted(2)" class="mt-5 border-gray-100 dark:border-gray-700">
                     <div class="mt-4 flex justify-end">
                         <button
                             type="button"
@@ -341,80 +462,16 @@
                 </div>
             </div>
 
-            {{-- Step 4: Metodo di pagamento --}}
+            {{-- Step 4: Conferma --}}
             <div class="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm"
                  :class="!isCompleted(3) && !isOpen(4) ? 'opacity-50' : ''">
-                <button
-                    type="button"
-                    class="flex w-full items-center justify-between px-5 py-4 text-left"
-                    @click="isCompleted(4) && !isOpen(4) ? goTo(4) : null"
-                    :class="isCompleted(4) && !isOpen(4) ? 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800' : 'cursor-default'"
-                >
-                    <div class="flex items-center gap-3">
-                        <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold"
-                              :class="isCompleted(4) ? 'step-done text-white' : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'">
-                            <span x-show="!isCompleted(4)">4</span>
-                            <svg x-show="isCompleted(4)" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                        </span>
-                        <div>
-                            <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">Metodo di pagamento</p>
-                            <p x-show="isCompleted(4) && !isOpen(4)" class="text-xs text-gray-500 dark:text-gray-400" x-text="paymentSummary"></p>
-                        </div>
-                    </div>
-                    <svg x-show="isOpen(4)" class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>
-                    <svg x-show="!isOpen(4)" class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                </button>
-                <div x-show="isOpen(4)" class="border-t border-gray-100 dark:border-gray-700 px-5 pb-5 pt-4">
-                    <div class="space-y-3">
-                        @if($paymentMode !== 'in_salon')
-                        <button
-                            type="button"
-                            @click="paymentMethod = 'online'"
-                            class="w-full rounded border p-4 text-left transition-colors"
-                            :class="paymentMethod === 'online'
-                                ? 'opt-selected border-transparent'
-                                : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 hover:bg-gray-50 dark:hover:border-gray-600 dark:hover:bg-gray-800'"
-                        >
-                            <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">Paga ora</p>
-                            <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Pagamento online con carta — la prenotazione viene confermata solo al completamento del pagamento</p>
-                        </button>
-                        @endif
-                        @if($paymentMode !== 'online')
-                        <button
-                            type="button"
-                            @click="paymentMethod = 'in_salon'"
-                            class="w-full rounded border p-4 text-left transition-colors"
-                            :class="paymentMethod === 'in_salon'
-                                ? 'opt-selected border-transparent'
-                                : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 hover:bg-gray-50 dark:hover:border-gray-600 dark:hover:bg-gray-800'"
-                        >
-                            <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">Paga in salone</p>
-                            <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Paghi direttamente al momento del servizio — la prenotazione è confermata subito</p>
-                        </button>
-                        @endif
-                    </div>
-                    <div class="mt-4 flex justify-end">
-                        <button
-                            type="button"
-                            @click="completeStep(4)"
-                            :disabled="paymentMethod === null"
-                            class="btn-wiz"
-                        >
-                            Continua
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Step 5: Riepilogo e conferma --}}
-            <div class="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm"
-                 :class="!isCompleted(4) && !isOpen(5) ? 'opacity-50' : ''">
                 <div class="flex items-center gap-3 px-5 py-4">
-                    <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 text-xs font-bold text-gray-600 dark:text-gray-400">5</span>
-                    <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">Riepilogo e conferma</p>
+                    <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 text-xs font-bold text-gray-600 dark:text-gray-400">4</span>
+                    <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">Conferma</p>
                 </div>
-                <div x-show="isOpen(5)" class="border-t border-gray-100 dark:border-gray-700 px-5 pb-5 pt-4 space-y-4">
+                <div x-show="isOpen(4)" class="border-t border-gray-100 dark:border-gray-700 px-5 pb-5 pt-4 space-y-4">
                     @auth
+                        {{-- Riepilogo --}}
                         <dl class="divide-y divide-gray-100 dark:divide-gray-800 rounded bg-gray-50 dark:bg-gray-800 text-sm overflow-hidden">
                             <div class="flex justify-between px-4 py-3">
                                 <dt class="text-gray-500 dark:text-gray-400">Servizi</dt>
@@ -436,12 +493,38 @@
                                 <dt class="font-semibold text-gray-900 dark:text-gray-100">Totale</dt>
                                 <dd class="font-bold tabular-nums text-gray-900 dark:text-gray-100" x-text="'€ ' + totalPrice.toFixed(2).replace('.', ',')"></dd>
                             </div>
-                            <div class="flex justify-between px-4 py-3">
-                                <dt class="text-gray-500 dark:text-gray-400">Pagamento</dt>
-                                <dd class="font-medium text-gray-900 dark:text-gray-100" x-text="paymentSummary"></dd>
-                            </div>
                         </dl>
 
+                        {{-- Metodo di pagamento (solo quando entrambe le opzioni sono disponibili) --}}
+                        @if($paymentMode === 'both')
+                        <div class="space-y-2">
+                            <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">Come vuoi pagare?</p>
+                            <button
+                                type="button"
+                                @click="paymentMethod = 'online'"
+                                class="w-full rounded border p-4 text-left transition-colors"
+                                :class="paymentMethod === 'online'
+                                    ? 'opt-selected border-transparent'
+                                    : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 hover:bg-gray-50 dark:hover:border-gray-600 dark:hover:bg-gray-800'"
+                            >
+                                <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">Paga ora</p>
+                                <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Pagamento online con carta — la prenotazione viene confermata solo al completamento del pagamento</p>
+                            </button>
+                            <button
+                                type="button"
+                                @click="paymentMethod = 'in_salon'"
+                                class="w-full rounded border p-4 text-left transition-colors"
+                                :class="paymentMethod === 'in_salon'
+                                    ? 'opt-selected border-transparent'
+                                    : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 hover:bg-gray-50 dark:hover:border-gray-600 dark:hover:bg-gray-800'"
+                            >
+                                <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">Paga in salone</p>
+                                <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Paghi direttamente al momento del servizio — la prenotazione è confermata subito</p>
+                            </button>
+                        </div>
+                        @endif
+
+                        {{-- Note --}}
                         <div>
                             <label class="block text-sm font-medium text-gray-900 dark:text-gray-200 mb-1.5">Note (opzionale)</label>
                             <textarea
@@ -454,10 +537,16 @@
 
                         <button
                             type="button"
-                            @click="$refs.bookingForm.submit()"
+                            @click="submitBooking()"
+                            :disabled="submitting || paymentMethod === null"
                             class="btn-wiz-full"
-                            x-text="paymentMethod === 'online' ? 'Prenota e vai al pagamento' : 'Conferma prenotazione'"
-                        ></button>
+                        >
+                            <svg x-show="submitting" class="spinner h-4 w-4" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 22 6.373 22 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span x-text="submitting ? 'Invio in corso...' : (paymentMethod === 'online' ? 'Prenota e vai al pagamento' : 'Conferma prenotazione')"></span>
+                        </button>
                     @else
                         <p class="text-sm text-gray-600 dark:text-gray-400">Accedi o crea un account per completare la prenotazione.</p>
                         <div class="flex gap-3">

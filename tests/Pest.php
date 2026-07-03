@@ -22,6 +22,7 @@ pest()->extend(TestCase::class)
         Cache::flush();
         $business = Business::factory()->create();
         app()->instance('current_business_id', $business->id);
+        $this->business = $business;
         config(['app.base_domain' => 'localhost']); // prevents SubdomainMiddleware from overriding the current_business_id binding (test requests use host localhost)
     })
     ->in('Feature');

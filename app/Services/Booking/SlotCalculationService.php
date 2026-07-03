@@ -42,9 +42,10 @@ class SlotCalculationService
             return [];
         }
 
+        $granularity     = SystemSetting::getSlotGranularity();
         $slotsByOperator = [];
         foreach ($eligibleStaff as $staff) {
-            $slots = $this->getSlotsForOperator($staff, $date, $totalDuration);
+            $slots = $this->getSlotsForOperator($staff, $date, $totalDuration, $granularity);
             if (! empty($slots)) {
                 $slotsByOperator[$staff->id] = $slots;
             }
@@ -168,7 +169,7 @@ class SlotCalculationService
         return $available;
     }
 
-    private function getSlotsForOperator(User $staff, Carbon $date, int $duration): array
+    private function getSlotsForOperator(User $staff, Carbon $date, int $duration, int $granularity): array
     {
         $workRanges = $this->getWorkRanges($staff, $date);
         if (empty($workRanges)) {
@@ -179,8 +180,7 @@ class SlotCalculationService
         $freeRanges  = $this->calculateFreeRanges($workRanges, $occupations);
 
         if ($date->isToday()) {
-            $now         = Carbon::now();
-            $granularity = SystemSetting::getSlotGranularity();
+            $now = Carbon::now();
             // Round up to the next granularity boundary so slots stay on the configured grid
             // e.g. now=15:43 → cutoff=15:45, now=15:45:01 → cutoff=16:00
             $totalMins = $now->hour * 60 + $now->minute + ($now->second > 0 ? 1 : 0);
@@ -202,7 +202,7 @@ class SlotCalculationService
 
         $slots = [];
         foreach ($freeRanges as $freeRange) {
-            $slots = array_merge($slots, $this->generateSlotsFromRange($freeRange, $duration));
+            $slots = array_merge($slots, $this->generateSlotsFromRange($freeRange, $duration, $granularity));
         }
 
         return $slots;
@@ -323,7 +323,7 @@ class SlotCalculationService
      *   Busy: 09:00-09:30, 10:00-10:30
      *   Free: 09:30-10:00, 10:30-13:00
      */
-    private function calculateFreeRanges(array $workRanges, array $occupations): array
+    public function calculateFreeRanges(array $workRanges, array $occupations): array
     {
         $freeRanges = [];
 
@@ -362,11 +362,10 @@ class SlotCalculationService
      *
      * Slots count = floor((range_minutes - duration) / granularity) + 1
      */
-    private function generateSlotsFromRange(array $range, int $duration): array
+    private function generateSlotsFromRange(array $range, int $duration, int $granularity): array
     {
-        $granularity = SystemSetting::getSlotGranularity();
-        $start       = $range['start'];
-        $end         = $range['end'];
+        $start = $range['start'];
+        $end   = $range['end'];
         $rangeMin    = $start->diffInMinutes($end);
 
         if ($rangeMin < $duration) {
@@ -419,5 +418,217 @@ class SlotCalculationService
         ksort($grouped);
 
         return array_values($grouped);
+    }
+
+    // ── Monthly context approach ──────────────────────────────────────────────
+
+    /**
+     * Returns available dates for a month using a single pre-loaded context
+     * instead of re-querying DB for each day.
+     *
+     * @param array{month: string, serviceIds: int[], staffId?: int|null} $params
+     */
+    public function getAvailableDatesForMonth(array $params): array
+    {
+        $serviceIds = $params['serviceIds'];
+        $staffId    = $params['staffId'] ?? null;
+        $preference = $staffId ? 'specific' : 'any';
+
+        $start   = Carbon::createFromFormat('Y-m', $params['month'])->startOfMonth();
+        $end     = $start->copy()->endOfMonth();
+        $today   = Carbon::today();
+        $maxDate = $today->copy()->addDays(SystemSetting::getBookingMaxDaysAhead());
+
+        $ctx = $this->buildMonthlyContext($serviceIds, $staffId, $preference, $start, $end);
+
+        if ($ctx['eligibleStaff']->isEmpty() || $ctx['totalDuration'] <= 0) {
+            return [];
+        }
+
+        $available = [];
+        for ($day = $start->copy(); $day->lte($end); $day->addDay()) {
+            if ($day->lt($today) || $day->gt($maxDate)) {
+                continue;
+            }
+
+            if ($this->hasAvailableSlotsInContext($day, $ctx)) {
+                $available[] = $day->toDateString();
+            }
+        }
+
+        return $available;
+    }
+
+    private function buildMonthlyContext(
+        array $serviceIds,
+        ?int $staffId,
+        string $preference,
+        Carbon $monthStart,
+        Carbon $monthEnd
+    ): array {
+        $eligibleStaff = $this->getEligibleOperators($serviceIds, $staffId, $preference);
+        $totalDuration = $this->calculateTotalDuration($serviceIds);
+        $granularity   = SystemSetting::getSlotGranularity();
+
+        if ($eligibleStaff->isEmpty() || $totalDuration <= 0) {
+            return [
+                'eligibleStaff'           => $eligibleStaff,
+                'totalDuration'           => $totalDuration,
+                'granularity'             => $granularity,
+                'rulesByUserId'           => collect(),
+                'blockoutsByUserId'       => collect(),
+                'appointmentsByStaffDate' => collect(),
+                'serviceDurations'        => [],
+            ];
+        }
+
+        $staffIds = $eligibleStaff->pluck('id')->all();
+
+        $rulesByUserId = AvailabilityRule::whereIn('user_id', $staffIds)
+            ->where('is_available', true)
+            ->get()
+            ->groupBy('user_id');
+
+        $blockoutsByUserId = StaffBlockout::whereIn('user_id', $staffIds)
+            ->where('start_date', '<=', $monthEnd->toDateString())
+            ->where('end_date', '>=', $monthStart->toDateString())
+            ->get()
+            ->groupBy('user_id');
+
+        $allAppointments = Appointment::whereIn('staff_id', $staffIds)
+            ->whereIn('status', ['pending', 'confirmed'])
+            ->whereBetween('scheduled_date', [
+                $monthStart->copy()->startOfDay(),
+                $monthEnd->copy()->endOfDay(),
+            ])
+            ->get();
+
+        $appointmentsByStaffDate = $allAppointments->groupBy(
+            fn ($a) => $a->staff_id . '|' . $a->scheduled_date->toDateString()
+        );
+
+        $apptServiceIds = $allAppointments
+            ->flatMap(fn ($a) => $a->service_ids ?? [])
+            ->unique()
+            ->values()
+            ->all();
+
+        $serviceDurations = empty($apptServiceIds)
+            ? []
+            : Service::whereIn('id', $apptServiceIds)->pluck('duration_minutes', 'id')->all();
+
+        return compact(
+            'eligibleStaff', 'totalDuration', 'granularity',
+            'rulesByUserId', 'blockoutsByUserId',
+            'appointmentsByStaffDate', 'serviceDurations'
+        );
+    }
+
+    private function hasAvailableSlotsInContext(Carbon $day, array $ctx): bool
+    {
+        $dayStr = $day->toDateString();
+
+        foreach ($ctx['eligibleStaff'] as $staff) {
+            $workRanges = $this->getWorkRangesFromContext($staff, $day, $dayStr, $ctx);
+            if (empty($workRanges)) {
+                continue;
+            }
+
+            $appts       = $ctx['appointmentsByStaffDate']->get($staff->id . '|' . $dayStr, collect());
+            $occupations = $this->getOccupationsFromData($appts, $ctx['serviceDurations']);
+            $freeRanges  = $this->calculateFreeRanges($workRanges, $occupations);
+
+            if ($day->isToday()) {
+                $now       = Carbon::now();
+                $totalMins = $now->hour * 60 + $now->minute + ($now->second > 0 ? 1 : 0);
+                $cutoff    = $day->copy()->addMinutes((int) ceil($totalMins / $ctx['granularity']) * $ctx['granularity']);
+
+                $freeRanges = array_values(array_filter(
+                    array_map(function (array $range) use ($cutoff): ?array {
+                        if ($range['end'] <= $cutoff) {
+                            return null;
+                        }
+                        if ($range['start'] < $cutoff) {
+                            $range['start'] = $cutoff->copy();
+                        }
+                        return $range;
+                    }, $freeRanges)
+                ));
+            }
+
+            foreach ($freeRanges as $range) {
+                if ($range['start']->diffInMinutes($range['end']) >= $ctx['totalDuration']) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private function getWorkRangesFromContext(User $staff, Carbon $day, string $dayStr, array $ctx): array
+    {
+        $staffBlockouts = $ctx['blockoutsByUserId']->get($staff->id, collect());
+
+        $hasFullDayBlockout = $staffBlockouts->contains(function ($b) use ($dayStr) {
+            return $b->start_date->toDateString() <= $dayStr
+                && $b->end_date->toDateString() >= $dayStr
+                && $b->start_time === null;
+        });
+
+        if ($hasFullDayBlockout) {
+            return [];
+        }
+
+        $dow   = $day->dayOfWeek;
+        $rules = $ctx['rulesByUserId']->get($staff->id, collect())->where('day_of_week', $dow);
+
+        $ranges = [];
+        foreach ($rules as $rule) {
+            $ranges[] = [
+                'start' => $day->copy()->setTimeFromTimeString($rule->start_time),
+                'end'   => $day->copy()->setTimeFromTimeString($rule->end_time),
+            ];
+            if ($rule->start_time_2 && $rule->end_time_2) {
+                $ranges[] = [
+                    'start' => $day->copy()->setTimeFromTimeString($rule->start_time_2),
+                    'end'   => $day->copy()->setTimeFromTimeString($rule->end_time_2),
+                ];
+            }
+        }
+
+        $timeBlockouts = $staffBlockouts->filter(function ($b) use ($dayStr) {
+            return $b->start_date->toDateString() <= $dayStr
+                && $b->end_date->toDateString() >= $dayStr
+                && $b->start_time !== null
+                && $b->end_time !== null;
+        });
+
+        foreach ($timeBlockouts as $blockout) {
+            $blockStart = $day->copy()->setTimeFromTimeString($blockout->start_time);
+            $blockEnd   = $day->copy()->setTimeFromTimeString($blockout->end_time);
+            $ranges     = $this->subtractRange($ranges, $blockStart, $blockEnd);
+        }
+
+        return $ranges;
+    }
+
+    private function getOccupationsFromData(Collection $appointments, array $serviceDurations): array
+    {
+        $result = [];
+        foreach ($appointments as $appt) {
+            $sids     = $appt->service_ids ?? ($appt->service_id ? [$appt->service_id] : []);
+            $duration = collect($sids)->sum(fn ($id) => $serviceDurations[$id] ?? 0);
+            if ($duration <= 0) {
+                continue;
+            }
+            $result[] = [
+                'start' => $appt->scheduled_date,
+                'end'   => $appt->scheduled_date->copy()->addMinutes($duration),
+                'type'  => 'appointment',
+            ];
+        }
+
+        return $result;
     }
 }

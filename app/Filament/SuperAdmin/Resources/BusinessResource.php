@@ -7,6 +7,7 @@ use App\Filament\SuperAdmin\Resources\BusinessResource\Pages\CreateBusiness;
 use App\Filament\SuperAdmin\Resources\BusinessResource\Pages\EditBusiness;
 use App\Filament\SuperAdmin\Resources\BusinessResource\Pages\ListBusinesses;
 use App\Models\Business;
+use App\Models\SystemSetting;
 use App\Models\User;
 use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Select;
@@ -70,6 +71,16 @@ class BusinessResource extends Resource
                         ->label('Stato')
                         ->options(['active' => 'Attivo', 'suspended' => 'Sospeso'])
                         ->required()
+                        ->visibleOn('edit'),
+
+                    TextInput::make('stripe_platform_fee_percent')
+                        ->label('Fee piattaforma (%)')
+                        ->numeric()
+                        ->minValue(0)
+                        ->maxValue(100)
+                        ->step(0.1)
+                        ->placeholder(fn() => (SystemSetting::getStripePlatformFeePercent() ?? config('services.stripe.platform_fee_percent', 0)) . ' (default globale)')
+                        ->helperText('Lascia vuoto per usare la fee globale configurata in Stripe Connect; se assente usa STRIPE_PLATFORM_FEE_PERCENT.')
                         ->visibleOn('edit'),
                 ])
                 ->columns(2)
@@ -262,6 +273,7 @@ class BusinessResource extends Resource
     {
         return [
             \App\Filament\SuperAdmin\Resources\BusinessResource\RelationManagers\BusinessAdminsRelationManager::class,
+            \App\Filament\SuperAdmin\Resources\BusinessResource\RelationManagers\ActivityLogRelationManager::class,
         ];
     }
 

@@ -1,12 +1,18 @@
 <?php
 
+use App\Http\Middleware\SubdomainMiddleware;
 use App\Models\AvailabilityRule;
+use App\Models\Business;
 use App\Models\Service;
 use App\Models\User;
 use Carbon\Carbon;
 
 it('seeds booking data needed by the customer portal', function () {
     $this->seed();
+
+    // The seeder creates the Rossini business; switch scope to it so queries work correctly
+    $rossini = Business::withoutGlobalScopes()->where('subdomain', 'salone')->firstOrFail();
+    app()->instance('current_business_id', $rossini->id);
 
     expect(User::role('admin')->where('email', 'admin@rossini.test')->exists())->toBeTrue();
     expect(User::role('customer')->where('email', 'giovanni@rossini.test')->exists())->toBeTrue();
@@ -22,7 +28,9 @@ it('seeds booking data needed by the customer portal', function () {
     $rule = $staff->availabilityRules()->where('is_available', true)->first();
     $date = Carbon::now()->next($rule->day_of_week)->toDateString();
 
-    $response = $this->getJson("/api/services/{$service->id}/slots?date={$date}&staff_id={$staff->id}");
+    // Disable SubdomainMiddleware so our app('current_business_id') is used, not overridden by subdomain lookup
+    $response = $this->withoutMiddleware(SubdomainMiddleware::class)
+        ->getJson("/api/services/{$service->id}/slots?date={$date}&staff_id={$staff->id}");
 
     $response->assertOk()
         ->assertJsonStructure(['data' => [['start_time', 'end_time']]]);

@@ -4,12 +4,16 @@ namespace App\Console\Commands;
 
 use App\Models\AvailabilityRule;
 use App\Models\Business;
+use App\Models\BusinessPageBlock;
 use App\Models\SalonProfile;
 use App\Models\Service;
+use App\Models\SystemSetting;
 use App\Models\User;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
@@ -148,10 +152,31 @@ class ImportBusinessFromWeb extends Command
         }
 
         // ── Import DB + media ─────────────────────────────────────────────────
-        $mediaQueue = $this->importData($data, $businessId);
+        ['business_id' => $importedBusinessId, 'media' => $mediaQueue, 'avatars' => $avatarQueue, 'passwords' => $newPasswords]
+            = $this->importData($data, $businessId);
+
+        Artisan::call('page-builder:init', ['--business' => $importedBusinessId]);
+        $this->line('  ✓ Page builder inizializzato');
+
+        $galleryUrls = $this->applyAiDataToBlocks($data, $importedBusinessId);
 
         if (! $this->option('no-media')) {
             $this->downloadMedia($mediaQueue);
+            $this->downloadAvatars($avatarQueue);
+            if (! empty($galleryUrls)) {
+                $this->downloadGalleryImages($galleryUrls, $importedBusinessId);
+            }
+        }
+
+        if (! empty($newPasswords)) {
+            $this->newLine();
+            $this->info('╔══════════════════════════════════════════════════╗');
+            $this->info('  CREDENZIALI STAFF (salva ora, non rivisualizzabili)');
+            $this->info('╚══════════════════════════════════════════════════╝');
+            $this->table(
+                ['Email', 'Password temporanea'],
+                array_map(fn ($email, $pass) => [$email, $pass], array_keys($newPasswords), $newPasswords)
+            );
         }
 
         return 0;
@@ -654,17 +679,18 @@ PROMPT;
         $b = $data['business'] ?? [];
         $this->line("\nBusiness:");
         $this->table(['Campo', 'Valore'], [
-            ['Nome',        $b['name'] ?? '—'],
-            ['Tagline',     $b['tagline'] ?? '—'],
-            ['Indirizzo',   $b['address'] ?? '—'],
-            ['Telefono',    $b['phone'] ?? '—'],
-            ['Instagram',   $b['instagram_url'] ?? '—'],
-            ['Facebook',    $b['facebook_url'] ?? '—'],
-            ['TikTok',      $b['tiktok_url'] ?? '—'],
-            ['WhatsApp',    $b['whatsapp_number'] ?? '—'],
-            ['Logo',        ! empty($b['logo_url']) ? '✓ ' . Str::limit($b['logo_url'], 60) : '—'],
-            ['Google Maps', ! empty($b['google_maps_embed']) ? '✓' : '—'],
-            ['Gallery',     ! empty($data['gallery_images']) ? '✓ ' . count($data['gallery_images']) . ' immagini' : '—'],
+            ['Nome',            $b['name'] ?? '—'],
+            ['Sottotitolo hero', $b['tagline'] ?? '—'],
+            ['Descrizione',     ! empty($b['description']) ? Str::limit(strip_tags($b['description']), 80) : '—'],
+            ['Indirizzo',       $b['address'] ?? '—'],
+            ['Telefono',        $b['phone'] ?? '—'],
+            ['Instagram',       $b['instagram_url'] ?? '—'],
+            ['Facebook',        $b['facebook_url'] ?? '—'],
+            ['TikTok',          $b['tiktok_url'] ?? '—'],
+            ['WhatsApp',        $b['whatsapp_number'] ?? '—'],
+            ['Logo',            ! empty($b['logo_url']) ? '✓ ' . Str::limit($b['logo_url'], 60) : '—'],
+            ['Google Maps',     ! empty($b['google_maps_embed']) ? '✓' : '—'],
+            ['Foto galleria',   ! empty($data['gallery_images']) ? count($data['gallery_images']) . ' trovate (blocco galleria)' : '—'],
         ]);
 
         if (! empty($data['hours'])) {
@@ -701,9 +727,12 @@ PROMPT;
 
     private function importData(array $data, ?int $businessId): array
     {
-        $mediaQueue = [];
+        $mediaQueue    = [];
+        $avatarQueue   = [];
+        $newPasswords  = []; // [email => password] per utenti appena creati
+        $businessRef   = new Business();
 
-        DB::transaction(function () use ($data, $businessId, &$mediaQueue) {
+        DB::transaction(function () use ($data, $businessId, &$mediaQueue, &$avatarQueue, &$newPasswords, &$businessRef) {
             // Business
             if ($businessId) {
                 $business = Business::findOrFail($businessId);
@@ -720,14 +749,37 @@ PROMPT;
                 $this->info("Business creato: {$business->name} (subdomain: {$subdomain}, ID: {$business->id})");
             }
 
-            // SalonProfile
+            $businessRef = $business;
+
+            // SystemSetting — crea se assente
+            SystemSetting::firstOrCreate(
+                ['business_id' => $business->id],
+                [
+                    'slot_generation_weeks'       => 4,
+                    'slot_granularity_minutes'    => 15,
+                    'timezone'                    => 'Europe/Rome',
+                    'booking_max_days_ahead'      => 60,
+                    'cancellation_deadline_hours' => 24,
+                    'reminder_count'              => 1,
+                    'reminder_1_hours'            => 24,
+                    'payment_mode'                => 'both',
+                    'reviews_enabled'             => true,
+                    'review_request_enabled'      => false,
+                    'loyalty_enabled'             => false,
+                    'loyalty_points_per_euro'     => 1,
+                    'loyalty_reward_threshold'    => 100,
+                    'loyalty_reward_percentage'   => 10,
+                    'follow_up_reminders_enabled' => false,
+                    'follow_up_reminder_days'     => 30,
+                ]
+            );
+
+            // SalonProfile — senza tagline/description (ora nei page blocks)
             $b       = $data['business'] ?? [];
             $profile = SalonProfile::updateOrCreate(
                 ['business_id' => $business->id],
                 array_filter([
                     'name'              => $b['name'] ?? null,
-                    'tagline'           => $b['tagline'] ?? null,
-                    'description'       => $b['description'] ?? null,
                     'address'           => $b['address'] ?? null,
                     'phone'             => $b['phone'] ?? null,
                     'instagram_url'     => $b['instagram_url'] ?? null,
@@ -744,12 +796,6 @@ PROMPT;
                 $profile->clearMediaCollection('favicon');
                 $mediaQueue[] = ['model' => $profile, 'url' => $b['logo_url'], 'collection' => 'logo'];
                 $mediaQueue[] = ['model' => $profile, 'url' => $b['logo_url'], 'collection' => 'favicon'];
-            }
-            if (! empty($data['gallery_images'])) {
-                $profile->clearMediaCollection('gallery');
-                foreach ($data['gallery_images'] as $imgUrl) {
-                    $mediaQueue[] = ['model' => $profile, 'url' => $imgUrl, 'collection' => 'gallery'];
-                }
             }
 
             $this->line('  ✓ SalonProfile aggiornato');
@@ -777,26 +823,27 @@ PROMPT;
                     ]
                 );
 
-                // Aggiorna solo se l'utente esisteva già (firstOrCreate non aggiorna)
                 if (! $user->wasRecentlyCreated) {
                     $user->update([
                         'business_id' => $business->id,
                         'bio'         => $s['bio'] ?? $user->bio,
                         'sort_order'  => $user->sort_order ?: $idx + 1,
                     ]);
-                    $tempPass = null; // password già impostata in precedenza, non la mostriamo
+                    $tempPass = null;
                 }
 
                 $role = ($s['role'] ?? 'staff') === 'admin' ? ['admin', 'staff'] : ['staff'];
                 $user->syncRoles($role);
+                $user->businesses()->syncWithoutDetaching([$business->id]);
                 $staffIds[$idx] = $user->id;
 
-                $passNote = $tempPass ? " | password temporanea: {$tempPass}" : ' | utente già esistente';
-                $this->line('  ✓ Staff: ' . $user->name . ' (' . implode('+', $role) . ')' . $passNote);
+                if ($tempPass) {
+                    $newPasswords[$email] = $tempPass;
+                }
+                $this->line('  ✓ Staff: ' . $user->name . ' <' . $email . '> (' . implode('+', $role) . ')' . ($tempPass ? '' : ' — già esistente'));
 
                 if (! empty($s['photo_url'])) {
-                    $user->clearMediaCollection('avatar');
-                    $mediaQueue[] = ['model' => $user, 'url' => $s['photo_url'], 'collection' => 'avatar'];
+                    $avatarQueue[] = ['user' => $user, 'url' => $s['photo_url']];
                 }
             }
 
@@ -842,7 +889,81 @@ PROMPT;
             $this->info("Import DB completato. Business ID: {$business->id}");
         });
 
-        return $mediaQueue;
+        return [
+            'business_id' => $businessRef->id,
+            'media'       => $mediaQueue,
+            'avatars'     => $avatarQueue,
+            'passwords'   => $newPasswords,
+        ];
+    }
+
+    /** @return list<string> Gallery image URLs to download after the transaction */
+    private function applyAiDataToBlocks(array $data, int $businessId): array
+    {
+        $b = $data['business'] ?? [];
+
+        $update = function (string $type, array $fields) use ($businessId): void {
+            $block = BusinessPageBlock::withoutGlobalScopes()
+                ->where('business_id', $businessId)
+                ->where('block_type', $type)
+                ->first();
+            if (! $block) return;
+            if (isset($fields['content'])) {
+                $fields['content'] = array_merge($block->content ?? [], array_filter($fields['content'], fn ($v) => $v !== null && $v !== ''));
+            }
+            $block->update($fields);
+        };
+
+        // Hero — variante classica (immagine sfondo piena), titolo + sottotitolo
+        $update('hero', [
+            'is_enabled' => true,
+            'variant'    => 'classic',
+            'content' => [
+                'title'    => $b['name'] ?? null,
+                'subtitle' => $b['tagline'] ?? null,
+            ],
+        ]);
+
+        // About — descrizione in HTML
+        $aboutContent = [];
+        if (! empty($b['description'])) {
+            $aboutContent['body'] = '<p>' . implode('</p><p>', array_map(
+                fn ($p) => e(trim($p)),
+                preg_split('/\n{2,}/', trim($b['description']))
+            )) . '</p>';
+        }
+        $update('about', ['is_enabled' => true, 'content' => $aboutContent]);
+
+        // Services — lista compatta con bottone prenotazione
+        $update('services', ['is_enabled' => true, 'variant' => 'compact_list']);
+        $update('staff',    ['is_enabled' => true]);
+
+        // Contact info — usa SalonProfile, basta abilitarlo
+        $update('contact_info', ['is_enabled' => true]);
+
+        // Reviews — abilita (nessun contenuto specifico dall'import)
+        $update('reviews', ['is_enabled' => true]);
+
+        // CTA
+        $ctaContent = [
+            'title'        => 'Prenota il tuo appuntamento',
+            'button_label' => 'Prenota ora',
+        ];
+        if (! empty($b['tagline'])) {
+            $ctaContent['subtitle'] = $b['tagline'];
+        }
+        $update('cta', ['is_enabled' => true, 'content' => $ctaContent]);
+
+        // Map — disabilitata di default all'import
+        $update('map', ['is_enabled' => false]);
+
+        // Gallery — ritorna le URL per il download separato
+        $galleryUrls = array_slice($data['gallery_images'] ?? [], 0, 12);
+        if (! empty($galleryUrls)) {
+            $update('gallery', ['is_enabled' => true]);
+        }
+
+        return $galleryUrls;
     }
 
     // ─── Media download (fuori transazione) ──────────────────────────────────
@@ -860,6 +981,82 @@ PROMPT;
                 $this->line('  ✓ ' . $item['collection'] . ': ' . Str::limit($item['url'], 60));
             } catch (\Exception $e) {
                 $this->warn('  → Saltato: ' . Str::limit($item['url'], 50) . ' — ' . $e->getMessage());
+            }
+        }
+    }
+
+    private function downloadAvatars(array $avatarQueue): void
+    {
+        if (empty($avatarQueue)) {
+            return;
+        }
+
+        $this->info('Download avatar staff (' . count($avatarQueue) . ')...');
+        foreach ($avatarQueue as $item) {
+            /** @var User $user */
+            $user = $item['user'];
+            $url  = $item['url'];
+            try {
+                $contents = Http::timeout(12)
+                    ->withHeaders(['User-Agent' => 'Mozilla/5.0 (compatible; SalonBot/1.0)'])
+                    ->get($url)
+                    ->body();
+                $path = 'avatars/' . $user->id . '.jpg';
+                Storage::disk('public')->put($path, $contents);
+                $user->update(['avatar_path' => $path]);
+                $this->line('  ✓ avatar: ' . $user->name);
+            } catch (\Exception $e) {
+                $this->warn('  → Avatar saltato (' . $user->name . '): ' . $e->getMessage());
+            }
+        }
+    }
+
+    private function downloadGalleryImages(array $urls, int $businessId): void
+    {
+        $this->info('Download immagini galleria (' . count($urls) . ')...');
+        $paths = [];
+
+        foreach ($urls as $i => $url) {
+            $url = trim(preg_replace('/\s*\[alt:.*?\]$/', '', $url));
+            if (empty($url)) continue;
+            try {
+                $contents = Http::timeout(12)
+                    ->withHeaders(['User-Agent' => 'Mozilla/5.0 (compatible; SalonBot/1.0)'])
+                    ->get($url)
+                    ->body();
+                $webp = $this->toWebp($contents);
+                if ($webp !== null) {
+                    $path = "site-builder/gallery/{$businessId}/{$i}.webp";
+                    Storage::disk('public')->put($path, $webp);
+                } else {
+                    $path = "site-builder/gallery/{$businessId}/{$i}.jpg";
+                    Storage::disk('public')->put($path, $contents);
+                }
+                $paths[] = $path;
+                $this->line("  ✓ galleria [{$i}]");
+            } catch (\Exception $e) {
+                $this->warn("  → Saltata [{$i}]: " . $e->getMessage());
+            }
+        }
+
+        if (! empty($paths)) {
+            $gallery = BusinessPageBlock::withoutGlobalScopes()
+                ->where('business_id', $businessId)
+                ->where('block_type', 'gallery')
+                ->first();
+            if ($gallery) {
+                $gallery->update(['content' => array_merge($gallery->content ?? [], ['images' => $paths])]);
+            }
+            $this->line('  ✓ ' . count($paths) . ' immagini salvate nel blocco galleria');
+
+            // Prima immagine galleria → sfondo hero classico
+            $hero = BusinessPageBlock::withoutGlobalScopes()
+                ->where('business_id', $businessId)
+                ->where('block_type', 'hero')
+                ->first();
+            if ($hero) {
+                $hero->update(['content' => array_merge($hero->content ?? [], ['image' => $paths[0]])]);
+                $this->line('  ✓ Immagine hero impostata: ' . $paths[0]);
             }
         }
     }
@@ -897,5 +1094,15 @@ PROMPT;
     private function generateEmail(string $staffName, string $businessName): string
     {
         return Str::slug($staffName) . '@' . Str::slug($businessName) . '.it';
+    }
+
+    private function toWebp(string $contents, int $quality = 82): ?string
+    {
+        $img = @imagecreatefromstring($contents);
+        if (! $img) return null;
+        ob_start();
+        imagewebp($img, null, $quality);
+        imagedestroy($img);
+        return ob_get_clean() ?: null;
     }
 }

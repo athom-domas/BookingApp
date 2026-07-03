@@ -5,7 +5,6 @@ namespace App\Services\Booking;
 use App\Models\SystemSetting;
 use App\Models\User;
 use Carbon\Carbon;
-use Illuminate\Support\Collection;
 
 class OperatorScoringService
 {
@@ -29,28 +28,43 @@ class OperatorScoringService
             return null;
         }
 
-        if (count($availableOperatorIds) === 1) {
-            return User::find($availableOperatorIds[0]);
+        $operators = User::whereIn('id', $availableOperatorIds)->get()->keyBy('id');
+
+        if ($operators->count() === 1) {
+            return $operators->first();
         }
+
+        $granularity = SystemSetting::getSlotGranularity();
 
         $scores = [];
         foreach ($availableOperatorIds as $operatorId) {
-            $operator                = User::find($operatorId);
-            $scores[$operatorId]     = $this->score($operator, $slotStart, $duration, $date);
+            $operator = $operators->get($operatorId);
+            if ($operator) {
+                $scores[$operatorId] = $this->score($operator, $slotStart, $duration, $date, $granularity);
+            }
         }
 
         asort($scores);
 
-        return User::find(array_key_first($scores));
+        return $operators->get(array_key_first($scores));
     }
 
-    private function score(User $operator, Carbon $slotStart, int $duration, Carbon $date): float
+    private function score(User $operator, Carbon $slotStart, int $duration, Carbon $date, int $granularity): float
     {
         $slotEnd     = $slotStart->copy()->addMinutes($duration);
-        $minGap      = SystemSetting::getSlotGranularity();
         $score       = 0.0;
 
-        $freeRange = $this->findContainingFreeRange($operator, $slotStart, $slotEnd, $date);
+        $workRanges  = $this->slots->getWorkRangesForOperator($operator, $date);
+        $occupations = $this->slots->getOccupationsForOperator($operator, $date);
+        $freeRanges  = $this->slots->calculateFreeRanges($workRanges, $occupations);
+
+        $freeRange = null;
+        foreach ($freeRanges as $range) {
+            if ($range['start'] <= $slotStart && $range['end'] >= $slotEnd) {
+                $freeRange = $range;
+                break;
+            }
+        }
 
         if ($freeRange) {
             $gapBefore = $slotStart->diffInMinutes($freeRange['start']);
@@ -58,10 +72,10 @@ class OperatorScoringService
 
             $score += $gapBefore + $gapAfter;
 
-            if ($gapBefore > 0 && $gapBefore < $minGap) {
+            if ($gapBefore > 0 && $gapBefore < $granularity) {
                 $score += 100;
             }
-            if ($gapAfter > 0 && $gapAfter < $minGap) {
+            if ($gapAfter > 0 && $gapAfter < $granularity) {
                 $score += 100;
             }
             if ($gapBefore === 0 && $gapAfter === 0) {
@@ -69,32 +83,14 @@ class OperatorScoringService
             }
         }
 
-        $score += $this->dailyLoadPercent($operator, $date) * 0.5;
+        $score += $this->dailyLoadPercent($workRanges, $occupations) * 0.5;
 
         return $score;
     }
 
-    private function findContainingFreeRange(
-        User $operator,
-        Carbon $slotStart,
-        Carbon $slotEnd,
-        Carbon $date
-    ): ?array {
-        $freeRanges = $this->slots->getFreeRangesForOperator($operator, $date);
-
-        foreach ($freeRanges as $range) {
-            if ($range['start'] <= $slotStart && $range['end'] >= $slotEnd) {
-                return $range;
-            }
-        }
-
-        return null;
-    }
-
-    private function dailyLoadPercent(User $operator, Carbon $date): float
+    private function dailyLoadPercent(array $workRanges, array $occupations): float
     {
-        $workRanges = $this->slots->getWorkRangesForOperator($operator, $date);
-        $totalWork  = array_sum(array_map(
+        $totalWork = array_sum(array_map(
             fn ($r) => $r['start']->diffInMinutes($r['end']),
             $workRanges
         ));
@@ -103,7 +99,6 @@ class OperatorScoringService
             return 0.0;
         }
 
-        $occupations   = $this->slots->getOccupationsForOperator($operator, $date);
         $totalOccupied = array_sum(array_map(
             fn ($o) => $o['start']->diffInMinutes($o['end']),
             $occupations

@@ -7,47 +7,73 @@ use App\Events\PaymentCompleted;
 use App\Events\PaymentRefunded;
 use App\Exceptions\BookingException;
 use App\Models\Appointment;
+use App\Models\Business;
 use App\Models\Payment;
 use Illuminate\Support\Facades\Log;
 use Stripe\StripeClient;
-use App\Services\LoyaltyService;
 
 class PaymentService
 {
-    public function __construct(private readonly StripeClient $stripe) {}
+    public function __construct(
+        private readonly ?StripeClient $stripe,
+        private readonly ?StripeConnectService $connectService = null,
+    ) {}
 
-    public function initiateStripePayment(int $appointmentId, int $amountCents): Payment
+    public function initiateStripePayment(int $appointmentId, int $amountCents, ?Business $business = null): Payment
     {
         $appointment = Appointment::findOrFail($appointmentId);
+        $business ??= Business::find(app()->bound('current_business_id') ? app('current_business_id') : null);
 
-        $paymentIntent = $this->stripe->paymentIntents->create([
-            'amount' => $amountCents,
+        $connectAccount = $business?->stripeConnectAccount;
+        $hasConnect = $connectAccount && $connectAccount->isActive() && $this->connectService;
+
+        $fee = $hasConnect
+            ? $this->connectService->calculatePlatformFee($business, $amountCents)
+            : ['cents' => 0, 'percent' => null];
+
+        $pmConfig = config('services.stripe.payment_method_configuration');
+
+        $intentParams = [
+            'amount'   => $amountCents,
             'currency' => 'eur',
-            'automatic_payment_methods' => ['enabled' => true],
             'metadata' => [
                 'appointment_id' => $appointmentId,
-                'business_id'    => app()->bound('current_business_id') ? app('current_business_id') : null,
+                'business_id'    => $business?->id,
             ],
-        ]);
+        ];
+
+        if ($hasConnect) {
+            $intentParams['application_fee_amount']    = $fee['cents'];
+            $intentParams['automatic_payment_methods'] = ['enabled' => true];
+            $paymentIntent = $this->stripe->paymentIntents->create(
+                $intentParams,
+                ['stripe_account' => $connectAccount->stripe_account_id]
+            );
+        } elseif ($pmConfig) {
+            $intentParams['payment_method_configuration'] = $pmConfig;
+            $paymentIntent = $this->stripe->paymentIntents->create($intentParams);
+        } else {
+            $intentParams['automatic_payment_methods'] = ['enabled' => true];
+            $paymentIntent = $this->stripe->paymentIntents->create($intentParams);
+        }
 
         $payment = Payment::create([
-            'appointment_id' => $appointmentId,
-            'user_id' => $appointment->user_id,
-            'amount' => $amountCents / 100,
-            'status' => 'pending',
-            'payment_method' => 'stripe',
+            'appointment_id'        => $appointmentId,
+            'user_id'               => $appointment->user_id,
+            'amount'                => $amountCents / 100,
+            'status'                => 'pending',
+            'payment_method'        => 'stripe',
             'stripe_transaction_id' => $paymentIntent->id,
-            'stripe_response' => $paymentIntent->toArray(),
+            'stripe_response'       => $paymentIntent->toArray(),
+            'stripe_account_id'     => $hasConnect ? $connectAccount->stripe_account_id : null,
+            'platform_fee_amount'   => round($fee['cents'] / 100, 2),
+            'platform_fee_percent'  => $fee['percent'],
         ]);
-
-        // Pre-accredito punti fedeltà subito, così sono già visibili sulla pagina di pagamento.
-        // Se il pagamento fallisce/viene cancellato, i punti vengono stornati (vedere handleStripeWebhook).
-        $this->preCreditLoyalty($appointment);
 
         return $payment;
     }
 
-    public function handleStripeWebhook(array $payload): void
+    public function handleStripeWebhook(array $payload, ?string $accountId = null): void
     {
         $type = $payload['type'] ?? '';
         $transactionId = $payload['data']['object']['id'] ?? null;
@@ -58,13 +84,26 @@ class PaymentService
             return;
         }
 
-        $payment = Payment::where('stripe_transaction_id', $transactionId)->first();
+        $query = Payment::withoutGlobalScopes()->where('stripe_transaction_id', $transactionId);
+        if ($accountId !== null) {
+            $query->where('stripe_account_id', $accountId);
+        }
+        $payment = $query->first();
 
         if (! $payment) {
             return;
         }
 
         if ($type === 'payment_intent.succeeded') {
+            $chargeId = $payload['data']['object']['latest_charge'] ?? null;
+            $appFeeId = $payload['data']['object']['application_fee'] ?? null;
+            if ($chargeId) {
+                $updates = ['stripe_charge_id' => $chargeId];
+                if ($appFeeId) {
+                    $updates['stripe_application_fee_id'] = $appFeeId;
+                }
+                $payment->update($updates);
+            }
             $this->markPaymentCompleted($payment);
         } elseif ($type === 'payment_intent.payment_failed') {
             $payment->update(['status' => 'failed']);
@@ -72,6 +111,8 @@ class PaymentService
         } elseif ($type === 'payment_intent.canceled') {
             $payment->update(['status' => 'cancelled']);
             PaymentRefunded::dispatch($payment);
+        } elseif ($type === 'charge.refunded') {
+            app(RefundService::class)->handleExternalRefund($payload['data']['object'], $accountId);
         }
     }
 
@@ -84,9 +125,21 @@ class PaymentService
             throw new BookingException('Nessun pagamento trovato per questo appuntamento.');
         }
 
-        $paymentIntent = $this->stripe->paymentIntents->retrieve($payment->stripe_transaction_id);
+        $opts = $payment->stripe_account_id
+            ? ['stripe_account' => $payment->stripe_account_id]
+            : [];
+
+        $paymentIntent = $this->stripe->paymentIntents->retrieve(
+            $payment->stripe_transaction_id,
+            [],
+            $opts
+        );
 
         if ($paymentIntent->status === 'succeeded') {
+            $chargeId = $paymentIntent->latest_charge ?? null;
+            if ($chargeId && ! $payment->stripe_charge_id) {
+                $payment->update(['stripe_charge_id' => $chargeId]);
+            }
             $this->markPaymentCompleted($payment);
         } elseif (in_array($paymentIntent->status, ['canceled', 'requires_payment_method'], true)) {
             throw new BookingException('Il pagamento non è andato a buon fine.');
@@ -103,7 +156,10 @@ class PaymentService
 
         if ($payment->payment_method === 'stripe' && $payment->stripe_transaction_id) {
             try {
-                $this->stripe->paymentIntents->cancel($payment->stripe_transaction_id);
+                $opts = $payment->stripe_account_id
+                    ? ['stripe_account' => $payment->stripe_account_id]
+                    : [];
+                $this->stripe->paymentIntents->cancel($payment->stripe_transaction_id, [], $opts);
             } catch (\Throwable) {
                 // PaymentIntent già cancellato o scaduto: nessuna azione necessaria
             }
@@ -116,22 +172,7 @@ class PaymentService
     public function refundPayment(int $paymentId): Payment
     {
         $payment = Payment::findOrFail($paymentId);
-
-        if ($payment->status !== 'completed') {
-            throw new BookingException('Solo i pagamenti completati possono essere rimborsati.');
-        }
-
-        $refund = $this->stripe->refunds->create([
-            'payment_intent' => $payment->stripe_transaction_id,
-        ]);
-
-        $payment->update([
-            'status' => 'refunded',
-            'stripe_response' => $refund->toArray(),
-        ]);
-
-        PaymentRefunded::dispatch($payment);
-
+        app(\App\Services\RefundService::class)->refund($payment);
         return $payment->fresh();
     }
 
@@ -159,11 +200,19 @@ class PaymentService
 
     public function applyLoyaltyDiscount(Payment $payment, int $percentage, float $originalAmount): void
     {
-        $discounted = round($originalAmount * (1 - $percentage / 100), 2);
+        $discounted     = round($originalAmount * (1 - $percentage / 100), 2);
+        $newAmountCents = (int) round($discounted * 100);
 
-        $this->stripe->paymentIntents->update($payment->stripe_transaction_id, [
-            'amount' => (int) round($discounted * 100),
-        ]);
+        $updateParams = ['amount' => $newAmountCents];
+        if ($payment->stripe_account_id && $payment->platform_fee_percent) {
+            $updateParams['application_fee_amount'] = (int) round($newAmountCents * $payment->platform_fee_percent / 100);
+        }
+
+        $opts = $payment->stripe_account_id
+            ? ['stripe_account' => $payment->stripe_account_id]
+            : [];
+
+        $this->stripe->paymentIntents->update($payment->stripe_transaction_id, $updateParams, $opts);
 
         $payment->update([
             'amount'                      => $discounted,
@@ -174,11 +223,19 @@ class PaymentService
 
     public function removeLoyaltyDiscount(Payment $payment): void
     {
-        $original = (float) $payment->loyalty_original_amount;
+        $original      = (float) $payment->loyalty_original_amount;
+        $originalCents = (int) round($original * 100);
 
-        $this->stripe->paymentIntents->update($payment->stripe_transaction_id, [
-            'amount' => (int) round($original * 100),
-        ]);
+        $updateParams = ['amount' => $originalCents];
+        if ($payment->stripe_account_id && $payment->platform_fee_percent) {
+            $updateParams['application_fee_amount'] = (int) round($originalCents * $payment->platform_fee_percent / 100);
+        }
+
+        $opts = $payment->stripe_account_id
+            ? ['stripe_account' => $payment->stripe_account_id]
+            : [];
+
+        $this->stripe->paymentIntents->update($payment->stripe_transaction_id, $updateParams, $opts);
 
         $payment->update([
             'amount'                      => $original,
@@ -212,17 +269,4 @@ class PaymentService
         }
     }
 
-    private function preCreditLoyalty(Appointment $appointment): void
-    {
-        $price = (float) ($appointment->final_price ?? 0);
-        if ($price <= 0) {
-            return;
-        }
-
-        if (! app()->bound('current_business_id')) {
-            app()->instance('current_business_id', $appointment->business_id);
-        }
-
-        app(LoyaltyService::class)->accrue($appointment, $price);
-    }
 }

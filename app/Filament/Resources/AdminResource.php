@@ -5,8 +5,9 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\AdminResource\Pages;
 use App\Models\User;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
@@ -26,7 +27,7 @@ class AdminResource extends Resource
 
     protected static ?string $navigationLabel = 'Amministratori';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Impostazioni';
+    protected static string|\UnitEnum|null $navigationGroup = 'Configurazioni';
     protected static ?int $navigationSort = 1;
 
     protected static ?string $modelLabel = 'amministratore';
@@ -107,6 +108,7 @@ class AdminResource extends Resource
                     TextInput::make('password')
                         ->label('Password')
                         ->password()
+                        ->autocomplete('new-password')
                         ->confirmed()
                         ->required(fn(string $operation): bool => $operation === 'create')
                         ->dehydrated(fn(?string $state): bool => filled($state))
@@ -122,6 +124,7 @@ class AdminResource extends Resource
                     TextInput::make('password_confirmation')
                         ->label('Conferma password')
                         ->password()
+                        ->autocomplete('new-password')
                         ->required(fn(string $operation): bool => $operation === 'create')
                         ->dehydrated(false)
                         ->maxLength(255)
@@ -141,11 +144,12 @@ class AdminResource extends Resource
                         ->live()
                         ->columnSpanFull(),
 
-                    SpatieMediaLibraryFileUpload::make('avatar')
+                    FileUpload::make('avatar_path')
                         ->label('Foto profilo')
-                        ->collection('avatar')
+                        ->disk('public')
                         ->image()
                         ->maxSize(2048)
+                        ->saveUploadedFileUsing(fn ($file) => \App\PageBlocks\AbstractPageBlock::storeAsWebp($file, 'site-builder/avatars'))
                         ->visible(fn(Get $get): bool => (bool) $get('works_as_staff'))
                         ->columnSpanFull(),
 
@@ -162,6 +166,10 @@ class AdminResource extends Resource
                         ->visible(fn(Get $get): bool => (bool) $get('works_as_staff'))
                         ->helperText('Seleziona almeno un servizio per rendere lo staff prenotabile dal portale clienti.')
                         ->columnSpanFull(),
+
+                    ColorPicker::make('calendar_color')
+                        ->label('Colore calendario')
+                        ->visible(fn(Get $get): bool => (bool) $get('works_as_staff')),
 
                     Toggle::make('receive_email_notifications')
                         ->label('Ricevi notifiche email')

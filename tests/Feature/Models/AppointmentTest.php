@@ -112,3 +112,33 @@ it('canBeCancelled returns false when less than 24 hours away', function () {
 
     expect($appointment->canBeCancelled())->toBeFalse();
 });
+
+it('pendingExpired scope excludes recent pending appointments', function () {
+    $recent = Appointment::factory()->create(['status' => 'pending', 'created_at' => now()->subMinutes(10)]);
+    $old    = Appointment::factory()->create(['status' => 'pending', 'created_at' => now()->subMinutes(45)]);
+
+    $ids = Appointment::pendingExpired()->pluck('id');
+
+    expect($ids)->not->toContain($recent->id)
+        ->and($ids)->toContain($old->id);
+});
+
+it('pendingExpired scope excludes confirmed appointments', function () {
+    Appointment::factory()->create(['status' => 'confirmed', 'created_at' => now()->subHour()]);
+
+    expect(Appointment::pendingExpired()->count())->toBe(0);
+});
+
+it('cancelling a pending appointment also cancels its pending payment', function () {
+    $appointment = Appointment::factory()->create(['status' => 'pending']);
+    $payment = Payment::factory()->create([
+        'appointment_id'        => $appointment->id,
+        'status'                => 'pending',
+        'payment_method'        => 'stripe',
+        'stripe_transaction_id' => null,
+    ]);
+
+    $appointment->update(['status' => 'cancelled']);
+
+    expect($payment->fresh()->status)->toBe('cancelled');
+});

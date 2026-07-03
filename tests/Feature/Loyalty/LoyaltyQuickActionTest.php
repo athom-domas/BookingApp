@@ -62,10 +62,11 @@ it('applica lo sconto fedeltà dalla quick-action registra pagamento', function 
 
     $payment = Payment::where('appointment_id', $this->appointment->id)->first();
 
-    // Con accrual alla conferma: 120 (base) + 100 (conferma) = 220 → redeem -100 = 120.
+    // 120 punti base → redeem −100 = 20 rimanenti. Prezzo: 100 − 10% = 90.
     expect((float) $payment->amount)->toBe(90.0)
-        ->and(LoyaltyAccount::where('user_id', $this->customer->id)->first()->points)->toBe(120)
-        ->and(LoyaltyTransaction::where('appointment_id', $this->appointment->id)->where('type', 'redeem')->first()->points)->toBe(-100);
+        ->and(LoyaltyAccount::where('user_id', $this->customer->id)->first()->points)->toBe(20)
+        ->and(LoyaltyTransaction::where('appointment_id', $this->appointment->id)->where('type', 'redeem')->first()->points)->toBe(-100)
+        ->and((float) $this->appointment->fresh()->loyalty_discounted_price)->toBe(90.0);
 });
 
 it('non applica sconto dalla quick-action se il toggle è spento', function () {

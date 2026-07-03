@@ -123,7 +123,9 @@ it('confirmPayment marks payment and appointment as completed when Stripe succee
     ]);
 
     $mockPaymentIntents = Mockery::mock();
-    $mockPaymentIntents->shouldReceive('retrieve')->once()->with('pi_test_confirm')->andReturn($fakeIntent);
+    $mockPaymentIntents->shouldReceive('retrieve')->once()->withArgs(function ($id, $params, $opts) {
+        return $id === 'pi_test_confirm';
+    })->andReturn($fakeIntent);
 
     $mockStripe = Mockery::mock(StripeClient::class);
     $mockStripe->shouldReceive('getService')->with('paymentIntents')->andReturn($mockPaymentIntents);
@@ -139,20 +141,19 @@ it('refundPayment updates status to refunded', function () {
     $payment = Payment::factory()->create([
         'status' => 'completed',
         'stripe_transaction_id' => 'pi_test_refund',
+        'stripe_charge_id'      => 'ch_test_refund',
     ]);
 
-    $fakeRefund = Refund::constructFrom([
-        'id' => 're_test_123',
-        'payment_intent' => 'pi_test_refund',
-        'status' => 'succeeded',
-    ]);
-
-    $mockRefunds = Mockery::mock();
-    $mockRefunds->shouldReceive('create')->once()->andReturn($fakeRefund);
+    $mockRefundService = Mockery::mock(\App\Services\RefundService::class);
+    $mockRefundService->shouldReceive('refund')->once()->withArgs(function ($p) use ($payment) {
+        return $p->id === $payment->id;
+    })->andReturnUsing(function ($p) {
+        $p->update(['status' => 'refunded']);
+        return new \App\Models\StripeRefund();
+    });
+    $this->app->instance(\App\Services\RefundService::class, $mockRefundService);
 
     $mockStripe = Mockery::mock(StripeClient::class);
-    $mockStripe->shouldReceive('getService')->with('refunds')->andReturn($mockRefunds);
-
     $result = ($this->makePaymentService)($mockStripe)->refundPayment($payment->id);
 
     expect($result->status)->toBe('refunded');
@@ -160,6 +161,10 @@ it('refundPayment updates status to refunded', function () {
 
 it('refundPayment throws BookingException if payment is not completed', function () {
     $payment = Payment::factory()->create(['status' => 'pending']);
+
+    $mockRefundService = Mockery::mock(\App\Services\RefundService::class);
+    $mockRefundService->shouldReceive('refund')->once()->andThrow(new \App\Exceptions\BookingException('Solo i pagamenti completati possono essere rimborsati.'));
+    $this->app->instance(\App\Services\RefundService::class, $mockRefundService);
 
     $mockStripe = Mockery::mock(StripeClient::class);
 
@@ -218,4 +223,243 @@ it('recordInPersonPayment throws BookingException if a completed payment already
 
     expect(fn () => ($this->makePaymentService)($mockStripe)->recordInPersonPayment($appointment->id, 'cash', 50.00))
         ->toThrow(BookingException::class);
+});
+
+it('initiateStripePayment usa direct charge con stripe_account option se business ha account attivo', function () {
+    $account = \App\Models\StripeConnectAccount::factory()->create([
+        'business_id'       => $this->business->id,
+        'stripe_account_id' => 'acct_direct_test',
+    ]);
+
+    $appointment = Appointment::factory()->create(['business_id' => $this->business->id]);
+    $this->business->update(['stripe_platform_fee_percent' => 5.0]);
+
+    $fakeIntent = \Stripe\PaymentIntent::constructFrom([
+        'id'            => 'pi_direct_test',
+        'object'        => 'payment_intent',
+        'amount'        => 10000,
+        'currency'      => 'eur',
+        'status'        => 'requires_payment_method',
+        'client_secret' => 'pi_direct_test_secret',
+    ]);
+
+    $capturedParams = null;
+    $capturedOpts   = null;
+
+    $mockPaymentIntents = Mockery::mock();
+    $mockPaymentIntents->shouldReceive('create')
+        ->once()
+        ->withArgs(function ($params, $opts = []) use (&$capturedParams, &$capturedOpts) {
+            $capturedParams = $params;
+            $capturedOpts   = $opts;
+            return true;
+        })
+        ->andReturn($fakeIntent);
+
+    $mockStripe = Mockery::mock(\Stripe\StripeClient::class);
+    $mockStripe->shouldReceive('getService')->with('paymentIntents')->andReturn($mockPaymentIntents);
+
+    $service = new \App\Services\PaymentService(
+        $mockStripe,
+        app(\App\Services\StripeConnectService::class)
+    );
+    $payment = $service->initiateStripePayment($appointment->id, 10000, $this->business);
+
+    expect(array_key_exists('on_behalf_of', $capturedParams))->toBeFalse();
+    expect(array_key_exists('transfer_data', $capturedParams))->toBeFalse();
+    expect($capturedParams['application_fee_amount'])->toBe(500);
+    expect($capturedOpts['stripe_account'])->toBe('acct_direct_test');
+    expect($payment->stripe_account_id)->toBe('acct_direct_test');
+    expect((float) $payment->platform_fee_amount)->toBe(5.0);
+});
+
+it('confirmPayment passa stripe_account option e salva latest_charge', function () {
+    $appointment = Appointment::factory()->create(['business_id' => $this->business->id]);
+    $payment = \App\Models\Payment::factory()->create([
+        'appointment_id'        => $appointment->id,
+        'stripe_transaction_id' => 'pi_confirm_direct',
+        'stripe_account_id'     => 'acct_confirm',
+        'status'                => 'pending',
+    ]);
+
+    $fakeIntent = \Stripe\PaymentIntent::constructFrom([
+        'id'            => 'pi_confirm_direct',
+        'object'        => 'payment_intent',
+        'status'        => 'succeeded',
+        'latest_charge' => 'ch_direct_001',
+        'amount'        => 5000,
+        'currency'      => 'eur',
+    ]);
+
+    $capturedOpts = null;
+    $mockPaymentIntents = Mockery::mock();
+    $mockPaymentIntents->shouldReceive('retrieve')
+        ->once()
+        ->withArgs(function ($id, $params, $opts) use (&$capturedOpts) {
+            $capturedOpts = $opts;
+            return true;
+        })
+        ->andReturn($fakeIntent);
+
+    $mockStripe = Mockery::mock(\Stripe\StripeClient::class);
+    $mockStripe->shouldReceive('getService')->with('paymentIntents')->andReturn($mockPaymentIntents);
+
+    ($this->makePaymentService)($mockStripe)->confirmPayment($appointment->id);
+
+    expect($capturedOpts['stripe_account'])->toBe('acct_confirm');
+    expect($payment->fresh()->stripe_charge_id)->toBe('ch_direct_001');
+});
+
+it('cancelPendingPayment passa stripe_account option per direct charge', function () {
+    $appointment = Appointment::factory()->create(['business_id' => $this->business->id]);
+    $payment = \App\Models\Payment::factory()->create([
+        'appointment_id'        => $appointment->id,
+        'stripe_transaction_id' => 'pi_cancel_direct',
+        'stripe_account_id'    => 'acct_cancel',
+        'status'               => 'pending',
+        'payment_method'       => 'stripe',
+    ]);
+
+    $capturedOpts = null;
+    $mockPaymentIntents = Mockery::mock();
+    $mockPaymentIntents->shouldReceive('cancel')
+        ->once()
+        ->withArgs(function ($id, $params, $opts) use (&$capturedOpts) {
+            $capturedOpts = $opts;
+            return true;
+        });
+
+    $mockStripe = Mockery::mock(\Stripe\StripeClient::class);
+    $mockStripe->shouldReceive('getService')->with('paymentIntents')->andReturn($mockPaymentIntents);
+
+    ($this->makePaymentService)($mockStripe)->cancelPendingPayment($payment);
+
+    expect($capturedOpts['stripe_account'])->toBe('acct_cancel');
+    expect($payment->fresh()->status)->toBe('cancelled');
+});
+
+it('applyLoyaltyDiscount ricalcola application_fee_amount e passa stripe_account', function () {
+    $appointment = Appointment::factory()->create(['business_id' => $this->business->id]);
+    $payment = \App\Models\Payment::factory()->create([
+        'appointment_id'        => $appointment->id,
+        'stripe_transaction_id' => 'pi_loyalty_test',
+        'stripe_account_id'     => 'acct_loyalty',
+        'platform_fee_percent'  => 5.0,
+        'status'                => 'pending',
+    ]);
+
+    $capturedParams = null;
+    $capturedOpts   = null;
+    $mockPaymentIntents = Mockery::mock();
+    $mockPaymentIntents->shouldReceive('update')
+        ->once()
+        ->withArgs(function ($id, $params, $opts) use (&$capturedParams, &$capturedOpts) {
+            $capturedParams = $params;
+            $capturedOpts   = $opts;
+            return true;
+        });
+
+    $mockStripe = Mockery::mock(\Stripe\StripeClient::class);
+    $mockStripe->shouldReceive('getService')->with('paymentIntents')->andReturn($mockPaymentIntents);
+
+    ($this->makePaymentService)($mockStripe)->applyLoyaltyDiscount($payment, 20, 50.0);
+
+    expect($capturedParams['amount'])->toBe(4000);
+    expect($capturedParams['application_fee_amount'])->toBe(200);
+    expect($capturedOpts['stripe_account'])->toBe('acct_loyalty');
+});
+
+it('removeLoyaltyDiscount ripristina application_fee_amount e passa stripe_account', function () {
+    $appointment = Appointment::factory()->create(['business_id' => $this->business->id]);
+    $payment = \App\Models\Payment::factory()->create([
+        'appointment_id'          => $appointment->id,
+        'stripe_transaction_id'   => 'pi_remove_loyalty',
+        'stripe_account_id'       => 'acct_loyalty',
+        'platform_fee_percent'    => 5.0,
+        'loyalty_original_amount' => 50.0,
+        'status'                  => 'pending',
+    ]);
+
+    $capturedParams = null;
+    $capturedOpts   = null;
+    $mockPaymentIntents = Mockery::mock();
+    $mockPaymentIntents->shouldReceive('update')
+        ->once()
+        ->withArgs(function ($id, $params, $opts) use (&$capturedParams, &$capturedOpts) {
+            $capturedParams = $params;
+            $capturedOpts   = $opts;
+            return true;
+        });
+
+    $mockStripe = Mockery::mock(\Stripe\StripeClient::class);
+    $mockStripe->shouldReceive('getService')->with('paymentIntents')->andReturn($mockPaymentIntents);
+
+    ($this->makePaymentService)($mockStripe)->removeLoyaltyDiscount($payment);
+
+    expect($capturedParams['amount'])->toBe(5000);
+    expect($capturedParams['application_fee_amount'])->toBe(250);
+    expect($capturedOpts['stripe_account'])->toBe('acct_loyalty');
+});
+
+it('handleStripeWebhook usa stripe_account_id nel lookup quando accountId fornito', function () {
+    $appointment = Appointment::factory()->create(['business_id' => $this->business->id]);
+
+    $otherBusiness = \App\Models\Business::factory()->create();
+    $decoy = \App\Models\Payment::factory()->create([
+        'appointment_id'        => Appointment::factory()->create(['business_id' => $otherBusiness->id]),
+        'stripe_transaction_id' => 'pi_multi_test',
+        'stripe_account_id'     => 'acct_other',
+        'status'                => 'pending',
+    ]);
+
+    $target = \App\Models\Payment::factory()->create([
+        'appointment_id'        => $appointment->id,
+        'stripe_transaction_id' => 'pi_multi_test',
+        'stripe_account_id'     => 'acct_target',
+        'status'                => 'pending',
+    ]);
+
+    $mockStripe = Mockery::mock(\Stripe\StripeClient::class);
+    ($this->makePaymentService)($mockStripe)->handleStripeWebhook([
+        'type' => 'payment_intent.succeeded',
+        'data' => ['object' => ['id' => 'pi_multi_test', 'latest_charge' => 'ch_target']],
+    ], 'acct_target');
+
+    expect($target->fresh()->status)->toBe('completed');
+    expect($decoy->fresh()->status)->toBe('pending');
+});
+
+it('initiateStripePayment non aggiunge destination params se business non ha account attivo', function () {
+    $appointment = Appointment::factory()->create(['business_id' => $this->business->id]);
+
+    $fakeIntent = PaymentIntent::constructFrom([
+        'id'           => 'pi_no_connect',
+        'object'       => 'payment_intent',
+        'amount'       => 5000,
+        'currency'     => 'eur',
+        'status'       => 'requires_payment_method',
+        'client_secret'=> 'secret',
+    ]);
+
+    $capturedParams = null;
+    $mockPaymentIntents = Mockery::mock();
+    $mockPaymentIntents->shouldReceive('create')
+        ->withArgs(function ($params) use (&$capturedParams) {
+            $capturedParams = $params;
+            return true;
+        })
+        ->andReturn($fakeIntent);
+
+    $mockStripe = Mockery::mock(StripeClient::class);
+    $mockStripe->shouldReceive('getService')->with('paymentIntents')->andReturn($mockPaymentIntents);
+
+    $service = new \App\Services\PaymentService(
+        $mockStripe,
+        app(\App\Services\StripeConnectService::class)
+    );
+    $payment = $service->initiateStripePayment($appointment->id, 5000, $this->business);
+
+    expect(array_key_exists('on_behalf_of', $capturedParams))->toBeFalse();
+    expect(array_key_exists('application_fee_amount', $capturedParams))->toBeFalse();
+    expect((float) $payment->platform_fee_amount)->toBe(0.0);
 });

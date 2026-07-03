@@ -4,11 +4,14 @@ namespace App\Http\Controllers\Portal;
 
 use App\Exceptions\ProductOrderException;
 use App\Http\Controllers\Controller;
+use App\Models\Business;
 use App\Models\IntegrationSetting;
+use App\Models\SalonProfile;
 use App\Models\Product;
 use App\Models\ProductOrder;
 use App\Models\SystemSetting;
 use App\Services\ProductOrderService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -18,23 +21,25 @@ class ProductController extends Controller
 {
     public function __construct(
         private readonly ProductOrderService $service,
-        private readonly StripeClient $stripe,
+        private readonly ?StripeClient $stripe,
     ) {}
 
     public function index(): View
     {
-        $products = Product::inSale()->with('media')->orderBy('name')->get();
-        $cart     = session('product_cart', []);
+        $products    = Product::inSale()->with('media')->orderBy('name')->get();
+        $cart        = session('product_cart', []);
+        $business    = Business::find(Business::currentId());
+        $shopProfile = SalonProfile::current();
 
         $cartItems = collect($cart)->map(function (int $qty, int $productId) use ($products) {
             $product = $products->firstWhere('id', $productId);
             return $product ? ['product' => $product, 'quantity' => $qty] : null;
         })->filter()->values();
 
-        return view('portal.products.index', compact('products', 'cartItems'));
+        return view('shop.index', compact('products', 'cartItems', 'business', 'shopProfile'));
     }
 
-    public function cartUpdate(Request $request): RedirectResponse
+    public function cartUpdate(Request $request): RedirectResponse|JsonResponse
     {
         $validated = $request->validate([
             'product_id' => ['required', 'integer', 'exists:products,id'],
@@ -44,6 +49,9 @@ class ProductController extends Controller
         $product = Product::find($validated['product_id']);
 
         if (! $product || ! $product->isAvailable() || $product->stock < $validated['quantity']) {
+            if ($request->wantsJson()) {
+                return response()->json(['error' => 'Quantità non disponibile per questo prodotto.'], 422);
+            }
             return back()->withErrors(['cart' => 'Quantità non disponibile per questo prodotto.']);
         }
 
@@ -51,14 +59,29 @@ class ProductController extends Controller
         $cart[$product->id] = $validated['quantity'];
         session(['product_cart' => $cart]);
 
-        return redirect()->route('portal.products.index');
+        if ($request->wantsJson()) {
+            return response()->json([
+                'cartCount' => array_sum($cart),
+                'productId' => $product->id,
+                'quantity'  => $validated['quantity'],
+            ]);
+        }
+
+        return redirect()->route('shop.index');
     }
 
-    public function cartRemove(int $productId): RedirectResponse
+    public function cartRemove(int $productId): RedirectResponse|JsonResponse
     {
         $cart = session('product_cart', []);
         unset($cart[$productId]);
         session(['product_cart' => $cart]);
+
+        if (request()->wantsJson()) {
+            return response()->json([
+                'cartCount' => array_sum($cart),
+                'productId' => $productId,
+            ]);
+        }
 
         return back();
     }
@@ -68,7 +91,7 @@ class ProductController extends Controller
         $cart = session('product_cart', []);
 
         if (empty($cart)) {
-            return redirect()->route('portal.products.index');
+            return redirect()->route('shop.index');
         }
 
         $products  = Product::whereIn('id', array_keys($cart))->with('media')->get()->keyBy('id');
@@ -79,13 +102,13 @@ class ProductController extends Controller
 
         if ($cartItems->isEmpty()) {
             session()->forget('product_cart');
-            return redirect()->route('portal.products.index');
+            return redirect()->route('shop.index');
         }
 
         $total       = $cartItems->sum(fn ($item) => $item['product']->price * $item['quantity']);
         $paymentMode = SystemSetting::getPaymentMode();
 
-        return view('portal.products.checkout', compact('cartItems', 'total', 'paymentMode'));
+        return view('shop.checkout', compact('cartItems', 'total', 'paymentMode'));
     }
 
     public function placeOrder(Request $request): RedirectResponse
@@ -93,7 +116,7 @@ class ProductController extends Controller
         $cart = session('product_cart', []);
 
         if (empty($cart)) {
-            return redirect()->route('portal.products.index');
+            return redirect()->route('shop.index');
         }
 
         $rules = ['notes' => ['nullable', 'string', 'max:1000']];
@@ -127,10 +150,10 @@ class ProductController extends Controller
 
         if ($paymentMethod === 'stripe') {
             $clientSecret = $this->service->createStripePaymentIntent($order);
-            return redirect()->route('portal.products.payment', $order)->with('stripe_client_secret', $clientSecret);
+            return redirect()->route('shop.payment', $order)->with('stripe_client_secret', $clientSecret);
         }
 
-        return redirect()->route('portal.products.confirmation', $order);
+        return redirect()->route('shop.confirmation', $order);
     }
 
     public function payment(Request $request, int $orderId): View|RedirectResponse
@@ -140,13 +163,13 @@ class ProductController extends Controller
             ->findOrFail($orderId);
 
         if ($order->payment_status === 'paid') {
-            return redirect()->route('portal.products.confirmation', $order);
+            return redirect()->route('shop.confirmation', $order);
         }
 
         $clientSecret    = session('stripe_client_secret');
         $stripePublicKey = IntegrationSetting::getStripePublicKey() ?? config('services.stripe.public');
 
-        return view('portal.products.payment', compact('order', 'clientSecret', 'stripePublicKey'));
+        return view('shop.payment', compact('order', 'clientSecret', 'stripePublicKey'));
     }
 
     public function confirmStripePayment(Request $request, int $orderId): RedirectResponse
@@ -154,7 +177,7 @@ class ProductController extends Controller
         $order = ProductOrder::where('user_id', $request->user()->id)->findOrFail($orderId);
 
         if ($order->payment_status === 'paid') {
-            return redirect()->route('portal.products.confirmation', $order);
+            return redirect()->route('shop.confirmation', $order);
         }
 
         if ($order->stripe_payment_intent_id) {
@@ -162,14 +185,14 @@ class ProductController extends Controller
                 $pi = $this->stripe->paymentIntents->retrieve($order->stripe_payment_intent_id);
                 if ($pi->status === 'succeeded') {
                     $this->service->confirmStripePayment($order->stripe_payment_intent_id);
-                    return redirect()->route('portal.products.confirmation', $order);
+                    return redirect()->route('shop.confirmation', $order);
                 }
             } catch (\Exception $e) {
                 // Stripe API error — fall through
             }
         }
 
-        return redirect()->route('portal.products.payment', $order)
+        return redirect()->route('shop.payment', $order)
             ->with('status', 'Pagamento in elaborazione. Attendi la conferma.');
     }
 
@@ -179,6 +202,6 @@ class ProductController extends Controller
             ->with('items.product')
             ->findOrFail($orderId);
 
-        return view('portal.products.confirmation', compact('order'));
+        return view('shop.confirmation', compact('order'));
     }
 }

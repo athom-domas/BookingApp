@@ -231,10 +231,11 @@ body {
     text-decoration: none; flex-shrink: 0;
     display: flex; align-items: center; gap: 10px;
 }
-.sf-logo img { height: 28px; object-fit: contain; }
+.sf-logo img { height: 38px; width: auto; object-fit: contain; }
 .sf-logo-dark { display: none; }
 .mode-dark .sf-logo-light { display: none; }
 .mode-dark .sf-logo-dark { display: block; }
+.mode-dark .sf-logo-light.sf-logo-only { display: block; filter: brightness(0) invert(1); }
 #sf-nav-links { display: flex; gap: 28px; list-style: none; }
 #sf-nav-links a {
     font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
@@ -247,7 +248,7 @@ body {
     display: inline-block;
     background: var(--sf-btn-bg); color: var(--sf-btn-fg);
     font-size: 10px; letter-spacing: 2.5px; text-transform: uppercase;
-    font-weight: 700; padding: 11px 24px; text-decoration: none;
+    font-weight: 700; padding: 11px 50px; text-decoration: none;
     white-space: nowrap; transition: opacity 0.2s;
     border-radius: var(--sf-radius);
 }

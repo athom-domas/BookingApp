@@ -3,6 +3,7 @@
 use App\Filament\Resources\AppointmentResource;
 use App\Filament\Resources\CustomerResource;
 use App\Filament\Resources\PaymentResource;
+use App\Filament\Resources\ServiceCategoryResource;
 use App\Filament\Resources\ServiceResource;
 use App\Filament\Resources\StaffResource;
 use App\Models\Business;
@@ -109,5 +110,15 @@ it('manage availability page renders for a staff member', function () {
 
     $this->actingAs($admin)
         ->get(StaffResource::getUrl('manage-availability', ['record' => $staff]))
+        ->assertSuccessful();
+});
+
+it('service category list page renders', function () {
+    $admin = User::factory()->create(['business_id' => $this->business->id]);
+    $admin->assignRole('admin');
+    $admin->businesses()->attach($this->business->id);
+
+    $this->actingAs($admin)
+        ->get(ServiceCategoryResource::getUrl('index'))
         ->assertSuccessful();
 });

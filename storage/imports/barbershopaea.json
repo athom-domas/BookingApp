@@ -4,7 +4,7 @@
         "tagline": "Dal oltre 30 anni facciamo della tua Testa un Capolavoro",
         "description": "Situato nel cuore di Pescara, il Barbershop Andrea & Antonio rappresenta un'oasi di stile e raffinatezza per tutti gli uomini che desiderano prendersi cura del proprio look. Con anni di esperienza e una passione senza pari per l'arte del taglio dei capelli e della barba, Andrea e Antonio hanno creato un luogo dove la tradizione si incontra con l'innovazione.",
         "address": "Via Benedetto Croce, 217, 65126 Pescara PE",
-        "phone": "+39 085693212",
+        "phone": "+39 085.693212",
         "whatsapp_number": null,
         "instagram_url": "https:\/\/www.instagram.com\/lineauomoaea\/",
         "facebook_url": "https:\/\/www.facebook.com\/p\/Linea-Uomo-Andrea-E-Antonio-100046867546075\/?locale=it_IT",
@@ -58,7 +58,7 @@
         {
             "name": "Taglio Moderno",
             "description": "Look contemporaneo con le ultime tendenze e tecniche di taglio personalizzate",
-            "duration_minutes": 30,
+            "duration_minutes": 35,
             "price": null
         },
         {
@@ -82,13 +82,13 @@
         {
             "name": "Modellatura Barba",
             "description": "Tecniche avanzate per dare forma alla barba con contorni definiti e armoniosi",
-            "duration_minutes": 20,
+            "duration_minutes": 25,
             "price": null
         },
         {
             "name": "Stile Personalizzato Baffi",
             "description": "Creazione del look perfetto per i baffi tenendo conto della forma del viso",
-            "duration_minutes": 15,
+            "duration_minutes": 20,
             "price": null
         },
         {

@@ -172,6 +172,6 @@ it('isola i punti per business', function () {
     app()->instance('current_business_id', 999);
     expect(LoyaltyAccount::where('user_id', $this->customer->id)->exists())->toBeFalse();
 
-    app()->instance('current_business_id', $realBusinessId);
+    app()->instance('current_business_id', $this->business->id);
     expect(LoyaltyAccount::where('user_id', $this->customer->id)->first()->points)->toBe(50);
 });

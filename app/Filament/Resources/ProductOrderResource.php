@@ -22,7 +22,7 @@ class ProductOrderResource extends Resource
     protected static ?string $model = ProductOrder::class;
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-clipboard-document-list';
     protected static string|\UnitEnum|null $navigationGroup = 'Salone';
-    protected static ?int $navigationSort = 5;
+    protected static ?int $navigationSort = 6;
     protected static ?string $modelLabel = 'ordine prodotti';
     protected static ?string $pluralModelLabel = 'ordini prodotti';
 

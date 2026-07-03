@@ -17,23 +17,50 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(\App\Services\Booking\AppointmentService::class);
 
         $this->app->bind(StripeClient::class, function () {
-            $secret = \App\Models\IntegrationSetting::getStripeSecretKey() ?? config('services.stripe.secret');
+            try {
+                $secret = \App\Models\IntegrationSetting::getStripeSecretKey();
+            } catch (\Throwable) {
+                $secret = null;
+            }
+            $secret ??= config('services.stripe.secret');
+            $secret ??= config('cashier.secret');
+            if (empty($secret)) {
+                return null;
+            }
+            return new StripeClient($secret);
+        });
+
+        $this->app->bind('platform.stripe', function () {
+            $secret = config('services.stripe.secret');
+            if (empty($secret)) {
+                return null;
+            }
             return new StripeClient($secret);
         });
 
         $this->app->bind(PaymentService::class, function ($app) {
-            return new PaymentService($app->make(StripeClient::class));
+            return new PaymentService(
+                $app->make(StripeClient::class),
+                $app->make(\App\Services\StripeConnectService::class),
+            );
+        });
+
+        $this->app->bind(\App\Services\StripeConnectService::class, function ($app) {
+            return new \App\Services\StripeConnectService($app->make('platform.stripe'));
+        });
+
+        $this->app->bind(\App\Services\RefundService::class, function ($app) {
+            return new \App\Services\RefundService($app->make('platform.stripe'));
         });
 
         $this->app->bind(\App\Services\NotificationService::class, function () {
             $sid   = \App\Models\IntegrationSetting::getTwilioSid()   ?? config('services.twilio.sid');
             $token = \App\Models\IntegrationSetting::getTwilioToken() ?? config('services.twilio.token');
-            $messages = null;
-            if ($sid && $token) {
-                $client = new \Twilio\Rest\Client($sid, $token);
-                $messages = $client->messages;
+            if (empty($sid) || empty($token)) {
+                return new \App\Services\NotificationService(null);
             }
-            return new \App\Services\NotificationService($messages);
+            $client = new \Twilio\Rest\Client($sid, $token);
+            return new \App\Services\NotificationService($client->messages);
         });
 
         $this->app->bind(\App\Services\GoogleCalendarService::class, function () {

@@ -174,7 +174,7 @@ class AppointmentCalendarWidget extends FullCalendarWidget
                 'id'    => (string) $u->id,
                 'title' => $u->name,
                 'extendedProps' => [
-                    'avatar' => $u->getFirstMediaUrl('avatar') ?: null,
+                    'avatar' => $u->avatarUrl(),
                     'color'  => $u->calendar_color,
                 ],
             ])

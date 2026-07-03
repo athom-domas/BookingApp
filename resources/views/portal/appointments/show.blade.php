@@ -18,7 +18,7 @@
                 <div>
                     <dt class="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">Staff</dt>
                     <dd class="mt-1.5 flex items-center gap-3">
-                        @php $avatarUrl = $appointment->staff->getFirstMediaUrl('avatar', 'thumb'); @endphp
+                        @php $avatarUrl = $appointment->staff->avatarUrl(); @endphp
                         @if ($avatarUrl)
                             <img src="{{ $avatarUrl }}" alt="{{ $appointment->staff->name }}" class="w-10 h-10 rounded-full object-cover shrink-0">
                         @else
@@ -64,6 +64,38 @@
                 </div>
             @endif
         </div>
+
+        @if($showPreferencePrompt ?? false)
+        <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm p-5">
+            <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                Vuoi salvare il {{ $prefillPreferences['label'] }} come preferenza?
+            </p>
+            <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400 mb-4">
+                Ti suggeriremo slot simili per i prossimi appuntamenti.
+            </p>
+            <div class="flex gap-3">
+                <form method="POST" action="{{ route('portal.settings.booking-preferences') }}">
+                    @csrf
+                    @method('PATCH')
+                    @foreach($prefillPreferences['preferred_days'] as $d)
+                        <input type="hidden" name="preferred_days[]" value="{{ $d }}">
+                    @endforeach
+                    <input type="hidden" name="preferred_time_from" value="{{ $prefillPreferences['preferred_time_from'] }}">
+                    <input type="hidden" name="preferred_time_to"   value="{{ $prefillPreferences['preferred_time_to'] }}">
+                    <button type="submit" class="btn-primary rounded px-4 py-2 text-sm font-semibold text-white">
+                        Salva preferenza
+                    </button>
+                </form>
+                <form method="POST" action="{{ route('portal.settings.booking-preferences.dismiss') }}">
+                    @csrf
+                    <button type="submit"
+                        class="rounded-md border border-gray-200 dark:border-gray-700 px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                        No, grazie
+                    </button>
+                </form>
+            </div>
+        </div>
+        @endif
 
         <aside class="space-y-3">
             @if ($appointment->payment && $appointment->payment->status !== 'completed' && $appointment->status !== 'cancelled')

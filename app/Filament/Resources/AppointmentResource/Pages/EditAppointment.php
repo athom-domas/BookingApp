@@ -107,6 +107,7 @@ class EditAppointment extends EditRecord
                     'loyalty_discount_percentage' => $discountPct,
                     'loyalty_original_amount'     => $originalAmount,
                 ]);
+                $this->record->update(['loyalty_discounted_price' => $amount]);
             }
         } catch (BookingException $e) {
             Notification::make()

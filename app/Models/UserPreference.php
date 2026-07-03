@@ -8,7 +8,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['business_id', 'user_id', 'notification_channel', 'phone_number', 'follow_up_reminders_enabled'])]
+#[Fillable([
+    'business_id', 'user_id', 'notification_channel', 'phone_number',
+    'follow_up_reminders_enabled', 'preferred_days',
+    'preferred_time_from', 'preferred_time_to',
+    'booking_preference_prompt_dismissed',
+])]
 class UserPreference extends Model
 {
     /** @use HasFactory<\Database\Factories\UserPreferenceFactory> */
@@ -17,8 +22,15 @@ class UserPreference extends Model
     protected function casts(): array
     {
         return [
-            'follow_up_reminders_enabled' => 'boolean',
+            'follow_up_reminders_enabled'        => 'boolean',
+            'preferred_days'                      => 'array',
+            'booking_preference_prompt_dismissed' => 'boolean',
         ];
+    }
+
+    public function setNotificationChannelAttribute(?string $value): void
+    {
+        $this->attributes['notification_channel'] = $value ?? 'email';
     }
 
     public function user(): BelongsTo

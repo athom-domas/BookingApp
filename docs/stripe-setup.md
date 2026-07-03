@@ -1,0 +1,184 @@
+# Stripe Setup — Booking App
+
+Configurazione completa per abbonamenti piattaforma e pagamenti diretti tra clienti e saloni (Stripe Connect).
+
+---
+
+## 0 — Configurare Stripe Connect sulla piattaforma
+
+Da fare **una sola volta** prima di poter connettere qualsiasi salone.
+
+1. Vai su **Settings → Connect settings** nel dashboard Stripe
+2. Clicca **Get started** per attivare Connect
+3. Rispondi alle domande di configurazione:
+
+   | Domanda | Risposta |
+   |---------|----------|
+   | Come avverrà il flusso di fondi? | **I venditori riscuoteranno i pagamenti direttamente** (direct charges) |
+   | Settore | **Software di gestione aziendale** |
+   | Dove creeranno i venditori il proprio account? | **Onboarding gestito da Stripe** |
+   | Dove potranno i venditori gestire il proprio account? | **Pannello di controllo Express** |
+
+4. Completa la configurazione e torna al dashboard
+
+> Dopo questo step i saloni potranno collegare il proprio account Stripe tramite il pannello admin dell'app (Impostazioni → Pagamenti online → Collega Stripe).
+
+---
+
+## 1 — Chiavi API
+
+1. Vai su **Developers → API keys** nel dashboard Stripe
+2. Assicurati di essere in modalità **Live**
+3. Copia la **Publishable key** (`pk_live_...`) → `STRIPE_PUBLIC_KEY`
+4. Copia la **Secret key** (`sk_live_...`) → `STRIPE_SECRET_KEY`
+
+---
+
+## 2 — Prodotto e prezzo
+
+1. Vai su **Product catalog → Add product**
+2. Nome del piano (es. "Piano Base Salone")
+3. Prezzo: **Recurring**, EUR, importo e cadenza mensile
+4. Copia il **Price ID** (`price_...`) → `STRIPE_PRICE_ID`
+
+---
+
+## 3 — Webhook billing
+
+Abbonamenti piattaforma — gestito da Laravel Cashier.
+
+1. **Developers → Webhooks → Add destination**
+2. Tipo: **Il tuo account** (non "Account connessi")
+3. URL: `https://booking-app.it/stripe/billing-webhook`
+4. Events: seleziona il gruppo **Abbonamenti** (18 eventi — include `subscription.*`, `invoice.*`, `customer.*`). Se il gruppo non è disponibile, seleziona manualmente:
+   - `customer.subscription.created`
+   - `customer.subscription.updated`
+   - `customer.subscription.deleted`
+   - `customer.subscription.trial_will_end`
+   - `invoice.payment_succeeded`
+   - `invoice.payment_failed`
+   - `invoice.payment_action_required`
+   - `payment_method.automatically_updated`
+5. Copia il **Signing secret** → `STRIPE_BILLING_WEBHOOK_SECRET`
+
+---
+
+## 4 — Webhook Connect
+
+Account connessi — saloni registrati come connected accounts. Gestisce sia gli aggiornamenti account che i pagamenti diretti (direct charges).
+
+1. **Developers → Webhooks → Add destination**
+2. Tipo: **Account connessi**
+3. URL: `https://booking-app.it/stripe/connect/webhook`
+4. Events — seleziona questi specifici:
+   - **Accounts → `account.updated`**
+   - **Payments → `payment_intent.succeeded`**
+   - **Payments → `payment_intent.payment_failed`**
+   - **Payments → `payment_intent.canceled`**
+   - **Charges → `charge.refunded`**
+5. Copia il **Signing secret** → `STRIPE_CONNECT_WEBHOOK_SECRET`
+
+> I 4 eventi payment sono necessari per aggiornare lo stato degli appuntamenti pagati tramite Stripe Connect (direct charges). Senza di essi il pagamento viene addebitato correttamente sul salone ma lo stato nell'app rimane `pending`.
+
+---
+
+## 5 — Webhook pagamenti
+
+Transazioni clienti — appuntamenti e ordini prodotti.
+
+1. **Developers → Webhooks → Add destination**
+2. Tipo: **Il tuo account**
+3. URL: `https://booking-app.it/stripe/webhook`
+4. Events (seleziona questi specifici):
+   ```
+   payment_intent.succeeded
+   payment_intent.payment_failed
+   payment_intent.canceled
+   charge.refunded
+   ```
+5. Copia il **Signing secret** → `STRIPE_WEBHOOK_SECRET`
+
+> Il secret di questo webhook può essere configurato anche per singolo salone dal pannello admin (IntegrationSetting). Il valore in `.env` è il fallback globale.
+
+---
+
+## 6 — .env.production
+
+```env
+STRIPE_PUBLIC_KEY=pk_live_...
+STRIPE_SECRET_KEY=sk_live_...
+STRIPE_PRICE_ID=price_...
+STRIPE_BILLING_WEBHOOK_SECRET=whsec_...
+STRIPE_CONNECT_WEBHOOK_SECRET=whsec_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+```
+
+| Variabile | Fonte |
+|-----------|-------|
+| `STRIPE_PUBLIC_KEY` | Developers → API keys → Publishable key |
+| `STRIPE_SECRET_KEY` | Developers → API keys → Secret key |
+| `STRIPE_PRICE_ID` | Product catalog → prezzo abbonamento → Price ID |
+| `STRIPE_BILLING_WEBHOOK_SECRET` | Webhook billing → Signing secret |
+| `STRIPE_CONNECT_WEBHOOK_SECRET` | Webhook Connect → Signing secret |
+| `STRIPE_WEBHOOK_SECRET` | Webhook pagamenti → Signing secret |
+
+---
+
+## 7 — Deploy
+
+```bash
+make deploy
+```
+
+Copia `.env.production` sul server sia come `.env` sia come `.env.production`, sincronizza il codice, lancia le migration e ricostruisce la config cache.
+
+---
+
+## 8 — Verifica
+
+1. Su ogni webhook appena creato in Stripe: **Invia evento di test** → deve rispondere **200 OK**
+
+2. Verifica che il secret billing sia letto correttamente:
+   ```bash
+   php85 artisan tinker --execute="var_dump(config('cashier.billing_webhook.secret'));"
+   ```
+   Deve restituire una stringa non vuota.
+
+3. Verifica che la secret key piattaforma sia nella config cache:
+   ```bash
+   php85 artisan tinker --execute="var_export(['services_secret' => config('services.stripe.secret') ? 'set' : 'empty', 'cashier_secret' => config('cashier.secret') ? 'set' : 'empty', 'cached' => app()->configurationIsCached() ? 'yes' : 'no']);"
+   ```
+   `services_secret` e `cashier_secret` devono risultare `set`.
+
+4. Verifica che l'abbonamento sia in DB dopo la creazione:
+   ```bash
+   php85 artisan tinker --execute="var_dump(\App\Models\Business::find(1)->subscriptions()->get()->toArray());"
+   ```
+
+### Se un abbonamento esiste su Stripe ma non in DB
+
+```bash
+php85 artisan tinker --execute="
+\$business = \App\Models\Business::find(1);
+\$stripe = \$business->stripe();
+\$subs = \$stripe->subscriptions->all(['customer' => \$business->stripe_id, 'limit' => 5]);
+var_dump(collect(\$subs->data)->map(fn(\$s) => [\$s->id, \$s->status])->toArray());
+"
+```
+
+Recupera l'ID della subscription attiva, poi crea il record locale:
+
+```bash
+php85 artisan tinker --execute="
+\$business = \App\Models\Business::find(1);
+\$sub = \$business->stripe()->subscriptions->retrieve('sub_XXXXXXXX');
+\$business->subscriptions()->create([
+    'type'          => 'default',
+    'stripe_id'     => \$sub->id,
+    'stripe_status' => \$sub->status,
+    'stripe_price'  => \$sub->items->data[0]->price->id,
+    'quantity'      => \$sub->items->data[0]->quantity,
+    'ends_at'       => null,
+]);
+"
+```

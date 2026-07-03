@@ -31,7 +31,7 @@ class AppointmentController extends Controller
     public function index(Request $request): View
     {
         $appointments = Appointment::where('user_id', $request->user()->id)
-            ->with(['staff.media', 'payment'])
+            ->with(['staff', 'payment'])
             ->oldest('scheduled_date')
             ->get();
 
@@ -52,8 +52,8 @@ class AppointmentController extends Controller
             ->all();
 
         return view('portal.appointments.index', [
-            'upcomingAppointments'   => $appointments->filter(fn (Appointment $appointment) => $appointment->isUpcoming())->values(),
-            'pastAppointments'       => $appointments->filter(fn (Appointment $appointment) => $appointment->isPast())->sortByDesc('scheduled_date')->values(),
+            'upcomingAppointments'   => $appointments->filter(fn(Appointment $appointment) => $appointment->isUpcoming())->values(),
+            'pastAppointments'       => $appointments->filter(fn(Appointment $appointment) => $appointment->isPast())->sortByDesc('scheduled_date')->values(),
             'waitlistEntries'        => $waitlistEntries,
             'loyaltyEnabled'         => $loyaltyEnabled,
             'loyaltyPoints'          => (int) $loyaltyPoints,
@@ -67,8 +67,47 @@ class AppointmentController extends Controller
     {
         $this->authorizeAppointment($request, $appointment);
 
+        $showPreferencePrompt = false;
+        $prefillPreferences   = null;
+
+        if (auth()->check()) {
+            $pref = \App\Models\UserPreference::where('user_id', auth()->id())
+                ->where('business_id', app('current_business_id'))
+                ->first();
+
+            $noPreferences = ! $pref || empty($pref->preferred_days);
+            $notDismissed  = ! $pref || ! $pref->booking_preference_prompt_dismissed;
+
+            if ($noPreferences && $notDismissed) {
+                $showPreferencePrompt = true;
+                $dt      = $appointment->scheduled_date;
+                $dow     = (int) $dt->format('w');
+                $slotMin = (int) $dt->format('H') * 60 + (int) $dt->format('i');
+                $fromMin = max(7 * 60, (int) (floor(($slotMin - 60) / 30) * 30));
+                $toMin   = min(21 * 60, (int) (ceil(($slotMin + 60) / 30) * 30));
+
+                $hour        = (int) $dt->format('H');
+                $fasciaLabel = match (true) {
+                    $hour < 12 => 'mattina',
+                    $hour < 17 => 'pomeriggio',
+                    default    => 'sera',
+                };
+
+                $dayNames = [0 => 'domenica', 1 => 'lunedì', 2 => 'martedì', 3 => 'mercoledì', 4 => 'giovedì', 5 => 'venerdì', 6 => 'sabato'];
+
+                $prefillPreferences = [
+                    'preferred_days'      => [$dow],
+                    'preferred_time_from' => sprintf('%02d:%02d', intdiv($fromMin, 60), $fromMin % 60),
+                    'preferred_time_to'   => sprintf('%02d:%02d', intdiv($toMin, 60), $toMin % 60),
+                    'label'               => $dayNames[$dow] . ' ' . $fasciaLabel,
+                ];
+            }
+        }
+
         return view('portal.appointments.show', [
-            'appointment' => $appointment->load(['staff.media', 'payment']),
+            'appointment'          => $appointment->load(['staff', 'payment']),
+            'showPreferencePrompt' => $showPreferencePrompt,
+            'prefillPreferences'   => $prefillPreferences,
         ]);
     }
 
@@ -76,7 +115,7 @@ class AppointmentController extends Controller
     {
         $this->authorizeAppointment($request, $appointment);
 
-        $appointment->load(['staff.media', 'payment']);
+        $appointment->load(['staff', 'payment']);
 
         if (! $appointment->payment) {
             return redirect()
@@ -101,11 +140,16 @@ class AppointmentController extends Controller
                 || $payment->loyalty_discount_percentage !== null;
         }
 
+        $pointsToEarn = $loyaltyEnabled
+            ? (int) floor((float) $appointment->final_price * SystemSetting::getLoyaltyPointsPerEuro())
+            : 0;
+
         return view('portal.appointments.payment', [
             'appointment'               => $appointment,
             'payment'                   => $payment,
             'stripePublicKey'           => \App\Models\IntegrationSetting::getStripePublicKey() ?? config('services.stripe.public'),
             'clientSecret'              => $payment->stripe_response['client_secret'] ?? null,
+            'stripeAccountId'           => $payment->stripe_account_id,
             'loyaltyEnabled'            => $loyaltyEnabled,
             'loyaltyEligible'           => $loyaltyEligible,
             'loyaltyPoints'             => $loyaltyPoints,
@@ -114,6 +158,7 @@ class AppointmentController extends Controller
             'discountApplied'           => $payment->loyalty_discount_percentage !== null,
             'discountedAmount'          => (float) $payment->amount,
             'originalAmount'            => (float) ($payment->loyalty_original_amount ?? $payment->amount),
+            'pointsToEarn'              => $pointsToEarn,
         ]);
     }
 

@@ -12,14 +12,14 @@ beforeEach(function () {
     $this->customer = User::factory()->create();
 });
 
-it('accredita quando un appuntamento viene creato come confirmed', function () {
+it('non accredita quando un appuntamento viene creato come confirmed', function () {
     Appointment::factory()->create([
         'user_id'     => $this->customer->id,
         'status'      => 'confirmed',
         'final_price' => 80,
     ]);
 
-    expect(LoyaltyAccount::where('user_id', $this->customer->id)->value('points'))->toBe(80);
+    expect(LoyaltyAccount::where('user_id', $this->customer->id)->exists())->toBeFalse();
 });
 
 it('non accredita quando un appuntamento viene creato come pending', function () {
@@ -35,7 +35,7 @@ it('non accredita quando un appuntamento viene creato come pending', function ()
 it('non accredita quando final_price è null', function () {
     Appointment::factory()->create([
         'user_id'     => $this->customer->id,
-        'status'      => 'confirmed',
+        'status'      => 'completed',
         'final_price' => null,
     ]);
 
@@ -45,23 +45,35 @@ it('non accredita quando final_price è null', function () {
 it('non accredita quando final_price è zero', function () {
     Appointment::factory()->create([
         'user_id'     => $this->customer->id,
-        'status'      => 'confirmed',
+        'status'      => 'completed',
         'final_price' => 0,
     ]);
 
     expect(LoyaltyAccount::where('user_id', $this->customer->id)->exists())->toBeFalse();
 });
 
-it('accredita quando lo status passa da pending a confirmed', function () {
+it('accredita quando lo status passa a completed', function () {
     $appointment = Appointment::factory()->create([
         'user_id'     => $this->customer->id,
         'status'      => 'pending',
         'final_price' => 60,
     ]);
 
-    $appointment->update(['status' => 'confirmed']);
+    $appointment->update(['status' => 'completed']);
 
     expect(LoyaltyAccount::where('user_id', $this->customer->id)->value('points'))->toBe(60);
+});
+
+it('accredita quando lo status cambia da confirmed a completed', function () {
+    $appointment = Appointment::factory()->create([
+        'user_id'     => $this->customer->id,
+        'status'      => 'confirmed',
+        'final_price' => 50,
+    ]);
+
+    $appointment->update(['status' => 'completed']);
+
+    expect(LoyaltyAccount::where('user_id', $this->customer->id)->first()->points)->toBe(50);
 });
 
 it('storna i punti quando lo status passa a cancelled', function () {
@@ -71,29 +83,12 @@ it('storna i punti quando lo status passa a cancelled', function () {
         'final_price' => 60,
     ]);
 
+    $appointment->update(['status' => 'completed']);
+
     expect(LoyaltyAccount::where('user_id', $this->customer->id)->first()->points)->toBe(60);
 
     $appointment->update(['status' => 'cancelled']);
 
-    expect(LoyaltyAccount::where('user_id', $this->customer->id)->first()->points)->toBe(0);
-});
-
-it('non accredita quando lo status cambia senza toccare confirmed (es. confirmed→completed)', function () {
-    $appointment = Appointment::factory()->create([
-        'user_id'     => $this->customer->id,
-        'status'      => 'confirmed',
-        'final_price' => 50,
-    ]);
-
-    // Svuota account per isolare l'effetto dell'update successivo
-    LoyaltyAccount::where('user_id', $this->customer->id)->update(['points' => 0]);
-    LoyaltyTransaction::where('loyalty_account_id',
-        LoyaltyAccount::where('user_id', $this->customer->id)->value('id')
-    )->delete();
-
-    $appointment->update(['status' => 'completed']);
-
-    // Nessun nuovo accredito: l'observer non reagisce a completed
     expect(LoyaltyAccount::where('user_id', $this->customer->id)->first()->points)->toBe(0);
 });
 
@@ -147,14 +142,16 @@ it('non lancia eccezioni se non ci sono punti da stornare', function () {
     expect(fn () => $appointment->update(['status' => 'cancelled']))->not->toThrow(\Throwable::class);
 });
 
-it('non accredita se il programma fedeltà è disattivo alla creazione', function () {
+it('non accredita se il programma fedeltà è disattivo al completamento', function () {
     SystemSetting::current()->update(['loyalty_enabled' => false]);
 
-    Appointment::factory()->create([
+    $appointment = Appointment::factory()->create([
         'user_id'     => $this->customer->id,
         'status'      => 'confirmed',
         'final_price' => 80,
     ]);
+
+    $appointment->update(['status' => 'completed']);
 
     expect(LoyaltyAccount::where('user_id', $this->customer->id)->exists())->toBeFalse();
 });

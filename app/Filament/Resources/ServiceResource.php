@@ -4,12 +4,16 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ServiceResource\Pages;
 use App\Models\Service;
+use App\Models\ServiceCategory;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Illuminate\Validation\Rule;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -23,7 +27,7 @@ class ServiceResource extends Resource
     protected static ?string $model = Service::class;
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-wrench-screwdriver';
     protected static string|\UnitEnum|null $navigationGroup = 'Salone';
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 4;
     protected static ?string $modelLabel = 'servizio';
     protected static ?string $pluralModelLabel = 'servizi';
 
@@ -82,8 +86,35 @@ class ServiceResource extends Resource
                             'numeric'  => 'Il prezzo deve essere un numero.',
                             'min'      => 'Il prezzo deve essere maggiore di zero.',
                         ]),
+
+                    Select::make('service_category_id')
+                        ->label('Categoria')
+                        ->options(fn () => ServiceCategory::orderBy('sort_order')->pluck('name', 'id'))
+                        ->searchable()
+                        ->preload()
+                        ->nullable()
+                        ->placeholder('Nessuna categoria')
+                        ->rules([
+                            'nullable',
+                            Rule::exists('service_categories', 'id')
+                                ->where('business_id', \App\Models\Business::currentId()),
+                        ])
+                        ->hidden(fn () => ServiceCategory::count() === 0)
+                        ->columnSpanFull(),
                 ])
                 ->columns(2)
+                ->columnSpanFull(),
+
+            Section::make('Immagine')
+                ->schema([
+                    FileUpload::make('image_path')
+                        ->label('Foto del servizio')
+                        ->disk('public')
+                        ->image()
+                        ->maxSize(10240)
+                        ->saveUploadedFileUsing(fn ($file) => \App\PageBlocks\AbstractPageBlock::storeAsWebp($file, 'site-builder/services'))
+                        ->columnSpanFull(),
+                ])
                 ->columnSpanFull(),
 
             Section::make('Impostazioni')
@@ -94,22 +125,7 @@ class ServiceResource extends Resource
 
                     Toggle::make('featured')
                         ->label('In evidenza')
-                        ->helperText('Mostrato in primo piano nella pagina del salone. Massimo 4 servizi.')
-                        ->live()
-                        ->afterStateUpdated(function (bool $state, $set, $record): void {
-                            if (! $state) return;
-                            $count = Service::where('featured', true)
-                                ->when($record?->id, fn ($q, $id) => $q->where('id', '!=', $id))
-                                ->count();
-                            if ($count >= 4) {
-                                $set('featured', false);
-                                \Filament\Notifications\Notification::make()
-                                    ->danger()
-                                    ->title('Limite raggiunto')
-                                    ->body('Puoi selezionare al massimo 4 servizi in evidenza.')
-                                    ->send();
-                            }
-                        }),
+                        ->helperText('Mostrato in primo piano nella pagina del salone.'),
                 ])
                 ->columns(2)
                 ->columnSpanFull(),
@@ -138,20 +154,7 @@ class ServiceResource extends Resource
                     ->label('Attivo'),
 
                 ToggleColumn::make('featured')
-                    ->label('In evidenza')
-                    ->disabled(fn (Service $record): bool => ! $record->featured && Service::where('featured', true)->count() >= 4)
-                    ->updateStateUsing(function (Service $record, bool $state): bool {
-                        if ($state && Service::where('featured', true)->where('id', '!=', $record->id)->count() >= 4) {
-                            \Filament\Notifications\Notification::make()
-                                ->danger()
-                                ->title('Limite raggiunto')
-                                ->body('Puoi selezionare al massimo 4 servizi in evidenza.')
-                                ->send();
-                            return false;
-                        }
-                        $record->update(['featured' => $state]);
-                        return $state;
-                    }),
+                    ->label('In evidenza'),
             ])
             ->reorderable('sort_order')
             ->defaultSort('sort_order')

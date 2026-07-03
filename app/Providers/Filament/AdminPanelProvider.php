@@ -39,6 +39,24 @@ class AdminPanelProvider extends PanelProvider
         FilamentView::registerRenderHook(
             PanelsRenderHook::HEAD_END,
             function (): HtmlString {
+                if (! app()->bound('current_business_id')) {
+                    return new HtmlString('');
+                }
+                $business = Business::find(app('current_business_id'));
+                if (! $business || $business->hasAccess()) {
+                    return new HtmlString('');
+                }
+                return new HtmlString('<style>
+                    li.fi-sidebar-item:not(:has(a[href*="abbonamento"])){display:none!important}
+                    li.fi-sidebar-group{display:none!important}
+                    .fi-topbar-end>[wire\:id]{display:none!important}
+                </style>');
+            }
+        );
+
+        FilamentView::registerRenderHook(
+            PanelsRenderHook::HEAD_END,
+            function (): HtmlString {
                 try {
                     $palette = Color::hex('#334155');
                     $vars = implode('', array_map(
@@ -82,7 +100,7 @@ class AdminPanelProvider extends PanelProvider
             ->navigationGroups([
                 NavigationGroup::make('Prenotazioni'),
                 NavigationGroup::make('Salone'),
-                NavigationGroup::make('Impostazioni'),
+                NavigationGroup::make('Configurazioni'),
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
@@ -100,7 +118,7 @@ class AdminPanelProvider extends PanelProvider
                     ->url(fn(): string => route('portal.appointments.index'))
                     ->icon('heroicon-o-home'),
             ])
-            // ->spa()
+            ->spa()
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

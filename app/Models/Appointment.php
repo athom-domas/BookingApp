@@ -13,19 +13,40 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Spatie\Activitylog\Contracts\Activity;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 
-#[Fillable(['user_id', 'service_ids', 'staff_id', 'scheduled_date', 'status', 'customer_confirmed_at', 'final_price', 'notes', 'google_event_id', 'customer_google_event_id', 'business_id', 'is_walk_in'])]
+#[Fillable(['user_id', 'service_ids', 'staff_id', 'scheduled_date', 'status', 'customer_confirmed_at', 'final_price', 'loyalty_discounted_price', 'notes', 'google_event_id', 'customer_google_event_id', 'business_id', 'is_walk_in'])]
 #[ObservedBy(AppointmentObserver::class)]
 class Appointment extends Model
 {
     /** @use HasFactory<\Database\Factories\AppointmentFactory> */
-    use HasFactory, BelongsToBusiness;
+    use HasFactory, BelongsToBusiness, LogsActivity;
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['status', 'scheduled_date', 'staff_id', 'final_price', 'notes'])
+            ->logOnlyDirty()
+            ->dontLogEmptyChanges()
+            ->setDescriptionForEvent(fn(string $event) => "appuntamento {$event}");
+    }
+
+    public function beforeActivityLogged(Activity $activity, string $eventName): void
+    {
+        $activity->business_id = $this->business_id;
+        $activity->type        = 'activity';
+        $activity->level       = 'info';
+        $activity->source      = 'model_event';
+    }
 
     protected function casts(): array
     {
         return [
             'scheduled_date' => 'datetime',
-            'final_price'    => 'decimal:2',
+            'final_price'              => 'decimal:2',
+            'loyalty_discounted_price' => 'decimal:2',
             'service_ids'    => 'array',
             'is_walk_in'     => 'boolean',
         ];
@@ -79,6 +100,12 @@ class Appointment extends Model
     public function scopeConfirmed(Builder $query): Builder
     {
         return $query->where('status', 'confirmed');
+    }
+
+    public function scopePendingExpired(Builder $query, int $minutes = 30): Builder
+    {
+        return $query->where('status', 'pending')
+            ->where('created_at', '<', now()->subMinutes($minutes));
     }
 
     public function isPast(): bool

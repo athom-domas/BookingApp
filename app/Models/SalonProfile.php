@@ -4,8 +4,11 @@ namespace App\Models;
 
 use App\Models\Business;
 use App\Models\Concerns\BelongsToBusiness;
+use Database\Factories\SalonProfileFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Storage;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
@@ -13,19 +16,22 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 #[Fillable([
     'business_id',
-    'name', 'tagline', 'logo_path', 'theme', 'theme_mode', 'hero_image_preset',
-    'announcement_active', 'announcement_text', 'booking_button_label',
-    'meta_description', 'owner_signature',
+    'name', 'logo_path', 'theme', 'theme_mode', 'hero_image_preset',
+    'announcement_active', 'announcement_text',
+    'meta_description',
     'font_pair', 'border_style', 'bg_texture',
     'phone', 'address',
-    'description', 'google_maps_embed',
+    'google_maps_embed',
     'opening_hours',
     'instagram_url', 'facebook_url', 'tiktok_url', 'whatsapp_number',
     'email_greeting', 'email_footer_note', 'email_accent_color',
+    'shop_header_variant', 'shop_header_title', 'shop_header_subtitle',
+    'shop_header_image', 'shop_header_image_mobile', 'shop_header_image_preset',
 ])]
 class SalonProfile extends Model implements HasMedia
 {
-    use BelongsToBusiness, InteractsWithMedia;
+    /** @use HasFactory<SalonProfileFactory> */
+    use BelongsToBusiness, HasFactory, InteractsWithMedia;
 
     protected function casts(): array
     {
@@ -35,22 +41,14 @@ class SalonProfile extends Model implements HasMedia
         ];
     }
 
-    public function bookingButtonLabel(): string
+    public function pageTemplate(): BelongsTo
     {
-        return trim((string) $this->booking_button_label) ?: 'Prenota un appuntamento';
+        return $this->belongsTo(PageTemplate::class);
     }
 
     public function metaDescription(): ?string
     {
-        if ($this->meta_description) {
-            return $this->meta_description;
-        }
-        if ($this->tagline) {
-            return $this->tagline;
-        }
-        $plain = trim(preg_replace('/\s+/', ' ', strip_tags((string) $this->description)));
-
-        return $plain !== '' ? \Illuminate\Support\Str::limit($plain, 160) : null;
+        return $this->meta_description ?: null;
     }
 
     public static function current(): self
@@ -73,8 +71,6 @@ class SalonProfile extends Model implements HasMedia
         $this->addMediaCollection('logo_dark')->singleFile()->useDisk('public');
         $this->addMediaCollection('cover')->singleFile()->useDisk('public');
         $this->addMediaCollection('favicon')->singleFile()->useDisk('public');
-        $this->addMediaCollection('gallery')->useDisk('public');
-        $this->addMediaCollection('portfolio')->useDisk('public');
     }
 
     public function registerMediaConversions(?Media $media = null): void
@@ -82,19 +78,24 @@ class SalonProfile extends Model implements HasMedia
         $this->addMediaConversion('thumb')
             ->width(200)
             ->height(200)
+            ->format('webp')
+            ->quality(80)
             ->nonQueued()
             ->performOnCollections('logo', 'logo_dark', 'cover', 'favicon');
 
         $this->addMediaConversion('web')
             ->width(1200)
             ->height(800)
+            ->format('webp')
+            ->quality(82)
             ->nonQueued()
-            ->performOnCollections('gallery', 'portfolio', 'cover');
+            ->performOnCollections('cover');
+
     }
 
     public function logoUrl(): ?string
     {
-        $url = $this->getFirstMediaUrl('logo');
+        $url = $this->getFirstMediaUrl('logo', 'thumb') ?: $this->getFirstMediaUrl('logo');
         if ($url) {
             return $url;
         }
@@ -106,7 +107,7 @@ class SalonProfile extends Model implements HasMedia
 
     public function logoDarkUrl(): ?string
     {
-        $url = $this->getFirstMediaUrl('logo_dark');
+        $url = $this->getFirstMediaUrl('logo_dark', 'thumb') ?: $this->getFirstMediaUrl('logo_dark');
         return $url ?: null;
     }
 

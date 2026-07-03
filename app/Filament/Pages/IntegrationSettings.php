@@ -20,8 +20,8 @@ class IntegrationSettings extends Page
     protected static ?string $navigationLabel = 'Integrazioni';
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-puzzle-piece';
-    protected static string|\UnitEnum|null $navigationGroup = 'Impostazioni';
-    protected static ?int $navigationSort = 4;
+    protected static string|\UnitEnum|null $navigationGroup = 'Configurazioni';
+    protected static ?int $navigationSort = 5;
 
     public ?array $data = [];
 
@@ -50,29 +50,6 @@ class IntegrationSettings extends Page
     {
         return $schema
             ->schema([
-                Section::make('Stripe')
-                    ->description('Credenziali per accettare pagamenti online. Trovale su dashboard.stripe.com → Sviluppatori → Chiavi API.')
-                    ->schema([
-                        TextInput::make('stripe_public_key')
-                            ->label('Chiave pubblica (pk_...)')
-                            ->helperText('Inizia con pk_live_ (produzione) o pk_test_ (test). Visibile nella pagina Chiavi API.')
-                            ->nullable(),
-
-                        TextInput::make('stripe_secret_key')
-                            ->label('Chiave segreta (sk_...)')
-                            ->helperText('Inizia con sk_live_ (produzione) o sk_test_ (test). Visibile solo al momento della creazione.')
-                            ->password()
-                            ->revealable()
-                            ->nullable(),
-
-                        TextInput::make('stripe_webhook_secret')
-                            ->label('Webhook secret (whsec_...)')
-                            ->helperText('dashboard.stripe.com → Sviluppatori → Webhook → seleziona l\'endpoint → "Firma segreta". Generato dopo aver registrato l\'URL del webhook.')
-                            ->password()
-                            ->revealable()
-                            ->nullable(),
-                    ]),
-
                 Section::make('WhatsApp (Meta Cloud API)')
                     ->description('Credenziali per inviare promemoria via WhatsApp. Richiede un\'app Meta con WhatsApp Business API configurata. Consulta Aiuto → SMS e WhatsApp per la guida completa.')
                     ->schema([

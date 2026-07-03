@@ -71,3 +71,74 @@ it('redirects to products page when cart is empty on checkout', function () {
         ->get('/portal/products/checkout')
         ->assertRedirect('/portal/products');
 });
+
+it('shows default shop header title when profile has no shop config', function () {
+    $customer = User::factory()->create();
+    $customer->assignRole('customer');
+
+    $this->actingAs($customer)
+        ->get(route('shop.index'))
+        ->assertOk()
+        ->assertSee('Prodotti');
+});
+
+it('shows configured shop header title', function () {
+    \App\Models\SalonProfile::firstOrCreate(
+        ['business_id' => $this->business->id],
+        ['name' => 'Test Salone']
+    )->update([
+        'shop_header_title'   => 'I nostri prodotti',
+        'shop_header_variant' => 'classic',
+    ]);
+
+    $customer = User::factory()->create();
+    $customer->assignRole('customer');
+
+    $this->actingAs($customer)
+        ->get(route('shop.index'))
+        ->assertOk()
+        ->assertSee('I nostri prodotti');
+});
+
+it('shows centered variant shop header', function () {
+    \App\Models\SalonProfile::firstOrCreate(
+        ['business_id' => $this->business->id],
+        ['name' => 'Test Salone']
+    )->update([
+        'shop_header_variant'  => 'centered',
+        'shop_header_title'    => 'Shop',
+        'shop_header_subtitle' => 'Acquista online',
+    ]);
+
+    $customer = User::factory()->create();
+    $customer->assignRole('customer');
+
+    $this->actingAs($customer)
+        ->get(route('shop.index'))
+        ->assertOk()
+        ->assertSee('Shop')
+        ->assertSee('Acquista online');
+});
+
+it('can store and retrieve shop header fields on salon profile', function () {
+    $profile = \App\Models\SalonProfile::firstOrCreate(
+        ['business_id' => $this->business->id],
+        ['name' => 'Test Salone']
+    );
+
+    $profile->update([
+        'shop_header_variant'  => 'editorial',
+        'shop_header_title'    => 'I nostri prodotti',
+        'shop_header_subtitle' => 'Spedizione gratuita sopra i 50€',
+        'shop_header_image'    => 'site-builder/shop-header/test.webp',
+    ]);
+
+    $profile->refresh();
+
+    expect($profile->shop_header_variant)->toBe('editorial')
+        ->and($profile->shop_header_title)->toBe('I nostri prodotti')
+        ->and($profile->shop_header_subtitle)->toBe('Spedizione gratuita sopra i 50€')
+        ->and($profile->shop_header_image)->toBe('site-builder/shop-header/test.webp')
+        ->and($profile->shop_header_image_mobile)->toBeNull()
+        ->and($profile->shop_header_image_preset)->toBeNull();
+});

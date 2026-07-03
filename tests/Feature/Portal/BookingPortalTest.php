@@ -237,3 +237,26 @@ it('rejects store request when payment_method is missing', function () {
         'scheduled_date' => $date->toDateTimeString(),
     ])->assertSessionHasErrors('payment_method');
 });
+
+it('nasconde pagamento online se il salone non ha account Connect attivo', function () {
+    \App\Models\SystemSetting::current()->update(['payment_mode' => 'both']);
+    $customer = \App\Models\User::factory()->create(['business_id' => $this->business->id]);
+    $customer->assignRole('customer');
+
+    $response = $this->actingAs($customer)->get('/prenota');
+
+    $response->assertOk();
+    $response->assertSee('in_salon');
+});
+
+it('mostra pagamento online se il salone ha account Connect attivo', function () {
+    $customer = \App\Models\User::factory()->create(['business_id' => $this->business->id]);
+    $customer->assignRole('customer');
+    \App\Models\StripeConnectAccount::factory()->create(['business_id' => $this->business->id]);
+    \App\Models\SystemSetting::current()->update(['payment_mode' => 'both']);
+
+    $response = $this->actingAs($customer)->get('/prenota');
+
+    $response->assertOk();
+    $response->assertSee('both');
+});

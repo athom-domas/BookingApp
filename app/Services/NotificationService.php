@@ -10,7 +10,10 @@ class NotificationService
 
     public function sendSms(string $to, string $message): void
     {
-        $this->messages?->create($to, [
+        if (! $this->messages) {
+            return;
+        }
+        $this->messages->create($to, [
             'from' => \App\Models\IntegrationSetting::getTwilioFrom() ?? config('services.twilio.from'),
             'body' => $message,
         ]);
@@ -18,7 +21,10 @@ class NotificationService
 
     public function sendWhatsApp(string $to, string $message): void
     {
-        $this->messages?->create('whatsapp:' . $to, [
+        if (! $this->messages) {
+            return;
+        }
+        $this->messages->create('whatsapp:' . $to, [
             'from' => 'whatsapp:' . (\App\Models\IntegrationSetting::getTwilioFrom() ?? config('services.twilio.from')),
             'body' => $message,
         ]);

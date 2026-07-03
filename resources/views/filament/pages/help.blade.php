@@ -9,10 +9,14 @@
             <p class="text-sm font-semibold text-amber-800 dark:text-amber-200">Integrazioni da configurare</p>
         </div>
         <div class="space-y-1.5">
-            @foreach($unconfigured as $status)
+            @foreach($unconfigured as $key => $status)
             <div class="flex items-center justify-between">
                 <p class="text-sm text-amber-700 dark:text-amber-300">{{ $status['label'] }} non è ancora configurato</p>
-                <a href="{{ $integrationSettingsUrl }}" class="text-xs font-medium text-amber-700 dark:text-amber-400 hover:underline whitespace-nowrap ml-4">Configura ora →</a>
+                @if($key === 'stripe')
+                    <a href="{{ $stripeConnectUrl }}" class="text-xs font-medium text-amber-700 dark:text-amber-400 hover:underline whitespace-nowrap ml-4">Configura ora →</a>
+                @else
+                    <a href="{{ $integrationSettingsUrl }}" class="text-xs font-medium text-amber-700 dark:text-amber-400 hover:underline whitespace-nowrap ml-4">Configura ora →</a>
+                @endif
             </div>
             @endforeach
         </div>
@@ -352,7 +356,7 @@
                             <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-sky-600 text-xs font-bold text-white">3</span>
                             <div>
                                 <p class="font-semibold text-gray-900 dark:text-white">Modalità di pagamento</p>
-                                <p class="mt-0.5 text-gray-500 dark:text-gray-400">Nella sezione <strong>Pagamenti</strong>: scegli se accettare pagamenti <strong>online (Stripe) e in salone</strong>, solo online o solo in salone. Se scegli online è necessario che Stripe sia configurato nelle Integrazioni.</p>
+                                <p class="mt-0.5 text-gray-500 dark:text-gray-400">Nella sezione <strong>Pagamenti</strong>: scegli se accettare pagamenti <strong>online (Stripe) e in salone</strong>, solo online o solo in salone. Se scegli online è necessario aver collegato il tuo account Stripe in <strong>Impostazioni → Pagamenti online</strong>.</p>
                             </div>
                         </li>
 
@@ -409,44 +413,30 @@
                     <h2 class="text-base font-semibold text-gray-900 dark:text-white">Pagamenti con Stripe</h2>
                 </div>
                 <div class="px-6 py-5 space-y-5 text-sm text-gray-700 dark:text-gray-300">
-                    <p>Per accettare pagamenti online dagli appuntamenti e dagli ordini, il salone deve collegare il proprio account Stripe. I pagamenti vengono accreditati <strong>direttamente sul conto bancario del salone</strong>.</p>
+                    <p>Per accettare pagamenti online, collega il tuo account Stripe direttamente dal pannello. I pagamenti vengono accreditati <strong>direttamente sul tuo conto bancario</strong> — non serve inserire chiavi API né configurare webhook manualmente.</p>
 
                     <ol class="space-y-5 list-none">
                         <li class="flex gap-4">
                             <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-white">1</span>
                             <div>
-                                <p class="font-semibold text-gray-900 dark:text-white">Crea un account Stripe</p>
-                                <p class="mt-0.5 text-gray-500 dark:text-gray-400">Vai su <span class="font-mono text-xs bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded">stripe.com</span> e registra un account. Inserisci i dati della tua azienda e il conto bancario su cui ricevere i pagamenti.</p>
+                                <p class="font-semibold text-gray-900 dark:text-white">Collega il tuo account Stripe</p>
+                                <p class="mt-0.5 text-gray-500 dark:text-gray-400">Dal menu laterale vai su <strong>Impostazioni → Pagamenti online</strong> e clicca <strong>Collega Stripe</strong>. Verrai reindirizzato alla procedura guidata di Stripe.</p>
                             </div>
                         </li>
 
                         <li class="flex gap-4">
                             <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-white">2</span>
                             <div>
-                                <p class="font-semibold text-gray-900 dark:text-white">Ottieni le chiavi API</p>
-                                <p class="mt-0.5 text-gray-500 dark:text-gray-400">Dal pannello Stripe, vai su <strong>Sviluppatori → Chiavi API</strong>. Copia la <strong>Chiave pubblica</strong> (inizia con <span class="font-mono text-xs bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded">pk_live_</span>) e la <strong>Chiave segreta</strong> (inizia con <span class="font-mono text-xs bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded">sk_live_</span>).</p>
-                                <p class="mt-1.5 text-amber-600 dark:text-amber-400 text-xs">⚠ Non condividere mai la chiave segreta. Non inviarla via email o chat.</p>
+                                <p class="font-semibold text-gray-900 dark:text-white">Completa la verifica su Stripe</p>
+                                <p class="mt-0.5 text-gray-500 dark:text-gray-400">Stripe ti chiederà i dati della tua azienda, il codice fiscale/P.IVA e il conto bancario su cui ricevere i pagamenti. Puoi completare la procedura in qualsiasi momento — se esci, riprendi da dove ti eri fermato con il pulsante <strong>Riprendi configurazione</strong>.</p>
                             </div>
                         </li>
 
                         <li class="flex gap-4">
                             <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-white">3</span>
                             <div>
-                                <p class="font-semibold text-gray-900 dark:text-white">Configura il Webhook</p>
-                                <p class="mt-0.5 text-gray-500 dark:text-gray-400">Il webhook aggiorna automaticamente lo stato dei pagamenti. Dal pannello Stripe vai su <strong>Sviluppatori → Webhook → Aggiungi endpoint</strong>.</p>
-                                <div class="mt-2 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-4 py-3">
-                                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">URL endpoint da inserire:</p>
-                                    <p class="font-mono text-xs text-gray-900 dark:text-white break-all">{{ rtrim(request()->getSchemeAndHttpHost(), '/') }}/stripe/webhook</p>
-                                </div>
-                                <p class="mt-2 text-gray-500 dark:text-gray-400">Seleziona gli eventi: <span class="font-mono text-xs bg-gray-100 dark:bg-gray-800 px-1 rounded">payment_intent.succeeded</span> e <span class="font-mono text-xs bg-gray-100 dark:bg-gray-800 px-1 rounded">payment_intent.payment_failed</span>. Dopo aver salvato, copia la <strong>Firma segreta</strong> del webhook.</p>
-                            </div>
-                        </li>
-
-                        <li class="flex gap-4">
-                            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-white">4</span>
-                            <div>
-                                <p class="font-semibold text-gray-900 dark:text-white">Inserisci le chiavi nel pannello</p>
-                                <p class="mt-0.5 text-gray-500 dark:text-gray-400">Dal menu laterale vai su <strong>Impostazioni → Integrazioni → sezione Stripe</strong> e incolla le tre chiavi: chiave pubblica, chiave segreta e firma del webhook. Salva.</p>
+                                <p class="font-semibold text-gray-900 dark:text-white">Attendi l'approvazione</p>
+                                <p class="mt-0.5 text-gray-500 dark:text-gray-400">Dopo aver inviato i dati, Stripe verifica le informazioni (di solito poche ore). Il pannello mostrerà lo stato <strong>In attesa di approvazione</strong> e passerà automaticamente ad <strong>Attivo</strong> non appena Stripe abilita i pagamenti.</p>
                             </div>
                         </li>
 
@@ -454,13 +444,13 @@
                             <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-green-600 text-xs font-bold text-white">✓</span>
                             <div>
                                 <p class="font-semibold text-gray-900 dark:text-white">Tutto pronto</p>
-                                <p class="mt-0.5 text-gray-500 dark:text-gray-400">I clienti potranno pagare gli appuntamenti e gli ordini online. Gli importi vengono accreditati entro 2–7 giorni lavorativi in base alle impostazioni del tuo account Stripe.</p>
+                                <p class="mt-0.5 text-gray-500 dark:text-gray-400">I clienti potranno pagare gli appuntamenti online durante la prenotazione. Gli importi vengono accreditati entro 2–7 giorni lavorativi in base alle impostazioni del tuo account Stripe.</p>
                             </div>
                         </li>
                     </ol>
 
                     <div class="rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 px-4 py-3 text-xs text-blue-700 dark:text-blue-300">
-                        <strong>Modalità test:</strong> per provare prima di andare live, usa le chiavi <span class="font-mono bg-blue-100 dark:bg-blue-900/40 px-1 rounded">pk_test_</span> / <span class="font-mono bg-blue-100 dark:bg-blue-900/40 px-1 rounded">sk_test_</span>. Numero di carta di test: <span class="font-mono bg-blue-100 dark:bg-blue-900/40 px-1 rounded">4242 4242 4242 4242</span>.
+                        <strong>Carta di test:</strong> <span class="font-mono bg-blue-100 dark:bg-blue-900/40 px-1 rounded">4242 4242 4242 4242</span> — qualsiasi data futura e qualsiasi CVC.
                     </div>
                 </div>
             </div>

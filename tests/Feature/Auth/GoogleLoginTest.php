@@ -49,7 +49,7 @@ it('redirige a Google OAuth', function () {
 });
 
 it('crea un nuovo utente customer via Google e fa login', function () {
-    $business = Business::find(app('current_business_id'));
+    $business = $this->business;
     app()->instance('current_business_id', $business->id);
 
     mockSocialiteUser('google-123', 'nuovo@example.com', 'Nuovo Utente');
@@ -66,7 +66,7 @@ it('crea un nuovo utente customer via Google e fa login', function () {
 });
 
 it('collega google_id a utente esistente con stessa email e fa login', function () {
-    $business = Business::find(app('current_business_id'));
+    $business = $this->business;
     app()->instance('current_business_id', $business->id);
 
     $user = User::factory()->create([
@@ -86,7 +86,7 @@ it('collega google_id a utente esistente con stessa email e fa login', function 
 });
 
 it('fa login diretto se google_id già registrato', function () {
-    $business = Business::find(app('current_business_id'));
+    $business = $this->business;
     app()->instance('current_business_id', $business->id);
 
     $user = User::factory()->create([
@@ -127,7 +127,7 @@ it('exchange con token scaduto o invalido redirige al login', function () {
 });
 
 it('exchange con token valido fa login', function () {
-    $business = Business::find(app('current_business_id'));
+    $business = $this->business;
     $user = User::factory()->create(['business_id' => $business->id]);
     $user->assignRole('customer');
 

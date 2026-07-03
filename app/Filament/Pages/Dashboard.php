@@ -6,6 +6,8 @@ use App\Filament\Widgets\AppointmentCalendarWidget;
 
 class Dashboard extends \Filament\Pages\Dashboard
 {
+    protected static ?int $navigationSort = 1;
+
     public function getWidgets(): array
     {
         return collect(parent::getWidgets())

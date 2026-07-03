@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Enums\BusinessStatus;
+use App\Models\ActivityLog;
+use App\Models\StripeConnectAccount;
 use Database\Factories\BusinessFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -12,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Laravel\Cashier\Billable;
 
-#[Fillable(['name', 'subdomain', 'status', 'trial_ends_at'])]
+#[Fillable(['name', 'subdomain', 'status', 'trial_ends_at', 'stripe_platform_fee_percent'])]
 class Business extends Model
 {
     /** @use HasFactory<BusinessFactory> */
@@ -26,8 +28,9 @@ class Business extends Model
     protected function casts(): array
     {
         return [
-            'status'        => BusinessStatus::class,
-            'trial_ends_at' => 'datetime',
+            'status'                    => BusinessStatus::class,
+            'trial_ends_at'             => 'datetime',
+            'stripe_platform_fee_percent' => 'float',
         ];
     }
 
@@ -67,4 +70,20 @@ class Business extends Model
     public function systemSetting(): HasOne      { return $this->hasOne(SystemSetting::class); }
     public function salonProfile(): HasOne       { return $this->hasOne(SalonProfile::class); }
     public function integrationSetting(): HasOne { return $this->hasOne(IntegrationSetting::class); }
+
+    public function stripeConnectAccount(): HasOne
+    {
+        return $this->hasOne(StripeConnectAccount::class);
+    }
+
+    public function canAcceptOnlinePayments(): bool
+    {
+        $account = $this->stripeConnectAccount;
+        return $account !== null && $account->isActive();
+    }
+
+    public function activityLogs(): HasMany
+    {
+        return $this->hasMany(ActivityLog::class);
+    }
 }

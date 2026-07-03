@@ -101,15 +101,50 @@ Per i deploy automatici via terminale usare il `Makefile` (vedi sezione 5).
 Richiede `.env.production` compilato localmente (vedi sezione 6).
 
 ```bash
-make deploy          # tutto: env + assets + codice + cache clear
-make deploy-env      # solo .env → server
-make deploy-assets   # solo build CSS/JS (npm build + rsync)
-make deploy-code     # solo PHP (app/, routes/, config/, resources/)
+make deploy          # produzione: preflight + build + env + codice + vendor + cache + healthcheck
+make deploy-staging  # staging: stesso flusso production-like, senza reset database
+
+make deploy-env      # solo .env e .env.production → produzione
+make deploy-assets   # solo build + asset pubblici → produzione
+make deploy-code     # solo codice Laravel → produzione
+make deploy-vendor   # solo composer install da composer.lock → produzione
 ```
+
+Il Makefile:
+- valida `composer.json` dentro Docker prima del deploy
+- crea un lock remoto `.deploy.lock` per evitare deploy concorrenti
+- manda l'app in maintenance mode durante sync/migrazioni/cache
+- sincronizza codice Laravel, `bootstrap/`, `lang/`, `public/` e `public/build/`
+- non copia `vendor/` dal locale: esegue sempre `composer install` sul server da `composer.lock`
+- rimuove `public/hot` dal server per evitare asset Vite dev in produzione
+- esegue healthcheck HTTP finale sugli URL configurati nel `Makefile`
 
 Dopo ogni deploy il Makefile esegue automaticamente su server:
 ```bash
-php85 artisan config:clear && php85 artisan route:clear && php85 artisan view:clear
+/usr/bin/php8.5 artisan optimize:clear
+/usr/bin/php8.5 artisan migrate --force
+/usr/bin/php8.5 artisan config:cache
+/usr/bin/php8.5 artisan route:cache
+/usr/bin/php8.5 artisan view:cache
+/usr/bin/php8.5 artisan storage:link
+/usr/bin/php8.5 artisan queue:restart
+```
+
+`make deploy-env` copia `.env.production` sia in `/home/www/.env` sia in `/home/www/.env.production`. Questo evita che Laravel carichi un vecchio `.env.production` quando l'ambiente PHP imposta `APP_ENV=production`.
+
+Per resettare staging intenzionalmente:
+
+```bash
+make staging-reset-db
+```
+
+Il reset staging non è più parte di `make deploy-staging`: staging deve restare il più simile possibile alla produzione, salvo reset esplicito.
+
+Se un deploy viene interrotto e resta un lock remoto, verificare prima che non ci sia davvero un deploy in corso, poi sbloccare con:
+
+```bash
+make deploy-unlock-prod
+make deploy-unlock-staging
 ```
 
 Per deploy di singoli file (rapido):
@@ -164,6 +199,8 @@ STRIPE_PUBLIC_KEY=
 STRIPE_SECRET_KEY=
 STRIPE_PRICE_ID=
 STRIPE_BILLING_WEBHOOK_SECRET=
+STRIPE_CONNECT_WEBHOOK_SECRET=
+STRIPE_WEBHOOK_SECRET=
 
 TWILIO_SID=
 TWILIO_TOKEN=
@@ -237,7 +274,15 @@ Questo attiva l'invio automatico dei reminder email agli appuntamenti.
 
 ## Problemi noti e fix applicati
 
-**Stripe non configurato**: se `STRIPE_SECRET_KEY` è vuota, il middleware `CheckSubscription` crasha con 500 sull'admin panel. Fix temporaneo: estendere il trial (vedi sezione 8).
+**Stripe non configurato**: se `STRIPE_SECRET_KEY` è vuota o la config cache è stata generata da un env sbagliato, Stripe Connect solleva `Stripe non configurato. Verifica la chiave STRIPE_SECRET_KEY.`. Verificare:
+```bash
+/usr/bin/php8.5 artisan tinker --execute="var_export(['stripe_secret' => config('services.stripe.secret') ? 'set' : 'empty', 'cashier_secret' => config('cashier.secret') ? 'set' : 'empty', 'cached' => app()->configurationIsCached() ? 'yes' : 'no']);"
+```
+Se risulta `empty`, correggere `.env.production`, rieseguire `make deploy-env`, poi sul server:
+```bash
+/usr/bin/php8.5 artisan optimize:clear
+/usr/bin/php8.5 artisan config:cache
+```
 
 **PHP su SSH**: usare sempre `/usr/bin/php8.5`, non `php` (punta a 8.3). Il Makefile usa l'alias `php85` — se il server cambia configurazione, verificare.
 

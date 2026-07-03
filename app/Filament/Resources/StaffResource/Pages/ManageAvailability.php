@@ -68,6 +68,7 @@ class ManageAvailability extends Page
             $t          = fn(?string $v): ?string => $v ? substr($v, 0, 5) : null;
             $days[$day] = [
                 'is_available' => $rule?->is_available ?? false,
+                'type'         => ($rule?->is_available && $rule?->start_time_2) ? 'split' : 'continuous',
                 'start_time'   => $t($rule?->start_time),
                 'end_time'     => $t($rule?->end_time),
                 'start_time_2' => $t($rule?->start_time_2),
@@ -95,23 +96,44 @@ class ManageAvailability extends Page
                         ->live()
                         ->columnSpanFull(),
 
+                    Select::make("days.{$day}.type")
+                        ->label('Tipo orario')
+                        ->options([
+                            'continuous' => 'Orario intero',
+                            'split'      => 'Spezzato',
+                        ])
+                        ->default('continuous')
+                        ->live()
+                        ->visible(fn (Get $get): bool => (bool) $get("days.{$day}.is_available"))
+                        ->columnSpanFull(),
+
                     Select::make("days.{$day}.start_time")
-                        ->label('Inizio mattina')
+                        ->label(fn (Get $get): string => $get("days.{$day}.type") === 'split' ? 'Inizio mattina' : 'Inizio')
                         ->options(self::timeOptions())
-                        ->required(fn (Get $get): bool => (bool) $get("days.{$day}.is_available")),
+                        ->visible(fn (Get $get): bool => (bool) $get("days.{$day}.is_available"))
+                        ->required(fn (Get $get): bool => (bool) $get("days.{$day}.is_available"))
+                        ->columnSpan(2),
 
                     Select::make("days.{$day}.end_time")
-                        ->label('Fine mattina')
+                        ->label(fn (Get $get): string => $get("days.{$day}.type") === 'split' ? 'Fine mattina' : 'Fine')
                         ->options(self::timeOptions())
-                        ->required(fn (Get $get): bool => (bool) $get("days.{$day}.is_available")),
+                        ->visible(fn (Get $get): bool => (bool) $get("days.{$day}.is_available"))
+                        ->required(fn (Get $get): bool => (bool) $get("days.{$day}.is_available"))
+                        ->columnSpan(2),
 
                     Select::make("days.{$day}.start_time_2")
                         ->label('Inizio pomeriggio')
-                        ->options(self::timeOptions()),
+                        ->options(self::timeOptions())
+                        ->visible(fn (Get $get): bool => (bool) $get("days.{$day}.is_available") && $get("days.{$day}.type") === 'split')
+                        ->required(fn (Get $get): bool => (bool) $get("days.{$day}.is_available") && $get("days.{$day}.type") === 'split')
+                        ->columnSpan(2),
 
                     Select::make("days.{$day}.end_time_2")
                         ->label('Fine pomeriggio')
-                        ->options(self::timeOptions()),
+                        ->options(self::timeOptions())
+                        ->visible(fn (Get $get): bool => (bool) $get("days.{$day}.is_available") && $get("days.{$day}.type") === 'split')
+                        ->required(fn (Get $get): bool => (bool) $get("days.{$day}.is_available") && $get("days.{$day}.type") === 'split')
+                        ->columnSpan(2),
                 ]);
         }
 
@@ -169,7 +191,7 @@ class ManageAvailability extends Page
 
             $s2 = $t($values['start_time_2'] ?? null);
             $e2 = $t($values['end_time_2']   ?? null);
-            if ($s2 && $e2) {
+            if (($values['type'] ?? 'continuous') === 'split' && $s2 && $e2) {
                 $r  = $ranges[1] ?? $ranges[0];
                 if ($s2 < $t($r['start'])) {
                     $errors[] = "{$label}: inizio pomeriggio {$s2} è prima dell'apertura salone ({$t($r['start'])}).";
@@ -192,6 +214,7 @@ class ManageAvailability extends Page
 
         foreach ($data['days'] as $day => $values) {
             $isAvailable = (bool) ($values['is_available'] ?? false);
+            $isSplit     = $isAvailable && ($values['type'] ?? 'continuous') === 'split';
 
             AvailabilityRule::updateOrCreate(
                 ['user_id' => $this->record->id, 'day_of_week' => $day],
@@ -199,8 +222,8 @@ class ManageAvailability extends Page
                     'is_available'  => $isAvailable,
                     'start_time'    => $isAvailable ? ($values['start_time'] ?? null) : null,
                     'end_time'      => $isAvailable ? ($values['end_time'] ?? null) : null,
-                    'start_time_2'  => $isAvailable ? ($values['start_time_2'] ?? null) : null,
-                    'end_time_2'    => $isAvailable ? ($values['end_time_2'] ?? null) : null,
+                    'start_time_2'  => $isSplit ? ($values['start_time_2'] ?? null) : null,
+                    'end_time_2'    => $isSplit ? ($values['end_time_2'] ?? null) : null,
                 ]
             );
         }

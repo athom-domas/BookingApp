@@ -7,29 +7,35 @@ use App\Models\Appointment;
 use App\Models\FollowUpReminder;
 use App\Models\SystemSetting;
 use App\Services\LoyaltyService;
+use Illuminate\Support\Facades\Cache;
 
 class AppointmentObserver
 {
     public function created(Appointment $appointment): void
     {
-        if ($appointment->status !== 'confirmed') {
-            return;
-        }
-
-        $this->accrue($appointment);
+        $this->bustDateCache($appointment->business_id, $appointment->scheduled_date->format('Y-m'));
     }
 
     public function updated(Appointment $appointment): void
     {
+        if ($appointment->wasChanged('scheduled_date')) {
+            $this->bustDateCache($appointment->business_id, $appointment->scheduled_date->format('Y-m'));
+            $old = $appointment->getOriginal('scheduled_date');
+            if ($old) {
+                $this->bustDateCache($appointment->business_id, substr($old, 0, 7));
+            }
+        } elseif ($appointment->wasChanged('status')) {
+            $this->bustDateCache($appointment->business_id, $appointment->scheduled_date->format('Y-m'));
+        }
+
         if (! $appointment->wasChanged('status')) {
             return;
         }
 
-        if ($appointment->status === 'confirmed') {
-            $this->accrue($appointment);
-        } elseif ($appointment->status === 'cancelled') {
+        if ($appointment->status === 'cancelled') {
             $this->reverse($appointment);
         } elseif ($appointment->status === 'completed') {
+            $this->accrue($appointment);
             $this->scheduleReviewRequest($appointment);
             $this->scheduleFollowUpReminder($appointment);
         }
@@ -76,6 +82,11 @@ class AppointmentObserver
         if ($payment && $payment->status === 'pending') {
             app(\App\Services\PaymentService::class)->cancelPendingPayment($payment);
         }
+    }
+
+    private function bustDateCache(int $businessId, string $month): void
+    {
+        Cache::increment("booking_dates_v:{$businessId}:{$month}");
     }
 
     private function scheduleFollowUpReminder(Appointment $appointment): void

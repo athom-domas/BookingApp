@@ -2,6 +2,7 @@
 
 use App\Jobs\SendAppointmentReminder;
 use App\Jobs\SendFollowUpReminder;
+use App\Models\Appointment;
 use App\Models\AppointmentReminder;
 use App\Models\FollowUpReminder;
 use Illuminate\Foundation\Inspiring;
@@ -37,3 +38,15 @@ Schedule::call(function () {
 Schedule::command('whatsapp:reset-monthly-counters')
     ->monthlyOn(1, '00:00')
     ->description('Reset monthly WhatsApp notification counters');
+
+Schedule::call(function () {
+    Appointment::withoutGlobalScopes()
+        ->pendingExpired()
+        ->chunkById(50, function ($appointments) {
+            foreach ($appointments as $appointment) {
+                $appointment->update(['status' => 'cancelled']);
+            }
+        });
+})->everyFifteenMinutes()->description('Expire unpaid pending appointments');
+
+Schedule::command('activitylog:clean')->daily()->description('Clean old activity log entries');

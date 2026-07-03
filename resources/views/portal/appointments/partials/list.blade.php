@@ -29,7 +29,7 @@
                             <td class="px-5 py-4 font-semibold text-gray-950 dark:text-gray-50">{{ $appointment->services_label }}</td>
                             <td class="px-5 py-4">
                                 <div class="flex items-center gap-2">
-                                    @php $avatarUrl = $appointment->staff->getFirstMediaUrl('avatar', 'thumb'); @endphp
+                                    @php $avatarUrl = $appointment->staff->avatarUrl(); @endphp
                                     @if ($avatarUrl)
                                         <img src="{{ $avatarUrl }}" alt="{{ $appointment->staff->name }}" class="w-7 h-7 rounded-full object-cover shrink-0">
                                     @else

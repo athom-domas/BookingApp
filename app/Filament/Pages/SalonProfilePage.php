@@ -7,7 +7,7 @@ use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\RichEditor;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -31,7 +31,7 @@ class SalonProfilePage extends Page
     protected static ?string $navigationLabel = 'Profilo Salone';
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-building-storefront';
-    protected static string|\UnitEnum|null $navigationGroup = 'Impostazioni';
+    protected static string|\UnitEnum|null $navigationGroup = 'Configurazioni';
     protected static ?int $navigationSort = 2;
 
     public ?array $data = [];
@@ -43,22 +43,18 @@ class SalonProfilePage extends Page
 
         $formData = [
             'name'                 => $profile->name,
-            'tagline'              => $profile->tagline,
             'theme'                => $profile->theme             ?? 'luxury',
             'theme_mode'           => $profile->theme_mode        ?? 'light',
             'hero_image_preset'    => $profile->hero_image_preset ?? '',
             'announcement_active'  => (bool) $profile->announcement_active,
             'announcement_text'    => $profile->announcement_text,
-            'booking_button_label' => $profile->booking_button_label,
             'meta_description'     => $profile->meta_description,
-            'owner_signature'      => $profile->owner_signature,
             'font_pair'            => $profile->font_pair  ?? 'classic',
             'border_style'         => $profile->border_style ?? 'sharp',
 
             'phone'                => $profile->phone,
             'address'              => $profile->address,
 
-            'description'          => $profile->description,
             'google_maps_embed'    => $profile->google_maps_embed,
 
             'instagram_url'        => $profile->instagram_url,
@@ -69,6 +65,13 @@ class SalonProfilePage extends Page
             'email_greeting'     => $profile->email_greeting     ?? "Ciao {nome},\nhai un nuovo appuntamento confermato.",
             'email_footer_note'  => $profile->email_footer_note  ?? 'Puoi gestire l\'appuntamento dall\'area riservata.',
             'email_accent_color' => $profile->email_accent_color,
+
+            'shop_header_variant'      => $profile->shop_header_variant      ?? 'classic',
+            'shop_header_title'        => $profile->shop_header_title,
+            'shop_header_subtitle'     => $profile->shop_header_subtitle,
+            'shop_header_image'        => $profile->shop_header_image,
+            'shop_header_image_mobile' => $profile->shop_header_image_mobile,
+            'shop_header_image_preset' => $profile->shop_header_image_preset ?? '',
         ];
 
         foreach (['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as $day) {
@@ -190,18 +193,9 @@ class SalonProfilePage extends Page
                 Tabs::make()->tabs([
 
                     Tab::make('Identità')->schema([
-                        Grid::make(2)->schema([
-                            TextInput::make('name')
-                                ->label('Nome del salone')
-                                ->required(),
-                            TextInput::make('tagline')
-                                ->label('Tagline'),
-                        ]),
-                        TextInput::make('booking_button_label')
-                            ->label('Testo del pulsante "Prenota"')
-                            ->placeholder('Prenota un appuntamento')
-                            ->helperText('Lascia vuoto per usare il testo predefinito.')
-                            ->columnSpanFull(),
+                        TextInput::make('name')
+                            ->label('Nome del salone')
+                            ->required(),
                         Toggle::make('announcement_active')
                             ->label('Mostra banner avvisi')
                             ->helperText('Una striscia in cima alla vetrina per ferie, promozioni o comunicazioni.')
@@ -235,7 +229,7 @@ class SalonProfilePage extends Page
                             ->inline()
                             ->helperText('Il cliente può cambiare la modalità con il toggle sul sito.')
                             ->columnSpanFull(),
-                        Grid::make(3)->schema([
+                        Grid::make(2)->schema([
                             SpatieMediaLibraryFileUpload::make('logo')
                                 ->label('Logo (light mode)')
                                 ->collection('logo')
@@ -247,24 +241,7 @@ class SalonProfilePage extends Page
                                 ->image()
                                 ->maxSize(2048)
                                 ->helperText('Se non caricato, viene usato il logo principale.'),
-                            SpatieMediaLibraryFileUpload::make('cover')
-                                ->label('Immagine hero (carica la tua)')
-                                ->collection('cover')
-                                ->image()
-                                ->maxSize(5120)
-                                ->helperText('Ha priorità sulle immagini predefinite.'),
                         ]),
-                        Radio::make('hero_image_preset')
-                            ->label('Oppure scegli un\'immagine predefinita')
-                            ->options(
-                                array_merge(
-                                    ['' => 'Nessuna'],
-                                    array_map(fn($p) => $p['label'], \App\Models\SalonProfile::heroPresets())
-                                )
-                            )
-                            ->dehydrateStateUsing(fn($state) => $state ?: null)
-                            ->view('filament.forms.hero-preset-picker')
-                            ->columnSpanFull(),
                         Grid::make(2)->schema([
                             SpatieMediaLibraryFileUpload::make('favicon')
                                 ->label('Favicon')
@@ -300,41 +277,6 @@ class SalonProfilePage extends Page
                             ->columnSpanFull(),
                     ]),
 
-                    Tab::make('Descrizione')->schema([
-                        RichEditor::make('description')
-                            ->label('Chi siamo')
-                            ->columnSpanFull(),
-                        TextInput::make('owner_signature')
-                            ->label('Firma del titolare')
-                            ->placeholder('es. Con cura, Giulia e il team')
-                            ->helperText('Una firma breve mostrata in fondo alla sezione "Il salone".')
-                            ->maxLength(120)
-                            ->columnSpanFull(),
-                    ]),
-
-                    Tab::make('Galleria')->schema([
-                        SpatieMediaLibraryFileUpload::make('gallery')
-                            ->label('Foto salone')
-                            ->helperText('Immagini degli interni, dell\'atmosfera e degli spazi del salone.')
-                            ->collection('gallery')
-                            ->conversion('web')
-                            ->multiple()
-                            ->reorderable()
-                            ->image()
-                            ->maxSize(10240)
-                            ->columnSpanFull(),
-                        SpatieMediaLibraryFileUpload::make('portfolio')
-                            ->label('Foto lavori')
-                            ->helperText('Risultati, trasformazioni e lavori realizzati dallo staff.')
-                            ->collection('portfolio')
-                            ->conversion('web')
-                            ->multiple()
-                            ->reorderable()
-                            ->image()
-                            ->maxSize(10240)
-                            ->columnSpanFull(),
-                    ]),
-
                     Tab::make('Orari')->schema($hoursFields),
 
                     Tab::make('Contatti & Social')->schema([
@@ -358,6 +300,54 @@ class SalonProfilePage extends Page
                                 ->helperText('Numero internazionale senza + (es. 39333000000)'),
                         ]),
 
+                    ]),
+
+                    Tab::make('Shop')->schema([
+                        Radio::make('shop_header_variant')
+                            ->label('Layout header shop')
+                            ->options([
+                                'classic'   => 'Sfondo immagine piena con testo centrato',
+                                'editorial' => 'Immagine laterale con testo a sinistra',
+                                'centered'  => 'Sfondo tinta unita con testo centrato',
+                            ])
+                            ->default('classic')
+                            ->columnSpanFull(),
+
+                        TextInput::make('shop_header_title')
+                            ->label('Titolo')
+                            ->placeholder('Prodotti')
+                            ->maxLength(120),
+
+                        Textarea::make('shop_header_subtitle')
+                            ->label('Sottotitolo')
+                            ->placeholder('Acquista i prodotti del salone con ritiro in sede.')
+                            ->maxLength(200)
+                            ->rows(2),
+
+                        FileUpload::make('shop_header_image')
+                            ->label('Immagine desktop')
+                            ->image()
+                            ->disk('public')
+                            ->storeFiles(false)
+                            ->saveUploadedFileUsing(fn ($file) => \App\PageBlocks\AbstractPageBlock::storeAsWebp($file, 'site-builder/shop-header'))
+                            ->helperText('Mostrata su tutti i dispositivi se non viene caricata un\'immagine mobile.'),
+
+                        FileUpload::make('shop_header_image_mobile')
+                            ->label('Immagine mobile (opzionale)')
+                            ->image()
+                            ->disk('public')
+                            ->storeFiles(false)
+                            ->saveUploadedFileUsing(fn ($file) => \App\PageBlocks\AbstractPageBlock::storeAsWebp($file, 'site-builder/shop-header'))
+                            ->helperText('Sostituisce l\'immagine desktop su schermi ≤ 640px. Usa formato verticale o quadrato.'),
+
+                        Radio::make('shop_header_image_preset')
+                            ->label('Oppure scegli immagine predefinita')
+                            ->options(array_merge(
+                                ['' => 'Nessuna'],
+                                array_map(fn ($p) => $p['label'], SalonProfile::heroPresets())
+                            ))
+                            ->dehydrateStateUsing(fn ($state) => $state ?: null)
+                            ->view('filament.forms.hero-preset-picker'),
                     ]),
 
                     Tab::make('Email')->schema([
@@ -385,7 +375,7 @@ class SalonProfilePage extends Page
                         Textarea::make('meta_description')
                             ->label('Descrizione per la condivisione')
                             ->placeholder('es. Parrucchiere e centro estetico nel cuore di Milano. Prenota online.')
-                            ->helperText('Testo che appare quando il link viene condiviso su WhatsApp, Facebook e Instagram. Lascia vuoto per usare automaticamente la tagline o la descrizione.')
+                            ->helperText('Testo che appare quando il link viene condiviso su WhatsApp, Facebook e Instagram.')
                             ->maxLength(160)
                             ->rows(2)
                             ->columnSpanFull(),

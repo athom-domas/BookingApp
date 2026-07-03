@@ -120,6 +120,22 @@ it('prevents cross-tenant API access with valid Sanctum token', function () {
         ->assertForbidden();
 });
 
+// --- ServiceCategory ---
+
+it('scopes service categories to current business', function () {
+    $b1 = Business::factory()->create();
+    $b2 = Business::factory()->create();
+
+    \App\Models\ServiceCategory::factory()->create(['business_id' => $b1->id]);
+    \App\Models\ServiceCategory::factory()->create(['business_id' => $b2->id]);
+
+    $this->setBusinessContext($b1);
+    expect(\App\Models\ServiceCategory::count())->toBe(1);
+
+    $this->setBusinessContext($b2);
+    expect(\App\Models\ServiceCategory::count())->toBe(1);
+});
+
 // --- WaitlistEntry ---
 
 it('scopes waitlist entries to current business', function () {

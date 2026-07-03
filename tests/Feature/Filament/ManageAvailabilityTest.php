@@ -16,14 +16,12 @@ beforeEach(function () {
     $this->business = Business::withoutGlobalScopes()->firstOrFail();
     Filament::setTenant($this->business, isQuiet: true);
 
-    $allDay = ['type' => 'continuous', 'open_time' => '08:00', 'close_time' => '20:00'];
-    SalonProfile::updateOrCreate(
-        ['business_id' => $this->business->id],
-        ['name' => 'Test Salon', 'opening_hours' => [
-            'mon' => $allDay, 'tue' => $allDay, 'wed' => $allDay,
-            'thu' => $allDay, 'fri' => $allDay, 'sat' => $allDay, 'sun' => $allDay,
-        ]]
-    );
+    // Ensure salon has open hours so ManageAvailability::save() doesn't reject all days
+    SalonProfile::current()->update([
+        'opening_hours' => collect([0, 1, 2, 3, 4, 5, 6])->mapWithKeys(fn ($d) => [
+            ['sun','mon','tue','wed','thu','fri','sat'][$d] => ['type' => 'continuous', 'open_time' => '00:00', 'close_time' => '23:59'],
+        ])->all(),
+    ]);
 
     $this->admin = User::factory()->create(['business_id' => $this->business->id])->assignRole('admin');
     $this->admin->businesses()->attach($this->business->id);

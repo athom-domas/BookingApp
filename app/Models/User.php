@@ -19,21 +19,18 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Collection;
 use Laravel\Sanctum\HasApiTokens;
-use Spatie\MediaLibrary\HasMedia;
-use Spatie\MediaLibrary\InteractsWithMedia;
-use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Spatie\Permission\Traits\HasRoles;
 
 #[Fillable([
     'name', 'email', 'password', 'internal_notes', 'calendar_color',
     'bio', 'receive_email_notifications', 'business_id', 'must_change_password',
-    'google_id', 'google_refresh_token', 'sort_order',
+    'google_id', 'google_refresh_token', 'sort_order', 'avatar_path',
 ])]
 #[Hidden(['password', 'remember_token'])]
-class User extends Authenticatable implements FilamentUser, HasMedia, HasTenants
+class User extends Authenticatable implements FilamentUser, HasTenants
 {
     /** @use HasFactory<UserFactory> */
-    use HasApiTokens, HasFactory, HasRoles, Notifiable, InteractsWithMedia;
+    use HasApiTokens, HasFactory, HasRoles, Notifiable;
 
     protected function casts(): array
     {
@@ -101,14 +98,12 @@ class User extends Authenticatable implements FilamentUser, HasMedia, HasTenants
         return str_ends_with($this->email, '@noreply.local');
     }
 
-    public function registerMediaCollections(): void
+    public function avatarUrl(): ?string
     {
-        $this->addMediaCollection('avatar')->singleFile()->useDisk('public');
-    }
-
-    public function registerMediaConversions(?Media $media = null): void
-    {
-        $this->addMediaConversion('thumb')->width(200)->height(200)->nonQueued();
+        if ($this->avatar_path) {
+            return \Illuminate\Support\Facades\Storage::disk('public')->url($this->avatar_path);
+        }
+        return null;
     }
 
     public function sendPasswordResetNotification($token): void

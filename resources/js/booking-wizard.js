@@ -1,4 +1,4 @@
-export function bookingWizard(allServices, allStaff) {
+export function bookingWizard(allServices, allStaff, bookingPreferences = null, paymentMode = 'both', categories = []) {
     return {
         // navigation
         step: 1,
@@ -7,10 +7,13 @@ export function bookingWizard(allServices, allStaff) {
         // data
         allServices,
         allStaff,
+        paymentMode,
 
         // step 1
         selectedServiceIds: [],
         showAllServices: false,
+        categories,
+        selectedCategory: null,
 
         // step 2
         staffId: null,
@@ -25,13 +28,19 @@ export function bookingWizard(allServices, allStaff) {
         loadingSlots: false,
 
         // step 4
+        submitting: false,
         paymentMethod: null,
-
-        // step 5
         notes: '',
 
         // waitlist offer source (null when booking directly)
         waitlistEntryId: null,
+
+        // preferences & suggestions
+        preferences: bookingPreferences,
+        suggestedSlots: [],
+        suggestedSlotsLoaded: false,
+        loadingSuggested: false,
+        showSuggestions: true,
 
         // ── init ──────────────────────────────────────────────────────────
         init() {
@@ -51,7 +60,7 @@ export function bookingWizard(allServices, allStaff) {
                     this.paymentMethod      = s.paymentMethod ?? null;
                     this.notes              = (typeof s.notes === 'string') ? s.notes.slice(0, 1000) : '';
                     this.completed          = Array.isArray(s.completed) ? s.completed : [];
-                    this.step               = (Number.isInteger(s.step) && s.step >= 1 && s.step <= 5) ? s.step : 1;
+                    this.step               = (Number.isInteger(s.step) && s.step >= 1 && s.step <= 4) ? s.step : 1;
                     this.waitlistEntryId    = Number.isInteger(s.waitlistEntryId) ? s.waitlistEntryId : null;
                 } catch (_) {}
 
@@ -59,6 +68,10 @@ export function bookingWizard(allServices, allStaff) {
                     this.loadAvailableDates();
                     if (this.date) this.loadAvailableSlots();
                 }
+            }
+
+            if (this.paymentMode !== 'both' && !this.paymentMethod) {
+                this.paymentMethod = this.paymentMode;
             }
 
             this.$watch('step', (v) => {
@@ -96,6 +109,8 @@ export function bookingWizard(allServices, allStaff) {
                 this.completed.push(n);
             }
             this.step = n + 1;
+            if (n === 2 && this.preferences) this.loadSuggestedSlots();
+            if (n === 3 && this.paymentMode !== 'both') this.paymentMethod = this.paymentMode;
         },
 
         goTo(n) {
@@ -109,7 +124,7 @@ export function bookingWizard(allServices, allStaff) {
                 this.availableDates = [];
             }
             if (n <= 3) {
-                this.paymentMethod = null;
+                this.paymentMethod = this.paymentMode !== 'both' ? this.paymentMode : null;
             }
             this.completed = this.completed.filter(s => s < n);
             this.step = n;
@@ -131,15 +146,25 @@ export function bookingWizard(allServices, allStaff) {
         },
 
         get visibleServices() {
+            if (this.selectedCategory !== null) {
+                if (this.selectedCategory === 'altri') {
+                    return this.allServices.filter(s => s.category_id === null);
+                }
+                return this.allServices.filter(s => s.category_id === this.selectedCategory);
+            }
             if (this.showAllServices) return this.allServices;
             const featured = this.allServices.filter(s => s.featured);
-            return featured.length > 0 ? featured : this.allServices.slice(0, 4);
+            return featured.length > 0 ? featured : this.allServices;
         },
 
         get hasMoreServices() {
+            if (this.selectedCategory !== null) return false;
             const featured = this.allServices.filter(s => s.featured);
-            const shown = featured.length > 0 ? featured : this.allServices.slice(0, 4);
-            return shown.length < this.allServices.length;
+            return featured.length > 0 && featured.length < this.allServices.length;
+        },
+
+        get hasUncategorized() {
+            return this.categories.length > 0 && this.allServices.some(s => s.category_id === null);
         },
 
         get filteredStaff() {
@@ -220,6 +245,7 @@ export function bookingWizard(allServices, allStaff) {
         },
 
         prevMonth() {
+            if (this.loadingDates) return;
             const [year, month] = this.calendarMonth.split('-').map(Number);
             const d = new Date(year, month - 2, 1);
             const newMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
@@ -230,6 +256,7 @@ export function bookingWizard(allServices, allStaff) {
         },
 
         nextMonth() {
+            if (this.loadingDates) return;
             const [year, month] = this.calendarMonth.split('-').map(Number);
             const d = new Date(year, month, 1);
             const limit = new Date();
@@ -286,6 +313,74 @@ export function bookingWizard(allServices, allStaff) {
             } finally {
                 this.loadingSlots = false;
             }
+        },
+
+        // ── suggestions ───────────────────────────────────────────────────
+        toLocalIsoDate(date) {
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const d = String(date.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        },
+
+        isPreferredDay(iso) {
+            if (!this.preferences?.days?.length) return false;
+            const dow = new Date(iso + 'T00:00:00').getDay();
+            return this.preferences.days.includes(dow);
+        },
+
+        async loadSuggestedSlots() {
+            if (!this.preferences || !this.selectedServiceIds.length) return;
+            this.suggestedSlotsLoaded = false;
+            this.loadingSuggested = true;
+            this.suggestedSlots = [];
+            this.showSuggestions = true;
+
+            const params = new URLSearchParams();
+            this.selectedServiceIds.forEach(id => params.append('serviceIds[]', id));
+            if (this.staffId) params.append('staffId', this.staffId);
+            if (this.preferences.days?.length) {
+                this.preferences.days.forEach(d => params.append('preferredDays[]', d));
+            }
+            if (this.preferences.timeFrom) params.append('timeFrom', this.preferences.timeFrom);
+            if (this.preferences.timeTo)   params.append('timeTo',   this.preferences.timeTo);
+            params.append('limit', '6');
+
+            try {
+                const res  = await fetch('/api/booking/suggested-slots?' + params.toString(), { headers: { Accept: 'application/json' } });
+                const data = await res.json();
+                this.suggestedSlots = data.data ?? [];
+            } catch (_) {}
+
+            this.loadingSuggested = false;
+            this.suggestedSlotsLoaded = true;
+        },
+
+        get groupedSuggested() {
+            const map = {};
+            for (const s of this.suggestedSlots) {
+                if (!map[s.date]) map[s.date] = { date: s.date, slots: [] };
+                map[s.date].slots.push(s);
+            }
+            return Object.values(map).slice(0, 3);
+        },
+
+        submitBooking() {
+            if (this.submitting) return;
+            this.submitting = true;
+            this.$refs.bookingForm.submit();
+        },
+
+        selectSuggestedSlot(dateVal, timeVal) {
+            this.date          = dateVal;
+            this.slot          = timeVal;
+            this.calendarMonth = dateVal.slice(0, 7);
+            this.loadAvailableSlots();
+        },
+
+        formatSuggestedDate(iso) {
+            const s = new Date(iso + 'T00:00:00').toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' });
+            return s.charAt(0).toUpperCase() + s.slice(1);
         },
     };
 }

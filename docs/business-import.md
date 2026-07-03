@@ -1,104 +1,47 @@
 # Importazione business
 
-Il comando `business:import` crea tutti i record necessari nel gestionale (business, profilo, staff, servizi, orari, media) partendo dal sito web del salone oppure da un file JSON compilato a mano.
-
----
-
-## Workflow A — Salone con sito web
-
-### Step 1 — Scraping + AI, senza toccare il DB
+## Il salone ha un sito web
 
 ```bash
+# 1. Scraping + AI → salva JSON (non tocca il DB)
 docker-compose run --rm app php artisan business:import https://www.nomsalone.it \
     --save-json=storage/imports/nomsalone.json \
     --dry-run
-```
 
-- Scarica homepage e fino a 5 pagine rilevanti
-- Legge JSON-LD/schema.org se presente (priorità alta)
-- Chiama Claude Haiku per estrarre i dati
-- Salva il JSON e mostra anteprima — **non crea nulla nel DB**
+# 2. Correggi storage/imports/nomsalone.json se necessario
 
-Il file JSON può essere corretto a mano prima del secondo step.
-
-### Step 2 — Import nel DB
-
-```bash
-docker-compose run --rm app php artisan business:import https://www.nomsalone.it \
-    --from-json=storage/imports/nomsalone.json
-```
-
----
-
-## Workflow B — Salone senza sito web (JSON manuale)
-
-Copia il template, compilalo e importa direttamente senza passare un URL:
-
-```bash
-cp storage/imports/_template.json storage/imports/nomsalone.json
-# modifica nomsalone.json
-
+# 3. Import nel DB
 docker-compose run --rm app php artisan business:import \
     --from-json=storage/imports/nomsalone.json
 ```
 
 ---
 
-## Opzioni disponibili
+## Il salone non ha un sito web
 
-| Opzione | Descrizione |
-|---|---|
-| `--business-id=N` | Aggiorna un business esistente invece di crearne uno nuovo |
-| `--dry-run` | Mostra i dati estratti senza creare nulla |
-| `--force` | Salta la conferma interattiva |
-| `--no-media` | Non scarica immagini (logo, gallery, avatar) |
-| `--save-json=path` | Salva il JSON estratto su file |
-| `--from-json=path` | Importa da JSON già salvato, salta scraping e AI |
+```bash
+# 1. Copia il template e compilalo
+cp storage/imports/_template.json storage/imports/nomsalone.json
+
+# 2. Import nel DB
+docker-compose run --rm app php artisan business:import \
+    --from-json=storage/imports/nomsalone.json
+```
 
 ---
 
-## Altri esempi
-
-**Aggiorna business esistente (ID 5) senza ri-scaricare le immagini:**
+## Aggiornare un business esistente
 
 ```bash
 docker-compose run --rm app php artisan business:import \
     --from-json=storage/imports/nomsalone.json \
     --business-id=5 \
-    --no-media \
-    --force
-```
-
-**Import silenzioso (no conferma interattiva):**
-
-```bash
-docker-compose run --rm app php artisan business:import \
-    --from-json=storage/imports/nomsalone.json \
     --force
 ```
 
 ---
 
-## Cosa viene creato
-
-| Record | Note |
-|---|---|
-| `Business` | Subdomain auto-generato da `Str::slug(nome)`, con collision avoidance |
-| `SalonProfile` | Nome, tagline, descrizione, indirizzo, telefono, orari, social, Google Maps embed |
-| `User` (staff) | Email sintetica `nome@nomsalone.it`, password temporanea mostrata in output, `must_change_password = true` |
-| `Service` | Nome, descrizione, durata, prezzo; associato a tutto lo staff |
-| `AvailabilityRule` | Un record per giorno per ogni membro staff; supporta pausa pranzo |
-| Logo | Media collection `logo` + `favicon` di SalonProfile |
-| Gallery | Media collection `gallery` di SalonProfile (max 10) |
-| Avatar staff | Media collection `avatar` dell'utente |
-
-> I media vengono scaricati **dopo** la transazione DB.
-
----
-
-## Struttura del file JSON
-
-Vedere `storage/imports/_template.json` per il template completo da compilare a mano.
+## Struttura JSON
 
 ```json
 {
@@ -128,15 +71,7 @@ Vedere `storage/imports/_template.json` per il template completo da compilare a 
 }
 ```
 
-**Note:**
-- Giorni chiusi: ometti la riga dall'array `hours`
-- Pausa pranzo: imposta `open_2` e `close_2`
+- Giorni chiusi: ometti la riga da `hours`
+- Pausa pranzo: usa `open_2` e `close_2`
 - `role`: `"admin"` per il titolare, `"staff"` per i dipendenti
-- `google_maps_embed`: incolla il valore `src` dell'iframe di Google Maps (non l'URL della pagina)
-
----
-
-## Prerequisiti
-
-- `ANTHROPIC_API_KEY` nel file `.env` (necessaria solo per il workflow A con scraping)
-- Docker in esecuzione (`docker-compose up -d`)
+- `google_maps_embed`: valore `src` dell'iframe Google Maps

@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'stripe/webhook',
             'stripe/billing-webhook',
             'whatsapp/webhook',
+            'stripe/connect/webhook',
         ]);
 
         $middleware->alias([
@@ -38,5 +39,9 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->stopIgnoring(\Symfony\Component\HttpKernel\Exception\HttpException::class);
+
+        $exceptions->report(function (\Throwable $e): void {
+            app(\App\Support\Logging\ExceptionActivityLogger::class)->report($e);
+        });
     })->create();

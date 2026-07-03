@@ -10,6 +10,9 @@ use Carbon\Carbon;
 use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
+    $business = \App\Models\Business::factory()->create();
+    app()->instance('current_business_id', $business->id);
+
     Role::firstOrCreate(['name' => 'staff', 'guard_name' => 'web']);
     Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
     Role::firstOrCreate(['name' => 'customer', 'guard_name' => 'web']);
