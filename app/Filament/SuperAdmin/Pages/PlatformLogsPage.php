@@ -3,6 +3,7 @@
 namespace App\Filament\SuperAdmin\Pages;
 
 use App\Models\ActivityLog;
+use App\Models\Business;
 use Filament\Pages\Page;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
@@ -67,7 +68,11 @@ class PlatformLogsPage extends Page implements HasTable
                 TextColumn::make('description')
                     ->label('Descrizione')
                     ->limit(100)
-                    ->tooltip(fn (TextColumn $column): ?string => strlen($column->getState() ?? '') > 100 ? $column->getState() : null),
+                    ->tooltip(fn (TextColumn $column): ?string => strlen($column->getState() ?? '') > 100 ? $column->getState() : null)
+                    ->copyable()
+                    ->copyableState(fn ($record): string => $record->description ?? '')
+                    ->copyMessage('Copiato!')
+                    ->copyMessageDuration(1500),
 
                 TextColumn::make('source')
                     ->label('Sorgente')
@@ -89,6 +94,14 @@ class PlatformLogsPage extends Page implements HasTable
                     ->placeholder('—'),
             ])
             ->filters([
+                SelectFilter::make('type')
+                    ->label('Tipo')
+                    ->options([
+                        'activity' => 'Activity',
+                        'error'    => 'Error',
+                        'system'   => 'System',
+                    ]),
+
                 SelectFilter::make('level')
                     ->label('Livello')
                     ->options([
@@ -98,21 +111,25 @@ class PlatformLogsPage extends Page implements HasTable
                         'critical' => 'Critical',
                     ]),
 
-                Filter::make('date_from')
-                    ->label('Da data')
-                    ->form([\Filament\Forms\Components\DatePicker::make('date_from')->label('Da')])
+                SelectFilter::make('business_id')
+                    ->label('Salone')
+                    ->options(fn () => Business::withoutGlobalScopes()->pluck('name', 'id')->all())
+                    ->placeholder('Tutti (inclusa piattaforma)')
                     ->query(fn (Builder $query, array $data) => $query->when(
-                        $data['date_from'] ?? null,
-                        fn ($q) => $q->whereDate('created_at', '>=', $data['date_from'] ?? null)
+                        $data['value'] ?? null,
+                        fn ($q, $v) => $q->where('business_id', $v)
                     )),
 
-                Filter::make('date_to')
-                    ->label('A data')
-                    ->form([\Filament\Forms\Components\DatePicker::make('date_to')->label('A')])
-                    ->query(fn (Builder $query, array $data) => $query->when(
-                        $data['date_to'] ?? null,
-                        fn ($q) => $q->whereDate('created_at', '<=', $data['date_to'] ?? null)
-                    )),
+                Filter::make('date_range')
+                    ->label('Periodo')
+                    ->form([
+                        \Filament\Forms\Components\DatePicker::make('date_from')->label('Da'),
+                        \Filament\Forms\Components\DatePicker::make('date_to')->label('A'),
+                    ])
+                    ->query(fn (Builder $query, array $data) => $query
+                        ->when($data['date_from'] ?? null, fn ($q, $v) => $q->whereDate('created_at', '>=', $v))
+                        ->when($data['date_to'] ?? null,   fn ($q, $v) => $q->whereDate('created_at', '<=', $v))
+                    ),
             ])
             ->recordAction(null)
             ->paginated([25, 50, 100]);
