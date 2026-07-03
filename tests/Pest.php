@@ -1,6 +1,8 @@
 <?php
 
+use App\Models\Business;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
 /*
@@ -17,7 +19,10 @@ use Tests\TestCase;
 pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
     ->beforeEach(function () {
-        app()->instance('current_business_id', 1);
+        Cache::flush();
+        $business = Business::factory()->create();
+        app()->instance('current_business_id', $business->id);
+        config(['app.base_domain' => 'localhost']);
     })
     ->in('Feature');
 
