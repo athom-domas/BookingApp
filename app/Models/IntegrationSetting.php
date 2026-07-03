@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Model;
     'whatsapp_ai_enabled', 'whatsapp_ai_booking_enabled', 'whatsapp_ai_cancellation_enabled',
     'whatsapp_ai_custom_instructions', 'whatsapp_ai_handoff_email',
     'whatsapp_ai_timezone', 'whatsapp_ai_language', 'whatsapp_ai_max_turns',
+    'whatsapp_notifications_enabled', 'whatsapp_monthly_limit', 'whatsapp_monthly_sent',
 ])]
 class IntegrationSetting extends Model
 {
@@ -30,6 +31,7 @@ class IntegrationSetting extends Model
             'twilio_token'            => 'encrypted',
             'meta_whatsapp_token'     => 'encrypted',
             'google_credentials_json' => 'encrypted',
+            'whatsapp_notifications_enabled' => 'boolean',
         ];
     }
 
@@ -148,5 +150,19 @@ class IntegrationSetting extends Model
     public function getWhatsAppAiMaxTurns(): int
     {
         return $this->whatsapp_ai_max_turns ?? 12;
+    }
+
+    public function hasWhatsAppNotificationsEnabled(): bool
+    {
+        return (bool) $this->whatsapp_notifications_enabled;
+    }
+
+    public function hasWhatsAppMonthlyCapacity(): bool
+    {
+        if ($this->whatsapp_monthly_limit === null) {
+            return true;
+        }
+
+        return $this->whatsapp_monthly_sent < $this->whatsapp_monthly_limit;
     }
 }
