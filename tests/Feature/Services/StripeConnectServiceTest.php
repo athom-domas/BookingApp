@@ -1,12 +1,10 @@
 <?php
 
-use App\Models\Business;
 use App\Models\StripeConnectAccount;
+use App\Models\SystemSetting;
 use App\Services\StripeConnectService;
 use Mockery\MockInterface;
 use Stripe\Account;
-use Stripe\AccountLink;
-use Stripe\LoginLink;
 use Stripe\StripeClient;
 
 beforeEach(function () {
@@ -32,7 +30,7 @@ it('createAccount crea un StripeConnectAccount con stripe_account_id', function 
 
 it('createAccount non crea duplicato se già esiste un account per il business', function () {
     $existing = StripeConnectAccount::factory()->pending()->create([
-        'business_id'       => $this->business->id,
+        'business_id' => $this->business->id,
         'stripe_account_id' => 'acct_existing',
     ]);
 
@@ -57,7 +55,7 @@ it('calculatePlatformFee usa override business se presente', function () {
 });
 
 it('calculatePlatformFee usa fee globale se business non ha override', function () {
-    \App\Models\SystemSetting::current()->update(['stripe_platform_fee_percent' => 2.0]);
+    SystemSetting::platform()->update(['stripe_platform_fee_percent' => 2.0]);
     $mockStripe = Mockery::mock(StripeClient::class);
     $result = ($this->makeService)($mockStripe)->calculatePlatformFee($this->business, 10000);
 
@@ -65,22 +63,39 @@ it('calculatePlatformFee usa fee globale se business non ha override', function 
     expect($result['percent'])->toBe(2.0);
 });
 
+it('calculatePlatformFee usa env se la fee globale non esiste', function () {
+    config(['services.stripe.platform_fee_percent' => 1.5]);
+
+    $mockStripe = Mockery::mock(StripeClient::class);
+    $result = ($this->makeService)($mockStripe)->calculatePlatformFee($this->business, 10000);
+
+    expect($result['cents'])->toBe(150);
+    expect($result['percent'])->toBe(1.5);
+});
+
+it('platform settings restano senza business anche in contesto tenant', function () {
+    $setting = SystemSetting::platform();
+
+    expect($setting->business_id)->toBeNull();
+    expect(SystemSetting::withoutGlobalScopes()->whereNull('business_id')->count())->toBe(1);
+});
+
 it('syncFromStripe aggiorna charges_enabled e status', function () {
     $connectAccount = StripeConnectAccount::factory()->pending()->create([
-        'business_id'       => $this->business->id,
+        'business_id' => $this->business->id,
         'stripe_account_id' => 'acct_sync_test',
     ]);
 
     $fakeAccount = Account::constructFrom([
-        'id'               => 'acct_sync_test',
-        'object'           => 'account',
-        'charges_enabled'  => true,
-        'payouts_enabled'  => true,
-        'details_submitted'=> true,
-        'capabilities'     => ['card_payments' => 'active', 'transfers' => 'active'],
-        'requirements'     => ['currently_due' => [], 'past_due' => [], 'disabled_reason' => null],
+        'id' => 'acct_sync_test',
+        'object' => 'account',
+        'charges_enabled' => true,
+        'payouts_enabled' => true,
+        'details_submitted' => true,
+        'capabilities' => ['card_payments' => 'active', 'transfers' => 'active'],
+        'requirements' => ['currently_due' => [], 'past_due' => [], 'disabled_reason' => null],
         'default_currency' => 'eur',
-        'country'          => 'IT',
+        'country' => 'IT',
     ]);
 
     $mockAccounts = Mockery::mock();

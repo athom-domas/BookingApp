@@ -310,16 +310,63 @@
             @endif
         </x-filament::section>
 
-        {{-- Configurazione fee (solo se attiva) --}}
-        @if($hasFees)
+        {{-- Configurazione fee --}}
         <x-filament::section heading="Configurazione fee">
-            <p class="text-sm text-gray-600 dark:text-gray-400">
-                Fee globale: <strong>{{ config('services.stripe.platform_fee_percent', 0) }}%</strong>
-                <span class="text-xs text-gray-400 ml-1">(env <code>STRIPE_PLATFORM_FEE_PERCENT</code>)</span><br>
-                Sovrascrivibile per singolo salone tramite <code class="text-xs">businesses.stripe_platform_fee_percent</code>.
-            </p>
+            <form wire:submit="saveGlobalFee">
+                <div class="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+
+                    {{-- Stato attuale --}}
+                    <div class="space-y-1.5">
+                        <div class="flex items-center gap-2.5">
+                            <span class="text-3xl font-bold tracking-tight tabular-nums text-gray-900 dark:text-white">
+                                {{ $this->getEffectiveGlobalFeePercent() }}%
+                            </span>
+                            @if($this->hasCustomGlobalFeePercent())
+                                <x-filament::badge color="warning" size="sm">personalizzata</x-filament::badge>
+                            @else
+                                <x-filament::badge color="gray" size="sm">da env</x-filament::badge>
+                            @endif
+                        </div>
+                        <p class="text-xs text-gray-400 dark:text-gray-500 max-w-sm leading-relaxed">
+                            Senza valore salvato si usa <code class="font-mono">STRIPE_PLATFORM_FEE_PERCENT</code>.
+                            Sovrascrivibile per salone via <code class="font-mono">businesses.stripe_platform_fee_percent</code>.
+                        </p>
+                    </div>
+
+                    {{-- Form modifica --}}
+                    <div class="flex items-end gap-2 flex-shrink-0">
+                        <div>
+                            <label for="globalFeePercent" class="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
+                                Fee globale (%)
+                            </label>
+                            <input
+                                id="globalFeePercent"
+                                type="number"
+                                min="0"
+                                max="100"
+                                step="0.01"
+                                wire:model="globalFeePercent"
+                                class="w-28 rounded-lg border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                            />
+                            @error('globalFeePercent')
+                                <p class="mt-1 text-xs text-danger-600 dark:text-danger-400">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <x-filament::button type="submit" size="sm" icon="heroicon-o-check">
+                            Salva
+                        </x-filament::button>
+
+                        @if($this->hasCustomGlobalFeePercent())
+                            <x-filament::button type="button" wire:click="resetGlobalFee" size="sm" color="gray" outlined>
+                                Usa env
+                            </x-filament::button>
+                        @endif
+                    </div>
+
+                </div>
+            </form>
         </x-filament::section>
-        @endif
 
     </div>
 </x-filament-panels::page>

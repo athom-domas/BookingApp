@@ -6,12 +6,15 @@ use App\Models\ActivityLog;
 use App\Models\Business;
 use Filament\Pages\Page;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Actions\BulkAction;
+use Filament\Actions\BulkActionGroup;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 
 class PlatformLogsPage extends Page implements HasTable
 {
@@ -130,6 +133,20 @@ class PlatformLogsPage extends Page implements HasTable
                         ->when($data['date_from'] ?? null, fn ($q, $v) => $q->whereDate('created_at', '>=', $v))
                         ->when($data['date_to'] ?? null,   fn ($q, $v) => $q->whereDate('created_at', '<=', $v))
                     ),
+            ])
+            ->bulkActions([
+                BulkActionGroup::make([
+                    BulkAction::make('delete')
+                        ->label('Elimina selezionati')
+                        ->icon('heroicon-o-trash')
+                        ->color('danger')
+                        ->requiresConfirmation()
+                        ->modalHeading('Elimina log selezionati')
+                        ->modalDescription('Questa operazione è irreversibile. Vuoi procedere?')
+                        ->modalSubmitActionLabel('Elimina')
+                        ->action(fn (Collection $records) => $records->each->delete())
+                        ->deselectRecordsAfterCompletion(),
+                ]),
             ])
             ->recordAction(null)
             ->paginated([25, 50, 100]);

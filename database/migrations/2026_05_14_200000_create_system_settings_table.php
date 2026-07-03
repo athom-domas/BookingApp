@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('system_settings', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('business_id')->constrained()->cascadeOnDelete()->unique();
+            $table->foreignId('business_id')->nullable()->constrained()->cascadeOnDelete()->unique();
             $table->unsignedInteger('slot_generation_weeks')->default(4);
             $table->integer('slot_granularity_minutes')->default(10);
             $table->string('timezone')->default('Europe/Rome');

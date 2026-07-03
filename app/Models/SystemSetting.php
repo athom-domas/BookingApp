@@ -102,6 +102,21 @@ class SystemSetting extends Model
         );
     }
 
+    public static function platform(): self
+    {
+        $setting = self::withoutGlobalScopes()
+            ->whereNull('business_id')
+            ->first();
+
+        if ($setting) {
+            return $setting;
+        }
+
+        return self::withoutEvents(
+            fn () => self::withoutGlobalScopes()->create(['business_id' => null])
+        );
+    }
+
     public static function isReviewsEnabled(): bool
     {
         return self::current()->reviews_enabled ?? true;
@@ -204,7 +219,8 @@ class SystemSetting extends Model
 
     public static function getStripePlatformFeePercent(): ?float
     {
-        $v = self::current()->stripe_platform_fee_percent;
+        $v = self::platform()->stripe_platform_fee_percent;
+
         return $v !== null ? (float) $v : null;
     }
 }

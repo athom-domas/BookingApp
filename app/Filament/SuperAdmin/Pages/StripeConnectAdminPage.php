@@ -5,6 +5,7 @@ namespace App\Filament\SuperAdmin\Pages;
 use App\Models\Business;
 use App\Models\Payment;
 use App\Models\StripeConnectAccount;
+use App\Models\SystemSetting;
 use App\Services\StripeConnectService;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -23,6 +24,12 @@ class StripeConnectAdminPage extends Page
     public bool $problemsOnly = false;
     public bool $withPaymentsOnly = false;
     public bool $feeOverrideOnly = false;
+    public string $globalFeePercent = '0';
+
+    public function mount(): void
+    {
+        $this->globalFeePercent = $this->formatFeePercent($this->getEffectiveGlobalFeePercent());
+    }
 
     private function getPeriodStart(): ?Carbon
     {
@@ -37,7 +44,7 @@ class StripeConnectAdminPage extends Page
 
     public function hasFees(): bool
     {
-        if ((float) config('services.stripe.platform_fee_percent', 0) > 0) {
+        if ($this->getEffectiveGlobalFeePercent() > 0) {
             return true;
         }
         if (Business::whereNotNull('stripe_platform_fee_percent')->where('stripe_platform_fee_percent', '>', 0)->exists()) {
@@ -79,7 +86,7 @@ class StripeConnectAdminPage extends Page
     public function getAccounts()
     {
         $periodStart      = $this->getPeriodStart();
-        $globalFeePercent = config('services.stripe.platform_fee_percent', 2.5);
+        $globalFeePercent = $this->getEffectiveGlobalFeePercent();
 
         $query = StripeConnectAccount::with('business')->latest();
 
@@ -140,6 +147,68 @@ class StripeConnectAdminPage extends Page
         }
 
         return $accounts;
+    }
+
+    public function saveGlobalFee(): void
+    {
+        $data = $this->validate([
+            'globalFeePercent' => ['required', 'numeric', 'min:0', 'max:100'],
+        ]);
+
+        $percent = round((float) $data['globalFeePercent'], 2);
+
+        SystemSetting::platform()->update([
+            'stripe_platform_fee_percent' => $percent,
+        ]);
+
+        $this->globalFeePercent = $this->formatFeePercent($percent);
+
+        Notification::make()
+            ->title('Fee globale salvata')
+            ->success()
+            ->send();
+    }
+
+    public function resetGlobalFee(): void
+    {
+        SystemSetting::platform()->update([
+            'stripe_platform_fee_percent' => null,
+        ]);
+
+        $this->globalFeePercent = $this->formatFeePercent($this->getEnvGlobalFeePercent());
+
+        Notification::make()
+            ->title('Fee globale ripristinata da env')
+            ->success()
+            ->send();
+    }
+
+    public function hasCustomGlobalFeePercent(): bool
+    {
+        return SystemSetting::platform()->stripe_platform_fee_percent !== null;
+    }
+
+    public function getEffectiveGlobalFeePercent(): float
+    {
+        return SystemSetting::getStripePlatformFeePercent()
+            ?? $this->getEnvGlobalFeePercent();
+    }
+
+    public function getGlobalFeeSourceLabel(): string
+    {
+        return $this->hasCustomGlobalFeePercent()
+            ? 'personalizzata'
+            : 'env STRIPE_PLATFORM_FEE_PERCENT';
+    }
+
+    private function getEnvGlobalFeePercent(): float
+    {
+        return (float) config('services.stripe.platform_fee_percent', 0);
+    }
+
+    private function formatFeePercent(float $percent): string
+    {
+        return rtrim(rtrim(number_format($percent, 2, '.', ''), '0'), '.');
     }
 
     public function syncAccount(int $id): void
