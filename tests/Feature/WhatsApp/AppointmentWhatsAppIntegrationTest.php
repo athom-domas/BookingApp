@@ -83,9 +83,10 @@ it('does not send whatsapp when notifications disabled', function () {
 
 it('does not crash on appointment without customer', function () {
     $appointment = makeWaEventAppointment();
-    $appointment->updateQuietly(['user_id' => null]);
+    $appointment->setAttribute('user_id', null);
 
-    AppointmentConfirmed::dispatch($appointment->fresh());
+    app(\App\Listeners\SendWhatsAppAppointmentNotification::class)
+        ->handle(new AppointmentConfirmed($appointment));
 
     Queue::assertNotPushed(SendWhatsAppNotificationJob::class);
 });
