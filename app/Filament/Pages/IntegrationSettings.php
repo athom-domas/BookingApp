@@ -152,6 +152,19 @@ class IntegrationSettings extends Page
                             ->label('AI abilitata')
                             ->content(fn () => IntegrationSetting::current()->whatsapp_ai_enabled ? 'sì' : 'no'),
 
+                        Placeholder::make('status_notifications_enabled')
+                            ->label('Notifiche WhatsApp (gestite dalla piattaforma)')
+                            ->content(fn () => IntegrationSetting::current()->whatsapp_notifications_enabled ? 'abilitate' : 'non abilitate'),
+
+                        Placeholder::make('status_monthly_usage')
+                            ->label('Messaggi notifica questo mese')
+                            ->content(function () {
+                                $s     = IntegrationSetting::current();
+                                $limit = $s->whatsapp_monthly_limit ? (string) $s->whatsapp_monthly_limit : '∞';
+
+                                return ($s->whatsapp_monthly_sent ?? 0) . ' / ' . $limit;
+                            }),
+
                         Placeholder::make('status_last_outbound')
                             ->label('Ultimo messaggio inviato')
                             ->content(function () {

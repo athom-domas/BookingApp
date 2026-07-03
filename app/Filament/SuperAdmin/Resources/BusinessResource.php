@@ -204,6 +204,47 @@ class BusinessResource extends Resource
                             ->send();
                     }),
 
+                Action::make('whatsappNotifications')
+                    ->label('WhatsApp')
+                    ->icon('heroicon-o-chat-bubble-left-right')
+                    ->color('gray')
+                    ->fillForm(function (Business $record): array {
+                        $setting = $record->integrationSetting;
+
+                        return [
+                            'whatsapp_notifications_enabled' => (bool) $setting?->whatsapp_notifications_enabled,
+                            'whatsapp_monthly_limit'         => $setting?->whatsapp_monthly_limit,
+                        ];
+                    })
+                    ->form([
+                        \Filament\Forms\Components\Toggle::make('whatsapp_notifications_enabled')
+                            ->label('Notifiche WhatsApp abilitate'),
+                        \Filament\Forms\Components\TextInput::make('whatsapp_monthly_limit')
+                            ->label('Limite messaggi mensile')
+                            ->numeric()
+                            ->minValue(0)
+                            ->placeholder('Illimitato'),
+                        \Filament\Forms\Components\Placeholder::make('sent_info')
+                            ->label('Inviati questo mese')
+                            ->content(fn (Business $record): string => (string) ($record->integrationSetting?->whatsapp_monthly_sent ?? 0)),
+                    ])
+                    ->action(function (Business $record, array $data): void {
+                        \App\Models\IntegrationSetting::withoutGlobalScopes()->updateOrCreate(
+                            ['business_id' => $record->id],
+                            [
+                                'whatsapp_notifications_enabled' => (bool) ($data['whatsapp_notifications_enabled'] ?? false),
+                                'whatsapp_monthly_limit'         => filled($data['whatsapp_monthly_limit'] ?? null)
+                                    ? (int) $data['whatsapp_monthly_limit']
+                                    : null,
+                            ]
+                        );
+
+                        Notification::make()
+                            ->title('Impostazioni WhatsApp aggiornate.')
+                            ->success()
+                            ->send();
+                    }),
+
                 Action::make('storefront')
                     ->label('Vetrina')
                     ->icon('heroicon-o-arrow-top-right-on-square')
