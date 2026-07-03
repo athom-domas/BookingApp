@@ -3,6 +3,7 @@
 use App\Filament\Resources\StaffResource\Pages\ManageAvailability;
 use App\Models\AvailabilityRule;
 use App\Models\Business;
+use App\Models\SalonProfile;
 use App\Models\User;
 use Filament\Facades\Filament;
 use Spatie\Permission\Models\Role;
@@ -14,6 +15,15 @@ beforeEach(function () {
 
     $this->business = Business::withoutGlobalScopes()->firstOrFail();
     Filament::setTenant($this->business, isQuiet: true);
+
+    $allDay = ['type' => 'continuous', 'open_time' => '08:00', 'close_time' => '20:00'];
+    SalonProfile::updateOrCreate(
+        ['business_id' => $this->business->id],
+        ['name' => 'Test Salon', 'opening_hours' => [
+            'mon' => $allDay, 'tue' => $allDay, 'wed' => $allDay,
+            'thu' => $allDay, 'fri' => $allDay, 'sat' => $allDay, 'sun' => $allDay,
+        ]]
+    );
 
     $this->admin = User::factory()->create(['business_id' => $this->business->id])->assignRole('admin');
     $this->admin->businesses()->attach($this->business->id);

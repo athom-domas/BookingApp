@@ -7,11 +7,15 @@ use App\Models\Payment;
 use App\Services\PaymentService;
 use Illuminate\Support\Facades\Queue;
 use Mockery\MockInterface;
+use Spatie\Permission\Models\Role;
 use Stripe\PaymentIntent;
 use Stripe\Refund;
 use Stripe\StripeClient;
 
 beforeEach(function () {
+    Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+    Role::firstOrCreate(['name' => 'staff', 'guard_name' => 'web']);
+    Role::firstOrCreate(['name' => 'customer', 'guard_name' => 'web']);
     Queue::fake();
     $this->makePaymentService = function (MockInterface $mockStripe): PaymentService {
         return new PaymentService($mockStripe);

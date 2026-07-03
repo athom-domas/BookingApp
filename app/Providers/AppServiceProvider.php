@@ -28,8 +28,12 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(\App\Services\NotificationService::class, function () {
             $sid   = \App\Models\IntegrationSetting::getTwilioSid()   ?? config('services.twilio.sid');
             $token = \App\Models\IntegrationSetting::getTwilioToken() ?? config('services.twilio.token');
-            $client = new \Twilio\Rest\Client($sid, $token);
-            return new \App\Services\NotificationService($client->messages);
+            $messages = null;
+            if ($sid && $token) {
+                $client = new \Twilio\Rest\Client($sid, $token);
+                $messages = $client->messages;
+            }
+            return new \App\Services\NotificationService($messages);
         });
 
         $this->app->bind(\App\Services\GoogleCalendarService::class, function () {

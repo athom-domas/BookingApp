@@ -15,10 +15,9 @@ beforeEach(function () {
     Role::firstOrCreate(['name' => 'customer', 'guard_name' => 'web']);
 
     SystemSetting::create([
-        'id'                       => 1,
-        'business_id'              => 1,
+        'business_id'              => app('current_business_id'),
         'slot_generation_weeks'    => 4,
-        'slot_granularity_minutes' => 30,
+        'slot_granularity_minutes' => 15,
         'hold_duration_minutes'    => 5,
         'hold_extension_minutes'   => 5,
         'timezone'                 => 'Europe/Rome',

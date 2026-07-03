@@ -165,12 +165,13 @@ it('accredita usando il ratio corretto', function () {
 });
 
 it('isola i punti per business', function () {
+    $realBusinessId = app('current_business_id');
     SystemSetting::current()->update(['loyalty_enabled' => true, 'loyalty_points_per_euro' => 1]);
     $this->service->accrue($this->appointment, 50.0);
 
     app()->instance('current_business_id', 999);
     expect(LoyaltyAccount::where('user_id', $this->customer->id)->exists())->toBeFalse();
 
-    app()->instance('current_business_id', 1);
+    app()->instance('current_business_id', $realBusinessId);
     expect(LoyaltyAccount::where('user_id', $this->customer->id)->first()->points)->toBe(50);
 });
