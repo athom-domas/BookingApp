@@ -33,3 +33,7 @@ Schedule::call(function () {
 Schedule::call(function () {
     FollowUpReminder::stale()->update(['status' => 'pending', 'processing_at' => null]);
 })->hourly()->description('Recover stale follow-up reminders');
+
+Schedule::command('whatsapp:reset-monthly-counters')
+    ->monthlyOn(1, '00:00')
+    ->description('Reset monthly WhatsApp notification counters');
