@@ -18,7 +18,7 @@ class AppointmentRescheduleService
         Carbon $newDateTime,
         User $actor,
     ): Appointment {
-        return DB::transaction(function () use ($appointment, $newDateTime, $actor): Appointment {
+        $updated = DB::transaction(function () use ($appointment, $newDateTime, $actor): Appointment {
             $appointment = Appointment::withoutGlobalScope('business')
                 ->where('id', $appointment->id)
                 ->lockForUpdate()
@@ -97,6 +97,25 @@ class AppointmentRescheduleService
 
             return $appointment->fresh();
         });
+
+        $this->notifyReschedule($updated);
+
+        return $updated;
+    }
+
+    private function notifyReschedule(Appointment $appointment): void
+    {
+        if (! $appointment->user_id || ! $appointment->staff_id) {
+            return;
+        }
+
+        $appointment->loadMissing('user.preferences', 'staff');
+
+        app(WhatsAppNotificationService::class)->dispatchForAppointment(
+            $appointment,
+            'appointment_rescheduled',
+            WhatsAppNotificationService::appointmentParams($appointment),
+        );
     }
 
     private function durationFor(Appointment $appointment): int

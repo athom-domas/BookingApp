@@ -14,8 +14,10 @@ use App\Models\IntegrationSetting;
 use App\Models\User;
 use App\Models\UserPreference;
 use App\Services\NotificationService;
-use App\Services\WhatsAppService;
+use App\Jobs\SendWhatsAppNotificationJob;
+use App\Services\WhatsAppNotificationService;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Queue;
 use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
@@ -27,7 +29,7 @@ beforeEach(function () {
 
 // --- SendAppointmentReminder ---
 
-it('SendAppointmentReminder sends email to customer', function () {
+it('SendAppointmentReminder sends email when whatsapp gates block', function () {
     $appointment = Appointment::factory()->create();
     $reminder = AppointmentReminder::factory()->create([
         'appointment_id' => $appointment->id,
@@ -35,10 +37,7 @@ it('SendAppointmentReminder sends email to customer', function () {
         'status'         => 'pending',
     ]);
 
-    $mockWhatsApp = $this->mock(WhatsAppService::class);
-    $mockWhatsApp->shouldNotReceive('sendTemplate');
-
-    (new SendAppointmentReminder($reminder))->handle($mockWhatsApp);
+    (new SendAppointmentReminder($reminder))->handle(app(WhatsAppNotificationService::class));
 
     Mail::assertSent(AppointmentReminderMail::class, fn ($mail) =>
         $mail->appointment->id === $appointment->id
@@ -47,7 +46,9 @@ it('SendAppointmentReminder sends email to customer', function () {
     expect($reminder->fresh()->sent_at)->not->toBeNull();
 });
 
-it('SendAppointmentReminder sends WhatsApp when user has whatsapp preference enabled', function () {
+it('SendAppointmentReminder dispatches whatsapp job when enabled', function () {
+    Queue::fake();
+
     $user = User::factory()->create();
     UserPreference::factory()->create([
         'user_id'              => $user->id,
@@ -60,39 +61,31 @@ it('SendAppointmentReminder sends WhatsApp when user has whatsapp preference ena
         'status'         => 'pending',
     ]);
 
-    IntegrationSetting::current()->update([
-        'meta_whatsapp_token'    => 'test-token',
-        'meta_whatsapp_phone_id' => 'test-phone-id',
-    ]);
+    IntegrationSetting::withoutGlobalScope('business')->updateOrCreate(
+        ['business_id' => $appointment->business_id],
+        [
+            'whatsapp_notifications_enabled' => true,
+            'meta_whatsapp_token'            => 'test-token',
+            'meta_whatsapp_phone_id'         => 'test-phone-id',
+        ],
+    );
 
-    $mockWhatsApp = $this->mock(WhatsAppService::class);
-    $mockWhatsApp->shouldReceive('sendTemplate')
-        ->once()
-        ->andReturn(true);
+    (new SendAppointmentReminder($reminder))->handle(app(WhatsAppNotificationService::class));
 
-    (new SendAppointmentReminder($reminder))->handle($mockWhatsApp);
+    Queue::assertPushed(SendWhatsAppNotificationJob::class);
+    Mail::assertNotSent(AppointmentReminderMail::class);
+    expect($reminder->fresh()->status)->toBe('sent');
 });
 
-it('SendAppointmentReminder WhatsApp exception propagates', function () {
-    $user = User::factory()->create();
-    UserPreference::factory()->create([
-        'user_id'              => $user->id,
-        'notification_channel' => 'whatsapp',
-        'phone_number'         => '+39123456789',
-    ]);
-    $appointment = Appointment::factory()->create(['user_id' => $user->id]);
+it('SendAppointmentReminder exception propagates to failed hook path', function () {
+    $appointment = Appointment::factory()->create();
     $reminder = AppointmentReminder::factory()->create([
         'appointment_id' => $appointment->id,
         'status'         => 'pending',
     ]);
 
-    IntegrationSetting::current()->update([
-        'meta_whatsapp_token'    => 'test-token',
-        'meta_whatsapp_phone_id' => 'test-phone-id',
-    ]);
-
-    $mockWhatsApp = $this->mock(WhatsAppService::class);
-    $mockWhatsApp->shouldReceive('sendTemplate')
+    $mockWhatsApp = $this->mock(WhatsAppNotificationService::class);
+    $mockWhatsApp->shouldReceive('dispatchForAppointment')
         ->andThrow(new \Exception('WhatsApp error'));
 
     expect(fn () => (new SendAppointmentReminder($reminder))->handle($mockWhatsApp))
@@ -107,10 +100,7 @@ it('SendAppointmentReminder is a no-op when already sent', function () {
         'status'         => 'sent',
     ]);
 
-    $mockWhatsApp = $this->mock(WhatsAppService::class);
-    $mockWhatsApp->shouldNotReceive('sendTemplate');
-
-    (new SendAppointmentReminder($reminder))->handle($mockWhatsApp);
+    (new SendAppointmentReminder($reminder))->handle(app(WhatsAppNotificationService::class));
 
     Mail::assertNothingSent();
 });

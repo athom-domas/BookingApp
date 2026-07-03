@@ -95,17 +95,4 @@ class WhatsAppService
 
         return $response->json('messages.0.id', '');
     }
-
-    public function sendTemplateDefault(string $phone, array $parameters): bool
-    {
-        $setting  = IntegrationSetting::current();
-        $template = $setting->meta_whatsapp_template ?? 'appointment_reminder';
-        $businessId = $setting->business_id;
-        if (! $businessId) {
-            Log::warning('sendTemplateDefault called without current_business_id binding');
-            return false;
-        }
-
-        return $this->sendTemplate($phone, $template, 'it', 'UTILITY', $parameters, $businessId) !== null;
-    }
 }
