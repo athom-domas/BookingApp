@@ -59,6 +59,7 @@ class WhatsAppService
             return false;
         }
 
+        Log::info('WhatsApp sendText ok', ['to' => $phone, 'status' => $response->status(), 'wamid' => $response->json('messages.0.id')]);
         return true;
     }
 

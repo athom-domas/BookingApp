@@ -30,7 +30,10 @@ class WhatsAppWebhookController extends Controller
         $rawBody = $request->getContent();
         $this->verifySignature($rawBody, $request->header('X-Hub-Signature-256', ''));
 
-        $payload = $request->all();
+        $payload = $request->json()->all();
+        if (empty($payload)) {
+            $payload = json_decode($rawBody, true) ?? [];
+        }
 
         foreach (data_get($payload, 'entry', []) as $entry) {
             foreach (data_get($entry, 'changes', []) as $change) {
@@ -84,7 +87,7 @@ class WhatsAppWebhookController extends Controller
             return null;
         }
 
-        return IntegrationSetting::where('business_id', $businessId)->first();
+        return IntegrationSetting::withoutGlobalScope('business')->where('business_id', $businessId)->first();
     }
 
     private function saveStatus(array $statusData): void

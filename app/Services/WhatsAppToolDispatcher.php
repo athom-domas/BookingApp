@@ -239,7 +239,7 @@ class WhatsAppToolDispatcher
             [
                 'name'         => 'list_services',
                 'description'  => 'Elenca i servizi attivi del salone.',
-                'input_schema' => ['type' => 'object', 'properties' => [], 'required' => []],
+                'input_schema' => ['type' => 'object', 'properties' => (object)[], 'required' => []],
             ],
             [
                 'name'         => 'list_staff_for_service',
@@ -266,12 +266,12 @@ class WhatsAppToolDispatcher
             [
                 'name'         => 'book_appointment',
                 'description'  => 'Prenota lo slot confermato dal cliente. Usare solo quando awaiting_confirmation=true e il cliente ha confermato.',
-                'input_schema' => ['type' => 'object', 'properties' => [], 'required' => []],
+                'input_schema' => ['type' => 'object', 'properties' => (object)[], 'required' => []],
             ],
             [
                 'name'         => 'get_next_appointment',
                 'description'  => 'Recupera il prossimo appuntamento del cliente.',
-                'input_schema' => ['type' => 'object', 'properties' => [], 'required' => []],
+                'input_schema' => ['type' => 'object', 'properties' => (object)[], 'required' => []],
             ],
             [
                 'name'         => 'request_human_handoff',

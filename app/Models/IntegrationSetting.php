@@ -109,7 +109,7 @@ class IntegrationSetting extends Model
 
     public static function findByPhoneNumberId(string $phoneNumberId): ?self
     {
-        return self::where('meta_whatsapp_phone_id', $phoneNumberId)->first();
+        return self::withoutGlobalScope('business')->where('meta_whatsapp_phone_id', $phoneNumberId)->first();
     }
 
     public function hasWhatsAppAiEnabled(): bool

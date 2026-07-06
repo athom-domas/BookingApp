@@ -112,7 +112,7 @@ class WhatsAppConversationService
         ]);
 
         if (! $response->successful()) {
-            throw new \RuntimeException('Claude API error: ' . $response->status());
+            throw new \RuntimeException('Claude API error: ' . $response->status() . ' — ' . $response->body());
         }
 
         $content    = $response->json('content', []);
