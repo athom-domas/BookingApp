@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Exceptions\BookingException;
-use App\Jobs\SendCancellationNotification;
 use App\Jobs\SyncGoogleCalendar;
 use App\Models\Appointment;
 use App\Models\AppointmentReminder;
@@ -150,7 +149,6 @@ class AppointmentService
         $this->cancelPendingPaymentIfAny($appointment);
         $this->refundIfPaid($appointment);
 
-        SendCancellationNotification::dispatch($appointment);
         SyncGoogleCalendar::dispatch($appointment, 'delete');
     }
 

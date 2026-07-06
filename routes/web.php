@@ -17,6 +17,8 @@ use App\Http\Controllers\Public\AppointmentActionController;
 use App\Http\Controllers\StripeWebhookController;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/health', fn () => response()->json(['status' => 'ok']));
+
 Route::get('/whatsapp/webhook', [\App\Http\Controllers\WhatsAppWebhookController::class, 'verify']);
 Route::post('/whatsapp/webhook', [\App\Http\Controllers\WhatsAppWebhookController::class, 'handle']);
 

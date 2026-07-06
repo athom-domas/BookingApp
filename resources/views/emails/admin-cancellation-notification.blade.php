@@ -1,7 +1,7 @@
 @extends('emails.layouts.base')
 
 @section('title')Prenotazione cancellata @endsection
-@section('badge')Admin @endsection
+@section('badge'){{ $badge ?? 'Admin' }} @endsection
 @section('skip-greeting') @endsection
 
 @section('body')

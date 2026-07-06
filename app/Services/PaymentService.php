@@ -265,7 +265,7 @@ class PaymentService
         }
 
         if (! $alreadyCompleted && $payment->payment_method === 'stripe') {
-            AppointmentConfirmed::dispatch($appointment->fresh());
+            AppointmentConfirmed::dispatch($appointment->fresh(), byAdmin: false);
         }
     }
 

@@ -2,6 +2,7 @@
 
 namespace App\Observers;
 
+use App\Events\AppointmentCancelled;
 use App\Jobs\SendReviewRequestJob;
 use App\Models\Appointment;
 use App\Models\FollowUpReminder;
@@ -33,6 +34,8 @@ class AppointmentObserver
         }
 
         if ($appointment->status === 'cancelled') {
+            $byAdmin = auth()->check() && auth()->user()?->isAdmin();
+            AppointmentCancelled::dispatch($appointment->fresh(), null, $byAdmin);
             $this->reverse($appointment);
         } elseif ($appointment->status === 'completed') {
             $this->accrue($appointment);

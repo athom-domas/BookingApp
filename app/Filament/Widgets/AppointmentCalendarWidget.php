@@ -35,6 +35,10 @@ class AppointmentCalendarWidget extends FullCalendarWidget
     public array $filterService  = [];
     public array $filterCustomer = [];
 
+    public ?int    $pendingRescheduleId      = null;
+    public ?string $pendingRescheduleStart   = null;
+    public ?string $pendingRescheduleOldStart = null;
+
     protected function headerActions(): array
     {
         return [];
@@ -391,38 +395,14 @@ class AppointmentCalendarWidget extends FullCalendarWidget
             return true;
         }
 
-        try {
-            app(AppointmentRescheduleService::class)->reschedule(
-                $appointment,
-                Carbon::parse($event['start']),
-                $user,
-            );
-        } catch (RescheduleConflictException $e) {
-            Notification::make()
-                ->title($e->getMessage())
-                ->danger()
-                ->send();
+        $this->pendingRescheduleId       = $appointment->id;
+        $this->pendingRescheduleStart    = $event['start'];
+        $this->pendingRescheduleOldStart = $oldEvent['start'];
 
-            // saade/filament-fullcalendar v4: return true → JS chiama revert(), false → mantiene posizione
-            return true;
-        }
+        $this->mountAction('confirmReschedule');
 
-        Notification::make()
-            ->title('Appuntamento spostato alle ' . Carbon::parse($event['start'])->format('H:i'))
-            ->success()
-            ->actions([
-                Action::make('undo')
-                    ->label('Annulla')
-                    ->dispatch('undo-reschedule', [
-                        'appointmentId'    => $appointment->id,
-                        'previousDateTime' => $oldEvent['start'],
-                    ]),
-            ])
-            ->send();
-
-        $this->dispatch('filament-fullcalendar--refresh');
-
-        return false;
+        // Revert drag: l'action aggiorna la posizione dopo conferma via refresh
+        return true;
     }
 
     #[On('undo-reschedule')]
@@ -474,6 +454,57 @@ class AppointmentCalendarWidget extends FullCalendarWidget
         }
 
         $this->dispatch('filament-fullcalendar--refresh');
+    }
+
+    public function confirmRescheduleAction(): Action
+    {
+        return Action::make('confirmReschedule')
+            ->label('Sposta appuntamento')
+            ->modalHeading('Sposta appuntamento')
+            ->modalDescription('Il cliente riceverà una notifica con il nuovo orario.')
+            ->modalSubmitActionLabel('Conferma')
+            ->modalCancelActionLabel('Annulla')
+            ->action(function (): void {
+                $user = Filament::auth()->user();
+
+                $appointment = Appointment::where('id', $this->pendingRescheduleId)
+                    ->where('business_id', $user?->business_id)
+                    ->first();
+
+                if (! $appointment) {
+                    return;
+                }
+
+                try {
+                    app(AppointmentRescheduleService::class)->reschedule(
+                        $appointment,
+                        Carbon::parse($this->pendingRescheduleStart),
+                        $user,
+                    );
+                } catch (RescheduleConflictException $e) {
+                    Notification::make()
+                        ->title($e->getMessage())
+                        ->danger()
+                        ->send();
+
+                    return;
+                }
+
+                Notification::make()
+                    ->title('Appuntamento spostato alle ' . Carbon::parse($this->pendingRescheduleStart)->format('H:i'))
+                    ->success()
+                    ->actions([
+                        Action::make('undo')
+                            ->label('Annulla')
+                            ->dispatch('undo-reschedule', [
+                                'appointmentId'    => $appointment->id,
+                                'previousDateTime' => $this->pendingRescheduleOldStart,
+                            ]),
+                    ])
+                    ->send();
+
+                $this->dispatch('filament-fullcalendar--refresh');
+            });
     }
 
     public function changeStatusAction(): Action
@@ -539,6 +570,11 @@ class AppointmentCalendarWidget extends FullCalendarWidget
                             ])
                             ->in(['pending', 'confirmed', 'completed', 'cancelled'])
                             ->required()
+                            ->live()
+                            ->hint(fn (Get $get) => $get('status') === 'cancelled'
+                                ? 'Il cliente riceverà una notifica di cancellazione della prenotazione.'
+                                : null)
+                            ->hintColor('warning')
                             ->rules(fn(Get $get): array => [
                                 function (string $attribute, mixed $value, \Closure $fail) use ($get): void {
                                     if (

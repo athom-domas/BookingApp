@@ -80,7 +80,6 @@ class WhatsAppService
                 'template'          => [
                     'name'       => $templateName,
                     'language'   => ['code' => $language],
-                    'category'   => $category,
                     'components' => [
                         [
                             'type'       => 'body',

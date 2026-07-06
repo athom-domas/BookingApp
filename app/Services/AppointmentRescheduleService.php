@@ -7,7 +7,9 @@ use App\Models\Appointment;
 use App\Models\User;
 use App\Services\Booking\SlotCalculationService;
 use Carbon\Carbon;
+use App\Mail\AdminRescheduleNotificationMail;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 class AppointmentRescheduleService
 {
@@ -98,12 +100,12 @@ class AppointmentRescheduleService
             return $appointment->fresh();
         });
 
-        $this->notifyReschedule($updated);
+        $this->notifyReschedule($updated, $actor);
 
         return $updated;
     }
 
-    private function notifyReschedule(Appointment $appointment): void
+    private function notifyReschedule(Appointment $appointment, User $actor): void
     {
         if (! $appointment->user_id || ! $appointment->staff_id) {
             return;
@@ -111,11 +113,31 @@ class AppointmentRescheduleService
 
         $appointment->loadMissing('user.preferences', 'staff');
 
-        app(WhatsAppNotificationService::class)->dispatchForAppointment(
-            $appointment,
-            'appointment_rescheduled',
-            WhatsAppNotificationService::appointmentParams($appointment),
-        );
+        $byAdmin = $actor->isAdmin() || $actor->isStaff();
+
+        if ($byAdmin) {
+            $channel = $appointment->user?->preferences?->notification_channel ?? 'email';
+
+            if ($channel === 'whatsapp') {
+                app(WhatsAppNotificationService::class)->dispatchForAppointment(
+                    $appointment,
+                    'appointment_rescheduled',
+                    WhatsAppNotificationService::appointmentParams($appointment),
+                );
+            } else {
+                Mail::send(new \App\Mail\AppointmentRescheduleMail($appointment));
+            }
+        } else {
+            $admins = User::role('admin')
+                ->whereHas('businesses', fn ($q) => $q->where('businesses.id', $appointment->business_id))
+                ->get();
+
+            foreach ($admins as $admin) {
+                if ($admin->receive_email_notifications) {
+                    Mail::to($admin->email)->send(new AdminRescheduleNotificationMail($appointment));
+                }
+            }
+        }
     }
 
     private function durationFor(Appointment $appointment): int

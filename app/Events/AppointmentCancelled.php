@@ -14,5 +14,6 @@ class AppointmentCancelled
     public function __construct(
         public readonly Appointment $appointment,
         public readonly ?string $reason = null,
+        public readonly bool $byAdmin = false,
     ) {}
 }

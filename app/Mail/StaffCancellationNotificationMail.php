@@ -1,0 +1,39 @@
+<?php
+
+namespace App\Mail;
+
+use App\Models\Appointment;
+use App\Models\Payment;
+use App\Models\User;
+use Illuminate\Bus\Queueable;
+use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Content;
+use Illuminate\Mail\Mailables\Envelope;
+use Illuminate\Queue\SerializesModels;
+
+class StaffCancellationNotificationMail extends Mailable
+{
+    use Queueable, SerializesModels;
+
+    public function __construct(
+        public readonly Appointment $appointment,
+        public readonly User $recipient,
+        public readonly ?Payment $payment,
+    ) {}
+
+    public function envelope(): Envelope
+    {
+        return new Envelope(
+            to:      $this->recipient->email,
+            subject: 'Prenotazione cancellata: ' . $this->appointment->services_label,
+        );
+    }
+
+    public function content(): Content
+    {
+        return new Content(
+            view: 'emails.admin-cancellation-notification',
+            with: ['noGreeting' => true, 'badge' => 'Staff'],
+        );
+    }
+}

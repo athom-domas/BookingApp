@@ -163,7 +163,7 @@ class BookingController extends Controller
                     ->where('status', 'pending')
                     ->delete();
                 $pendingAppointment->update(['status' => 'confirmed']);
-                AppointmentConfirmed::dispatch($pendingAppointment->fresh());
+                AppointmentConfirmed::dispatch($pendingAppointment->fresh(), byAdmin: false);
 
                 return redirect()
                     ->route('portal.appointments.show', $pendingAppointment)

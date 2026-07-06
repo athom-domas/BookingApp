@@ -11,5 +11,8 @@ class AppointmentConfirmed
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public function __construct(public readonly Appointment $appointment) {}
+    public function __construct(
+        public readonly Appointment $appointment,
+        public readonly bool $byAdmin = false,
+    ) {}
 }

@@ -23,6 +23,15 @@ class SendWhatsAppAppointmentNotification
 
         $appointment->loadMissing('user.preferences', 'staff');
 
+        // Notifica il cliente solo quando è l'altra parte ad agire
+        if ($event instanceof AppointmentCancelled && ! $event->byAdmin) {
+            return;
+        }
+
+        if ($event instanceof AppointmentConfirmed && ! $event->byAdmin) {
+            return;
+        }
+
         $template = $event instanceof AppointmentConfirmed
             ? 'appointment_confirmed'
             : 'appointment_cancelled';

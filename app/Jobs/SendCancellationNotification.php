@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Mail\AdminCancellationNotificationMail;
 use App\Mail\AppointmentCancellationMail;
+use App\Mail\StaffCancellationNotificationMail;
 use App\Models\Appointment;
 use App\Models\User;
 use App\Services\NotificationService;
@@ -18,7 +19,10 @@ class SendCancellationNotification implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public function __construct(public readonly Appointment $appointment) {}
+    public function __construct(
+        public readonly Appointment $appointment,
+        public readonly bool $byAdmin = false,
+    ) {}
 
     public function handle(NotificationService $notificationService): void
     {
@@ -26,21 +30,26 @@ class SendCancellationNotification implements ShouldQueue
 
         $appointment = $this->appointment->load('user', 'staff.preferences', 'payment');
 
-        Mail::send(new AppointmentCancellationMail($appointment, $appointment->user));
-
-        $staffPrefs = $appointment->staff->preferences;
-        if ($staffPrefs?->receive_sms_reminders && $staffPrefs->phone_number) {
-            $message = "Cancelled: {$appointment->services_label} on {$appointment->scheduled_date->format('d/m/Y H:i')}";
-            $notificationService->sendSms($staffPrefs->phone_number, $message);
-        }
-
         $payment = $appointment->payment;
-        $admins = User::role('admin')
-            ->whereHas('businesses', fn ($q) => $q->where('businesses.id', $this->appointment->business_id))
-            ->get();
-        foreach ($admins as $admin) {
-            if ($admin->receive_email_notifications) {
-                Mail::send(new AdminCancellationNotificationMail($appointment, $admin, $payment));
+
+        if ($this->byAdmin) {
+            // Admin ha cancellato: notifica il cliente
+            Mail::send(new AppointmentCancellationMail($appointment, $appointment->user));
+        } else {
+            // Cliente ha cancellato: notifica gli admin
+            $admins = User::role('admin')
+                ->whereHas('businesses', fn ($q) => $q->where('businesses.id', $this->appointment->business_id))
+                ->get();
+            foreach ($admins as $admin) {
+                if ($admin->receive_email_notifications) {
+                    Mail::send(new AdminCancellationNotificationMail($appointment, $admin, $payment));
+                }
+            }
+
+            // Notifica lo staff assegnato se ha le notifiche email attive
+            $staff = $appointment->staff;
+            if ($staff && $staff->receive_email_notifications && ! $admins->contains('id', $staff->id)) {
+                Mail::send(new StaffCancellationNotificationMail($appointment, $staff, $payment));
             }
         }
     }

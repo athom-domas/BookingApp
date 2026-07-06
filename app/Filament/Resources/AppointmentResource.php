@@ -177,7 +177,11 @@ class AppointmentResource extends Resource
                         )
                         ->validationMessages([
                             'required' => 'Lo stato è obbligatorio.',
-                        ]),
+                        ])
+                        ->hint(fn (Get $get) => $get('status') === 'cancelled'
+                            ? 'Il cliente riceverà una notifica di cancellazione della prenotazione.'
+                            : null)
+                        ->hintColor('warning'),
 
                     Hidden::make('has_completed_payment')
                         ->dehydrated(false),

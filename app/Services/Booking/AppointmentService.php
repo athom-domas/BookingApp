@@ -2,7 +2,6 @@
 
 namespace App\Services\Booking;
 
-use App\Events\AppointmentCancelled;
 use App\Events\AppointmentConfirmed;
 use App\Jobs\SyncGoogleCalendar;
 use App\Models\Appointment;
@@ -55,8 +54,6 @@ class AppointmentService
             }
 
             $appointment->update(['status' => 'cancelled']);
-
-            AppointmentCancelled::dispatch($appointment, $reason);
         });
     }
 
@@ -145,7 +142,7 @@ class AppointmentService
         });
 
         if ($confirmImmediately) {
-            AppointmentConfirmed::dispatch($appointment);
+            AppointmentConfirmed::dispatch($appointment, byAdmin: false);
         }
 
         return $appointment;
