@@ -62,6 +62,10 @@ Route::post('/r/{appointment}/disdici', [AppointmentActionController::class, 'pr
     ->name('appointment.public.cancel.post')
     ->middleware('signed');
 
+Route::get('/r/{appointment}/paga', [AppointmentActionController::class, 'paymentPortal'])
+    ->name('appointment.public.payment')
+    ->middleware('signed');
+
 Route::get('/follow-up-reminders/unsubscribe/{user}', \App\Http\Controllers\FollowUpReminderUnsubscribeController::class)
     ->name('follow-up-reminders.unsubscribe')
     ->middleware('signed');

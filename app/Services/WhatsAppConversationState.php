@@ -85,6 +85,7 @@ class WhatsAppConversationState
             'messages'                          => [],
             'summary'                           => null,
             'draft'                             => [
+                'service_ids'   => [],
                 'service_id'    => null,
                 'staff_id'      => null,
                 'date'          => null,

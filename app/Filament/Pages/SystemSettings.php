@@ -120,6 +120,7 @@ class SystemSettings extends Page
                                 'online'   => 'Solo online (Stripe)',
                                 'in_salon' => 'Solo in salone',
                             ])
+                            ->default('in_salon')
                             ->required(),
                     ]),
 

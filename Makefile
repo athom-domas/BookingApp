@@ -23,7 +23,8 @@ REQUIRED_STAGING_ENV = APP_KEY APP_URL APP_BASE_DOMAIN DB_DATABASE DB_USERNAME D
         deploy-staging-code deploy-staging-vendor deploy-lock-staging \
         deploy-unlock-staging deploy-down-staging deploy-up-staging \
         deploy-prepare-staging deploy-staging-public deploy-staging-finalize \
-        deploy-health-staging staging-reset-db
+        deploy-health-staging staging-reset-db \
+        wa-test wa-reset wa-logs
 
 up:
 	docker compose up -d
@@ -271,3 +272,24 @@ deploy-health-staging:
 staging-reset-db:
 	ssh $(SSH_HOST) "set -e; cd $(STAGING_PATH); $(SSH_PHP) artisan migrate:fresh --force --seeder=StagingSeeder; $(SSH_PHP) artisan optimize:clear; $(SSH_PHP) artisan config:cache; $(SSH_PHP) artisan route:cache; $(SSH_PHP) artisan view:cache"
 	@echo "Reset database staging completato."
+
+# ── WhatsApp test ─────────────────────────────────────────────────────────────
+# Esempi:
+#   make wa-test MSG="taglio classico sabato"
+#   make wa-test MSG="sì confermo" ENV=prod
+#   make wa-test MSG="ciao" PHONE=393123456789 NAME=Mario
+#   make wa-reset
+#   make wa-logs MSG="voglio prenotare"
+
+WA_ENV  ?= staging
+WA_PHONE ?= 393298826230
+WA_NAME  ?= Daniele
+
+wa-test:
+	@./scripts/wa-test.sh "$(WA_ENV)" "$(MSG)" --phone "$(WA_PHONE)" --name "$(WA_NAME)"
+
+wa-reset:
+	@./scripts/wa-test.sh staging --reset --phone "$(WA_PHONE)"
+
+wa-logs:
+	@./scripts/wa-test.sh "$(WA_ENV)" "$(MSG)" --phone "$(WA_PHONE)" --name "$(WA_NAME)" --logs
