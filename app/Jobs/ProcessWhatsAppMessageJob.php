@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Models\Business;
 use App\Models\WhatsAppMessage;
 use App\Services\WhatsAppConversationService;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -35,11 +36,18 @@ class ProcessWhatsAppMessageJob implements ShouldQueue
         }
 
         if ($message->processed_at !== null) {
-            return; // already processed — idempotent
+            return;
+        }
+
+        $business = Business::find($message->business_id);
+        if (! $business?->canUseFeature('whatsapp_ai')) {
+            Log::info('ProcessWhatsAppMessageJob: business not on plus plan, skipping', [
+                'business_id' => $message->business_id,
+            ]);
+            return;
         }
 
         app()->instance('current_business_id', $message->business_id);
-
         $service->handle($this->messageId, $message->business_id);
     }
 

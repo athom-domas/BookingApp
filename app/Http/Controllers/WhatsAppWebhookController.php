@@ -2,10 +2,13 @@
 namespace App\Http\Controllers;
 
 use App\Jobs\ProcessWhatsAppMessageJob;
+use App\Models\Business;
 use App\Models\IntegrationSetting;
 use App\Models\WhatsAppMessage;
 use App\Models\WhatsAppMessageStatus;
 use App\Services\PhoneNormalizer;
+use App\Services\WhatsAppService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
@@ -151,6 +154,23 @@ class WhatsAppWebhookController extends Controller
             'type'             => $messageData['type'] ?? 'text',
             'payload'          => $messageData,
         ]);
+
+        $business = Business::find($setting->business_id);
+
+        if (! $business?->canUseFeature('whatsapp_ai')) {
+            if ($setting->whatsapp_notifications_enabled) {
+                $rawPhone = '+' . ltrim($waId, '+');
+                dispatch(function () use ($setting, $rawPhone) {
+                    app(WhatsAppService::class)->sendTextWithinWindow(
+                        $rawPhone,
+                        'Grazie per il messaggio. Il nostro team ti risponderà al più presto.',
+                        Carbon::now(),
+                        $setting->business_id,
+                    );
+                });
+            }
+            return;
+        }
 
         if (! $setting->hasWhatsAppAiEnabled()) {
             return;
