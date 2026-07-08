@@ -20,7 +20,7 @@ test('billing page renders trial state', function () {
 
     Livewire::test(BillingPage::class)
         ->assertSee('Periodo di prova')
-        ->assertSee('Attiva abbonamento');
+        ->assertSee('Attiva Base');
 });
 
 test('billing page renders expired state', function () {
@@ -33,5 +33,5 @@ test('billing page renders expired state', function () {
 
     Livewire::test(BillingPage::class)
         ->assertSee('Accesso sospeso')
-        ->assertSee('Abbonati ora');
+        ->assertSee('Attiva Plus');
 });

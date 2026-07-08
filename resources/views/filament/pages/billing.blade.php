@@ -60,6 +60,10 @@
                                 Termina il <strong>{{ $business->trial_ends_at->format('d/m/Y') }}</strong>
                                 — {{ $daysLeft }} {{ $daysLeft === 1 ? 'giorno rimasto' : 'giorni rimasti' }}
                             </p>
+                            <p class="text-xs text-amber-600 dark:text-amber-500 mt-1">
+                                Piano pagato: <strong>Base</strong> &nbsp;·&nbsp;
+                                Accesso trial: <strong>Plus</strong> — alla fine del trial resterai su Base se non scegli Plus.
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -81,8 +85,8 @@
                         <x-heroicon-o-check-circle class="w-5 h-5 text-green-600 dark:text-green-400"/>
                     </div>
                     <div>
-                        <p class="font-semibold text-green-900 dark:text-green-100">Piano attivo — BookingApp</p>
-                        <p class="text-sm text-green-700 dark:text-green-400 mt-0.5">€29/mese · IVA esclusa · Cancellazione in qualsiasi momento</p>
+                        <p class="font-semibold text-green-900 dark:text-green-100">Piano attivo — {{ ucfirst($business->plan) }}</p>
+                        <p class="text-sm text-green-700 dark:text-green-400 mt-0.5">Piano {{ ucfirst($business->plan) }} · IVA esclusa · Cancellazione in qualsiasi momento</p>
                     </div>
                 </div>
                 <div class="grid grid-cols-2 sm:grid-cols-{{ $renewalDate ? '3' : '2' }} gap-4 pt-4 border-t border-green-200 dark:border-green-800">
@@ -132,6 +136,58 @@
                     <p class="text-xs text-red-500 dark:text-red-500">Usa il pulsante <strong>Abbonati ora</strong> in alto a destra.</p>
                 @endif
             </div>
+        @endif
+
+        {{-- ═══════════ PIANI ═══════════ --}}
+        @if ($isAdmin)
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            @foreach (['base', 'plus'] as $planKey)
+            @php
+                $planConfig   = config("plans.{$planKey}");
+                $isCurrentPaidPlan = $business->plan === $planKey && $business->subscribed('default');
+                $isEffectivePlan   = $business->effectivePlan() === $planKey;
+                $isPlusPlan        = $planKey === 'plus';
+            @endphp
+            <div class="rounded-xl border {{ $isPlusPlan ? 'border-primary-500 dark:border-primary-400' : 'border-gray-200 dark:border-gray-700' }} bg-white dark:bg-gray-900 p-6 flex flex-col relative">
+                @if ($isCurrentPaidPlan)
+                    <span class="absolute top-4 right-4 inline-flex items-center rounded-full bg-primary-100 dark:bg-primary-900 px-2.5 py-0.5 text-xs font-medium text-primary-800 dark:text-primary-200">Piano attuale</span>
+                @endif
+
+                <div class="mb-4">
+                    <h3 class="text-lg font-bold text-gray-900 dark:text-white">{{ $planConfig['label'] }}</h3>
+                    {{-- Price is defined on the Stripe price object — not duplicated here. --}}
+                </div>
+
+                <ul class="space-y-2 flex-1 mb-6">
+                    @foreach ($planConfig['features'] as $feature)
+                    <li class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                        <x-heroicon-m-check-circle class="w-4 h-4 text-teal-500 shrink-0"/>
+                        {{ $feature }}
+                    </li>
+                    @endforeach
+                </ul>
+
+                @if (in_array($status, ['trial', 'expired']))
+                    <button wire:click="mountAction('subscribe{{ ucfirst($planKey) }}')"
+                            class="w-full rounded-lg px-4 py-2 text-sm font-semibold {{ $isPlusPlan ? 'bg-primary-600 hover:bg-primary-700 text-white' : 'bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-900 dark:text-white' }} transition-colors">
+                        Attiva {{ $planConfig['label'] }}
+                    </button>
+                @elseif ($status === 'active' && !$isCurrentPaidPlan)
+                    @if ($planKey === 'plus')
+                        <button wire:click="mountAction('upgradePlus')"
+                                class="w-full rounded-lg px-4 py-2 text-sm font-semibold bg-primary-600 hover:bg-primary-700 text-white transition-colors">
+                            Passa a Plus
+                        </button>
+                    @else
+                        <button wire:click="mountAction('downgradeBase')"
+                                class="w-full rounded-lg px-4 py-2 text-sm font-semibold bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-900 dark:text-white transition-colors">
+                            Torna a Base
+                        </button>
+                    @endif
+                @endif
+            </div>
+            @endforeach
+        </div>
         @endif
 
         {{-- ═══════════ DETTAGLI + PAGAMENTO (grid) ═══════════ --}}
@@ -205,7 +261,7 @@
                 <div class="mt-4 pt-4 border-t border-gray-100 dark:border-white/5 space-y-2.5">
                     <div class="flex justify-between text-sm">
                         <span class="text-gray-500 dark:text-gray-400">Prossima fattura</span>
-                        <span class="font-medium text-gray-900 dark:text-white">€29,00</span>
+                        {{-- Amount shown on Stripe invoice, not hardcoded here. --}}
                     </div>
                     <div class="flex justify-between text-sm">
                         <span class="text-gray-500 dark:text-gray-400">Data addebito</span>

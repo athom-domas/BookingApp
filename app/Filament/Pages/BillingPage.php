@@ -46,61 +46,147 @@ class BillingPage extends Page
 
     protected function getHeaderActions(): array
     {
-        $business = $this->getBusiness();
-
         if (! Auth::user()?->isAdmin()) {
             return [];
         }
 
-        $status = $business->subscriptionStatus();
+        $business = $this->getBusiness();
+        $status   = $business->subscriptionStatus();
 
-        return match ($status) {
-            'trial', 'expired' => [
-                Action::make('subscribe')
-                    ->label($status === 'trial' ? 'Attiva abbonamento' : 'Abbonati ora — €29/mese')
-                    ->color('primary')
+        return match (true) {
+            in_array($status, ['trial', 'expired']) => [
+                Action::make('subscribeBase')
+                    ->label('Attiva Base')
+                    ->color('gray')
                     ->icon('heroicon-o-credit-card')
-                    ->action(function () use ($business) {
-                        $session = $business->newSubscription('default', config('cashier.price_id'))
-                            ->checkout([
-                                'success_url' => route('filament.admin.pages.abbonamento', ['tenant' => $business->subdomain]) . '?checkout=success',
-                                'cancel_url'  => route('filament.admin.pages.abbonamento', ['tenant' => $business->subdomain]) . '?checkout=cancelled',
-                            ]);
-                        $this->redirect($session->url, navigate: false);
-                    }),
+                    ->action(fn () => $this->checkoutRedirect('base')),
+
+                Action::make('subscribePlus')
+                    ->label('Attiva Plus')
+                    ->color('primary')
+                    ->icon('heroicon-o-rocket-launch')
+                    ->action(fn () => $this->checkoutRedirect('plus')),
             ],
-            'active' => [
+
+            $status === 'active' && $business->plan === 'base' => [
+                Action::make('upgradePlus')
+                    ->label('Passa a Plus')
+                    ->color('primary')
+                    ->icon('heroicon-o-arrow-up-circle')
+                    ->action(fn () => $this->swapPlan('plus')),
+
                 Action::make('cancel')
                     ->label('Annulla abbonamento')
                     ->color('danger')
                     ->icon('heroicon-o-x-circle')
                     ->requiresConfirmation()
                     ->modalHeading('Annulla abbonamento')
-                    ->modalDescription('L\'abbonamento rimarrà attivo fino alla fine del periodo corrente. Sei sicuro?')
-                    ->action(function () use ($business) {
-                        $subscription = $business->subscription('default');
-                        $subscription->cancel();
-                        $endsAt = $subscription->fresh()?->ends_at?->format('d/m/Y');
-                        Notification::make()
-                            ->title("Abbonamento annullato. Accesso garantito fino al {$endsAt}.")
-                            ->warning()
-                            ->send();
-                    }),
+                    ->modalDescription("L'abbonamento rimarrà attivo fino alla fine del periodo corrente.")
+                    ->action(fn () => $this->cancelSubscription()),
             ],
-            'grace_period' => [
+
+            $status === 'active' && $business->plan === 'plus' => [
+                Action::make('downgradeBase')
+                    ->label('Torna a Base')
+                    ->color('warning')
+                    ->icon('heroicon-o-arrow-down-circle')
+                    ->requiresConfirmation()
+                    ->modalHeading('Torna al piano Base')
+                    ->modalDescription('Il downgrade è immediato. WhatsApp AI verrà disattivato subito. Sei sicuro?')
+                    ->action(fn () => $this->swapPlan('base')),
+
+                Action::make('cancel')
+                    ->label('Annulla abbonamento')
+                    ->color('danger')
+                    ->icon('heroicon-o-x-circle')
+                    ->requiresConfirmation()
+                    ->modalHeading('Annulla abbonamento')
+                    ->modalDescription("L'abbonamento rimarrà attivo fino alla fine del periodo corrente.")
+                    ->action(fn () => $this->cancelSubscription()),
+            ],
+
+            $status === 'grace_period' => [
                 Action::make('resume')
                     ->label('Riattiva abbonamento')
                     ->color('success')
                     ->icon('heroicon-o-arrow-path')
-                    ->action(function () use ($business) {
-                        $business->subscription('default')->resume();
-                        Notification::make()
-                            ->title('Abbonamento riattivato!')
-                            ->success()
-                            ->send();
-                    }),
+                    ->action(fn () => $this->resumeSubscription()),
             ],
+
             default => [],
         };
+    }
+
+    private function checkoutRedirect(string $plan): void
+    {
+        $priceId = config("plans.{$plan}.price_id");
+
+        if (! $priceId) {
+            Notification::make()
+                ->title("Prezzo per il piano {$plan} non ancora configurato.")
+                ->danger()
+                ->send();
+            return;
+        }
+
+        $business = $this->getBusiness();
+        $session  = $business->newSubscription('default', $priceId)
+            ->checkout([
+                'success_url' => route('filament.admin.pages.abbonamento', ['tenant' => $business->subdomain]) . '?checkout=success',
+                'cancel_url'  => route('filament.admin.pages.abbonamento', ['tenant' => $business->subdomain]) . '?checkout=cancelled',
+            ]);
+
+        $this->redirect($session->url, navigate: false);
+    }
+
+    private function swapPlan(string $plan): void
+    {
+        $priceId = config("plans.{$plan}.price_id");
+
+        if (! $priceId) {
+            Notification::make()
+                ->title("Prezzo per il piano {$plan} non ancora configurato.")
+                ->danger()
+                ->send();
+            return;
+        }
+
+        $business = $this->getBusiness();
+        $business->subscription('default')->swapAndInvoice($priceId);
+
+        $freshBusiness = $business->fresh();
+        if ($freshBusiness->subscribed('default') && ! $freshBusiness->hasIncompletePayment('default')) {
+            $business->update(['plan' => $plan]);
+            Notification::make()
+                ->title('Piano aggiornato con successo.')
+                ->success()
+                ->send();
+        } else {
+            Notification::make()
+                ->title('Pagamento in sospeso — il piano sarà aggiornato a breve.')
+                ->warning()
+                ->send();
+        }
+    }
+
+    private function cancelSubscription(): void
+    {
+        $business     = $this->getBusiness();
+        $subscription = $business->subscription('default');
+        $subscription->cancel();
+        $endsAt = $subscription->fresh()?->ends_at?->format('d/m/Y');
+        Notification::make()
+            ->title("Abbonamento annullato. Accesso garantito fino al {$endsAt}.")
+            ->warning()
+            ->send();
+    }
+
+    private function resumeSubscription(): void
+    {
+        $this->getBusiness()->subscription('default')->resume();
+        Notification::make()
+            ->title('Abbonamento riattivato!')
+            ->success()
+            ->send();
     }
 }
