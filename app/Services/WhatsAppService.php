@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Exceptions\WhatsAppWindowExpiredException;
 use App\Models\IntegrationSetting;
+use App\Models\WhatsAppMessage;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -20,6 +21,7 @@ class WhatsAppService
     private function graphUrl(string $phoneId, string $path = 'messages'): string
     {
         $version = config('services.whatsapp.graph_api_version', 'v23.0');
+
         return "https://graph.facebook.com/{$version}/{$phoneId}/{$path}";
     }
 
@@ -27,46 +29,74 @@ class WhatsAppService
     {
         $digits = preg_replace('/[^0-9]/', '', $phone);
         if (str_starts_with($digits, '0')) {
-            $digits = '39' . ltrim($digits, '0');
+            $digits = '39'.ltrim($digits, '0');
         }
+
         return $digits;
     }
 
-    public function sendTextWithinWindow(string $phone, string $text, Carbon $lastUserMessageAt, int $businessId): bool
+    public function sendTextWithinWindow(string $phone, string $text, Carbon $lastUserMessageAt, int $businessId, ?string $conversationId = null): bool
     {
         if (now()->diffInSeconds($lastUserMessageAt, false) <= -86400) {
             throw new WhatsAppWindowExpiredException($phone);
         }
 
         $setting = $this->getSettings($businessId);
-        $token   = $setting->meta_whatsapp_token;
+        $token = $setting->meta_whatsapp_token;
         $phoneId = $setting->meta_whatsapp_phone_id;
 
         if (! $token || ! $phoneId) {
             return false;
         }
 
+        $message = WhatsAppMessage::create([
+            'business_id'     => $businessId,
+            'idempotency_key' => (string) \Illuminate\Support\Str::uuid(),
+            'phone'           => $phone,
+            'phone_normalized'=> PhoneNormalizer::normalize($phone),
+            'wa_id'           => $this->normalizePhoneForApi($phone),
+            'direction'       => 'outbound',
+            'type'            => 'text',
+            'conversation_id' => $conversationId,
+            'payload'         => ['text' => ['body' => $text]],
+            'status'          => 'queued',
+        ]);
+
         $response = Http::withToken($token)
             ->post($this->graphUrl($phoneId), [
                 'messaging_product' => 'whatsapp',
-                'to'                => $this->normalizePhoneForApi($phone),
-                'type'              => 'text',
-                'text'              => ['body' => $text],
+                'to' => $this->normalizePhoneForApi($phone),
+                'type' => 'text',
+                'text' => ['body' => $text],
             ]);
 
         if (! $response->successful()) {
+            $message->update([
+                'status' => 'failed',
+                'failed_at' => now(),
+                'error_code' => 'WA_SEND_FAILED',
+                'error_message' => data_get($response->json(), 'error.message') ?? $response->body(),
+            ]);
             Log::error('WhatsApp sendText error', ['status' => $response->status(), 'body' => $response->json()]);
+
             return false;
         }
 
+        $message->update([
+            'wamid' => $response->json('messages.0.id'),
+            'status' => 'sent',
+            'sent_at' => now(),
+        ]);
+
         Log::info('WhatsApp sendText ok', ['to' => $phone, 'status' => $response->status(), 'wamid' => $response->json('messages.0.id')]);
+
         return true;
     }
 
     public function sendTemplate(string $phone, string $templateName, string $language, string $category, array $params, int $businessId): ?string
     {
         $setting = $this->getSettings($businessId);
-        $token   = $setting->meta_whatsapp_token;
+        $token = $setting->meta_whatsapp_token;
         $phoneId = $setting->meta_whatsapp_phone_id;
 
         if (! $token || ! $phoneId) {
@@ -76,14 +106,14 @@ class WhatsAppService
         $response = Http::withToken($token)
             ->post($this->graphUrl($phoneId), [
                 'messaging_product' => 'whatsapp',
-                'to'                => $this->normalizePhoneForApi($phone),
-                'type'              => 'template',
-                'template'          => [
-                    'name'       => $templateName,
-                    'language'   => ['code' => $language],
+                'to' => $this->normalizePhoneForApi($phone),
+                'type' => 'template',
+                'template' => [
+                    'name' => $templateName,
+                    'language' => ['code' => $language],
                     'components' => [
                         [
-                            'type'       => 'body',
+                            'type' => 'body',
                             'parameters' => array_map(fn ($p) => ['type' => 'text', 'text' => $p], $params),
                         ],
                     ],
@@ -92,6 +122,7 @@ class WhatsAppService
 
         if (! $response->successful()) {
             Log::error('WhatsApp sendTemplate error', ['status' => $response->status(), 'body' => $response->json()]);
+
             return null;
         }
 

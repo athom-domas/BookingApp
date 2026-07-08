@@ -110,6 +110,22 @@ class CustomerResource extends Resource
                             'max'      => 'L\'email non può superare 255 caratteri.',
                         ]),
 
+                    Group::make()
+                        ->relationship('preferences')
+                        ->schema([
+                            TextInput::make('phone_number')
+                                ->label('Numero di telefono')
+                                ->tel()
+                                ->placeholder('+39 333 123 4567')
+                                ->required(fn (Get $get): bool => $get('notification_channel') === 'whatsapp')
+                                ->validationMessages([
+                                    'required' => 'Il numero di telefono è obbligatorio per il canale WhatsApp.',
+                                ])
+                                ->dehydrateStateUsing(fn (?string $state): ?string => $state
+                                    ? \App\Services\PhoneNormalizer::normalize($state)
+                                    : null),
+                        ]),
+
                     TextInput::make('password')
                         ->label('Password')
                         ->password()
@@ -202,7 +218,6 @@ class CustomerResource extends Resource
                                 ->label('Canale notifiche')
                                 ->options([
                                     'email'    => 'Email',
-                                    'sms'      => 'SMS',
                                     'whatsapp' => 'WhatsApp',
                                 ])
                                 ->default('email')
@@ -210,15 +225,6 @@ class CustomerResource extends Resource
                                 ->validationMessages([
                                     'required' => 'Il canale notifiche è obbligatorio.',
                                 ]),
-
-                            TextInput::make('phone_number')
-                                ->label('Numero di telefono')
-                                ->tel()
-                                ->placeholder('+39 333 123 4567')
-                                ->visible(
-                                    fn(Get $get): bool =>
-                                    in_array($get('notification_channel'), ['sms', 'whatsapp'])
-                                ),
                         ]),
                 ])
                 ->columnSpanFull(),

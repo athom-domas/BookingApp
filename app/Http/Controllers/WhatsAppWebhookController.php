@@ -142,6 +142,7 @@ class WhatsAppWebhookController extends Controller
         $message = WhatsAppMessage::create([
             'business_id'      => $setting->business_id,
             'wamid'            => $wamid,
+            'idempotency_key'  => $wamid,
             'phone'            => '+' . ltrim($waId, '+'),
             'phone_normalized' => $phone,
             'wa_id'            => $waId,

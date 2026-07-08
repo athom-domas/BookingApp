@@ -47,6 +47,7 @@ class WhatsAppNotificationService
         $message = WhatsAppMessage::create([
             'business_id'      => $appointment->business_id,
             'appointment_id'   => $appointment->id,
+            'idempotency_key'  => "appt-{$appointment->id}-{$templateName}",
             'phone'            => $prefs->phone_number,
             'phone_normalized' => PhoneNormalizer::normalize($prefs->phone_number),
             'direction'        => 'outbound',

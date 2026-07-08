@@ -2,7 +2,9 @@
 
 use App\Models\Appointment;
 use App\Models\AvailabilityRule;
+use App\Models\Business;
 use App\Models\Service;
+use App\Models\StaffBlockout;
 use App\Models\SystemSetting;
 use App\Models\User;
 use App\Services\Booking\SlotCalculationService;
@@ -10,7 +12,7 @@ use Carbon\Carbon;
 use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
-    $business = \App\Models\Business::factory()->create();
+    $business = Business::factory()->create();
     app()->instance('current_business_id', $business->id);
 
     Role::firstOrCreate(['name' => 'staff', 'guard_name' => 'web']);
@@ -18,12 +20,12 @@ beforeEach(function () {
     Role::firstOrCreate(['name' => 'customer', 'guard_name' => 'web']);
 
     SystemSetting::create([
-        'business_id'              => app('current_business_id'),
-        'slot_generation_weeks'    => 4,
+        'business_id' => app('current_business_id'),
+        'slot_generation_weeks' => 4,
         'slot_granularity_minutes' => 15,
-        'hold_duration_minutes'    => 5,
-        'hold_extension_minutes'   => 5,
-        'timezone'                 => 'Europe/Rome',
+        'hold_duration_minutes' => 5,
+        'hold_extension_minutes' => 5,
+        'timezone' => 'Europe/Rome',
     ]);
 });
 
@@ -33,20 +35,20 @@ it('calculates total duration from active services', function () {
     $s1 = Service::factory()->create(['duration_minutes' => 30, 'active' => true]);
     $s2 = Service::factory()->create(['duration_minutes' => 45, 'active' => true]);
 
-    $svc = new SlotCalculationService();
+    $svc = new SlotCalculationService;
     expect($svc->calculateTotalDuration([$s1->id, $s2->id]))->toBe(75);
 });
 
 it('ignores inactive services in duration calculation', function () {
-    $active   = Service::factory()->create(['duration_minutes' => 60, 'active' => true]);
+    $active = Service::factory()->create(['duration_minutes' => 60, 'active' => true]);
     $inactive = Service::factory()->create(['duration_minutes' => 30, 'active' => false]);
 
-    $svc = new SlotCalculationService();
+    $svc = new SlotCalculationService;
     expect($svc->calculateTotalDuration([$active->id, $inactive->id]))->toBe(60);
 });
 
 it('returns zero duration for empty service list', function () {
-    $svc = new SlotCalculationService();
+    $svc = new SlotCalculationService;
     expect($svc->calculateTotalDuration([]))->toBe(0);
 });
 
@@ -60,8 +62,8 @@ it('returns staff who offer all requested services', function () {
     $s2 = Service::factory()->create(['active' => true]);
     $staff->services()->attach([$s1->id, $s2->id]);
 
-    $svc     = new SlotCalculationService();
-    $result  = $svc->getEligibleOperators([$s1->id, $s2->id]);
+    $svc = new SlotCalculationService;
+    $result = $svc->getEligibleOperators([$s1->id, $s2->id]);
 
     expect($result->pluck('id'))->toContain($staff->id);
 });
@@ -74,7 +76,7 @@ it('excludes staff who only offer some of the requested services', function () {
     $s2 = Service::factory()->create(['active' => true]);
     $staff->services()->attach($s1->id); // only one service
 
-    $svc    = new SlotCalculationService();
+    $svc = new SlotCalculationService;
     $result = $svc->getEligibleOperators([$s1->id, $s2->id]);
 
     expect($result->pluck('id'))->not->toContain($staff->id);
@@ -90,7 +92,7 @@ it('filters by specific staff id when preference is specific', function () {
     $staffA->services()->attach($service->id);
     $staffB->services()->attach($service->id);
 
-    $svc    = new SlotCalculationService();
+    $svc = new SlotCalculationService;
     $result = $svc->getEligibleOperators([$service->id], $staffA->id, 'specific');
 
     expect($result->pluck('id'))->toContain($staffA->id)
@@ -100,7 +102,7 @@ it('filters by specific staff id when preference is specific', function () {
 // ─── getAvailableSlots ───────────────────────────────────────────────────────
 
 it('returns empty when no service IDs given', function () {
-    $svc = new SlotCalculationService();
+    $svc = new SlotCalculationService;
     expect($svc->getAvailableSlots(['date' => now(), 'serviceIds' => []]))->toBe([]);
 });
 
@@ -114,18 +116,18 @@ it('generates slots within staff availability window', function () {
     // Monday 2026-05-18, day_of_week = 1
     $date = Carbon::parse('2026-05-18');
     AvailabilityRule::factory()->create([
-        'user_id'      => $staff->id,
-        'day_of_week'  => $date->dayOfWeek,
-        'start_time'   => '09:00:00',
-        'end_time'     => '12:00:00',
+        'user_id' => $staff->id,
+        'day_of_week' => $date->dayOfWeek,
+        'start_time' => '09:00:00',
+        'end_time' => '12:00:00',
         'is_available' => true,
     ]);
 
-    $svc   = new SlotCalculationService();
+    $svc = new SlotCalculationService;
     $slots = $svc->getAvailableSlots([
-        'date'            => $date,
-        'serviceIds'      => [$service->id],
-        'staffId'         => $staff->id,
+        'date' => $date,
+        'serviceIds' => [$service->id],
+        'staffId' => $staff->id,
         'staffPreference' => 'specific',
     ]);
 
@@ -149,26 +151,26 @@ it('excludes slots blocked by confirmed appointments', function () {
 
     $date = Carbon::parse('2026-05-18');
     AvailabilityRule::factory()->create([
-        'user_id'      => $staff->id,
-        'day_of_week'  => $date->dayOfWeek,
-        'start_time'   => '09:00:00',
-        'end_time'     => '12:00:00',
+        'user_id' => $staff->id,
+        'day_of_week' => $date->dayOfWeek,
+        'start_time' => '09:00:00',
+        'end_time' => '12:00:00',
         'is_available' => true,
     ]);
 
     Appointment::factory()->create([
-        'user_id'        => $customer->id,
-        'staff_id'       => $staff->id,
-        'service_ids'    => [$service->id],
+        'user_id' => $customer->id,
+        'staff_id' => $staff->id,
+        'service_ids' => [$service->id],
         'scheduled_date' => $date->copy()->setTime(9, 0),
-        'status'         => 'confirmed',
+        'status' => 'confirmed',
     ]);
 
-    $svc   = new SlotCalculationService();
+    $svc = new SlotCalculationService;
     $slots = $svc->getAvailableSlots([
-        'date'            => $date,
-        'serviceIds'      => [$service->id],
-        'staffId'         => $staff->id,
+        'date' => $date,
+        'serviceIds' => [$service->id],
+        'staffId' => $staff->id,
         'staffPreference' => 'specific',
     ]);
 
@@ -176,6 +178,51 @@ it('excludes slots blocked by confirmed appointments', function () {
     expect($startTimes)->not->toContain('09:00')
         ->and($startTimes)->not->toContain('09:30') // still blocked (appt ends at 10:00)
         ->and($startTimes)->toContain('10:00');
+});
+
+it('aligns slots to the configured wall-clock granularity after a busy range', function () {
+    $customer = User::factory()->create();
+    $customer->assignRole('customer');
+    $staff = User::factory()->create();
+    $staff->assignRole('staff');
+
+    $serviceA = Service::factory()->create(['duration_minutes' => 20, 'active' => true]);
+    $serviceB = Service::factory()->create(['duration_minutes' => 20, 'active' => true]);
+    $staff->services()->attach([$serviceA->id, $serviceB->id]);
+
+    $date = Carbon::parse('2026-05-18');
+    AvailabilityRule::factory()->create([
+        'user_id' => $staff->id,
+        'day_of_week' => $date->dayOfWeek,
+        'start_time' => '09:00:00',
+        'end_time' => '13:00:00',
+        'is_available' => true,
+    ]);
+
+    Appointment::factory()->create([
+        'user_id' => $customer->id,
+        'staff_id' => $staff->id,
+        'service_ids' => [$serviceA->id, $serviceB->id],
+        'scheduled_date' => $date->copy()->setTime(10, 0),
+        'status' => 'confirmed',
+    ]);
+
+    $svc = new SlotCalculationService;
+    $slots = $svc->getAvailableSlots([
+        'date' => $date,
+        'serviceIds' => [$serviceA->id, $serviceB->id],
+        'staffId' => $staff->id,
+        'staffPreference' => 'specific',
+    ]);
+
+    $startTimes = array_column($slots, 'start');
+
+    expect($startTimes)->not->toContain('10:40')
+        ->and($startTimes)->not->toContain('10:55')
+        ->and($startTimes)->not->toContain('11:10')
+        ->and($startTimes)->toContain('10:45')
+        ->and($startTimes)->toContain('11:00')
+        ->and($startTimes)->toContain('11:15');
 });
 
 it('groups same time slots across multiple staff when preference is any', function () {
@@ -191,18 +238,18 @@ it('groups same time slots across multiple staff when preference is any', functi
     $date = Carbon::parse('2026-05-18');
     foreach ([$staffA, $staffB] as $staff) {
         AvailabilityRule::factory()->create([
-            'user_id'      => $staff->id,
-            'day_of_week'  => $date->dayOfWeek,
-            'start_time'   => '09:00:00',
-            'end_time'     => '10:00:00',
+            'user_id' => $staff->id,
+            'day_of_week' => $date->dayOfWeek,
+            'start_time' => '09:00:00',
+            'end_time' => '10:00:00',
             'is_available' => true,
         ]);
     }
 
-    $svc   = new SlotCalculationService();
+    $svc = new SlotCalculationService;
     $slots = $svc->getAvailableSlots([
-        'date'            => $date,
-        'serviceIds'      => [$service->id],
+        'date' => $date,
+        'serviceIds' => [$service->id],
         'staffPreference' => 'any',
     ]);
 
@@ -222,11 +269,11 @@ it('returns no slots when staff has no availability rule for that day', function
 
     $date = Carbon::parse('2026-05-18'); // Monday
 
-    $svc   = new SlotCalculationService();
+    $svc = new SlotCalculationService;
     $slots = $svc->getAvailableSlots([
-        'date'            => $date,
-        'serviceIds'      => [$service->id],
-        'staffId'         => $staff->id,
+        'date' => $date,
+        'serviceIds' => [$service->id],
+        'staffId' => $staff->id,
         'staffPreference' => 'specific',
     ]);
 
@@ -242,21 +289,21 @@ it('generates slots from both ranges when staff has a split schedule', function 
 
     // Morning 09:00–13:00, afternoon 14:00–18:00 on Monday
     AvailabilityRule::factory()->create([
-        'user_id'      => $staff->id,
-        'day_of_week'  => 1,
+        'user_id' => $staff->id,
+        'day_of_week' => 1,
         'is_available' => true,
-        'start_time'   => '09:00:00',
-        'end_time'     => '13:00:00',
+        'start_time' => '09:00:00',
+        'end_time' => '13:00:00',
         'start_time_2' => '14:00:00',
-        'end_time_2'   => '18:00:00',
+        'end_time_2' => '18:00:00',
     ]);
 
-    $date  = Carbon::parse('2026-05-18'); // Monday
-    $svc   = new SlotCalculationService();
+    $date = Carbon::parse('2026-05-18'); // Monday
+    $svc = new SlotCalculationService;
     $slots = $svc->getAvailableSlots([
-        'date'            => $date,
-        'serviceIds'      => [$service->id],
-        'staffId'         => $staff->id,
+        'date' => $date,
+        'serviceIds' => [$service->id],
+        'staffId' => $staff->id,
         'staffPreference' => 'specific',
     ]);
 
@@ -286,18 +333,18 @@ it('excludes past slots when date is today', function () {
 
     $date = Carbon::today(); // 2026-05-20, day_of_week = 3
     AvailabilityRule::factory()->create([
-        'user_id'      => $staff->id,
-        'day_of_week'  => $date->dayOfWeek,
-        'start_time'   => '09:00:00',
-        'end_time'     => '13:00:00',
+        'user_id' => $staff->id,
+        'day_of_week' => $date->dayOfWeek,
+        'start_time' => '09:00:00',
+        'end_time' => '13:00:00',
         'is_available' => true,
     ]);
 
-    $svc   = new SlotCalculationService();
+    $svc = new SlotCalculationService;
     $slots = $svc->getAvailableSlots([
-        'date'            => $date,
-        'serviceIds'      => [$service->id],
-        'staffId'         => $staff->id,
+        'date' => $date,
+        'serviceIds' => [$service->id],
+        'staffId' => $staff->id,
         'staffPreference' => 'specific',
     ]);
 
@@ -322,36 +369,37 @@ it('blocks time equal to combined duration of all service_ids on an appointment'
 
     $date = Carbon::parse('2026-05-19'); // Tuesday
     AvailabilityRule::factory()->create([
-        'user_id'      => $staff->id,
-        'day_of_week'  => $date->dayOfWeek,
-        'start_time'   => '08:00:00',
-        'end_time'     => '17:00:00',
+        'user_id' => $staff->id,
+        'day_of_week' => $date->dayOfWeek,
+        'start_time' => '08:00:00',
+        'end_time' => '17:00:00',
         'is_available' => true,
     ]);
 
     // Appointment with two services stored in service_ids (total 80 min) starting at 08:00
     Appointment::factory()->create([
-        'staff_id'       => $staff->id,
-        'service_ids'    => [$service1->id, $service2->id],
+        'staff_id' => $staff->id,
+        'service_ids' => [$service1->id, $service2->id],
         'scheduled_date' => $date->copy()->setTime(8, 0),
-        'status'         => 'confirmed',
+        'status' => 'confirmed',
     ]);
 
-    $svc   = new SlotCalculationService();
+    $svc = new SlotCalculationService;
     $slots = $svc->getAvailableSlots([
-        'date'            => $date->toDateString(),
-        'serviceIds'      => [$service1->id],
-        'staffId'         => $staff->id,
+        'date' => $date->toDateString(),
+        'serviceIds' => [$service1->id],
+        'staffId' => $staff->id,
         'staffPreference' => 'specific',
     ]);
 
     $startTimes = array_column($slots, 'start');
 
-    // 80-min occupation ends at 09:20; slots before that must not exist
+    // 80-min occupation ends at 09:20; next bookable slot must align to the 15-minute grid.
     expect($startTimes)->not->toContain('08:00')
         ->and($startTimes)->not->toContain('08:30')
         ->and($startTimes)->not->toContain('09:00')
-        ->and($startTimes)->toContain('09:20');
+        ->and($startTimes)->not->toContain('09:20')
+        ->and($startTimes)->toContain('09:30');
 });
 
 // ─── blockout periods ────────────────────────────────────────────────────────
@@ -365,24 +413,24 @@ it('returns no slots when staff has an active blockout covering the date', funct
 
     $date = Carbon::parse('2026-07-14'); // Monday
     AvailabilityRule::factory()->create([
-        'user_id'      => $staff->id,
-        'day_of_week'  => $date->dayOfWeek,
-        'start_time'   => '09:00:00',
-        'end_time'     => '17:00:00',
+        'user_id' => $staff->id,
+        'day_of_week' => $date->dayOfWeek,
+        'start_time' => '09:00:00',
+        'end_time' => '17:00:00',
         'is_available' => true,
     ]);
 
-    \App\Models\StaffBlockout::factory()->create([
-        'user_id'    => $staff->id,
+    StaffBlockout::factory()->create([
+        'user_id' => $staff->id,
         'start_date' => '2026-07-14',
-        'end_date'   => '2026-07-18',
+        'end_date' => '2026-07-18',
     ]);
 
-    $svc   = new SlotCalculationService();
+    $svc = new SlotCalculationService;
     $slots = $svc->getAvailableSlots([
-        'date'            => $date,
-        'serviceIds'      => [$service->id],
-        'staffId'         => $staff->id,
+        'date' => $date,
+        'serviceIds' => [$service->id],
+        'staffId' => $staff->id,
         'staffPreference' => 'specific',
     ]);
 
@@ -398,24 +446,24 @@ it('returns slots normally on dates outside the blockout period', function () {
 
     $date = Carbon::parse('2026-07-21'); // Monday after blockout 14-18
     AvailabilityRule::factory()->create([
-        'user_id'      => $staff->id,
-        'day_of_week'  => $date->dayOfWeek,
-        'start_time'   => '09:00:00',
-        'end_time'     => '12:00:00',
+        'user_id' => $staff->id,
+        'day_of_week' => $date->dayOfWeek,
+        'start_time' => '09:00:00',
+        'end_time' => '12:00:00',
         'is_available' => true,
     ]);
 
-    \App\Models\StaffBlockout::factory()->create([
-        'user_id'    => $staff->id,
+    StaffBlockout::factory()->create([
+        'user_id' => $staff->id,
         'start_date' => '2026-07-14',
-        'end_date'   => '2026-07-18',
+        'end_date' => '2026-07-18',
     ]);
 
-    $svc   = new SlotCalculationService();
+    $svc = new SlotCalculationService;
     $slots = $svc->getAvailableSlots([
-        'date'            => $date,
-        'serviceIds'      => [$service->id],
-        'staffId'         => $staff->id,
+        'date' => $date,
+        'serviceIds' => [$service->id],
+        'staffId' => $staff->id,
         'staffPreference' => 'specific',
     ]);
 

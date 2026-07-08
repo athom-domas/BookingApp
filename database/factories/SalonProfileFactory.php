@@ -13,8 +13,7 @@ class SalonProfileFactory extends Factory
         return [
             'business_id' => app()->bound('current_business_id') ? app('current_business_id') : 1,
             'name' => fake()->company(),
-            'tagline' => fake()->catchPhrase(),
-            'description' => fake()->paragraph(),
+            'meta_description' => fake()->paragraph(),
             'phone' => fake()->phoneNumber(),
             'address' => fake()->address(),
         ];

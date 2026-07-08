@@ -10,6 +10,7 @@ use App\Models\Service;
 use App\Models\SystemSetting;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
@@ -71,75 +72,85 @@ class AppointmentService
         $confirmImmediately = $params['confirmImmediately'] ?? false;
         $notes              = $params['notes'] ?? null;
         $staffPreference    = $staffId ? 'specific' : 'any';
+        $businessIdForLock  = $staffId
+            ? User::whereKey($staffId)->value('business_id')
+            : (app()->bound('current_business_id') ? app('current_business_id') : 'global');
+        $lockKey = 'booking:slot:'.$businessIdForLock.':'.$scheduledDate->format('YmdHi');
 
-        $appointment = DB::transaction(function () use ($userId, $serviceIds, $staffId, $scheduledDate, $confirmImmediately, $notes, $staffPreference) {
-            $date = $scheduledDate->copy()->startOfDay();
+        try {
+            $appointment = Cache::lock($lockKey, 10)->block(5, function () use ($userId, $serviceIds, $staffId, $scheduledDate, $confirmImmediately, $notes, $staffPreference) {
+                return DB::transaction(function () use ($userId, $serviceIds, $staffId, $scheduledDate, $confirmImmediately, $notes, $staffPreference) {
+                    $date = $scheduledDate->copy()->startOfDay();
 
-            // Grace period: allow slots up to one granularity window in the past to avoid
-            // race conditions between slot display and form submission (especially for today).
-            $graceCutoff = Carbon::now()->subMinutes(SystemSetting::getSlotGranularity());
-            if ($scheduledDate->lt($graceCutoff)) {
-                throw new \RuntimeException('Slot non disponibile.');
-            }
+                    // Grace period: allow slots up to one granularity window in the past to avoid
+                    // race conditions between slot display and form submission (especially for today).
+                    $graceCutoff = Carbon::now()->subMinutes(SystemSetting::getSlotGranularity());
+                    if ($scheduledDate->lt($graceCutoff)) {
+                        throw new \RuntimeException('Slot non disponibile.');
+                    }
 
-            // Validate against work ranges and conflicts without the "today from now" UI cutoff.
-            $slotFree = $this->slotService->isSlotFree([
-                'date'            => $date,
-                'slotStart'       => $scheduledDate,
-                'serviceIds'      => $serviceIds,
-                'staffId'         => $staffId,
-                'staffPreference' => $staffPreference,
-            ]);
+                    // Validate against work ranges and conflicts without the "today from now" UI cutoff.
+                    $slotFree = $this->slotService->isSlotFree([
+                        'date'            => $date,
+                        'slotStart'       => $scheduledDate,
+                        'serviceIds'      => $serviceIds,
+                        'staffId'         => $staffId,
+                        'staffPreference' => $staffPreference,
+                    ]);
 
-            if (! $slotFree) {
-                throw new \RuntimeException('Slot non disponibile.');
-            }
+                    if (! $slotFree) {
+                        throw new \RuntimeException('Slot non disponibile.');
+                    }
 
-            if ($staffPreference === 'any') {
-                $duration = $this->slotService->calculateTotalDuration($serviceIds);
-                $staffId  = $this->pickBestOperator($date, $serviceIds, $scheduledDate, $duration);
+                    if ($staffPreference === 'any') {
+                        $duration = $this->slotService->calculateTotalDuration($serviceIds);
+                        $staffId  = $this->pickBestOperator($date, $serviceIds, $scheduledDate, $duration);
 
-                if (! $staffId) {
-                    throw new \RuntimeException('Nessun operatore disponibile.');
-                }
-            }
+                        if (! $staffId) {
+                            throw new \RuntimeException('Nessun operatore disponibile.');
+                        }
+                    }
 
-            $businessId = User::find($staffId)?->business_id
-                ?? (app()->bound('current_business_id') ? app('current_business_id') : null);
+                    $businessId = User::find($staffId)?->business_id
+                        ?? (app()->bound('current_business_id') ? app('current_business_id') : null);
 
-            $appointment = Appointment::create([
-                'user_id'        => $userId,
-                'service_ids'    => $serviceIds,
-                'staff_id'       => $staffId,
-                'scheduled_date' => $scheduledDate,
-                'status'         => $confirmImmediately ? 'confirmed' : 'pending',
-                'final_price'    => $this->calculateTotalPrice($serviceIds),
-                'notes'          => $notes,
-                'business_id'    => $businessId,
-            ]);
+                    $appointment = Appointment::create([
+                        'user_id'        => $userId,
+                        'service_ids'    => $serviceIds,
+                        'staff_id'       => $staffId,
+                        'scheduled_date' => $scheduledDate,
+                        'status'         => $confirmImmediately ? 'confirmed' : 'pending',
+                        'final_price'    => $this->calculateTotalPrice($serviceIds),
+                        'notes'          => $notes,
+                        'business_id'    => $businessId,
+                    ]);
 
-            $reminderCount = SystemSetting::getReminderCount();
-            if ($reminderCount >= 1) {
-                AppointmentReminder::create([
-                    'appointment_id' => $appointment->id,
-                    'type'           => 'email',
-                    'scheduled_for'  => $scheduledDate->copy()->subHours(SystemSetting::getReminder1Hours()),
-                    'status'         => 'pending',
-                ]);
-            }
-            if ($reminderCount >= 2) {
-                AppointmentReminder::create([
-                    'appointment_id' => $appointment->id,
-                    'type'           => 'email',
-                    'scheduled_for'  => $scheduledDate->copy()->subHours(SystemSetting::getReminder2Hours()),
-                    'status'         => 'pending',
-                ]);
-            }
+                    $reminderCount = SystemSetting::getReminderCount();
+                    if ($reminderCount >= 1) {
+                        AppointmentReminder::create([
+                            'appointment_id' => $appointment->id,
+                            'type'           => 'email',
+                            'scheduled_for'  => $scheduledDate->copy()->subHours(SystemSetting::getReminder1Hours()),
+                            'status'         => 'pending',
+                        ]);
+                    }
+                    if ($reminderCount >= 2) {
+                        AppointmentReminder::create([
+                            'appointment_id' => $appointment->id,
+                            'type'           => 'email',
+                            'scheduled_for'  => $scheduledDate->copy()->subHours(SystemSetting::getReminder2Hours()),
+                            'status'         => 'pending',
+                        ]);
+                    }
 
-            SyncGoogleCalendar::dispatch($appointment, 'create');
+                    SyncGoogleCalendar::dispatch($appointment, 'create');
 
-            return $appointment;
-        });
+                    return $appointment;
+                });
+            });
+        } catch (LockTimeoutException) {
+            throw new \RuntimeException('Slot non disponibile.');
+        }
 
         if ($confirmImmediately) {
             AppointmentConfirmed::dispatch($appointment, byAdmin: false);

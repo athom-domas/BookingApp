@@ -33,13 +33,13 @@ class SendWhatsAppAppointmentNotification
         }
 
         $template = $event instanceof AppointmentConfirmed
-            ? 'hello_world'
-            : 'hello_world';
+            ? 'appointment_confirmed'
+            : 'appointment_cancelled';
 
         $this->whatsApp->dispatchForAppointment(
             $appointment,
             $template,
-            [],
+            WhatsAppNotificationService::appointmentParams($appointment),
         );
     }
 }

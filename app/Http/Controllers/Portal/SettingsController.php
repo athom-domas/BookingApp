@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Portal;
 use App\Http\Controllers\Controller;
 use App\Models\AvailabilityRule;
 use App\Models\UserPreference;
+use App\Services\PhoneNormalizer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -42,21 +43,28 @@ class SettingsController extends Controller
     {
         $user = $request->user();
 
+        $channel = UserPreference::where('user_id', $user->id)
+            ->where('business_id', app('current_business_id'))
+            ->value('notification_channel') ?? 'email';
+
         $validated = $request->validate([
             'name'             => ['required', 'string', 'max:255'],
             'email'            => ['required', 'email', 'max:255', 'unique:users,email,' . $user->id],
+            'phone_number'     => [$channel === 'whatsapp' ? 'required' : 'nullable', 'regex:/^\+?[\d\s\-]{8,20}$/'],
             'current_password' => ['nullable', 'required_with:new_password', 'current_password'],
             'new_password'     => ['nullable', Password::min(8), 'confirmed'],
         ], [
-            'name.required'                   => 'Il nome è obbligatorio.',
-            'name.max'                        => 'Il nome non può superare 255 caratteri.',
-            'email.required'                  => 'L\'email è obbligatoria.',
-            'email.email'                     => 'Inserisci un indirizzo email valido.',
-            'email.unique'                    => 'Questo indirizzo email è già in uso.',
-            'current_password.required_with'  => 'La password attuale è obbligatoria per impostarne una nuova.',
+            'name.required'                     => 'Il nome è obbligatorio.',
+            'name.max'                          => 'Il nome non può superare 255 caratteri.',
+            'email.required'                    => 'L\'email è obbligatoria.',
+            'email.email'                       => 'Inserisci un indirizzo email valido.',
+            'email.unique'                      => 'Questo indirizzo email è già in uso.',
+            'phone_number.required'             => 'Il numero di telefono è obbligatorio quando il canale di notifica è WhatsApp.',
+            'phone_number.regex'                => 'Inserisci un numero di telefono valido.',
+            'current_password.required_with'    => 'La password attuale è obbligatoria per impostarne una nuova.',
             'current_password.current_password' => 'La password attuale non è corretta.',
-            'new_password.min'                => 'La nuova password deve essere di almeno 8 caratteri.',
-            'new_password.confirmed'          => 'Le password non coincidono.',
+            'new_password.min'                  => 'La nuova password deve essere di almeno 8 caratteri.',
+            'new_password.confirmed'            => 'Le password non coincidono.',
         ]);
 
         $user->name  = $validated['name'];
@@ -71,6 +79,14 @@ class SettingsController extends Controller
         }
 
         $user->save();
+
+        $phone = isset($validated['phone_number']) && $validated['phone_number'] !== ''
+            ? PhoneNormalizer::normalize($validated['phone_number'])
+            : null;
+        UserPreference::firstOrCreate(
+            ['user_id' => $user->id, 'business_id' => app('current_business_id')],
+            ['notification_channel' => 'email']
+        )->update(['phone_number' => $phone]);
 
         return back()->with('profile_updated', 'Profilo aggiornato.');
     }
@@ -152,7 +168,6 @@ class SettingsController extends Controller
 
         $validated = $request->validate([
             'notification_channel'        => ['required', 'in:email,whatsapp'],
-            'phone_number'                => ['nullable', 'required_if:notification_channel,whatsapp', 'regex:/^\d{10}$/'],
             'follow_up_reminders_enabled' => ['nullable', 'boolean'],
             'preferred_days'              => ['nullable', 'array'],
             'preferred_days.*'            => ['integer', Rule::in($openDays ?: range(0, 6))],
@@ -160,12 +175,17 @@ class SettingsController extends Controller
             'preferred_time_to'           => ['nullable', 'date_format:H:i', 'required_with:preferred_time_from', 'after:preferred_time_from'],
         ], [
             'notification_channel.required' => 'Seleziona un canale di notifica.',
-            'phone_number.required_if'      => 'Il numero di telefono è obbligatorio per il canale WhatsApp.',
-            'phone_number.regex'            => 'Inserisci un numero italiano valido (10 cifre, es. 3341234567).',
         ]);
 
-        if (! empty($validated['phone_number'])) {
-            $validated['phone_number'] = '+39' . preg_replace('/\D/', '', $validated['phone_number']);
+        if ($validated['notification_channel'] === 'whatsapp') {
+            $existingPhone = UserPreference::where('user_id', $request->user()->id)
+                ->where('business_id', app('current_business_id'))
+                ->value('phone_number');
+            if (empty($existingPhone)) {
+                return back()
+                    ->withErrors(['notification_channel' => 'Per usare WhatsApp devi prima impostare il numero di telefono nel tuo profilo.'])
+                    ->withInput();
+            }
         }
 
         UserPreference::firstOrCreate(
@@ -173,7 +193,6 @@ class SettingsController extends Controller
             ['notification_channel' => 'email']
         )->update([
             'notification_channel'        => $validated['notification_channel'],
-            'phone_number'                => $validated['phone_number'] ?? null,
             'follow_up_reminders_enabled' => $validated['follow_up_reminders_enabled'] ?? false,
             'preferred_days'              => $validated['preferred_days'] ?? null,
             'preferred_time_from'         => $validated['preferred_time_from'] ?? null,

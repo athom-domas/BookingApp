@@ -58,7 +58,7 @@ function makeWaEventAppointment(bool $enabled = true): Appointment
 it('sends appointment_confirmed whatsapp when AppointmentConfirmed fired', function () {
     $appointment = makeWaEventAppointment();
 
-    AppointmentConfirmed::dispatch($appointment);
+    AppointmentConfirmed::dispatch($appointment, byAdmin: true);
 
     Queue::assertPushed(SendWhatsAppNotificationJob::class);
     expect(WhatsAppMessage::forAppointmentTemplate($appointment->id, 'appointment_confirmed')->exists())->toBeTrue();
@@ -67,7 +67,7 @@ it('sends appointment_confirmed whatsapp when AppointmentConfirmed fired', funct
 it('sends appointment_cancelled whatsapp when AppointmentCancelled fired', function () {
     $appointment = makeWaEventAppointment();
 
-    AppointmentCancelled::dispatch($appointment, 'cliente ha disdetto');
+    AppointmentCancelled::dispatch($appointment, 'admin ha cancellato', byAdmin: true);
 
     Queue::assertPushed(SendWhatsAppNotificationJob::class);
     expect(WhatsAppMessage::forAppointmentTemplate($appointment->id, 'appointment_cancelled')->exists())->toBeTrue();
@@ -76,7 +76,7 @@ it('sends appointment_cancelled whatsapp when AppointmentCancelled fired', funct
 it('does not send whatsapp when notifications disabled', function () {
     $appointment = makeWaEventAppointment(enabled: false);
 
-    AppointmentConfirmed::dispatch($appointment);
+    AppointmentConfirmed::dispatch($appointment, byAdmin: true);
 
     Queue::assertNotPushed(SendWhatsAppNotificationJob::class);
 });

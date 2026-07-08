@@ -1,12 +1,16 @@
 <?php
 
 use App\Models\Appointment;
+use App\Models\AvailabilityRule;
 use App\Models\Business;
 use App\Models\IntegrationSetting;
 use App\Models\Service;
+use App\Models\SystemSetting;
+use App\Models\User;
 use App\Models\UserPreference;
 use App\Services\WhatsAppConversationState;
 use App\Services\WhatsAppToolDispatcher;
+use Illuminate\Support\Facades\Queue;
 use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
@@ -38,7 +42,7 @@ it('lists active services', function () {
 
 it('returns SERVICE_NOT_FOUND for unrecognized tool', function () {
     $dispatcher = app(WhatsAppToolDispatcher::class);
-    $state      = app(WhatsAppConversationState::class)->fresh('+393401234567');
+    $state = app(WhatsAppConversationState::class)->fresh('+393401234567');
 
     $result = $dispatcher->dispatch(
         ['name' => 'drop_table', 'input' => []],
@@ -52,7 +56,7 @@ it('returns SERVICE_NOT_FOUND for unrecognized tool', function () {
 
 it('refuses book_appointment without awaiting_confirmation', function () {
     $dispatcher = app(WhatsAppToolDispatcher::class);
-    $state      = app(WhatsAppConversationState::class)->fresh('+393401234567');
+    $state = app(WhatsAppConversationState::class)->fresh('+393401234567');
     $state['awaiting_confirmation'] = false;
 
     $result = $dispatcher->dispatch(
@@ -65,9 +69,33 @@ it('refuses book_appointment without awaiting_confirmation', function () {
     expect($result['code'])->toBe('CONFIRMATION_REQUIRED');
 });
 
+it('refuses booking tools when whatsapp booking is disabled', function () {
+    IntegrationSetting::current()->update(['whatsapp_ai_booking_enabled' => false]);
+
+    $dispatcher = app(WhatsAppToolDispatcher::class);
+    $state = app(WhatsAppConversationState::class)->fresh('+393401234567');
+
+    $slotsResult = $dispatcher->dispatch(
+        ['name' => 'list_available_slots', 'input' => ['service_ids' => [1], 'date' => now()->addDay()->toDateString()]],
+        $state,
+        app('current_business_id'),
+    );
+
+    $bookResult = $dispatcher->dispatch(
+        ['name' => 'book_appointment', 'input' => []],
+        $state,
+        app('current_business_id'),
+    );
+
+    expect($slotsResult['ok'])->toBeFalse()
+        ->and($slotsResult['code'])->toBe('BOOKING_DISABLED')
+        ->and($bookResult['ok'])->toBeFalse()
+        ->and($bookResult['code'])->toBe('BOOKING_DISABLED');
+});
+
 it('refuses book_appointment when slot not in last_available_slots', function () {
-    $dispatcher  = app(WhatsAppToolDispatcher::class);
-    $state       = app(WhatsAppConversationState::class)->fresh('+393401234567');
+    $dispatcher = app(WhatsAppToolDispatcher::class);
+    $state = app(WhatsAppConversationState::class)->fresh('+393401234567');
     $state['awaiting_confirmation'] = true;
     $state['last_available_slots_generated_at'] = now()->toIso8601String();
     $state['last_available_slots'] = [
@@ -75,9 +103,9 @@ it('refuses book_appointment when slot not in last_available_slots', function ()
     ];
     $state['selected_slot'] = [
         'service_id' => 1,
-        'staff_id'   => 99,
-        'starts_at'  => now()->addDays(3)->setTime(10, 0)->toIso8601String(),
-        'ends_at'    => now()->addDays(3)->setTime(11, 0)->toIso8601String(),
+        'staff_id' => 99,
+        'starts_at' => now()->addDays(3)->setTime(10, 0)->toIso8601String(),
+        'ends_at' => now()->addDays(3)->setTime(11, 0)->toIso8601String(),
     ];
 
     $result = $dispatcher->dispatch(
@@ -92,22 +120,22 @@ it('refuses book_appointment when slot not in last_available_slots', function ()
 
 it('get_next_appointment returns appointment data for matched customer', function () {
     $businessId = app('current_business_id');
-    $phone      = '+393401234567';
+    $phone = '+393401234567';
 
     $appointment = Appointment::factory()->create([
-        'business_id'    => $businessId,
+        'business_id' => $businessId,
         'scheduled_date' => now()->addDays(3),
-        'status'         => 'confirmed',
+        'status' => 'confirmed',
     ]);
 
     UserPreference::factory()->create([
-        'business_id'  => $businessId,
-        'user_id'      => $appointment->user_id,
+        'business_id' => $businessId,
+        'user_id' => $appointment->user_id,
         'phone_number' => $phone,
     ]);
 
     $dispatcher = app(WhatsAppToolDispatcher::class);
-    $state      = app(WhatsAppConversationState::class)->fresh($phone);
+    $state = app(WhatsAppConversationState::class)->fresh($phone);
 
     $result = $dispatcher->dispatch(
         ['name' => 'get_next_appointment', 'input' => []],
@@ -126,7 +154,7 @@ it('refuses cancel_appointment when cancellation is disabled', function () {
     IntegrationSetting::current()->update(['whatsapp_ai_cancellation_enabled' => false]);
 
     $dispatcher = app(WhatsAppToolDispatcher::class);
-    $state      = app(WhatsAppConversationState::class)->fresh('+393401234567');
+    $state = app(WhatsAppConversationState::class)->fresh('+393401234567');
 
     $result = $dispatcher->dispatch(
         ['name' => 'cancel_appointment', 'input' => ['appointment_id' => 1]],
@@ -136,4 +164,53 @@ it('refuses cancel_appointment when cancellation is disabled', function () {
 
     expect($result['ok'])->toBeFalse();
     expect($result['code'])->toBe('CANCELLATION_DISABLED');
+});
+
+it('keeps selected slots valid for thirty minutes', function () {
+    Queue::fake();
+    SystemSetting::current()->update(['slot_granularity_minutes' => 30, 'payment_mode' => 'in_salon']);
+
+    $businessId = app('current_business_id');
+    $service = Service::factory()->create(['duration_minutes' => 30, 'active' => true]);
+
+    $staff = User::factory()->create();
+    $staff->assignRole('staff');
+    $staff->services()->attach($service->id);
+
+    $startsAt = now()->addDays(3)->setTime(9, 0);
+    AvailabilityRule::factory()->create([
+        'business_id' => $businessId,
+        'user_id' => $staff->id,
+        'day_of_week' => $startsAt->dayOfWeek,
+        'start_time' => '09:00:00',
+        'end_time' => '12:00:00',
+        'is_available' => true,
+    ]);
+
+    $dispatcher = app(WhatsAppToolDispatcher::class);
+    $state = app(WhatsAppConversationState::class)->fresh('+393401234567');
+    $state['awaiting_confirmation'] = true;
+    $state['last_available_slots_generated_at'] = now()->subMinutes(20)->toIso8601String();
+    $state['last_available_slots_service_ids'] = [$service->id];
+    $state['last_available_slots'] = [[
+        'start' => '09:00',
+        'starts_at' => $startsAt->toIso8601String(),
+        'availableOperators' => [$staff->id],
+    ]];
+    $state['selected_slot'] = [
+        'service_ids' => [$service->id],
+        'staff_id' => $staff->id,
+        'starts_at' => $startsAt->toIso8601String(),
+        'service_name' => $service->name,
+        'staff_name' => $staff->name,
+    ];
+
+    $result = $dispatcher->dispatch(
+        ['name' => 'book_appointment', 'input' => []],
+        $state,
+        $businessId,
+    );
+
+    expect($result['ok'])->toBeTrue()
+        ->and($result['appointment_id'])->not->toBeNull();
 });
