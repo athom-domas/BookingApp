@@ -5,7 +5,7 @@ use App\Models\Business;
 use App\Models\IntegrationSetting;
 use Illuminate\Support\Facades\Queue;
 
-function whatsappPayload(string $phoneNumberId, string $from, string $text): array
+function makeWhatsAppWebhookPayload(string $phoneNumberId, string $from, string $text): array
 {
     return [
         'object' => 'whatsapp_business_account',
@@ -45,7 +45,7 @@ it('does not dispatch AI job for base-plan business', function () {
         ]
     );
 
-    $this->postJson('/whatsapp/webhook', whatsappPayload('phone_test_base', '+39123456789', 'Ciao'))
+    $this->postJson('/whatsapp/webhook', makeWhatsAppWebhookPayload('phone_test_base', '+39123456789', 'Ciao'))
          ->assertStatus(200);
 
     Queue::assertNotPushed(ProcessWhatsAppMessageJob::class);
@@ -61,7 +61,7 @@ it('dispatches AI job for trial business', function () {
         ]
     );
 
-    $this->postJson('/whatsapp/webhook', whatsappPayload('phone_test_trial', '+39123456789', 'Ciao'))
+    $this->postJson('/whatsapp/webhook', makeWhatsAppWebhookPayload('phone_test_trial', '+39123456789', 'Ciao'))
          ->assertStatus(200);
 
     Queue::assertPushed(ProcessWhatsAppMessageJob::class);
@@ -77,7 +77,7 @@ it('does not dispatch AI job when ai_enabled is false even for plus plan', funct
         ]
     );
 
-    $this->postJson('/whatsapp/webhook', whatsappPayload('phone_test_disabled', '+39123456789', 'Ciao'))
+    $this->postJson('/whatsapp/webhook', makeWhatsAppWebhookPayload('phone_test_disabled', '+39123456789', 'Ciao'))
          ->assertStatus(200);
 
     Queue::assertNotPushed(ProcessWhatsAppMessageJob::class);
