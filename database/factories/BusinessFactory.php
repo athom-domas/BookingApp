@@ -16,6 +16,7 @@ class BusinessFactory extends Factory
             'subdomain'     => fake()->unique()->lexify('salon-????'),
             'status'        => BusinessStatus::Active,
             'trial_ends_at' => now()->addDays(14),
+            'plan'          => 'base',
         ];
     }
 

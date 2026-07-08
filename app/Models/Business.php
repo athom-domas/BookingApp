@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Laravel\Cashier\Billable;
 
-#[Fillable(['name', 'subdomain', 'status', 'trial_ends_at', 'stripe_platform_fee_percent'])]
+#[Fillable(['name', 'subdomain', 'status', 'trial_ends_at', 'stripe_platform_fee_percent', 'plan', 'plan_override', 'plan_override_expires_at', 'plan_override_reason'])]
 class Business extends Model
 {
     /** @use HasFactory<BusinessFactory> */
@@ -31,6 +31,7 @@ class Business extends Model
             'status'                    => BusinessStatus::class,
             'trial_ends_at'             => 'datetime',
             'stripe_platform_fee_percent' => 'float',
+            'plan_override_expires_at'  => 'datetime',
         ];
     }
 
