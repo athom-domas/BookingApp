@@ -5,16 +5,11 @@ use App\Models\Business;
 use Illuminate\Support\Facades\DB;
 use Laravel\Cashier\Events\WebhookHandled;
 
-function makeWebhookHandledEvent(string $type, string $stripeCustomerId, ?string $stripePrice = null): WebhookHandled
+function makeWebhookHandledEvent(string $type, string $stripeCustomerId): WebhookHandled
 {
-    $object = ['customer' => $stripeCustomerId];
-    if ($stripePrice) {
-        $object['items'] = ['data' => [['price' => ['id' => $stripePrice]]]];
-    }
-
     return new WebhookHandled([
         'type' => $type,
-        'data' => ['object' => $object],
+        'data' => ['object' => ['customer' => $stripeCustomerId]],
     ]);
 }
 
@@ -45,9 +40,19 @@ it('updates plan to plus when subscription updated to plus price', function () {
     ]);
 
     $listener = new UpdateBusinessPlanFromStripe();
-    $listener->handle(makeWebhookHandledEvent('customer.subscription.updated', 'cus_test_002', $plusPriceId));
+    $listener->handle(makeWebhookHandledEvent('customer.subscription.updated', 'cus_test_002'));
 
     expect($business->fresh()->plan)->toBe('plus');
+});
+
+it('updates plan to base when subscription updated to base price', function () {
+    $business = Business::factory()->create(['stripe_id' => 'cus_update_base', 'plan' => 'plus']);
+
+    // No subscription rows → subscribedToPrice(plus) returns false → plan becomes 'base'
+    $listener = new UpdateBusinessPlanFromStripe();
+    $listener->handle(makeWebhookHandledEvent('customer.subscription.updated', 'cus_update_base'));
+
+    expect($business->fresh()->plan)->toBe('base');
 });
 
 it('resets plan to base when subscription is deleted', function () {
