@@ -85,8 +85,8 @@
                         <x-heroicon-o-check-circle class="w-5 h-5 text-green-600 dark:text-green-400"/>
                     </div>
                     <div>
-                        <p class="font-semibold text-green-900 dark:text-green-100">Piano attivo — {{ ucfirst($business->plan) }}</p>
-                        <p class="text-sm text-green-700 dark:text-green-400 mt-0.5">Piano {{ ucfirst($business->plan) }} · IVA esclusa · Cancellazione in qualsiasi momento</p>
+                        <p class="font-semibold text-green-900 dark:text-green-100">Piano attivo — {{ ucfirst($business->plan ?? 'base') }}</p>
+                        <p class="text-sm text-green-700 dark:text-green-400 mt-0.5">Piano {{ ucfirst($business->plan ?? 'base') }} · IVA esclusa · Cancellazione in qualsiasi momento</p>
                     </div>
                 </div>
                 <div class="grid grid-cols-2 sm:grid-cols-{{ $renewalDate ? '3' : '2' }} gap-4 pt-4 border-t border-green-200 dark:border-green-800">
@@ -133,7 +133,7 @@
                     Il periodo di prova è terminato. Attiva l'abbonamento per continuare a usare BookingApp.
                 </p>
                 @if ($isAdmin)
-                    <p class="text-xs text-red-500 dark:text-red-500">Usa il pulsante <strong>Abbonati ora</strong> in alto a destra.</p>
+                    <p class="text-xs text-red-500 dark:text-red-500">Usa i pulsanti <strong>Attiva Base</strong> o <strong>Attiva Plus</strong> qui sotto per scegliere il tuo piano.</p>
                 @endif
             </div>
         @endif
@@ -145,7 +145,6 @@
             @php
                 $planConfig   = config("plans.{$planKey}");
                 $isCurrentPaidPlan = $business->plan === $planKey && $business->subscribed('default');
-                $isEffectivePlan   = $business->effectivePlan() === $planKey;
                 $isPlusPlan        = $planKey === 'plus';
             @endphp
             <div class="rounded-xl border {{ $isPlusPlan ? 'border-primary-500 dark:border-primary-400' : 'border-gray-200 dark:border-gray-700' }} bg-white dark:bg-gray-900 p-6 flex flex-col relative">
