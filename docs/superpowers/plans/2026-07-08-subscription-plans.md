@@ -112,7 +112,6 @@ return [
     'base' => [
         'price_id' => env('STRIPE_PRICE_ID_BASE', env('STRIPE_PRICE_ID')), // fallback to old var
         'label'    => 'Base',
-        'price'    => env('PLAN_BASE_PRICE', 29),
         'features' => [
             'Gestione appuntamenti',
             'Notifiche email/SMS',
@@ -123,7 +122,8 @@ return [
     'plus' => [
         'price_id' => env('STRIPE_PRICE_ID_PLUS'),
         'label'    => 'Plus',
-        'price'    => env('PLAN_PLUS_PRICE'), // null until confirmed
+        // No price here — unit_amount is defined on the Stripe price object.
+        // The plan cards show features only; price is shown by Stripe Checkout.
         'features' => [
             'Tutto il piano Base',
             'Assistente AI WhatsApp',
@@ -168,9 +168,9 @@ Add to `.env` (use the current `STRIPE_PRICE_ID` value for `STRIPE_PRICE_ID_BASE
 ```
 STRIPE_PRICE_ID_BASE=price_...   # same value as existing STRIPE_PRICE_ID
 STRIPE_PRICE_ID_PLUS=            # fill when Plus price is created in Stripe
-PLAN_BASE_PRICE=29
-PLAN_PLUS_PRICE=                 # fill before launch
 ```
+
+Note: no `PLAN_BASE_PRICE` / `PLAN_PLUS_PRICE` — the price is the `unit_amount` on the Stripe price object, not duplicated in the app config. The plan cards in the BillingPage show features only; the actual price is shown by Stripe Checkout.
 
 - [ ] **Step 7: Run migration**
 
@@ -923,13 +923,13 @@ class BillingPage extends Page
         return match (true) {
             in_array($status, ['trial', 'expired']) => [
                 Action::make('subscribeBase')
-                    ->label('Attiva Base — €' . config('plans.base.price') . '/mese')
+                    ->label('Attiva Base')
                     ->color('gray')
                     ->icon('heroicon-o-credit-card')
                     ->action(fn () => $this->checkoutRedirect('base')),
 
                 Action::make('subscribePlus')
-                    ->label('Attiva Plus' . (config('plans.plus.price') ? ' — €' . config('plans.plus.price') . '/mese' : ''))
+                    ->label('Attiva Plus')
                     ->color('primary')
                     ->icon('heroicon-o-rocket-launch')
                     ->action(fn () => $this->checkoutRedirect('plus')),
@@ -1116,13 +1116,7 @@ Then, after the status banner block (after the `@endif` at line 135) and before 
 
                 <div class="mb-4">
                     <h3 class="text-lg font-bold text-gray-900 dark:text-white">{{ $planConfig['label'] }}</h3>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-                        @if ($planConfig['price'])
-                            €{{ $planConfig['price'] }}<span class="text-sm font-normal text-gray-500 dark:text-gray-400">/mese</span>
-                        @else
-                            <span class="text-base font-normal text-gray-500 dark:text-gray-400">Prezzo da definire</span>
-                        @endif
-                    </p>
+                    {{-- Price is defined on the Stripe price object — not duplicated here. --}}
                 </div>
 
                 <ul class="space-y-2 flex-1 mb-6">
@@ -1162,13 +1156,13 @@ Also update the active subscription plan name in the status banner (line 84 — 
 
 ```blade
                         <p class="font-semibold text-green-900 dark:text-green-100">Piano attivo — {{ ucfirst($business->plan) }}</p>
-                        <p class="text-sm text-green-700 dark:text-green-400 mt-0.5">€{{ config("plans.{$business->plan}.price") }}/mese · IVA esclusa · Cancellazione in qualsiasi momento</p>
+                        <p class="text-sm text-green-700 dark:text-green-400 mt-0.5">Piano {{ ucfirst($business->plan) }} · IVA esclusa · Cancellazione in qualsiasi momento</p>
 ```
 
-And the payment detail `€29,00` (line 208 — replace hardcoded price):
+And the payment detail `€29,00` (line 208 — the hardcoded price row): remove or leave blank — the amount comes from the Stripe invoice, not the config:
 
 ```blade
-                        <span class="font-medium text-gray-900 dark:text-white">€{{ number_format(config("plans.{$business->plan}.price", 29), 2, ',', '.') }}</span>
+                        {{-- Amount shown on Stripe invoice, not hardcoded here. --}}
 ```
 
 - [ ] **Step 3: Verify in browser**
