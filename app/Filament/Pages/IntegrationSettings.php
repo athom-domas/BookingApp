@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Models\Business;
 use App\Models\IntegrationSetting;
 use App\Models\WhatsAppMessage;
 use Filament\Forms\Components\Placeholder;
@@ -24,6 +25,11 @@ class IntegrationSettings extends Page
     protected static ?int $navigationSort = 5;
 
     public ?array $data = [];
+
+    public function getBusiness(): Business
+    {
+        return once(fn () => Business::findOrFail(Business::currentId()));
+    }
 
     public function mount(): void
     {
@@ -74,45 +80,65 @@ class IntegrationSettings extends Page
 
                 Section::make('Assistente WhatsApp (AI)')
                     ->description('Abilita un assistente conversazionale AI per ricevere prenotazioni via WhatsApp. Richiede le credenziali Meta WhatsApp configurate sopra.')
-                    ->schema([
-                        Toggle::make('whatsapp_ai_enabled')
-                            ->label('Assistente WhatsApp attivo')
-                            ->helperText('Attiva il bot AI per rispondere ai messaggi in arrivo su WhatsApp.'),
+                    ->schema(function (): array {
+                        $hasPlan = $this->getBusiness()->canUseFeature('whatsapp_ai');
 
-                        Toggle::make('whatsapp_ai_booking_enabled')
-                            ->label('Permetti prenotazione via WhatsApp')
-                            ->default(true),
+                        $upgradeNotice = $hasPlan ? [] : [
+                            Placeholder::make('upgrade_notice')
+                                ->label('')
+                                ->hint('Disponibile nel piano Plus.')
+                                ->hintIcon('heroicon-o-rocket-launch')
+                                ->hintColor('primary'),
+                        ];
 
-                        Toggle::make('whatsapp_ai_cancellation_enabled')
-                            ->label('Permetti cancellazione via WhatsApp')
-                            ->helperText('Se disabilitato, il bot non potrà cancellare appuntamenti. Abilitare solo dopo aver testato il flusso.')
-                            ->default(false),
+                        return [
+                            ...$upgradeNotice,
 
-                        TextInput::make('whatsapp_ai_handoff_email')
-                            ->label('Email notifica escalation staff')
-                            ->helperText('Indirizzo a cui inviare la notifica quando il bot trasferisce a un operatore umano.')
-                            ->email()
-                            ->nullable(),
+                            Toggle::make('whatsapp_ai_enabled')
+                                ->label('Assistente WhatsApp attivo')
+                                ->helperText('Attiva il bot AI per rispondere ai messaggi in arrivo su WhatsApp.')
+                                ->disabled(! $hasPlan),
 
-                        TextInput::make('whatsapp_ai_max_turns')
-                            ->label('Numero max turni')
-                            ->helperText('Limite di messaggi per conversazione prima di invitare il cliente a contattare direttamente il salone. Default: 12.')
-                            ->numeric()
-                            ->default(12)
-                            ->minValue(4)
-                            ->maxValue(50),
+                            Toggle::make('whatsapp_ai_booking_enabled')
+                                ->label('Permetti prenotazione via WhatsApp')
+                                ->default(true)
+                                ->disabled(! $hasPlan),
 
-                        Textarea::make('whatsapp_ai_custom_instructions')
-                            ->label('Istruzioni personalizzate')
-                            ->helperText('Personalizza tono e identità dell\'assistente (es. "Usa un tono caloroso e chiama il salone Atelier Rossi"). Non può sovrascrivere le regole di sicurezza.')
-                            ->rows(4)
-                            ->nullable(),
+                            Toggle::make('whatsapp_ai_cancellation_enabled')
+                                ->label('Permetti cancellazione via WhatsApp')
+                                ->helperText('Se disabilitato, il bot non potrà cancellare appuntamenti. Abilitare solo dopo aver testato il flusso.')
+                                ->default(false)
+                                ->disabled(! $hasPlan),
 
-                        Placeholder::make('webhook_url')
-                            ->label('URL webhook da registrare su Meta Developer Console')
-                            ->content(fn () => url('/whatsapp/webhook'))
-                            ->helperText('Subscribed fields: messages'),
-                    ]),
+                            TextInput::make('whatsapp_ai_handoff_email')
+                                ->label('Email notifica escalation staff')
+                                ->helperText('Indirizzo a cui inviare la notifica quando il bot trasferisce a un operatore umano.')
+                                ->email()
+                                ->nullable()
+                                ->disabled(! $hasPlan),
+
+                            TextInput::make('whatsapp_ai_max_turns')
+                                ->label('Numero max turni')
+                                ->helperText('Limite di messaggi per conversazione prima di invitare il cliente a contattare direttamente il salone. Default: 12.')
+                                ->numeric()
+                                ->default(12)
+                                ->minValue(4)
+                                ->maxValue(50)
+                                ->disabled(! $hasPlan),
+
+                            Textarea::make('whatsapp_ai_custom_instructions')
+                                ->label('Istruzioni personalizzate')
+                                ->helperText('Personalizza tono e identità dell\'assistente (es. "Usa un tono caloroso e chiama il salone Atelier Rossi"). Non può sovrascrivere le regole di sicurezza.')
+                                ->rows(4)
+                                ->nullable()
+                                ->disabled(! $hasPlan),
+
+                            Placeholder::make('webhook_url')
+                                ->label('URL webhook da registrare su Meta Developer Console')
+                                ->content(fn () => url('/whatsapp/webhook'))
+                                ->helperText('Subscribed fields: messages'),
+                        ];
+                    }),
 
                 Section::make('Stato connessione WhatsApp')
                     ->description('Informazioni di sola lettura sullo stato della connessione WhatsApp.')
