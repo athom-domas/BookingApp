@@ -803,6 +803,7 @@ class WhatsAppConversationService
     private function handleGeneralMessage(string $msg, array &$state, int $businessId, ?IntegrationSetting $setting): ?string
     {
         $entities = $this->extractEntities($msg, $state, $businessId, $setting);
+        $this->applyBookingPreferenceAnswers($msg, $state, $businessId);
         $bookingRequested = $this->isBookingRequest($msg, $state);
 
         if (! ($setting?->isWhatsAppBookingEnabled() ?? true)
@@ -823,11 +824,13 @@ class WhatsAppConversationService
             return $this->formatServiceMenu($businessId, $state);
         }
 
-        if (! empty($entities['service_ids']) && empty($entities['date'])) {
-            $state['step'] = 'collecting';
-            $services = $this->formatSelectedServices($entities['service_ids'], $businessId);
+        if (! empty($entities['service_ids'])) {
+            $missingReply = $this->nextBookingInformationPrompt($state, $businessId);
+            if ($missingReply !== null) {
+                $state['step'] = 'collecting';
 
-            return "Perfetto: {$services}.\nChe giorno preferisci?";
+                return $missingReply;
+            }
         }
 
         // Auto-fetch slots when we have service + date
@@ -842,6 +845,11 @@ class WhatsAppConversationService
             ], $state, $businessId);
 
             if ($slotResult['ok'] ?? false) {
+                if (! empty($slotResult['slots'])) {
+                    $this->filterSlotsByTimePreference($state);
+                    $slotResult['slots'] = $state['last_available_slots'] ?? [];
+                }
+
                 if (! empty($slotResult['slots'])) {
                     $state['step'] = 'slots_shown';
 
@@ -866,6 +874,10 @@ class WhatsAppConversationService
                             'name' => 'list_available_slots',
                             'input' => ['service_ids' => $entities['service_ids'], 'date' => $nextDate, 'staff_id' => $entities['staff_id']],
                         ], $state, $businessId);
+                        if (! empty($nextResult['slots'] ?? [])) {
+                            $this->filterSlotsByTimePreference($state);
+                            $nextResult['slots'] = $state['last_available_slots'] ?? [];
+                        }
                         if (! empty($nextResult['slots'] ?? [])) {
                             $state['step'] = 'slots_shown';
                             $tz = $setting?->getWhatsAppAiTimezone() ?? 'Europe/Rome';
@@ -942,13 +954,124 @@ class WhatsAppConversationService
             $staffId = $state['draft']['staff_id'] ?? null;
         }
 
+        $timePeriod = $this->extractTimePeriod($lower) ?? ($state['draft']['time_period'] ?? null);
+
         // Persist extracted entities to draft
         $state['draft']['service_ids'] = $serviceIds;
         $state['draft']['date'] = $date;
         $state['draft']['time'] = $time;
         $state['draft']['staff_id'] = $staffId;
+        $state['draft']['time_period'] = $time ? null : $timePeriod;
+
+        if ($staffId) {
+            $state['draft']['staff_any'] = false;
+        }
+        if ($time || $timePeriod) {
+            $state['draft']['time_any'] = false;
+        }
 
         return ['service_ids' => $serviceIds, 'date' => $date, 'time' => $time, 'staff_id' => $staffId];
+    }
+
+    private function applyBookingPreferenceAnswers(string $msg, array &$state, int $businessId): void
+    {
+        $normalized = $this->normalizeSearchText($msg);
+        $draft = $state['draft'] ?? [];
+
+        if (empty($draft['service_ids'])) {
+            return;
+        }
+
+        if ($this->isNoPreferenceAnswer($normalized)) {
+            $missing = $this->nextBookingMissingField($state, $businessId);
+            if ($missing === 'staff') {
+                $state['draft']['staff_any'] = true;
+                $state['draft']['staff_id'] = null;
+            }
+            if ($missing === 'time') {
+                $state['draft']['time_any'] = true;
+                $state['draft']['time'] = null;
+                $state['draft']['time_period'] = null;
+            }
+        }
+    }
+
+    private function nextBookingInformationPrompt(array $state, int $businessId): ?string
+    {
+        $missing = $this->nextBookingMissingField($state, $businessId);
+        if ($missing === null) {
+            return null;
+        }
+
+        $services = $this->formatSelectedServices((array) ($state['draft']['service_ids'] ?? []), $businessId);
+
+        return match ($missing) {
+            'staff' => "Perfetto: {$services}.\nHai preferenze sullo staff? Puoi indicare un nome o scrivere *nessuna preferenza*.",
+            'date' => "Perfetto: {$services}.\nChe giorno preferisci?",
+            'time' => "Perfetto: {$services}.\nPreferisci mattina, pomeriggio o un orario preciso?",
+            default => null,
+        };
+    }
+
+    private function nextBookingMissingField(array $state, int $businessId): ?string
+    {
+        $draft = $state['draft'] ?? [];
+        $serviceIds = array_values(array_filter(array_map('intval', (array) ($draft['service_ids'] ?? []))));
+
+        if (empty($serviceIds)) {
+            return 'services';
+        }
+
+        if ($this->hasStaffOptionsForServices($businessId, $serviceIds)
+            && empty($draft['staff_id'])
+            && empty($draft['staff_any'])
+        ) {
+            return 'staff';
+        }
+
+        if (empty($draft['date'])) {
+            return 'date';
+        }
+
+        if (empty($draft['time']) && empty($draft['time_period']) && empty($draft['time_any'])) {
+            return 'time';
+        }
+
+        return null;
+    }
+
+    private function hasStaffOptionsForServices(int $businessId, array $serviceIds): bool
+    {
+        $serviceIds = array_values(array_unique(array_filter(array_map('intval', $serviceIds))));
+        if (empty($serviceIds)) {
+            return false;
+        }
+
+        return User::where('business_id', $businessId)
+            ->whereHas('roles', fn ($q) => $q->where('name', 'staff'))
+            ->whereHas('services', fn ($q) => $q->whereIn('services.id', $serviceIds), '=', count($serviceIds))
+            ->exists();
+    }
+
+    private function isNoPreferenceAnswer(string $normalized): bool
+    {
+        if (str_contains($normalized, 'nessuna preferenza')
+            || str_contains($normalized, 'senza preferenza')
+            || str_contains($normalized, 'va bene chiunque')
+            || str_contains($normalized, 'va bene tutto')
+            || str_contains($normalized, 'primo disponibile')
+        ) {
+            return true;
+        }
+
+        return $this->containsSearchTerm($normalized, 'nessuna preferenza')
+            || $this->containsSearchTerm($normalized, 'senza preferenza')
+            || $this->containsSearchTerm($normalized, 'indifferente')
+            || $this->containsSearchTerm($normalized, 'qualsiasi')
+            || $this->containsSearchTerm($normalized, 'chiunque')
+            || $this->containsSearchTerm($normalized, 'primo disponibile')
+            || $this->containsSearchTerm($normalized, 'va bene chiunque')
+            || $this->containsSearchTerm($normalized, 'va bene tutto');
     }
 
     private function findMentionedStaff(string $msg, int $businessId): ?User
@@ -1096,6 +1219,55 @@ class WhatsAppConversationService
         }
 
         return null;
+    }
+
+    private function extractTimePeriod(string $text): ?string
+    {
+        $normalized = $this->normalizeSearchText($text);
+
+        if ($this->containsSearchTerm($normalized, 'mattina') || $this->containsSearchTerm($normalized, 'mattino')) {
+            return 'morning';
+        }
+
+        if ($this->containsSearchTerm($normalized, 'pomeriggio') || $this->containsSearchTerm($normalized, 'primo pomeriggio')) {
+            return 'afternoon';
+        }
+
+        if ($this->containsSearchTerm($normalized, 'sera') || $this->containsSearchTerm($normalized, 'serata')) {
+            return 'evening';
+        }
+
+        return null;
+    }
+
+    private function filterSlotsByTimePreference(array &$state): void
+    {
+        $period = $state['draft']['time_period'] ?? null;
+        if (! $period || ! empty($state['draft']['time_any']) || empty($state['last_available_slots'])) {
+            return;
+        }
+
+        $state['last_available_slots'] = array_values(array_filter(
+            $state['last_available_slots'],
+            fn (array $slot) => $this->slotMatchesTimePeriod($slot, $period)
+        ));
+    }
+
+    private function slotMatchesTimePeriod(array $slot, string $period): bool
+    {
+        $startsAt = $slot['starts_at'] ?? null;
+        if (! $startsAt) {
+            return true;
+        }
+
+        $hour = (int) Carbon::parse($startsAt)->format('G');
+
+        return match ($period) {
+            'morning' => $hour < 13,
+            'afternoon' => $hour >= 13 && $hour < 18,
+            'evening' => $hour >= 18,
+            default => true,
+        };
     }
 
     private function findSlotByTime(string $time, array $slots): ?array
@@ -1539,6 +1711,9 @@ class WhatsAppConversationService
 
             ."FLUSSO PRENOTAZIONE\n"
             ."- Se booking_enabled è disabilitata: informa che la prenotazione via WhatsApp non è disponibile.\n"
+            ."- Il flusso segue l'ordine del form /prenota: servizi, preferenza staff, giorno, preferenza oraria, poi proposta slot.\n"
+            ."- Se manca una di queste informazioni, guida il cliente chiedendo il prossimo dato mancante; non scaricare la gestione sul cliente.\n"
+            ."- Staff e orario possono essere 'nessuna preferenza', ma devono essere chiariti prima di proporre disponibilità.\n"
             ."- Il sistema gestisce automaticamente: ricerca slot, selezione, conferma e pagamento.\n"
             ."  Tu non chiami mai select_slot o book_appointment — il backend PHP li esegue.\n"
             ."- Non inventare orari disponibili. Mostra orari solo quando sono presenti in SLOT_DISPONIBILI.\n"

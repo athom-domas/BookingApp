@@ -108,13 +108,16 @@ it('handles unsupported media messages without calling Claude', function () {
         'timestamp' => (string) now()->timestamp,
     ]);
 
-    Http::fake([
-        'https://graph.facebook.com/*' => Http::response(['messages' => [['id' => 'wamid.out']]], 200),
-        'https://api.anthropic.com/*' => Http::response([
-            'content' => [['type' => 'text', 'text' => 'fallback']],
-            'stop_reason' => 'end_turn',
-        ], 200),
-    ]);
+    Http::fake(function ($request) {
+        if (str_contains($request->url(), 'api.anthropic.com')) {
+            return Http::response([
+                'content' => [['type' => 'text', 'text' => 'fallback']],
+                'stop_reason' => 'end_turn',
+            ], 200);
+        }
+
+        return Http::response(['messages' => [['id' => 'wamid.out.'.uniqid()]]], 200);
+    });
 
     app(WhatsAppConversationService::class)->handle($message->id, $businessId);
 
@@ -147,13 +150,16 @@ it('uses interactive reply text as conversation input', function () {
         'timestamp' => (string) now()->timestamp,
     ]);
 
-    Http::fake([
-        'https://graph.facebook.com/*' => Http::response(['messages' => [['id' => 'wamid.out']]], 200),
-        'https://api.anthropic.com/*' => Http::response([
-            'content' => [['type' => 'text', 'text' => 'fallback']],
-            'stop_reason' => 'end_turn',
-        ], 200),
-    ]);
+    Http::fake(function ($request) {
+        if (str_contains($request->url(), 'api.anthropic.com')) {
+            return Http::response([
+                'content' => [['type' => 'text', 'text' => 'fallback']],
+                'stop_reason' => 'end_turn',
+            ], 200);
+        }
+
+        return Http::response(['messages' => [['id' => 'wamid.out.'.uniqid()]]], 200);
+    });
 
     app(WhatsAppConversationService::class)->handle($message->id, $businessId);
 
@@ -264,13 +270,16 @@ it('shows a deterministic numbered service menu for booking requests', function 
         'active' => true,
     ]);
 
-    Http::fake([
-        'https://graph.facebook.com/*' => Http::response(['messages' => [['id' => 'wamid.out']]], 200),
-        'https://api.anthropic.com/*' => Http::response([
-            'content' => [['type' => 'text', 'text' => 'fallback']],
-            'stop_reason' => 'end_turn',
-        ], 200),
-    ]);
+    Http::fake(function ($request) {
+        if (str_contains($request->url(), 'api.anthropic.com')) {
+            return Http::response([
+                'content' => [['type' => 'text', 'text' => 'fallback']],
+                'stop_reason' => 'end_turn',
+            ], 200);
+        }
+
+        return Http::response(['messages' => [['id' => 'wamid.out.'.uniqid()]]], 200);
+    });
 
     app(WhatsAppConversationService::class)->handle(
         makeInboundMessage($businessId, 'Ciao, vorrei fare una prenotazione')->id,
@@ -305,6 +314,9 @@ it('accepts numbered service selections from the last service menu', function ()
         'price' => 10,
         'active' => true,
     ]);
+    $staff = User::factory()->create(['name' => 'Nicola']);
+    $staff->assignRole('staff');
+    $staff->services()->attach([$taglio->id, $rasatura->id]);
 
     Http::fake(function ($request) {
         if (str_contains($request->url(), 'api.anthropic.com')) {
@@ -333,7 +345,7 @@ it('accepts numbered service selections from the last service menu', function ()
 
     Http::assertSent(fn ($request) => str_contains($request->url(), 'graph.facebook.com')
         && str_contains(data_get($request->data(), 'text.body', ''), 'Perfetto: Taglio Classico + Rasatura Barba')
-        && str_contains(data_get($request->data(), 'text.body', ''), 'Che giorno preferisci?')
+        && str_contains(data_get($request->data(), 'text.body', ''), 'Hai preferenze sullo staff?')
     );
     Http::assertNotSent(fn ($request) => str_contains($request->url(), 'api.anthropic.com'));
 });
@@ -374,15 +386,33 @@ it('uses explicit calendar date before weekday names when fetching slots', funct
 
     $message = makeInboundMessage($businessId, 'Vorrei un taglio venerdì 11 luglio');
 
-    Http::fake([
-        'https://graph.facebook.com/*' => Http::response(['messages' => [['id' => 'wamid.out']]], 200),
-        'https://api.anthropic.com/*' => Http::response([
-            'content' => [['type' => 'text', 'text' => 'Ho trovato alcuni orari per l\'11 luglio.']],
-            'stop_reason' => 'end_turn',
-        ], 200),
-    ]);
+    Http::fake(function ($request) {
+        if (str_contains($request->url(), 'api.anthropic.com')) {
+            return Http::response([
+                'content' => [['type' => 'text', 'text' => 'Ho trovato alcuni orari per l\'11 luglio.']],
+                'stop_reason' => 'end_turn',
+            ], 200);
+        }
+
+        return Http::response(['messages' => [['id' => 'wamid.out.'.uniqid()]]], 200);
+    });
 
     app(WhatsAppConversationService::class)->handle($message->id, $businessId);
+
+    $state = app(WhatsAppConversationState::class)->get($businessId, '+393401234567');
+
+    expect($state['draft']['date'])->toBe('2026-07-11')
+        ->and($state['step'])->toBe('collecting')
+        ->and($state['last_available_slots'])->toBeEmpty();
+
+    app(WhatsAppConversationService::class)->handle(
+        makeInboundMessage($businessId, 'nessuna preferenza')->id,
+        $businessId,
+    );
+    app(WhatsAppConversationService::class)->handle(
+        makeInboundMessage($businessId, 'mattina')->id,
+        $businessId,
+    );
 
     $state = app(WhatsAppConversationState::class)->get($businessId, '+393401234567');
 
@@ -469,16 +499,29 @@ it('selects a real available operator for an exact time and excludes busy staff'
         'status' => 'confirmed',
     ]);
 
-    Http::fake([
-        'https://graph.facebook.com/*' => Http::response(['messages' => [['id' => 'wamid.out']]], 200),
-        'https://api.anthropic.com/*' => Http::response([
-            'content' => [['type' => 'text', 'text' => 'fallback']],
-            'stop_reason' => 'end_turn',
-        ], 200),
-    ]);
+    Http::fake(function ($request) {
+        if (str_contains($request->url(), 'api.anthropic.com')) {
+            return Http::response([
+                'content' => [['type' => 'text', 'text' => 'fallback']],
+                'stop_reason' => 'end_turn',
+            ], 200);
+        }
+
+        return Http::response(['messages' => [['id' => 'wamid.out.'.uniqid()]]], 200);
+    });
 
     app(WhatsAppConversationService::class)->handle(
         makeInboundMessage($businessId, 'Vorrei taglio e rasatura venerdì 10 luglio alle 11')->id,
+        $businessId,
+    );
+
+    $state = app(WhatsAppConversationState::class)->get($businessId, '+393401234567');
+
+    expect($state['step'])->toBe('collecting')
+        ->and($state['selected_slot'])->toBeNull();
+
+    app(WhatsAppConversationService::class)->handle(
+        makeInboundMessage($businessId, 'nessuna preferenza')->id,
         $businessId,
     );
 
@@ -902,6 +945,24 @@ it('runs the PHP-driven booking flow from request to confirmed appointment', fun
     );
 
     $stateService = app(WhatsAppConversationState::class);
+    $state = $stateService->get($businessId, '+393401234567');
+    expect($state['step'])->toBe('collecting')
+        ->and($state['last_available_slots'])->toBeEmpty();
+
+    app(WhatsAppConversationService::class)->handle(
+        makeInboundMessage($businessId, 'nessuna preferenza')->id,
+        $businessId,
+    );
+
+    $state = $stateService->get($businessId, '+393401234567');
+    expect($state['step'])->toBe('collecting')
+        ->and($state['last_available_slots'])->toBeEmpty();
+
+    app(WhatsAppConversationService::class)->handle(
+        makeInboundMessage($businessId, 'mattina')->id,
+        $businessId,
+    );
+
     $state = $stateService->get($businessId, '+393401234567');
     expect($state['step'])->toBe('slots_shown')
         ->and($state['last_available_slots'])->not->toBeEmpty();
