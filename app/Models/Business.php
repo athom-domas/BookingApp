@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\BusinessStatus;
 use App\Models\ActivityLog;
 use App\Models\StripeConnectAccount;
+use App\Services\PlanFeatureGate;
 use Database\Factories\BusinessFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -81,6 +82,42 @@ class Business extends Model
     {
         $account = $this->stripeConnectAccount;
         return $account !== null && $account->isActive();
+    }
+
+    public function effectivePlan(): string
+    {
+        if ($this->hasActivePlanOverride()) {
+            return $this->plan_override;
+        }
+
+        if ($this->onGenericTrial()) {
+            return 'plus';
+        }
+
+        if (! $this->subscribed('default')) {
+            return 'base';
+        }
+
+        if ($this->hasIncompletePayment('default')) {
+            return 'base';
+        }
+
+        if ($this->subscribedToPrice(config('plans.plus.price_id'), 'default')) {
+            return 'plus';
+        }
+
+        return 'base';
+    }
+
+    public function hasActivePlanOverride(): bool
+    {
+        return $this->plan_override !== null
+            && ($this->plan_override_expires_at === null || $this->plan_override_expires_at->isFuture());
+    }
+
+    public function canUseFeature(string $feature): bool
+    {
+        return app(PlanFeatureGate::class)->allows($this, $feature);
     }
 
     public function activityLogs(): HasMany
