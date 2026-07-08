@@ -10,6 +10,7 @@ use App\Models\AvailabilityRule;
 use App\Models\Service;
 use App\Models\SystemSetting;
 use App\Models\User;
+use App\Models\UserPreference;
 use App\Services\Booking\SlotCalculationService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -110,9 +111,13 @@ class AppointmentService
 
             $reminderCount = SystemSetting::getReminderCount();
             if ($reminderCount >= 1) {
+                $reminderType = UserPreference::withoutGlobalScope('business')
+                    ->where('user_id', $userId)
+                    ->value('notification_channel') === 'whatsapp' ? 'whatsapp' : 'email';
+
                 AppointmentReminder::create([
                     'appointment_id' => $appointment->id,
-                    'type'           => 'email',
+                    'type'           => $reminderType,
                     'scheduled_for'  => $scheduledDate->copy()->subHours(SystemSetting::getReminder1Hours()),
                     'status'         => 'pending',
                 ]);
@@ -120,7 +125,7 @@ class AppointmentService
             if ($reminderCount >= 2) {
                 AppointmentReminder::create([
                     'appointment_id' => $appointment->id,
-                    'type'           => 'email',
+                    'type'           => $reminderType ?? 'email',
                     'scheduled_for'  => $scheduledDate->copy()->subHours(SystemSetting::getReminder2Hours()),
                     'status'         => 'pending',
                 ]);
