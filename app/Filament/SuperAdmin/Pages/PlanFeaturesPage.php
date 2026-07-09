@@ -62,8 +62,12 @@ class PlanFeaturesPage extends Page implements HasTable
                     ->label('Modifica')
                     ->icon('heroicon-o-pencil')
                     ->requiresConfirmation(fn (PlanFeature $record) => in_array($record->key, $costSensitive))
-                    ->modalHeading('Attenzione: feature con costo variabile')
-                    ->modalDescription('Questa feature genera costi (AI/WhatsApp). Assicurati di volerla rendere disponibile nel piano selezionato.')
+                    ->modalHeading(fn (PlanFeature $record) => in_array($record->key, $costSensitive)
+                        ? 'Attenzione: feature con costo variabile'
+                        : 'Modifica piano minimo')
+                    ->modalDescription(fn (PlanFeature $record) => in_array($record->key, $costSensitive)
+                        ? 'Questa feature genera costi (AI/WhatsApp). Assicurati di volerla rendere disponibile nel piano selezionato.'
+                        : null)
                     ->form([
                         Select::make('min_plan')
                             ->label('Piano minimo')
