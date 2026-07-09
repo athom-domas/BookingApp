@@ -10,8 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 #[Fillable([
     'business_id',
     'stripe_public_key', 'stripe_secret_key', 'stripe_webhook_secret',
-    'twilio_sid', 'twilio_token', 'twilio_from',
-    'meta_whatsapp_token', 'meta_whatsapp_phone_id', 'meta_whatsapp_template',
+'meta_whatsapp_token', 'meta_whatsapp_phone_id', 'meta_whatsapp_template',
     'google_calendar_id', 'google_credentials_json',
     'whatsapp_ai_enabled', 'whatsapp_ai_booking_enabled', 'whatsapp_ai_cancellation_enabled',
     'whatsapp_ai_custom_instructions', 'whatsapp_ai_handoff_email',
@@ -27,9 +26,7 @@ class IntegrationSetting extends Model
         return [
             'stripe_secret_key'       => 'encrypted',
             'stripe_webhook_secret'   => 'encrypted',
-            'twilio_sid'              => 'encrypted',
-            'twilio_token'            => 'encrypted',
-            'meta_whatsapp_token'     => 'encrypted',
+'meta_whatsapp_token'     => 'encrypted',
             'google_credentials_json' => 'encrypted',
             'whatsapp_notifications_enabled' => 'boolean',
         ];
@@ -59,21 +56,6 @@ class IntegrationSetting extends Model
     public static function getStripeWebhookSecret(): ?string
     {
         return self::current()->stripe_webhook_secret;
-    }
-
-    public static function getTwilioSid(): ?string
-    {
-        return self::current()->twilio_sid;
-    }
-
-    public static function getTwilioToken(): ?string
-    {
-        return self::current()->twilio_token;
-    }
-
-    public static function getTwilioFrom(): ?string
-    {
-        return self::current()->twilio_from;
     }
 
     public static function getMetaWhatsAppToken(): ?string

@@ -4,7 +4,6 @@ namespace App\Jobs;
 
 use App\Mail\WaitlistOfferMail;
 use App\Models\WaitlistEntry;
-use App\Services\NotificationService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -23,7 +22,7 @@ class NotifyWaitlistCandidateJob implements ShouldQueue
         public readonly array $slotInfo,
     ) {}
 
-    public function handle(NotificationService $notificationService): void
+    public function handle(): void
     {
         app()->instance('current_business_id', $this->entry->business_id);
 
@@ -38,27 +37,7 @@ class NotifyWaitlistCandidateJob implements ShouldQueue
             ['entry' => $this->entry->id],
         );
 
-        $user    = $this->entry->user->load('preferences');
-        $prefs   = $user->preferences;
-        $channel = $prefs?->notification_channel ?? 'email';
-
-        match ($channel) {
-            'sms'      => $prefs->phone_number
-                ? $notificationService->sendSms($prefs->phone_number, $this->buildSmsText($offerUrl))
-                : Mail::to($user->email)->send(new WaitlistOfferMail($this->entry, $offerUrl)),
-            'whatsapp' => $prefs->phone_number
-                ? $notificationService->sendWhatsApp($prefs->phone_number, $this->buildSmsText($offerUrl))
-                : Mail::to($user->email)->send(new WaitlistOfferMail($this->entry, $offerUrl)),
-            default    => Mail::to($user->email)->send(new WaitlistOfferMail($this->entry, $offerUrl)),
-        };
-    }
-
-    private function buildSmsText(string $offerUrl): string
-    {
-        $date = \Carbon\Carbon::parse($this->slotInfo['date'])->locale('it')->isoFormat('D MMMM');
-        $time = $this->slotInfo['time'];
-
-        return "Posto disponibile il {$date} alle {$time}. Prenota subito (prima di altri): {$offerUrl}";
+        Mail::to($this->entry->user->email)->send(new WaitlistOfferMail($this->entry, $offerUrl));
     }
 
     public function failed(\Throwable $e): void

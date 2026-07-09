@@ -53,16 +53,6 @@ class AppServiceProvider extends ServiceProvider
             return new \App\Services\RefundService($app->make('platform.stripe'));
         });
 
-        $this->app->bind(\App\Services\NotificationService::class, function () {
-            $sid   = \App\Models\IntegrationSetting::getTwilioSid()   ?? config('services.twilio.sid');
-            $token = \App\Models\IntegrationSetting::getTwilioToken() ?? config('services.twilio.token');
-            if (empty($sid) || empty($token)) {
-                return new \App\Services\NotificationService(null);
-            }
-            $client = new \Twilio\Rest\Client($sid, $token);
-            return new \App\Services\NotificationService($client->messages);
-        });
-
         $this->app->bind(\App\Services\GoogleCalendarService::class, function () {
             $client = new \Google\Client();
             $credJson = \App\Models\IntegrationSetting::getGoogleCredentialsJson();

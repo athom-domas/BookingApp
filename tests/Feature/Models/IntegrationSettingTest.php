@@ -29,9 +29,6 @@ describe('IntegrationSetting', function () {
         expect(IntegrationSetting::getStripePublicKey())->toBeNull();
         expect(IntegrationSetting::getStripeSecretKey())->toBeNull();
         expect(IntegrationSetting::getStripeWebhookSecret())->toBeNull();
-        expect(IntegrationSetting::getTwilioSid())->toBeNull();
-        expect(IntegrationSetting::getTwilioToken())->toBeNull();
-        expect(IntegrationSetting::getTwilioFrom())->toBeNull();
         expect(IntegrationSetting::getGoogleCalendarId())->toBeNull();
         expect(IntegrationSetting::getGoogleCredentialsJson())->toBeNull();
     });

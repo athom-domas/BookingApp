@@ -7,7 +7,6 @@ use App\Mail\AppointmentCancellationMail;
 use App\Mail\StaffCancellationNotificationMail;
 use App\Models\Appointment;
 use App\Models\User;
-use App\Services\NotificationService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -24,7 +23,7 @@ class SendCancellationNotification implements ShouldQueue
         public readonly bool $byAdmin = false,
     ) {}
 
-    public function handle(NotificationService $notificationService): void
+    public function handle(): void
     {
         app()->instance('current_business_id', $this->appointment->business_id);
 

@@ -4,16 +4,13 @@ use App\Jobs\NotifyWaitlistCandidateJob;
 use App\Mail\WaitlistOfferMail;
 use App\Models\Service;
 use App\Models\User;
-use App\Models\UserPreference;
 use App\Models\WaitlistEntry;
-use App\Services\NotificationService;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Queue;
 use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
     Role::firstOrCreate(['name' => 'customer', 'guard_name' => 'web']);
-    $this->mock(NotificationService::class);
 });
 
 it('sets entry to notified with offered_slot', function () {
@@ -36,9 +33,7 @@ it('sets entry to notified with offered_slot', function () {
         'service_ids' => [$service->id],
     ];
 
-    (new NotifyWaitlistCandidateJob($entry, $slotInfo))->handle(
-        app(NotificationService::class)
-    );
+    (new NotifyWaitlistCandidateJob($entry, $slotInfo))->handle();
 
     $entry->refresh();
     expect($entry->status)->toBe('notified')
@@ -55,21 +50,17 @@ it('does not dispatch ExpireWaitlistOfferJob', function () {
 
     $slotInfo = ['date' => today()->addDay()->toDateString(), 'time' => '10:00', 'staff_id' => 1, 'service_ids' => $entry->service_ids];
 
-    (new NotifyWaitlistCandidateJob($entry, $slotInfo))->handle(app(NotificationService::class));
+    (new NotifyWaitlistCandidateJob($entry, $slotInfo))->handle();
 
     Queue::assertNothingPushed();
 });
 
-it('sends email when notification_channel is email', function () {
+it('sends email to user', function () {
     Queue::fake();
     Mail::fake();
 
     $user = User::factory()->create();
     $user->assignRole('customer');
-    UserPreference::factory()->create([
-        'user_id'              => $user->id,
-        'notification_channel' => 'email',
-    ]);
     $entry = WaitlistEntry::factory()->create([
         'user_id' => $user->id,
         'status'  => 'waiting',
@@ -82,9 +73,7 @@ it('sends email when notification_channel is email', function () {
         'service_ids' => $entry->service_ids,
     ];
 
-    (new NotifyWaitlistCandidateJob($entry, $slotInfo))->handle(
-        app(NotificationService::class)
-    );
+    (new NotifyWaitlistCandidateJob($entry, $slotInfo))->handle();
 
     Mail::assertSent(WaitlistOfferMail::class);
 });

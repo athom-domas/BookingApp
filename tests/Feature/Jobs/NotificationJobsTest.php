@@ -13,7 +13,6 @@ use App\Models\Business;
 use App\Models\IntegrationSetting;
 use App\Models\User;
 use App\Models\UserPreference;
-use App\Services\NotificationService;
 use App\Jobs\SendWhatsAppNotificationJob;
 use App\Services\WhatsAppNotificationService;
 use Illuminate\Support\Facades\Mail;
@@ -150,10 +149,7 @@ it('SendCancellationNotification emails customer and admin', function () {
         'staff_id' => $staff->id,
     ]);
 
-    $mockNotification = $this->mock(NotificationService::class);
-    $mockNotification->shouldNotReceive('sendSms');
-
-    (new SendCancellationNotification($appointment))->handle($mockNotification);
+    (new SendCancellationNotification($appointment))->handle();
 
     Mail::assertSent(AdminCancellationNotificationMail::class, 1);
     Mail::assertNotSent(AppointmentCancellationMail::class);
