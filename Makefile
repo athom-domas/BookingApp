@@ -109,6 +109,7 @@ deploy: deploy-preflight validate-prod-env deploy-build-assets
 	$(MAKE) --no-print-directory deploy-env-prod; \
 	$(MAKE) --no-print-directory deploy-prepare-prod; \
 	$(MAKE) --no-print-directory deploy-code-prod; \
+	$(MAKE) --no-print-directory deploy-version-file; \
 	$(MAKE) --no-print-directory deploy-public-prod; \
 	$(MAKE) --no-print-directory deploy-vendor-prod; \
 	$(MAKE) --no-print-directory deploy-finalize-prod; \
@@ -140,6 +141,12 @@ deploy-preflight:
 
 deploy-build-assets:
 	docker-compose run --rm --no-deps app npm run build
+
+deploy-version-file:
+	@commit=$$(git log --format="%H" -1); \
+	datetime=$$(date "+%d/%m/%Y %H:%M"); \
+	printf "Ultima commit: %s\nData deploy: %s\n" "$$commit" "$$datetime" > public/DEPLOY.TXT
+	@echo "DEPLOY.TXT generato:"; cat public/DEPLOY.TXT
 
 deploy-lock-prod:
 	ssh $(SSH_HOST) "cd $(SSH_PATH) && test ! -f .deploy.lock && date -Is > .deploy.lock || (echo 'Errore: deploy produzione gia in corso o lock presente'; exit 1)"
@@ -215,6 +222,7 @@ deploy-staging: deploy-preflight validate-staging-env deploy-build-assets
 	$(MAKE) --no-print-directory deploy-staging-env; \
 	$(MAKE) --no-print-directory deploy-prepare-staging; \
 	$(MAKE) --no-print-directory deploy-staging-code; \
+	$(MAKE) --no-print-directory deploy-version-file; \
 	$(MAKE) --no-print-directory deploy-staging-public; \
 	$(MAKE) --no-print-directory deploy-staging-vendor; \
 	$(MAKE) --no-print-directory deploy-staging-finalize; \

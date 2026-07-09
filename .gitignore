@@ -19,6 +19,7 @@
 /public/fonts-manifest.dev.json
 /public/hot
 /public/storage
+/public/DEPLOY.TXT
 /storage/*.key
 /storage/google-credentials.json
 /config/google-credentials.json
