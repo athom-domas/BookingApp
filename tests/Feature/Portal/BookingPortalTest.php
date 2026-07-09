@@ -89,7 +89,7 @@ it('creates a pending booking and payment intent for an authenticated customer',
             'stripe_response'       => ['client_secret' => 'pi_portal_123_secret_test'],
         ]));
 
-    $response = $this->actingAs($customer)->post('/portal/bookings', [
+    $response = $this->actingAs($customer)->post('/portale/bookings', [
         'service_ids'    => [$service->id],
         'staff_id'       => $staff->id,
         'scheduled_date' => $date->toDateTimeString(),
@@ -111,7 +111,7 @@ it('rejects inactive services', function () {
 
     $this->mock(PaymentService::class)->shouldNotReceive('initiateStripePayment');
 
-    $this->actingAs($customer)->post('/portal/bookings', [
+    $this->actingAs($customer)->post('/portale/bookings', [
         'service_ids'    => [$service->id],
         'staff_id'       => $staff->id,
         'scheduled_date' => $date->toDateTimeString(),
@@ -126,7 +126,7 @@ it('rejects staff not assigned to the selected service', function () {
     [$service, $staff, $date] = makePortalBookableSetup();
     $service->staff()->detach($staff->id);
 
-    $this->actingAs($customer)->post('/portal/bookings', [
+    $this->actingAs($customer)->post('/portale/bookings', [
         'service_ids'    => [$service->id],
         'staff_id'       => $staff->id,
         'scheduled_date' => $date->toDateTimeString(),
@@ -139,7 +139,7 @@ it('rejects users without staff role even if attached to the service', function 
     [$service, $staff, $date] = makePortalBookableSetup();
     $staff->syncRoles([]);
 
-    $this->actingAs($customer)->post('/portal/bookings', [
+    $this->actingAs($customer)->post('/portale/bookings', [
         'service_ids'    => [$service->id],
         'staff_id'       => $staff->id,
         'scheduled_date' => $date->toDateTimeString(),
@@ -159,7 +159,7 @@ it('rejects bookings when the slot is already taken by another appointment', fun
         'status'         => 'confirmed',
     ]);
 
-    $this->actingAs($customer)->post('/portal/bookings', [
+    $this->actingAs($customer)->post('/portale/bookings', [
         'service_ids'    => [$service->id],
         'staff_id'       => $staff->id,
         'scheduled_date' => $date->toDateTimeString(),
@@ -171,7 +171,7 @@ it('rejects past booking dates', function () {
     $customer = makePortalCustomer();
     [$service, $staff] = makePortalBookableSetup();
 
-    $this->actingAs($customer)->post('/portal/bookings', [
+    $this->actingAs($customer)->post('/portale/bookings', [
         'service_ids'    => [$service->id],
         'staff_id'       => $staff->id,
         'scheduled_date' => now()->subDay()->toDateTimeString(),
@@ -183,7 +183,7 @@ it('creates a confirmed appointment and redirects to show when payment is in_sal
     $customer = makePortalCustomer();
     [$service, $staff, $date] = makePortalBookableSetup();
 
-    $response = $this->actingAs($customer)->post('/portal/bookings', [
+    $response = $this->actingAs($customer)->post('/portale/bookings', [
         'service_ids'    => [$service->id],
         'staff_id'       => $staff->id,
         'scheduled_date' => $date->toDateTimeString(),
@@ -213,7 +213,7 @@ it('creates a pending appointment and goes to payment when payment is online', f
             'stripe_response'       => ['client_secret' => 'pi_wizard_123_secret'],
         ]));
 
-    $response = $this->actingAs($customer)->post('/portal/bookings', [
+    $response = $this->actingAs($customer)->post('/portale/bookings', [
         'service_ids'    => [$service->id],
         'staff_id'       => $staff->id,
         'scheduled_date' => $date->toDateTimeString(),
@@ -231,7 +231,7 @@ it('rejects store request when payment_method is missing', function () {
     $customer = makePortalCustomer();
     [$service, $staff, $date] = makePortalBookableSetup();
 
-    $this->actingAs($customer)->post('/portal/bookings', [
+    $this->actingAs($customer)->post('/portale/bookings', [
         'service_ids'    => [$service->id],
         'staff_id'       => $staff->id,
         'scheduled_date' => $date->toDateTimeString(),

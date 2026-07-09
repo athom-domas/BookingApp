@@ -26,7 +26,7 @@ it('shows only the authenticated customer appointments', function () {
         'service_ids' => [Service::factory()->create(['name' => 'Servizio altro cliente'])->id],
     ]);
 
-    $response = $this->actingAs($customer)->get('/portal/appointments');
+    $response =     $this->actingAs($customer)->get('/portale/appuntamenti');
 
     $response->assertOk()
         ->assertSee($ownAppointment->services_label)
@@ -39,7 +39,7 @@ it('forbids viewing another customer appointment', function () {
     $appointment = Appointment::factory()->create();
 
     $this->actingAs($customer)
-        ->get("/portal/appointments/{$appointment->id}")
+        ->get("/portale/appuntamenti/{$appointment->id}")
         ->assertForbidden();
 });
 
@@ -56,9 +56,9 @@ it('shows the payment page for the owner', function () {
     config(['services.stripe.public' => 'pk_test_123']);
 
     $this->actingAs($customer)
-        ->get("/portal/appointments/{$appointment->id}/payment")
+        ->get("/portale/appuntamenti/{$appointment->id}/payment")
         ->assertOk()
-        ->assertSee('Pagamento prenotazione');
+        ->assertSee('Dati di pagamento');
 });
 
 it('forbids payment access for another customer appointment', function () {
@@ -67,7 +67,7 @@ it('forbids payment access for another customer appointment', function () {
     $appointment = Appointment::factory()->create();
 
     $this->actingAs($customer)
-        ->get("/portal/appointments/{$appointment->id}/payment")
+        ->get("/portale/appuntamenti/{$appointment->id}/payment")
         ->assertForbidden();
 });
 
@@ -88,7 +88,7 @@ it('confirms a payment through the payment service', function () {
         ->andReturn($payment);
 
     $this->actingAs($customer)
-        ->post("/portal/appointments/{$appointment->id}/payment/confirm")
+        ->post("/portale/appuntamenti/{$appointment->id}/payment/confirm")
         ->assertRedirect(route('portal.appointments.show', $appointment));
 });
 
@@ -102,7 +102,7 @@ it('surfaces payment confirmation errors', function () {
         ->andThrow(new BookingException('Pagamento non completato.'));
 
     $this->actingAs($customer)
-        ->post("/portal/appointments/{$appointment->id}/payment/confirm")
+        ->post("/portale/appuntamenti/{$appointment->id}/payment/confirm")
         ->assertSessionHasErrors('payment');
 });
 
@@ -117,6 +117,6 @@ it('cancels an owned appointment through the appointment service', function () {
         ->with($appointment->id, 'Cambio programma');
 
     $this->actingAs($customer)
-        ->post("/portal/appointments/{$appointment->id}/cancel", ['reason' => 'Cambio programma'])
+        ->post("/portale/appuntamenti/{$appointment->id}/cancel", ['reason' => 'Cambio programma'])
         ->assertRedirect(route('portal.appointments.index'));
 });

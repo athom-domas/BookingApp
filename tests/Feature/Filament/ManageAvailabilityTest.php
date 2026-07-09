@@ -71,6 +71,7 @@ it('saves all 7 rules on save()', function () {
         $available = $day >= 1 && $day <= 5;
         $days[$day] = [
             'is_available' => $available,
+            'type'         => $available ? 'split' : 'continuous',
             'start_time'   => $available ? '09:00' : null,
             'end_time'     => $available ? '13:00' : null,
             'start_time_2' => $available ? '14:00' : null,

@@ -16,7 +16,7 @@ it('mostra il saldo punti nel portale quando il programma è attivo', function (
     LoyaltyAccount::create(['user_id' => $this->customer->id, 'points' => 60]);
 
     $this->actingAs($this->customer)
-        ->get('/portal/appointments')
+        ->get('/portale/appuntamenti')
         ->assertOk()
         ->assertSee('Programma fedeltà')
         ->assertSee('60');
@@ -26,7 +26,7 @@ it('nasconde la card fedeltà quando il programma è disattivo', function () {
     SystemSetting::current()->update(['loyalty_enabled' => false]);
 
     $this->actingAs($this->customer)
-        ->get('/portal/appointments')
+        ->get('/portale/appuntamenti')
         ->assertOk()
         ->assertDontSee('Programma fedeltà');
 });
@@ -40,7 +40,7 @@ it('mostra il badge sconto disponibile quando il cliente raggiunge la soglia', f
     LoyaltyAccount::create(['user_id' => $this->customer->id, 'points' => 150]);
 
     $this->actingAs($this->customer)
-        ->get('/portal/appointments')
+        ->get('/portale/appuntamenti')
         ->assertOk()
         ->assertSee('Sconto 10% disponibile')
         ->assertSee('al tuo prossimo appuntamento');

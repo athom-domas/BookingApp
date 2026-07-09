@@ -155,6 +155,6 @@ it('SendCancellationNotification emails customer and admin', function () {
 
     (new SendCancellationNotification($appointment))->handle($mockNotification);
 
-    Mail::assertSent(AppointmentCancellationMail::class, 1);
     Mail::assertSent(AdminCancellationNotificationMail::class, 1);
+    Mail::assertNotSent(AppointmentCancellationMail::class);
 });

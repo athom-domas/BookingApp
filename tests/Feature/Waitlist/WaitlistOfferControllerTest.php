@@ -119,7 +119,7 @@ it('marks waitlist entry as booked after booking from waitlist offer', function 
             'waitlist_entry_id' => $entry->id,
         ]);
 
-    $response->assertRedirectContains('/portal/appointments/');
+    $response->assertRedirectContains('/portale/appuntamenti/');
     expect(Appointment::where('user_id', $customer->id)->exists())->toBeTrue();
     expect($entry->fresh()->status)->toBe('booked');
 });

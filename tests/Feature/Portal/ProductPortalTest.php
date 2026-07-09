@@ -17,7 +17,7 @@ it('shows only in_sale and active products on the catalog page', function () {
     $customer  = User::factory()->create();
     $customer->assignRole('customer');
 
-    $this->actingAs($customer)->get('/portal/products')
+    $this->actingAs($customer)->get('/prodotti')
         ->assertOk()
         ->assertSee('Shampoo Visible')
         ->assertDontSee('Hidden Product')
@@ -30,10 +30,10 @@ it('adds a product to the cart', function () {
     $customer->assignRole('customer');
 
     $this->actingAs($customer)
-        ->post('/portal/cart', ['product_id' => $product->id, 'quantity' => 2])
-        ->assertRedirect('/portal/products');
+        ->post('/prodotti/carrello', ['product_id' => $product->id, 'quantity' => 2])
+        ->assertRedirect('/prodotti');
 
-    $this->actingAs($customer)->get('/portal/products')
+    $this->actingAs($customer)->get('/prodotti')
         ->assertSessionHas('product_cart', [$product->id => 2]);
 });
 
@@ -43,10 +43,10 @@ it('does not add more than available stock to cart', function () {
     $customer->assignRole('customer');
 
     $this->actingAs($customer)
-        ->post('/portal/cart', ['product_id' => $product->id, 'quantity' => 10])
+        ->post('/prodotti/carrello', ['product_id' => $product->id, 'quantity' => 10])
         ->assertRedirect();
 
-    $this->actingAs($customer)->get('/portal/products')
+    $this->actingAs($customer)->get('/prodotti')
         ->assertSessionMissing('product_cart.' . $product->id);
 });
 
@@ -57,7 +57,7 @@ it('shows the checkout page with cart contents', function () {
 
     $this->actingAs($customer)
         ->withSession(['product_cart' => [$product->id => 2]])
-        ->get('/portal/products/checkout')
+        ->get('/checkout')
         ->assertOk()
         ->assertSee('Balsamo Test')
         ->assertSee('30,00');
@@ -68,8 +68,8 @@ it('redirects to products page when cart is empty on checkout', function () {
     $customer->assignRole('customer');
 
     $this->actingAs($customer)
-        ->get('/portal/products/checkout')
-        ->assertRedirect('/portal/products');
+        ->get('/checkout')
+        ->assertRedirect('/prodotti');
 });
 
 it('shows default shop header title when profile has no shop config', function () {

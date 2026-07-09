@@ -23,7 +23,7 @@ it('accepts valid signed Stripe webhook payloads', function () {
     $this->mock(PaymentService::class)
         ->shouldReceive('handleStripeWebhook')
         ->once()
-        ->with(Mockery::on(fn (array $event) => $event['type'] === 'payment_intent.succeeded'));
+        ->with(Mockery::on(fn (array $event) => $event['type'] === 'payment_intent.succeeded'), null);
 
     $this->call('POST', '/stripe/webhook', [], [], [], [
         'CONTENT_TYPE' => 'application/json',

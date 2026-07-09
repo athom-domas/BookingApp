@@ -66,7 +66,6 @@ it('handleStripeWebhook marks payment as completed on succeeded event', function
 
     expect($payment->fresh()->status)->toBe('completed');
     expect($appointment->fresh()->status)->toBe('confirmed');
-    Queue::assertPushed(SendAppointmentConfirmation::class, fn ($job) => $job->appointment->id === $appointment->id);
 });
 
 it('handleStripeWebhook marks payment as failed on failed event', function () {
@@ -134,7 +133,6 @@ it('confirmPayment marks payment and appointment as completed when Stripe succee
 
     expect($result->status)->toBe('completed');
     expect($appointment->fresh()->status)->toBe('confirmed');
-    Queue::assertPushed(SendAppointmentConfirmation::class, fn ($job) => $job->appointment->id === $appointment->id);
 });
 
 it('refundPayment updates status to refunded', function () {

@@ -12,7 +12,7 @@ beforeEach(function () {
 });
 
 it('redirects guests away from settings', function () {
-    $this->get('/portal/settings')->assertRedirect('/login');
+    $this->get('/portale/impostazioni')->assertRedirect('/login');
 });
 
 it('shows the settings page for authenticated users', function () {
@@ -20,7 +20,7 @@ it('shows the settings page for authenticated users', function () {
     $customer->assignRole('customer');
 
     $this->actingAs($customer)
-        ->get('/portal/settings')
+        ->get('/portale/impostazioni')
         ->assertOk()
         ->assertSee('Profilo')
         ->assertSee('Notifiche');
@@ -33,7 +33,7 @@ it('updates name and email', function () {
     $customer->assignRole('customer');
 
     $this->actingAs($customer)
-        ->patch('/portal/settings/profile', [
+        ->patch('/portale/impostazioni/profile', [
             'name'  => 'New Name',
             'email' => 'new@example.com',
         ])
@@ -49,7 +49,7 @@ it('requires name and email', function () {
     $customer->assignRole('customer');
 
     $this->actingAs($customer)
-        ->patch('/portal/settings/profile', [])
+        ->patch('/portale/impostazioni/profile', [])
         ->assertSessionHasErrors(['name', 'email']);
 });
 
@@ -59,7 +59,7 @@ it('rejects duplicate email from another user', function () {
     $customer->assignRole('customer');
 
     $this->actingAs($customer)
-        ->patch('/portal/settings/profile', [
+        ->patch('/portale/impostazioni/profile', [
             'name'  => 'Test',
             'email' => 'taken@example.com',
         ])
@@ -71,7 +71,7 @@ it('allows keeping own email', function () {
     $customer->assignRole('customer');
 
     $this->actingAs($customer)
-        ->patch('/portal/settings/profile', [
+        ->patch('/portale/impostazioni/profile', [
             'name'  => 'Test',
             'email' => 'mine@example.com',
         ])
@@ -83,7 +83,7 @@ it('changes password when current password is correct', function () {
     $customer->assignRole('customer');
 
     $this->actingAs($customer)
-        ->patch('/portal/settings/profile', [
+        ->patch('/portale/impostazioni/profile', [
             'name'                      => $customer->name,
             'email'                     => $customer->email,
             'current_password'          => 'oldpassword',
@@ -100,7 +100,7 @@ it('rejects wrong current password', function () {
     $customer->assignRole('customer');
 
     $this->actingAs($customer)
-        ->patch('/portal/settings/profile', [
+        ->patch('/portale/impostazioni/profile', [
             'name'                      => $customer->name,
             'email'                     => $customer->email,
             'current_password'          => 'wrongpassword',
@@ -115,7 +115,7 @@ it('requires current_password when setting new_password', function () {
     $customer->assignRole('customer');
 
     $this->actingAs($customer)
-        ->patch('/portal/settings/profile', [
+        ->patch('/portale/impostazioni/profile', [
             'name'                      => $customer->name,
             'email'                     => $customer->email,
             'new_password'              => 'newpassword1',
@@ -129,7 +129,7 @@ it('rejects mismatched password confirmation', function () {
     $customer->assignRole('customer');
 
     $this->actingAs($customer)
-        ->patch('/portal/settings/profile', [
+        ->patch('/portale/impostazioni/profile', [
             'name'                      => $customer->name,
             'email'                     => $customer->email,
             'current_password'          => 'oldpassword',
@@ -144,7 +144,7 @@ it('flashes profile_updated on success', function () {
     $customer->assignRole('customer');
 
     $this->actingAs($customer)
-        ->patch('/portal/settings/profile', [
+        ->patch('/portale/impostazioni/profile', [
             'name'  => 'Test',
             'email' => $customer->email,
         ])
@@ -159,7 +159,7 @@ it('nulls email_verified_at when email changes', function () {
     $customer->assignRole('customer');
 
     $this->actingAs($customer)
-        ->patch('/portal/settings/profile', [
+        ->patch('/portale/impostazioni/profile', [
             'name'  => $customer->name,
             'email' => 'new@example.com',
         ]);
@@ -174,7 +174,7 @@ it('saves email channel without phone', function () {
     $customer->assignRole('customer');
 
     $this->actingAs($customer)
-        ->patch('/portal/settings/notifications', [
+        ->patch('/portale/impostazioni/notifications', [
             'notification_channel' => 'email',
         ])
         ->assertSessionDoesntHaveErrors();
@@ -187,7 +187,7 @@ it('requires phone_number when channel is whatsapp (second test)', function () {
     $customer->assignRole('customer');
 
     $this->actingAs($customer)
-        ->patch('/portal/settings/notifications', [
+        ->patch('/portale/impostazioni/notifications', [
             'notification_channel' => 'whatsapp',
         ])
         ->assertSessionHasErrors(['phone_number']);
@@ -198,7 +198,7 @@ it('requires phone_number when channel is whatsapp', function () {
     $customer->assignRole('customer');
 
     $this->actingAs($customer)
-        ->patch('/portal/settings/notifications', [
+        ->patch('/portale/impostazioni/notifications', [
             'notification_channel' => 'whatsapp',
         ])
         ->assertSessionHasErrors(['phone_number']);
@@ -209,7 +209,7 @@ it('rejects phone number with non-digit characters', function () {
     $customer->assignRole('customer');
 
     $this->actingAs($customer)
-        ->patch('/portal/settings/notifications', [
+        ->patch('/portale/impostazioni/notifications', [
             'notification_channel' => 'whatsapp',
             'phone_number'         => 'abc1234567',
         ])
@@ -221,7 +221,7 @@ it('saves whatsapp with valid local phone number', function () {
     $customer->assignRole('customer');
 
     $this->actingAs($customer)
-        ->patch('/portal/settings/notifications', [
+        ->patch('/portale/impostazioni/notifications', [
             'notification_channel' => 'whatsapp',
             'phone_number'         => '3334567890',
         ])
@@ -238,7 +238,7 @@ it('creates UserPreference if none exists', function () {
     expect(UserPreference::where('user_id', $customer->id)->exists())->toBeFalse();
 
     $this->actingAs($customer)
-        ->patch('/portal/settings/notifications', [
+        ->patch('/portale/impostazioni/notifications', [
             'notification_channel' => 'email',
         ]);
 
@@ -250,7 +250,7 @@ it('flashes notifications_updated on success', function () {
     $customer->assignRole('customer');
 
     $this->actingAs($customer)
-        ->patch('/portal/settings/notifications', [
+        ->patch('/portale/impostazioni/notifications', [
             'notification_channel' => 'email',
         ])
         ->assertSessionHas('notifications_updated');
