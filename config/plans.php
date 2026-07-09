@@ -22,9 +22,4 @@ return [
         ],
     ],
 
-    'features' => [
-        'whatsapp_ai'           => ['plus'],
-        'whatsapp_booking'      => ['plus'],
-        'whatsapp_cancellation' => ['plus'],
-    ],
 ];

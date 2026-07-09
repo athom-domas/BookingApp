@@ -1,7 +1,6 @@
 <?php
 
 use App\Models\Business;
-use App\Services\PlanFeatureGate;
 use Tests\TestCase;
 
 uses(TestCase::class);
@@ -86,32 +85,3 @@ it('ignores expired plan override and falls through to subscription check', func
     expect($business->effectivePlan())->toBe('base');
 });
 
-// --- canUseFeature() ---
-
-it('trial business can use whatsapp_ai', function () {
-    $business = Business::factory()->make(['trial_ends_at' => now()->addDay()]);
-
-    expect($business->canUseFeature('whatsapp_ai'))->toBeTrue();
-});
-
-it('base-plan business cannot use whatsapp_ai', function () {
-    $business = Business::factory()->make(['trial_ends_at' => null]);
-
-    expect($business->canUseFeature('whatsapp_ai'))->toBeFalse();
-});
-
-it('unknown feature is denied', function () {
-    $business = Business::factory()->make(['trial_ends_at' => now()->addDay()]);
-
-    expect($business->canUseFeature('nonexistent_feature'))->toBeFalse();
-});
-
-it('plus override business can use whatsapp_ai', function () {
-    $business = Business::factory()->make([
-        'trial_ends_at'           => null,
-        'plan_override'           => 'plus',
-        'plan_override_expires_at' => null,
-    ]);
-
-    expect($business->canUseFeature('whatsapp_ai'))->toBeTrue();
-});
