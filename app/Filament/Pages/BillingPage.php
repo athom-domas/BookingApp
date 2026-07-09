@@ -82,19 +82,7 @@ class BillingPage extends Page
         $status   = $business->subscriptionStatus();
 
         return match (true) {
-            in_array($status, ['trial', 'expired']) => [
-                Action::make('subscribeBase')
-                    ->label('Attiva Base')
-                    ->color('gray')
-                    ->icon('heroicon-o-credit-card')
-                    ->action(fn () => $this->checkoutRedirect('base')),
-
-                Action::make('subscribePlus')
-                    ->label('Attiva Plus')
-                    ->color('primary')
-                    ->icon('heroicon-o-rocket-launch')
-                    ->action(fn () => $this->checkoutRedirect('plus')),
-            ],
+            in_array($status, ['trial', 'expired']) => [],
 
             $status === 'active' && $business->effectivePlan() === 'base' => [
                 Action::make('upgradePlus')

@@ -151,12 +151,7 @@
                     <span class="absolute top-4 right-4 inline-flex items-center rounded-full bg-primary-100 dark:bg-primary-900 px-2.5 py-0.5 text-xs font-medium text-primary-800 dark:text-primary-200">Piano attuale</span>
                 @endif
 
-                <div class="flex items-baseline justify-between mb-4">
-                    <h3 class="text-lg font-bold text-gray-900 dark:text-white">{{ $planConfig['label'] }}</h3>
-                    @if (!empty($planPrices[$planKey]))
-                        <span class="text-sm font-semibold text-gray-500 dark:text-gray-400">€{{ number_format($planPrices[$planKey] / 100, 0) }} / mese</span>
-                    @endif
-                </div>
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">{{ $planConfig['label'] }}</h3>
 
                 <ul class="space-y-2 flex-1 mb-6">
                     @foreach ($planConfig['features'] as $feature)
@@ -167,10 +162,15 @@
                     @endforeach
                 </ul>
 
-                @if (in_array($status, ['trial', 'expired']))
+                @if ($isCurrentPaidPlan)
+                    <button disabled
+                            class="w-full rounded-lg px-4 py-2 text-sm font-semibold {{ $isPlusPlan ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400' }} cursor-default">
+                        Piano attuale
+                    </button>
+                @elseif (in_array($status, ['trial', 'expired']))
                     <button wire:click="mountAction('subscribe{{ ucfirst($planKey) }}')"
                             class="w-full rounded-lg px-4 py-2 text-sm font-semibold {{ $isPlusPlan ? 'bg-primary-600 hover:bg-primary-700 text-white' : 'bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-900 dark:text-white' }} transition-colors">
-                        Attiva {{ $planConfig['label'] }}
+                        Attiva {{ $planConfig['label'] }}@if (!empty($planPrices[$planKey])) · €{{ number_format($planPrices[$planKey] / 100, 0) }}/mese @endif
                     </button>
                 @elseif ($status === 'active' && !$isCurrentPaidPlan)
                     @if ($planKey === 'plus')
