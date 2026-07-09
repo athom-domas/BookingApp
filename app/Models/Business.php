@@ -80,6 +80,9 @@ class Business extends Model
 
     public function canAcceptOnlinePayments(): bool
     {
+        if (! $this->canUseFeature('online_payments')) {
+            return false;
+        }
         $account = $this->stripeConnectAccount;
         return $account !== null && $account->isActive();
     }

@@ -115,6 +115,15 @@ class WaitlistEntryResource extends Resource
 
     public static function canAccess(): bool
     {
-        return (auth()->user()?->isAdmin() || auth()->user()?->isStaff()) ?? false;
+        if (! (auth()->user()?->isAdmin() || auth()->user()?->isStaff())) {
+            return false;
+        }
+
+        try {
+            $business = \App\Models\Business::findOrFail(\App\Models\Business::currentId());
+            return $business->canUseFeature('waitlist');
+        } catch (\Throwable) {
+            return false;
+        }
     }
 }

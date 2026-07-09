@@ -2,8 +2,10 @@
 
 namespace App\Filament\Pages;
 
+use App\Models\Business;
 use App\Models\SystemSetting;
 use App\Models\User;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -24,6 +26,11 @@ class SystemSettings extends Page
     protected static ?int $navigationSort = 6;
 
     public ?array $data = [];
+
+    public function getBusiness(): Business
+    {
+        return once(fn () => Business::findOrFail(Business::currentId()));
+    }
 
     public function mount(): void
     {
@@ -153,38 +160,57 @@ class SystemSettings extends Page
 
                 Section::make('Programma fedeltà')
                     ->columns(3)
-                    ->schema([
-                        Toggle::make('loyalty_enabled')
-                            ->label('Abilita programma fedeltà')
-                            ->helperText('I clienti accumulano punti sulla spesa e sbloccano uno sconto')
-                            ->live()
-                            ->columnSpanFull(),
+                    ->schema(function (): array {
+                        $hasPlan = $this->getBusiness()->canUseFeature('loyalty_program');
 
-                        TextInput::make('loyalty_points_per_euro')
-                            ->label('Punti per euro speso')
-                            ->integer()
-                            ->minValue(1)
-                            ->required()
-                            ->suffix('punti/€')
-                            ->visible(fn (Get $get): bool => (bool) $get('loyalty_enabled')),
+                        $upgradeNotice = $hasPlan ? [] : [
+                            Placeholder::make('upgrade_notice_loyalty')
+                                ->label('')
+                                ->hint('Disponibile nel piano Plus.')
+                                ->hintIcon('heroicon-o-rocket-launch')
+                                ->hintColor('primary')
+                                ->columnSpanFull(),
+                        ];
 
-                        TextInput::make('loyalty_reward_threshold')
-                            ->label('Punti per lo sconto')
-                            ->integer()
-                            ->minValue(1)
-                            ->required()
-                            ->suffix('punti')
-                            ->visible(fn (Get $get): bool => (bool) $get('loyalty_enabled')),
+                        return [
+                            ...$upgradeNotice,
 
-                        TextInput::make('loyalty_reward_percentage')
-                            ->label('Sconto sbloccato')
-                            ->integer()
-                            ->minValue(1)
-                            ->maxValue(100)
-                            ->required()
-                            ->suffix('%')
-                            ->visible(fn (Get $get): bool => (bool) $get('loyalty_enabled')),
-                    ]),
+                            Toggle::make('loyalty_enabled')
+                                ->label('Abilita programma fedeltà')
+                                ->helperText('I clienti accumulano punti sulla spesa e sbloccano uno sconto')
+                                ->live()
+                                ->columnSpanFull()
+                                ->disabled(! $hasPlan),
+
+                            TextInput::make('loyalty_points_per_euro')
+                                ->label('Punti per euro speso')
+                                ->integer()
+                                ->minValue(1)
+                                ->required()
+                                ->suffix('punti/€')
+                                ->visible(fn (Get $get): bool => (bool) $get('loyalty_enabled'))
+                                ->disabled(! $hasPlan),
+
+                            TextInput::make('loyalty_reward_threshold')
+                                ->label('Punti per lo sconto')
+                                ->integer()
+                                ->minValue(1)
+                                ->required()
+                                ->suffix('punti')
+                                ->visible(fn (Get $get): bool => (bool) $get('loyalty_enabled'))
+                                ->disabled(! $hasPlan),
+
+                            TextInput::make('loyalty_reward_percentage')
+                                ->label('Sconto sbloccato')
+                                ->integer()
+                                ->minValue(1)
+                                ->maxValue(100)
+                                ->required()
+                                ->suffix('%')
+                                ->visible(fn (Get $get): bool => (bool) $get('loyalty_enabled'))
+                                ->disabled(! $hasPlan),
+                        ];
+                    }),
 
                 Section::make('Notifiche')
                     ->columns(2)

@@ -38,6 +38,11 @@ class WaitlistController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $business = \App\Models\Business::find(app('current_business_id'));
+        if (! $business?->canUseFeature('waitlist')) {
+            abort(403);
+        }
+
         $validated = $request->validate([
             'service_ids'         => ['required', 'array', 'min:1'],
             'service_ids.*'       => ['integer', 'exists:services,id'],

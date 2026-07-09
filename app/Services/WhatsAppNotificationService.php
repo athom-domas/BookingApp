@@ -12,6 +12,12 @@ class WhatsAppNotificationService
 {
     public function dispatchForAppointment(Appointment $appointment, string $templateName, array $parameters): ?WhatsAppMessage
     {
+        $business = \App\Models\Business::find($appointment->business_id);
+
+        if (! $business?->canUseFeature('whatsapp_notifications')) {
+            return null;
+        }
+
         $settings = IntegrationSetting::withoutGlobalScope('business')
             ->where('business_id', $appointment->business_id)
             ->first();

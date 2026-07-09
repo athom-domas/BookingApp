@@ -24,6 +24,11 @@ class SyncGoogleCalendar implements ShouldQueue
     {
         app()->instance('current_business_id', $this->appointment->business_id);
 
+        $business = \App\Models\Business::find($this->appointment->business_id);
+        if (! $business?->canUseFeature('google_calendar')) {
+            return;
+        }
+
         if (! in_array($this->action, ['create', 'delete'])) {
             throw new \InvalidArgumentException("Unknown SyncGoogleCalendar action: {$this->action}");
         }

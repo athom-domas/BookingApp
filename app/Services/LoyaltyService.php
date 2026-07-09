@@ -12,6 +12,11 @@ class LoyaltyService
 {
     public function accrue(Appointment $appointment, float $amount): void
     {
+        $business = \App\Models\Business::find($appointment->business_id);
+        if (! $business?->canUseFeature('loyalty_program')) {
+            return;
+        }
+
         if (! SystemSetting::isLoyaltyEnabled()) {
             return;
         }
