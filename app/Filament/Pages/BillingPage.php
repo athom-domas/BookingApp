@@ -7,6 +7,7 @@ use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 
 class BillingPage extends Page
 {
@@ -25,6 +26,33 @@ class BillingPage extends Page
     public function getBusiness(): Business
     {
         return once(fn () => Business::findOrFail(Business::currentId()));
+    }
+
+    protected function getViewData(): array
+    {
+        return [
+            'planPrices' => [
+                'base' => $this->fetchPlanPrice('base'),
+                'plus' => $this->fetchPlanPrice('plus'),
+            ],
+        ];
+    }
+
+    private function fetchPlanPrice(string $plan): ?int
+    {
+        $priceId = config("plans.{$plan}.price_id");
+        if (! $priceId) {
+            return null;
+        }
+
+        return Cache::remember("stripe_price_amount_{$priceId}", 86400, function () use ($priceId) {
+            try {
+                $price = $this->getBusiness()->stripe()->prices->retrieve($priceId);
+                return $price->unit_amount;
+            } catch (\Throwable) {
+                return null;
+            }
+        });
     }
 
     public function mount(): void

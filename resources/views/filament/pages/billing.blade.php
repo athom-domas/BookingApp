@@ -152,9 +152,11 @@
                     <span class="absolute top-4 right-4 inline-flex items-center rounded-full bg-primary-100 dark:bg-primary-900 px-2.5 py-0.5 text-xs font-medium text-primary-800 dark:text-primary-200">Piano attuale</span>
                 @endif
 
-                <div class="mb-4">
+                <div class="flex items-baseline justify-between mb-4">
                     <h3 class="text-lg font-bold text-gray-900 dark:text-white">{{ $planConfig['label'] }}</h3>
-                    {{-- Price is defined on the Stripe price object — not duplicated here. --}}
+                    @if (!empty($planPrices[$planKey]))
+                        <span class="text-sm font-semibold text-gray-500 dark:text-gray-400">€{{ number_format($planPrices[$planKey] / 100, 0) }} / mese</span>
+                    @endif
                 </div>
 
                 <ul class="space-y-2 flex-1 mb-6">
@@ -191,7 +193,7 @@
 
         {{-- ═══════════ DETTAGLI + PAGAMENTO (grid) ═══════════ --}}
 
-        @unless ($status === 'expired' && !$checkoutPending)
+        @if (in_array($status, ['active', 'grace_period']) || $checkoutPending)
         <div class="grid grid-cols-1 @if($status === 'active' && $business->pm_last_four) lg:grid-cols-2 @endif gap-5">
 
             {{-- Piano --}}
@@ -272,7 +274,7 @@
             @endif
 
         </div>
-        @endunless
+        @endif
 
         {{-- ═══════════ FEATURES (solo stato expired) ═══════════ --}}
 
