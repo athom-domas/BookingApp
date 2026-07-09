@@ -68,7 +68,7 @@ class BillingPage extends Page
                     ->action(fn () => $this->checkoutRedirect('plus')),
             ],
 
-            $status === 'active' && $business->plan === 'base' => [
+            $status === 'active' && $business->effectivePlan() === 'base' => [
                 Action::make('upgradePlus')
                     ->label('Passa a Plus')
                     ->color('primary')
@@ -85,7 +85,7 @@ class BillingPage extends Page
                     ->action(fn () => $this->cancelSubscription()),
             ],
 
-            $status === 'active' && $business->plan === 'plus' => [
+            $status === 'active' && $business->effectivePlan() === 'plus' => [
                 Action::make('downgradeBase')
                     ->label('Torna a Base')
                     ->color('warning')
@@ -151,8 +151,13 @@ class BillingPage extends Page
             return;
         }
 
-        $business = $this->getBusiness();
-        $business->subscription('default')->swapAndInvoice($priceId);
+        $business     = $this->getBusiness();
+        $subscription = $business->subscription('default');
+        if (! $subscription) {
+            Notification::make()->title('Nessun abbonamento attivo.')->warning()->send();
+            return;
+        }
+        $subscription->swapAndInvoice($priceId);
 
         $freshBusiness = $business->fresh();
         if ($freshBusiness->subscribed('default') && ! $freshBusiness->hasIncompletePayment('default')) {
@@ -173,6 +178,10 @@ class BillingPage extends Page
     {
         $business     = $this->getBusiness();
         $subscription = $business->subscription('default');
+        if (! $subscription) {
+            Notification::make()->title('Nessun abbonamento da annullare.')->warning()->send();
+            return;
+        }
         $subscription->cancel();
         $endsAt = $subscription->fresh()?->ends_at?->format('d/m/Y');
         Notification::make()
@@ -183,7 +192,12 @@ class BillingPage extends Page
 
     private function resumeSubscription(): void
     {
-        $this->getBusiness()->subscription('default')->resume();
+        $subscription = $this->getBusiness()->subscription('default');
+        if (! $subscription) {
+            Notification::make()->title('Nessun abbonamento da riattivare.')->warning()->send();
+            return;
+        }
+        $subscription->resume();
         Notification::make()
             ->title('Abbonamento riattivato!')
             ->success()

@@ -22,7 +22,8 @@ class UpdateBusinessPlanFromStripe
                 return;
             }
 
-            $plan = $business->subscribedToPrice(config('plans.plus.price_id'), 'default')
+            $plusPriceId = config('plans.plus.price_id');
+            $plan = $plusPriceId && $business->subscribedToPrice($plusPriceId, 'default')
                 ? 'plus'
                 : 'base';
 

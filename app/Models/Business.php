@@ -90,7 +90,7 @@ class Business extends Model
             return $this->plan_override;
         }
 
-        if ($this->onGenericTrial()) {
+        if ($this->onGenericTrial() && ! $this->subscribed('default')) {
             return 'plus';
         }
 
@@ -102,7 +102,8 @@ class Business extends Model
             return 'base';
         }
 
-        if ($this->subscribedToPrice(config('plans.plus.price_id'), 'default')) {
+        $plusPriceId = config('plans.plus.price_id');
+        if ($plusPriceId && $this->subscribedToPrice($plusPriceId, 'default')) {
             return 'plus';
         }
 

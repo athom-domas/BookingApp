@@ -79,17 +79,14 @@ class WhatsAppWebhookController extends Controller
 
     private function resolveBusinessSetting(string $phoneNumberId): ?IntegrationSetting
     {
-        $cacheKey   = "whatsapp:phone_number:{$phoneNumberId}:business_id";
-        $businessId = cache()->remember($cacheKey, 3600, function () use ($phoneNumberId) {
-            return IntegrationSetting::findByPhoneNumberId($phoneNumberId)?->business_id;
-        });
+        $setting = IntegrationSetting::findByPhoneNumberId($phoneNumberId);
 
-        if (! $businessId) {
+        if (! $setting) {
             Log::critical('WhatsApp webhook from unknown phone_number_id', ['phone_number_id' => $phoneNumberId]);
             return null;
         }
 
-        return IntegrationSetting::withoutGlobalScope('business')->where('business_id', $businessId)->first();
+        return $setting;
     }
 
     private function saveStatus(array $statusData): void
