@@ -168,7 +168,7 @@
                         Piano attuale
                     </button>
                 @elseif (in_array($status, ['trial', 'expired']))
-                    <button wire:click="mountAction('subscribe{{ ucfirst($planKey) }}')"
+                    <button wire:click="checkoutRedirect('{{ $planKey }}')"
                             class="w-full rounded-lg px-4 py-2 text-sm font-semibold {{ $isPlusPlan ? 'bg-primary-600 hover:bg-primary-700 text-white' : 'bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-900 dark:text-white' }} transition-colors">
                         Attiva {{ $planConfig['label'] }}@if (!empty($planPrices[$planKey])) · €{{ number_format($planPrices[$planKey] / 100, 0) }}/mese @endif
                     </button>

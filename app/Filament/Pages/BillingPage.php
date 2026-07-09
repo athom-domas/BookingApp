@@ -133,7 +133,7 @@ class BillingPage extends Page
         };
     }
 
-    private function checkoutRedirect(string $plan): void
+    public function checkoutRedirect(string $plan): void
     {
         $priceId = config("plans.{$plan}.price_id");
 
