@@ -156,6 +156,26 @@ class BusinessResource extends Resource
                         default        => 'gray',
                     }),
 
+                TextColumn::make('plan')
+                    ->label('Piano pagato')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'plus'  => 'primary',
+                        default => 'gray',
+                    })
+                    ->formatStateUsing(fn (string $state): string => ucfirst($state))
+                    ->toggleable(),
+
+                TextColumn::make('effectivePlan')
+                    ->label('Accesso effettivo')
+                    ->badge()
+                    ->state(fn (Business $record): string => $record->effectivePlan())
+                    ->color(fn (string $state): string => $state === 'plus' ? 'success' : 'gray')
+                    ->formatStateUsing(fn (string $state, Business $record): string =>
+                        ucfirst($state) . ($state !== $record->plan ? ' ★' : '')
+                    )
+                    ->toggleable(),
+
                 TextColumn::make('trial_ends_at')
                     ->label('Fine trial')
                     ->dateTime('d/m/Y')
@@ -211,6 +231,53 @@ class BusinessResource extends Resource
 
                         Notification::make()
                             ->title('Abbonamento cancellato immediatamente.')
+                            ->success()
+                            ->send();
+                    }),
+
+                Action::make('grantPlusOverride')
+                    ->label('Concedi Plus')
+                    ->icon('heroicon-o-rocket-launch')
+                    ->color('primary')
+                    ->visible(fn (Business $record): bool => $record->plan_override !== 'plus' || $record->hasActivePlanOverride() === false)
+                    ->form([
+                        \Filament\Forms\Components\DateTimePicker::make('plan_override_expires_at')
+                            ->label('Scade il (lascia vuoto per indefinito)')
+                            ->nullable(),
+                        \Filament\Forms\Components\TextInput::make('plan_override_reason')
+                            ->label('Motivo (obbligatorio)')
+                            ->required()
+                            ->placeholder('es. test interno, supporto cliente'),
+                    ])
+                    ->action(function (Business $record, array $data): void {
+                        $record->update([
+                            'plan_override'            => 'plus',
+                            'plan_override_expires_at' => $data['plan_override_expires_at'] ?? null,
+                            'plan_override_reason'     => $data['plan_override_reason'],
+                        ]);
+
+                        Notification::make()
+                            ->title('Accesso Plus concesso.')
+                            ->success()
+                            ->send();
+                    }),
+
+                Action::make('revokeOverride')
+                    ->label('Revoca override')
+                    ->icon('heroicon-o-x-mark')
+                    ->color('warning')
+                    ->visible(fn (Business $record): bool => $record->plan_override !== null)
+                    ->requiresConfirmation()
+                    ->modalDescription('L\'accesso sarà determinato dal piano Stripe effettivo.')
+                    ->action(function (Business $record): void {
+                        $record->update([
+                            'plan_override'            => null,
+                            'plan_override_expires_at' => null,
+                            'plan_override_reason'     => null,
+                        ]);
+
+                        Notification::make()
+                            ->title('Override revocato.')
                             ->success()
                             ->send();
                     }),
