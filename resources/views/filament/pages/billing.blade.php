@@ -61,8 +61,7 @@
                                 — {{ $daysLeft }} {{ $daysLeft === 1 ? 'giorno rimasto' : 'giorni rimasti' }}
                             </p>
                             <p class="text-xs text-amber-600 dark:text-amber-500 mt-1">
-                                Piano pagato: <strong>Base</strong> &nbsp;·&nbsp;
-                                Accesso trial: <strong>Plus</strong> — alla fine del trial resterai su Base se non scegli Plus.
+                                Durante il trial hai accesso completo al piano <strong>Plus</strong>. Alla scadenza dovrai scegliere un piano per continuare.
                             </p>
                         </div>
                     </div>
@@ -275,6 +274,51 @@
 
         </div>
         @endif
+
+        {{-- ═══════════ FAQ ═══════════ --}}
+        <x-filament::section>
+            <x-slot name="heading">Domande frequenti</x-slot>
+            <div class="divide-y divide-gray-100 dark:divide-white/5">
+                @foreach ([
+                    [
+                        'q' => 'Quando vengo addebitato?',
+                        'a' => 'Al momento dell\'attivazione dell\'abbonamento. I rinnovi successivi avvengono automaticamente ogni mese alla stessa data.',
+                    ],
+                    [
+                        'q' => 'Posso cancellare in qualsiasi momento?',
+                        'a' => 'Sì. Puoi annullare l\'abbonamento quando vuoi dalla pagina Abbonamento. L\'accesso rimane attivo fino alla fine del periodo già pagato — non ci sono penali né costi aggiuntivi.',
+                    ],
+                    [
+                        'q' => 'Cosa succede se passo da Base a Plus?',
+                        'a' => "L'upgrade è immediato: hai accesso all'Assistente AI WhatsApp dal momento in cui confermi.\n\nVieni addebitato solo per i giorni rimanenti del ciclo in corso, calcolati proporzionalmente. Esempio: se hai pagato Base (€29) il 1° del mese e passi a Plus (€39) il giorno 16, restano 15 giorni su 30. Stripe ti accredita €14,50 (Base non usato) e addebita €19,50 (Plus per 15 giorni), per un netto di €5. Al rinnovo successivo pagherai l'intero mese Plus.",
+                    ],
+                    [
+                        'q' => 'Cosa succede se torno da Plus a Base?',
+                        'a' => "Il downgrade è immediato: l'Assistente AI WhatsApp viene disattivato subito.\n\nStripe ti accredita i giorni non usati del piano Plus sulla prossima fattura. Esempio: hai pagato Plus (€39) il 1° del mese e torni a Base (€29) il giorno 16, restano 15 giorni su 30. Stripe ti accredita €19,50 (Plus non usato) e addebita €14,50 (Base per 15 giorni), scalando €5 dalla fattura successiva.",
+                    ],
+                    [
+                        'q' => 'Cosa succede se un pagamento va a buon fine e poi fallisce?',
+                        'a' => 'Stripe riprova il pagamento automaticamente nei giorni successivi (dopo 1, 3, 5 e 7 giorni). Durante i tentativi di recupero l\'accesso alle funzionalità premium viene sospeso cautelativamente. Se tutti i retry falliscono, l\'abbonamento viene cancellato.',
+                    ],
+                    [
+                        'q' => 'Il periodo di prova richiede una carta di credito?',
+                        'a' => 'No. Il trial è gratuito e non richiede nessun dato di pagamento. Durante il trial hai accesso completo al piano Plus. Alla scadenza puoi scegliere se attivare Base o Plus.',
+                    ],
+                    [
+                        'q' => 'Qual è la differenza tra Base e Plus?',
+                        'a' => 'Il piano Base include la gestione appuntamenti, le notifiche email, il portale clienti e la sincronizzazione con Google Calendar. Il piano Plus aggiunge l\'Assistente AI WhatsApp: i tuoi clienti possono prenotare e cancellare direttamente via chat.',
+                    ],
+                ] as $faq)
+                <details class="group py-4 first:pt-0 last:pb-0">
+                    <summary class="flex items-center justify-between gap-4 cursor-pointer list-none text-sm font-medium text-gray-900 dark:text-white select-none">
+                        {{ $faq['q'] }}
+                        <x-heroicon-m-chevron-down class="w-4 h-4 text-gray-400 shrink-0 transition-transform duration-200 group-open:rotate-180"/>
+                    </summary>
+                    <p class="mt-2 text-sm text-gray-500 dark:text-gray-400 leading-relaxed">{{ $faq['a'] }}</p>
+                </details>
+                @endforeach
+            </div>
+        </x-filament::section>
 
         {{-- ═══════════ FEATURES (solo stato expired) ═══════════ --}}
 

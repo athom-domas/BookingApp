@@ -6,7 +6,7 @@ return [
         'label'    => 'Base',
         'features' => [
             'Gestione appuntamenti',
-            'Notifiche email/SMS',
+            'Notifiche email',
             'Portale clienti',
             'Google Calendar sync',
         ],
