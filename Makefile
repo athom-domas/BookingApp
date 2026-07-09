@@ -5,8 +5,21 @@ STAGING_PATH = ~/staging
 PROD_URL     = https://booking-app.it
 STAGING_URL  = https://staging.booking-app.it
 COMPOSER_INSTALL_FLAGS = --no-dev --prefer-dist --optimize-autoloader --no-interaction --no-progress
-RSYNC_FLAGS  = -az --delete --exclude='.DS_Store'
-REQUIRED_PROD_ENV = APP_KEY APP_URL APP_BASE_DOMAIN DB_DATABASE DB_USERNAME DB_PASSWORD STRIPE_PUBLIC_KEY STRIPE_SECRET_KEY STRIPE_PRICE_ID STRIPE_BILLING_WEBHOOK_SECRET STRIPE_CONNECT_WEBHOOK_SECRET STRIPE_WEBHOOK_SECRET
+RSYNC_FLAGS  = -az --delete --delay-updates --exclude='.DS_Store'
+RSYNC_DEPLOY_FILTERS = \
+	--include='/app/***' \
+	--include='/bootstrap/' --exclude='/bootstrap/cache/***' --include='/bootstrap/***' \
+	--include='/config/***' \
+	--include='/database/' --exclude='/database/database.sqlite' --include='/database/***' \
+	--include='/lang/***' \
+	--include='/resources/***' \
+	--include='/routes/***' \
+	--include='/public/' --exclude='/public/storage' --exclude='/public/storage/***' --exclude='/public/hot' --exclude='/public/fonts-manifest.dev.json' --include='/public/***' \
+	--include='/artisan' \
+	--include='/composer.json' \
+	--include='/composer.lock' \
+	--exclude='*'
+REQUIRED_PROD_ENV = APP_KEY APP_URL APP_BASE_DOMAIN DB_DATABASE DB_USERNAME DB_PASSWORD STRIPE_PUBLIC_KEY STRIPE_SECRET_KEY STRIPE_PRICE_ID_BASE STRIPE_PRICE_ID_PLUS STRIPE_BILLING_WEBHOOK_SECRET STRIPE_CONNECT_WEBHOOK_SECRET STRIPE_WEBHOOK_SECRET
 REQUIRED_STAGING_ENV = APP_KEY APP_URL APP_BASE_DOMAIN DB_DATABASE DB_USERNAME DB_PASSWORD
 
 .PHONY: up down build restart logs shell \
@@ -14,12 +27,16 @@ REQUIRED_STAGING_ENV = APP_KEY APP_URL APP_BASE_DOMAIN DB_DATABASE DB_USERNAME D
         test test-filter \
         composer npm-install npm-dev npm-build vite \
         artisan tinker cache-clear queue-work \
-        validate-prod-env validate-staging-env deploy-preflight deploy-build-assets \
-        deploy deploy-env deploy-assets deploy-code deploy-vendor \
-        deploy-lock-prod deploy-unlock-prod deploy-down-prod deploy-up-prod \
+        validate-prod-env validate-staging-env deploy-preflight deploy-build-assets deploy-version-file \
+        deploy deploy-run deploy-env deploy-assets deploy-code deploy-vendor deploy-preview \
+        deploy-remote-begin deploy-remote-lock deploy-remote-prepare \
+        deploy-remote-down deploy-remote-up deploy-remote-unlock \
+        deploy-env-file deploy-sync-files deploy-sync-files-preview deploy-remote-install \
+        deploy-remote-finalize deploy-remote-release deploy-health \
+        deploy-preview-prod deploy-lock-prod deploy-unlock-prod deploy-down-prod deploy-up-prod \
         deploy-prepare-prod deploy-env-prod deploy-code-prod deploy-public-prod \
         deploy-vendor-prod deploy-finalize-prod deploy-health-prod \
-        staging-setup deploy-staging deploy-staging-env deploy-staging-assets \
+        staging-setup deploy-staging deploy-preview-staging deploy-staging-env deploy-staging-assets \
         deploy-staging-code deploy-staging-vendor deploy-lock-staging \
         deploy-unlock-staging deploy-down-staging deploy-up-staging \
         deploy-prepare-staging deploy-staging-public deploy-staging-finalize \
@@ -101,181 +118,223 @@ queue-work:
 
 # ── Deploy ───────────────────────────────────────────────────────────────────
 
-deploy: deploy-preflight validate-prod-env deploy-build-assets
-	@set -e; \
-	$(MAKE) --no-print-directory deploy-lock-prod; \
-	trap '$(MAKE) --no-print-directory deploy-up-prod >/dev/null 2>&1 || true; $(MAKE) --no-print-directory deploy-unlock-prod >/dev/null 2>&1 || true' EXIT; \
-	$(MAKE) --no-print-directory deploy-down-prod; \
-	$(MAKE) --no-print-directory deploy-env-prod; \
-	$(MAKE) --no-print-directory deploy-prepare-prod; \
-	$(MAKE) --no-print-directory deploy-code-prod; \
-	$(MAKE) --no-print-directory deploy-version-file; \
-	$(MAKE) --no-print-directory deploy-public-prod; \
-	$(MAKE) --no-print-directory deploy-vendor-prod; \
-	$(MAKE) --no-print-directory deploy-finalize-prod; \
-	$(MAKE) --no-print-directory deploy-up-prod; \
-	$(MAKE) --no-print-directory deploy-health-prod; \
-	echo "Deploy produzione completato."
+deploy:
+	@$(MAKE) --no-print-directory deploy-run ENV_NAME=produzione ENV_FILE=.env.production REMOTE_PATH="$(SSH_PATH)" HEALTH_URL="$(PROD_URL)" ENV_ARCHIVE=.env.production VALIDATE_TARGET=validate-prod-env
 
 validate-prod-env:
+	@echo "[1/4] Verifico configurazione produzione (.env.production)..."
 	@test -f .env.production || (echo "Errore: manca .env.production"; exit 1)
 	@missing=0; for key in $(REQUIRED_PROD_ENV); do \
 		if ! grep -Eq "^$${key}=.+" .env.production; then \
 			echo "Errore: $${key} mancante o vuota in .env.production"; \
 			missing=1; \
 		fi; \
-	done; exit $$missing
+	done; \
+	if [ $$missing -eq 0 ]; then echo "Configurazione produzione OK."; fi; \
+	exit $$missing
 
 validate-staging-env:
+	@echo "[1/4] Verifico configurazione staging (.env.staging)..."
 	@test -f .env.staging || (echo "Errore: manca .env.staging"; exit 1)
 	@missing=0; for key in $(REQUIRED_STAGING_ENV); do \
 		if ! grep -Eq "^$${key}=.+" .env.staging; then \
 			echo "Errore: $${key} mancante o vuota in .env.staging"; \
 			missing=1; \
 		fi; \
-	done; exit $$missing
+	done; \
+	if [ $$missing -eq 0 ]; then echo "Configurazione staging OK."; fi; \
+	exit $$missing
 
 deploy-preflight:
+	@echo "[2/4] Eseguo preflight Composer..."
 	@test -f composer.lock || (echo "Errore: manca composer.lock"; exit 1)
 	docker-compose run --rm --no-deps app composer validate --no-check-publish --strict
 
 deploy-build-assets:
+	@echo "[3/4] Compilo asset frontend..."
 	docker-compose run --rm --no-deps app npm run build
 
 deploy-version-file:
 	@commit=$$(git log --format="%H" -1); \
 	datetime=$$(date "+%d/%m/%Y %H:%M"); \
 	printf "Ultima commit: %s\nData deploy: %s\n" "$$commit" "$$datetime" > public/DEPLOY.TXT
-	@echo "DEPLOY.TXT generato:"; cat public/DEPLOY.TXT
+	@echo "[4/4] DEPLOY.TXT generato:"; cat public/DEPLOY.TXT
+
+deploy-run:
+	@set -e; \
+	started_at=$$(date +%s); \
+	format_elapsed() { elapsed=$$(($$(date +%s) - started_at)); printf "%dm %02ds" $$((elapsed / 60)) $$((elapsed % 60)); }; \
+	test -n "$(ENV_NAME)" || (echo "Errore: ENV_NAME non impostato"; exit 1); \
+	test -n "$(ENV_FILE)" || (echo "Errore: ENV_FILE non impostato"; exit 1); \
+	test -n "$(REMOTE_PATH)" || (echo "Errore: REMOTE_PATH non impostato"; exit 1); \
+	test -n "$(HEALTH_URL)" || (echo "Errore: HEALTH_URL non impostato"; exit 1); \
+	test -n "$(VALIDATE_TARGET)" || (echo "Errore: VALIDATE_TARGET non impostato"; exit 1); \
+	echo "==> Deploy $(ENV_NAME) avviato"; \
+	echo "    Destinazione remota: $(SSH_HOST):$(REMOTE_PATH)"; \
+	echo "    Healthcheck finale:  $(HEALTH_URL)"; \
+	echo ""; \
+	$(MAKE) --no-print-directory "$(VALIDATE_TARGET)"; \
+	$(MAKE) --no-print-directory deploy-preflight; \
+	$(MAKE) --no-print-directory deploy-build-assets; \
+	$(MAKE) --no-print-directory deploy-version-file; \
+	echo ""; \
+	echo "[Remote 1/5] Creo lock, preparo directory e abilito manutenzione..."; \
+	$(MAKE) --no-print-directory deploy-remote-begin ENV_NAME="$(ENV_NAME)" REMOTE_PATH="$(REMOTE_PATH)"; \
+	trap 'status=$$?; $(MAKE) --no-print-directory deploy-remote-up REMOTE_PATH="$(REMOTE_PATH)" >/dev/null 2>&1 || true; $(MAKE) --no-print-directory deploy-remote-unlock REMOTE_PATH="$(REMOTE_PATH)" >/dev/null 2>&1 || true; if [ $$status -ne 0 ]; then echo ""; echo "Deploy $(ENV_NAME) fallito dopo $$(format_elapsed). Lock rimosso e manutenzione disattivata se possibile."; fi; exit $$status' EXIT; \
+	echo "[Remote 2/5] Carico file env..."; \
+	$(MAKE) --no-print-directory deploy-env-file ENV_FILE="$(ENV_FILE)" REMOTE_PATH="$(REMOTE_PATH)" ENV_ARCHIVE="$(ENV_ARCHIVE)"; \
+	echo "[Remote 3/5] Sincronizzo codice e asset..."; \
+	$(MAKE) --no-print-directory deploy-sync-files REMOTE_PATH="$(REMOTE_PATH)"; \
+	echo "[Remote 4/5] Installo dipendenze, eseguo migrazioni e ricostruisco cache..."; \
+	$(MAKE) --no-print-directory deploy-remote-release REMOTE_PATH="$(REMOTE_PATH)"; \
+	echo "[Remote 5/5] Riporto online l'applicazione..."; \
+	$(MAKE) --no-print-directory deploy-remote-up REMOTE_PATH="$(REMOTE_PATH)"; \
+	echo "Verifico risposta HTTP..."; \
+	$(MAKE) --no-print-directory deploy-health ENV_NAME="$(ENV_NAME)" HEALTH_URL="$(HEALTH_URL)"; \
+	echo "Pulisco lock remoto..."; \
+	$(MAKE) --no-print-directory deploy-remote-unlock REMOTE_PATH="$(REMOTE_PATH)"; \
+	trap - EXIT; \
+	echo ""; \
+	echo "Deploy $(ENV_NAME) completato in $$(format_elapsed)."
+
+deploy-remote-begin:
+	ssh $(SSH_HOST) "set -e; mkdir -p $(REMOTE_PATH); cd $(REMOTE_PATH); test ! -f .deploy.lock || (echo 'Errore: deploy $(ENV_NAME) gia in corso o lock presente'; exit 1); date -Is > .deploy.lock; mkdir -p storage/app/public storage/framework/cache/data storage/framework/sessions storage/framework/testing storage/framework/views storage/logs bootstrap/cache public/build; chmod -R ug+rwX storage bootstrap/cache; $(SSH_PHP) artisan down --retry=60 || true"
+
+deploy-remote-lock:
+	ssh $(SSH_HOST) "set -e; mkdir -p $(REMOTE_PATH); cd $(REMOTE_PATH); test ! -f .deploy.lock || (echo 'Errore: deploy $(ENV_NAME) gia in corso o lock presente'; exit 1); date -Is > .deploy.lock"
+
+deploy-remote-prepare:
+	ssh $(SSH_HOST) "set -e; mkdir -p $(REMOTE_PATH); cd $(REMOTE_PATH); mkdir -p storage/app/public storage/framework/cache/data storage/framework/sessions storage/framework/testing storage/framework/views storage/logs bootstrap/cache public/build; chmod -R ug+rwX storage bootstrap/cache"
+
+deploy-remote-down:
+	ssh $(SSH_HOST) "cd $(REMOTE_PATH) && $(SSH_PHP) artisan down --retry=60 || true"
+
+deploy-remote-up:
+	ssh $(SSH_HOST) "cd $(REMOTE_PATH) && $(SSH_PHP) artisan up || true"
+
+deploy-remote-unlock:
+	ssh $(SSH_HOST) "cd $(REMOTE_PATH) && rm -f .deploy.lock"
+
+deploy-env-file:
+	scp $(ENV_FILE) $(SSH_HOST):$(REMOTE_PATH)/.env
+	@if [ -n "$(ENV_ARCHIVE)" ]; then \
+		scp $(ENV_FILE) $(SSH_HOST):$(REMOTE_PATH)/$(ENV_ARCHIVE); \
+		ssh $(SSH_HOST) "chmod 640 $(REMOTE_PATH)/.env $(REMOTE_PATH)/$(ENV_ARCHIVE)"; \
+	else \
+		ssh $(SSH_HOST) "chmod 640 $(REMOTE_PATH)/.env"; \
+	fi
+
+deploy-sync-files:
+	rsync $(RSYNC_FLAGS) $(RSYNC_DEPLOY_FILTERS) ./ $(SSH_HOST):$(REMOTE_PATH)/
+
+deploy-sync-files-preview:
+	rsync $(RSYNC_FLAGS) --dry-run --itemize-changes $(RSYNC_DEPLOY_FILTERS) ./ $(SSH_HOST):$(REMOTE_PATH)/
+
+deploy-remote-install:
+	ssh $(SSH_HOST) "cd $(REMOTE_PATH) && $(SSH_PHP) ~/composer.phar install $(COMPOSER_INSTALL_FLAGS)"
+
+deploy-remote-finalize:
+	ssh $(SSH_HOST) "set -e; cd $(REMOTE_PATH); $(SSH_PHP) artisan optimize:clear; $(SSH_PHP) artisan migrate --force; $(SSH_PHP) artisan config:cache; $(SSH_PHP) artisan route:cache; $(SSH_PHP) artisan view:cache; $(SSH_PHP) artisan storage:link >/dev/null 2>&1 || true; $(SSH_PHP) artisan queue:restart >/dev/null 2>&1 || true; rm -f public/hot; touch public/index.php"
+
+deploy-remote-release:
+	ssh $(SSH_HOST) "set -e; cd $(REMOTE_PATH); $(SSH_PHP) ~/composer.phar install $(COMPOSER_INSTALL_FLAGS); $(SSH_PHP) artisan optimize:clear; $(SSH_PHP) artisan migrate --force; $(SSH_PHP) artisan config:cache; $(SSH_PHP) artisan route:cache; $(SSH_PHP) artisan view:cache; $(SSH_PHP) artisan storage:link >/dev/null 2>&1 || true; $(SSH_PHP) artisan queue:restart >/dev/null 2>&1 || true; rm -f public/hot; touch public/index.php"
+
+deploy-health:
+	@printf "Healthcheck $(ENV_NAME)... "
+	@curl -fsSIL --max-time 20 $(HEALTH_URL) >/dev/null
+	@echo "OK"
 
 deploy-lock-prod:
-	ssh $(SSH_HOST) "cd $(SSH_PATH) && test ! -f .deploy.lock && date -Is > .deploy.lock || (echo 'Errore: deploy produzione gia in corso o lock presente'; exit 1)"
+	$(MAKE) --no-print-directory deploy-remote-lock ENV_NAME=produzione REMOTE_PATH="$(SSH_PATH)"
 
 deploy-unlock-prod:
-	ssh $(SSH_HOST) "cd $(SSH_PATH) && rm -f .deploy.lock"
+	$(MAKE) --no-print-directory deploy-remote-unlock REMOTE_PATH="$(SSH_PATH)"
 
 deploy-down-prod:
-	ssh $(SSH_HOST) "cd $(SSH_PATH) && $(SSH_PHP) artisan down --retry=60 || true"
+	$(MAKE) --no-print-directory deploy-remote-down REMOTE_PATH="$(SSH_PATH)"
 
 deploy-up-prod:
-	ssh $(SSH_HOST) "cd $(SSH_PATH) && $(SSH_PHP) artisan up || true"
+	$(MAKE) --no-print-directory deploy-remote-up REMOTE_PATH="$(SSH_PATH)"
 
 deploy-prepare-prod:
-	ssh $(SSH_HOST) "cd $(SSH_PATH) && mkdir -p storage/app/public storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache public/build && chmod -R ug+rwX storage bootstrap/cache"
+	$(MAKE) --no-print-directory deploy-remote-prepare REMOTE_PATH="$(SSH_PATH)"
 
 deploy-env: deploy-env-prod
 
 deploy-env-prod: validate-prod-env
-	scp .env.production $(SSH_HOST):$(SSH_PATH)/.env
-	scp .env.production $(SSH_HOST):$(SSH_PATH)/.env.production
-	ssh $(SSH_HOST) "chmod 640 $(SSH_PATH)/.env $(SSH_PATH)/.env.production"
+	$(MAKE) --no-print-directory deploy-env-file ENV_FILE=.env.production REMOTE_PATH="$(SSH_PATH)" ENV_ARCHIVE=.env.production
 
 deploy-assets: deploy-build-assets deploy-public-prod
 
 deploy-code: deploy-code-prod
 
+deploy-preview: deploy-preview-staging
+
+deploy-preview-prod:
+	$(MAKE) --no-print-directory deploy-sync-files-preview REMOTE_PATH="$(SSH_PATH)"
+
 deploy-code-prod:
-	rsync $(RSYNC_FLAGS) app/ $(SSH_HOST):$(SSH_PATH)/app/
-	rsync $(RSYNC_FLAGS) --exclude='cache/*' bootstrap/ $(SSH_HOST):$(SSH_PATH)/bootstrap/
-	rsync $(RSYNC_FLAGS) config/ $(SSH_HOST):$(SSH_PATH)/config/
-	rsync $(RSYNC_FLAGS) --exclude='database.sqlite' database/ $(SSH_HOST):$(SSH_PATH)/database/
-	rsync $(RSYNC_FLAGS) lang/ $(SSH_HOST):$(SSH_PATH)/lang/
-	rsync $(RSYNC_FLAGS) resources/ $(SSH_HOST):$(SSH_PATH)/resources/
-	rsync $(RSYNC_FLAGS) routes/ $(SSH_HOST):$(SSH_PATH)/routes/
-	rsync -az artisan composer.json composer.lock $(SSH_HOST):$(SSH_PATH)/
+	$(MAKE) --no-print-directory deploy-sync-files REMOTE_PATH="$(SSH_PATH)"
 
 deploy-public-prod:
-	rsync $(RSYNC_FLAGS) --exclude='build/' --exclude='storage/' --exclude='hot' --exclude='fonts-manifest.dev.json' public/ $(SSH_HOST):$(SSH_PATH)/public/
-	rsync $(RSYNC_FLAGS) public/build/ $(SSH_HOST):$(SSH_PATH)/public/build/
-	ssh $(SSH_HOST) "cd $(SSH_PATH) && rm -f public/hot"
+	$(MAKE) --no-print-directory deploy-sync-files REMOTE_PATH="$(SSH_PATH)"
 
 deploy-vendor: deploy-vendor-prod
 
 deploy-vendor-prod:
-	ssh $(SSH_HOST) "cd $(SSH_PATH) && $(SSH_PHP) ~/composer.phar install $(COMPOSER_INSTALL_FLAGS)"
+	$(MAKE) --no-print-directory deploy-remote-install REMOTE_PATH="$(SSH_PATH)"
 
 deploy-finalize-prod:
-	ssh $(SSH_HOST) "set -e; cd $(SSH_PATH); $(SSH_PHP) artisan optimize:clear; $(SSH_PHP) artisan migrate --force; $(SSH_PHP) artisan config:cache; $(SSH_PHP) artisan route:cache; $(SSH_PHP) artisan view:cache; $(SSH_PHP) artisan storage:link >/dev/null 2>&1 || true; $(SSH_PHP) artisan queue:restart >/dev/null 2>&1 || true; touch public/index.php"
+	$(MAKE) --no-print-directory deploy-remote-finalize REMOTE_PATH="$(SSH_PATH)"
 
 deploy-health-prod:
-	@printf "Healthcheck produzione... "
-	@curl -fsSIL --max-time 20 $(PROD_URL) >/dev/null
-	@echo "OK"
+	$(MAKE) --no-print-directory deploy-health ENV_NAME=produzione HEALTH_URL="$(PROD_URL)"
 
 # ── Staging ──────────────────────────────────────────────────────────────────
 
-staging-setup: validate-staging-env deploy-build-assets
-	@echo "Creo struttura staging sul server..."
-	$(MAKE) --no-print-directory deploy-prepare-staging
-	$(MAKE) --no-print-directory deploy-staging-env
-	$(MAKE) --no-print-directory deploy-staging-code
-	$(MAKE) --no-print-directory deploy-staging-public
-	$(MAKE) --no-print-directory deploy-staging-vendor
-	$(MAKE) --no-print-directory deploy-staging-finalize
+staging-setup: deploy-staging
 	@echo "Staging setup completato. Visita https://staging.booking-app.it"
 
-deploy-staging: deploy-preflight validate-staging-env deploy-build-assets
-	@set -e; \
-	$(MAKE) --no-print-directory deploy-lock-staging; \
-	trap '$(MAKE) --no-print-directory deploy-up-staging >/dev/null 2>&1 || true; $(MAKE) --no-print-directory deploy-unlock-staging >/dev/null 2>&1 || true' EXIT; \
-	$(MAKE) --no-print-directory deploy-down-staging; \
-	$(MAKE) --no-print-directory deploy-staging-env; \
-	$(MAKE) --no-print-directory deploy-prepare-staging; \
-	$(MAKE) --no-print-directory deploy-staging-code; \
-	$(MAKE) --no-print-directory deploy-version-file; \
-	$(MAKE) --no-print-directory deploy-staging-public; \
-	$(MAKE) --no-print-directory deploy-staging-vendor; \
-	$(MAKE) --no-print-directory deploy-staging-finalize; \
-	$(MAKE) --no-print-directory deploy-up-staging; \
-	$(MAKE) --no-print-directory deploy-health-staging; \
-	echo "Deploy staging completato."
+deploy-staging:
+	@$(MAKE) --no-print-directory deploy-run ENV_NAME=staging ENV_FILE=.env.staging REMOTE_PATH="$(STAGING_PATH)" HEALTH_URL="$(STAGING_URL)" ENV_ARCHIVE=.env.staging VALIDATE_TARGET=validate-staging-env
 
 deploy-lock-staging:
-	ssh $(SSH_HOST) "mkdir -p $(STAGING_PATH) && cd $(STAGING_PATH) && test ! -f .deploy.lock && date -Is > .deploy.lock || (echo 'Errore: deploy staging gia in corso o lock presente'; exit 1)"
+	$(MAKE) --no-print-directory deploy-remote-lock ENV_NAME=staging REMOTE_PATH="$(STAGING_PATH)"
 
 deploy-unlock-staging:
-	ssh $(SSH_HOST) "cd $(STAGING_PATH) && rm -f .deploy.lock"
+	$(MAKE) --no-print-directory deploy-remote-unlock REMOTE_PATH="$(STAGING_PATH)"
 
 deploy-down-staging:
-	ssh $(SSH_HOST) "cd $(STAGING_PATH) && $(SSH_PHP) artisan down --retry=60 || true"
+	$(MAKE) --no-print-directory deploy-remote-down REMOTE_PATH="$(STAGING_PATH)"
 
 deploy-up-staging:
-	ssh $(SSH_HOST) "cd $(STAGING_PATH) && $(SSH_PHP) artisan up || true"
+	$(MAKE) --no-print-directory deploy-remote-up REMOTE_PATH="$(STAGING_PATH)"
 
 deploy-prepare-staging:
-	ssh $(SSH_HOST) "mkdir -p $(STAGING_PATH)/storage/app/public $(STAGING_PATH)/storage/framework/cache/data $(STAGING_PATH)/storage/framework/sessions $(STAGING_PATH)/storage/framework/testing $(STAGING_PATH)/storage/framework/views $(STAGING_PATH)/storage/logs $(STAGING_PATH)/bootstrap/cache $(STAGING_PATH)/public/build && chmod -R ug+rwX $(STAGING_PATH)/storage $(STAGING_PATH)/bootstrap/cache"
+	$(MAKE) --no-print-directory deploy-remote-prepare REMOTE_PATH="$(STAGING_PATH)"
 
 deploy-staging-env: validate-staging-env
-	scp .env.staging $(SSH_HOST):$(STAGING_PATH)/.env
-	ssh $(SSH_HOST) "chmod 640 $(STAGING_PATH)/.env"
+	$(MAKE) --no-print-directory deploy-env-file ENV_FILE=.env.staging REMOTE_PATH="$(STAGING_PATH)" ENV_ARCHIVE=.env.staging
 
 deploy-staging-assets: deploy-build-assets deploy-staging-public
 
+deploy-preview-staging:
+	$(MAKE) --no-print-directory deploy-sync-files-preview REMOTE_PATH="$(STAGING_PATH)"
+
 deploy-staging-code:
-	rsync $(RSYNC_FLAGS) app/ $(SSH_HOST):$(STAGING_PATH)/app/
-	rsync $(RSYNC_FLAGS) --exclude='cache/*' bootstrap/ $(SSH_HOST):$(STAGING_PATH)/bootstrap/
-	rsync $(RSYNC_FLAGS) config/ $(SSH_HOST):$(STAGING_PATH)/config/
-	rsync $(RSYNC_FLAGS) --exclude='database.sqlite' database/ $(SSH_HOST):$(STAGING_PATH)/database/
-	rsync $(RSYNC_FLAGS) lang/ $(SSH_HOST):$(STAGING_PATH)/lang/
-	rsync $(RSYNC_FLAGS) resources/ $(SSH_HOST):$(STAGING_PATH)/resources/
-	rsync $(RSYNC_FLAGS) routes/ $(SSH_HOST):$(STAGING_PATH)/routes/
-	rsync -az artisan composer.json composer.lock $(SSH_HOST):$(STAGING_PATH)/
+	$(MAKE) --no-print-directory deploy-sync-files REMOTE_PATH="$(STAGING_PATH)"
 
 deploy-staging-public:
-	rsync $(RSYNC_FLAGS) --exclude='build/' --exclude='storage/' --exclude='hot' --exclude='fonts-manifest.dev.json' public/ $(SSH_HOST):$(STAGING_PATH)/public/
-	rsync $(RSYNC_FLAGS) public/build/ $(SSH_HOST):$(STAGING_PATH)/public/build/
-	ssh $(SSH_HOST) "cd $(STAGING_PATH) && rm -f public/hot"
+	$(MAKE) --no-print-directory deploy-sync-files REMOTE_PATH="$(STAGING_PATH)"
 
 deploy-staging-vendor:
-	ssh $(SSH_HOST) "cd $(STAGING_PATH) && $(SSH_PHP) ~/composer.phar install $(COMPOSER_INSTALL_FLAGS)"
+	$(MAKE) --no-print-directory deploy-remote-install REMOTE_PATH="$(STAGING_PATH)"
 
 deploy-staging-finalize:
-	ssh $(SSH_HOST) "set -e; cd $(STAGING_PATH); $(SSH_PHP) artisan optimize:clear; $(SSH_PHP) artisan migrate --force; $(SSH_PHP) artisan config:cache; $(SSH_PHP) artisan route:cache; $(SSH_PHP) artisan view:cache; $(SSH_PHP) artisan storage:link >/dev/null 2>&1 || true; $(SSH_PHP) artisan queue:restart >/dev/null 2>&1 || true; touch public/index.php"
+	$(MAKE) --no-print-directory deploy-remote-finalize REMOTE_PATH="$(STAGING_PATH)"
 
 deploy-health-staging:
-	@printf "Healthcheck staging... "
-	@curl -fsSIL --max-time 20 $(STAGING_URL) >/dev/null
-	@echo "OK"
+	$(MAKE) --no-print-directory deploy-health ENV_NAME=staging HEALTH_URL="$(STAGING_URL)"
 
 staging-reset-db:
 	ssh $(SSH_HOST) "set -e; cd $(STAGING_PATH); $(SSH_PHP) artisan migrate:fresh --force --seeder=StagingSeeder; $(SSH_PHP) artisan optimize:clear; $(SSH_PHP) artisan config:cache; $(SSH_PHP) artisan route:cache; $(SSH_PHP) artisan view:cache"
