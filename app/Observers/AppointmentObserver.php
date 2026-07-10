@@ -61,7 +61,7 @@ class AppointmentObserver
 
     private function accrue(Appointment $appointment): void
     {
-        $price = (float) ($appointment->final_price ?? 0);
+        $price = (float) ($appointment->loyalty_discounted_price ?? $appointment->final_price ?? 0);
         if ($price <= 0) {
             return;
         }

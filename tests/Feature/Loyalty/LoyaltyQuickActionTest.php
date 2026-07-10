@@ -56,7 +56,7 @@ it('applica lo sconto fedeltà dalla quick-action registra pagamento', function 
         ->mountTableAction('register_payment', $this->appointment)
         ->set('mountedActions.0.data.method', 'cash')
         ->set('mountedActions.0.data.amount', 100)
-        ->set('mountedActions.0.data.apply_loyalty_discount', true)
+        ->set('mountedActions.0.data.loyalty_tier_index', 0)
         ->callMountedTableAction()
         ->assertHasNoTableActionErrors();
 
@@ -69,12 +69,11 @@ it('applica lo sconto fedeltà dalla quick-action registra pagamento', function 
         ->and((float) $this->appointment->fresh()->loyalty_discounted_price)->toBe(90.0);
 });
 
-it('non applica sconto dalla quick-action se il toggle è spento', function () {
+it('non applica sconto dalla quick-action se non si sceglie un livello', function () {
     livewire(ListAppointments::class)
         ->mountTableAction('register_payment', $this->appointment)
         ->set('mountedActions.0.data.method', 'cash')
         ->set('mountedActions.0.data.amount', 100)
-        ->set('mountedActions.0.data.apply_loyalty_discount', false)
         ->callMountedTableAction()
         ->assertHasNoTableActionErrors();
 

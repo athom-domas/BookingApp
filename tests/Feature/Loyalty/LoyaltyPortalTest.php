@@ -42,6 +42,6 @@ it('mostra il badge sconto disponibile quando il cliente raggiunge la soglia', f
     $this->actingAs($this->customer)
         ->get('/portale/appuntamenti')
         ->assertOk()
-        ->assertSee('Sconto 10% disponibile')
-        ->assertSee('al tuo prossimo appuntamento');
+        ->assertSee('Sconto disponibile')
+        ->assertSee('al prossimo appuntamento');
 });

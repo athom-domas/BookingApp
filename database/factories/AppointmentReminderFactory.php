@@ -15,7 +15,7 @@ class AppointmentReminderFactory extends Factory
         return [
             'business_id' => app()->bound('current_business_id') ? app('current_business_id') : 1,
             'appointment_id' => Appointment::factory(),
-            'type' => fake()->randomElement(['email', 'sms']),
+            'type' => fake()->randomElement(['email', 'whatsapp']),
             'scheduled_for' => now()->addHours(fake()->numberBetween(1, 48)),
             'sent_at' => null,
             'status' => 'pending',

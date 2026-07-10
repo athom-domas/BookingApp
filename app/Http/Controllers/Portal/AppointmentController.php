@@ -51,14 +51,18 @@ class AppointmentController extends Controller
             ->pluck('appointment_id')
             ->all();
 
+        $availableTiers = $loyaltyEnabled ? SystemSetting::getAvailableTiers((int) $loyaltyPoints) : [];
+        $nextTier       = $loyaltyEnabled ? SystemSetting::getNextTier((int) $loyaltyPoints) : null;
+
         return view('portal.appointments.index', [
             'upcomingAppointments'   => $appointments->filter(fn(Appointment $appointment) => $appointment->isUpcoming())->values(),
             'pastAppointments'       => $appointments->filter(fn(Appointment $appointment) => $appointment->isPast())->sortByDesc('scheduled_date')->values(),
             'waitlistEntries'        => $waitlistEntries,
             'loyaltyEnabled'         => $loyaltyEnabled,
             'loyaltyPoints'          => (int) $loyaltyPoints,
-            'loyaltyThreshold'       => SystemSetting::getLoyaltyRewardThreshold(),
-            'loyaltyPercentage'      => SystemSetting::getLoyaltyRewardPercentage(),
+            'loyaltyTiers'           => SystemSetting::getLoyaltyTiers(),
+            'loyaltyAvailableTiers'  => $availableTiers,
+            'loyaltyNextTier'        => $nextTier,
             'reviewedAppointmentIds' => $reviewedAppointmentIds,
         ]);
     }
@@ -134,15 +138,15 @@ class AppointmentController extends Controller
         $loyaltyEligible = false;
         $loyaltyPoints   = 0;
 
-        if ($loyaltyEnabled && $payment->payment_method === 'stripe') {
-            $loyaltyPoints   = (int) (LoyaltyAccount::where('user_id', $request->user()->id)->value('points') ?? 0);
-            $loyaltyEligible = $loyaltyPoints >= SystemSetting::getLoyaltyRewardThreshold()
-                || $payment->loyalty_discount_percentage !== null;
-        }
-
         $pointsToEarn = $loyaltyEnabled
             ? (int) floor((float) $appointment->final_price * SystemSetting::getLoyaltyPointsPerEuro())
             : 0;
+
+        $loyaltyPoints   = (int) (LoyaltyAccount::where('user_id', $request->user()->id)->value('points') ?? 0);
+        $availableTiers = $loyaltyEnabled && $payment->payment_method === 'stripe'
+            ? SystemSetting::getAvailableTiers($loyaltyPoints)
+            : [];
+        $loyaltyEligible = ! empty($availableTiers) || $payment->loyalty_discount_percentage !== null;
 
         return view('portal.appointments.payment', [
             'appointment'               => $appointment,
@@ -153,8 +157,8 @@ class AppointmentController extends Controller
             'loyaltyEnabled'            => $loyaltyEnabled,
             'loyaltyEligible'           => $loyaltyEligible,
             'loyaltyPoints'             => $loyaltyPoints,
-            'loyaltyThreshold'          => SystemSetting::getLoyaltyRewardThreshold(),
-            'loyaltyPercentage'         => SystemSetting::getLoyaltyRewardPercentage(),
+            'loyaltyAvailableTiers'     => $availableTiers,
+            'loyaltyPointsDispl'        => $payment->loyalty_tier_threshold,
             'discountApplied'           => $payment->loyalty_discount_percentage !== null,
             'discountedAmount'          => (float) $payment->amount,
             'originalAmount'            => (float) ($payment->loyalty_original_amount ?? $payment->amount),
@@ -180,18 +184,28 @@ class AppointmentController extends Controller
             return redirect()->route('portal.appointments.payment', $appointment);
         }
 
-        $account   = LoyaltyAccount::where('user_id', $request->user()->id)->first();
-        $threshold = SystemSetting::getLoyaltyRewardThreshold();
-
-        if (! $account || $account->points < $threshold) {
+        $account = LoyaltyAccount::where('user_id', $request->user()->id)->first();
+        if (! $account) {
             return redirect()->route('portal.appointments.payment', $appointment)
-                ->withErrors(['discount' => 'Punti insufficienti per applicare lo sconto.']);
+                ->withErrors(['discount' => 'Nessun punto fedeltà disponibile.']);
+        }
+
+        $threshold = $request->integer('threshold');
+        $tiers    = SystemSetting::getAvailableTiers($account->points);
+
+        $tier = collect($tiers)->firstWhere('threshold', $threshold);
+        if (! $tier) {
+            return redirect()->route('portal.appointments.payment', $appointment)
+                ->withErrors(['discount' => 'Sconto non disponibile.']);
         }
 
         $this->paymentService->applyLoyaltyDiscount(
             $payment,
-            SystemSetting::getLoyaltyRewardPercentage(),
+            (int) ($tier['percentage'] ?? 0),
             (float) $payment->amount,
+            isset($tier['amount']) ? (float) $tier['amount'] : null,
+            (int) $tier['threshold'],
+            true,
         );
 
         return redirect()->route('portal.appointments.payment', $appointment);
@@ -222,8 +236,16 @@ class AppointmentController extends Controller
         // Se redeem() ritorna 0 (es. soglia alzata dall'admin dopo che il cliente aveva applicato lo sconto),
         // ripristina l'importo originale sul Stripe PI e blocca il pagamento con un avviso.
         if ($payment && $payment->loyalty_discount_percentage !== null) {
-            $redeemed = app(LoyaltyService::class)->redeem($appointment);
-            if ($redeemed === 0) {
+            $tier = null;
+            if ($payment->loyalty_tier_threshold) {
+                $account = LoyaltyAccount::where('user_id', $request->user()->id)->first();
+                if ($account) {
+                    $tiers = SystemSetting::getAvailableTiers($account->points);
+                    $tier  = collect($tiers)->firstWhere('threshold', $payment->loyalty_tier_threshold);
+                }
+            }
+            $redeemed = app(LoyaltyService::class)->redeem($appointment, $tier);
+            if (($redeemed['percentage'] ?? 0) === 0 && ($redeemed['amount'] ?? 0) === 0) {
                 $this->paymentService->removeLoyaltyDiscount($payment);
 
                 return back()->withErrors([

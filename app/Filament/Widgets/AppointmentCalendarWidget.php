@@ -10,6 +10,9 @@ use App\Models\Service;
 use App\Models\StaffBlockout;
 use App\Models\User;
 use App\Services\AppointmentRescheduleService;
+use App\Models\LoyaltyAccount;
+use App\Models\SystemSetting;
+use App\Services\LoyaltyService;
 use App\Services\PaymentService;
 use Carbon\Carbon;
 use Filament\Actions\Action;
@@ -21,6 +24,7 @@ use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Html;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Facades\Filament;
 use Filament\Schemas\Schema;
 use Livewire\Attributes\On;
@@ -593,13 +597,75 @@ class AppointmentCalendarWidget extends FullCalendarWidget
                                 'cash' => 'Contanti',
                                 'pos'  => 'POS (carta)',
                             ])
-                            ->hidden(fn(Get $get): bool => (bool) $get('has_completed_payment')),
+                            ->hidden(fn(Get $get): bool => (bool) $get('has_completed_payment') || $get('status') !== 'completed'),
                         TextInput::make('payment_amount')
-                            ->label('Importo (€)')
+                            ->label('Importo dovuto (€)')
                             ->numeric()
                             ->rules(['nullable', 'numeric', 'min:0.01'])
                             ->required(fn(Get $get): bool => filled($get('payment_method')))
-                            ->hidden(fn(Get $get): bool => (bool) $get('has_completed_payment')),
+                            ->live(true)
+                            ->hidden(fn(Get $get): bool => (bool) $get('has_completed_payment') || $get('status') !== 'completed'),
+                        Select::make('loyalty_tier_index')
+                            ->label('Sconto fedeltà')
+                            ->placeholder('Nessuno')
+                            ->options(function (Get $get): array {
+                                $appointment = Appointment::find((int) $get('appointment_id'));
+                                if (! $appointment) return [];
+                                $points  = (int) (LoyaltyAccount::where('user_id', $appointment->user_id)->value('points') ?? 0);
+                                $tiers   = SystemSetting::getAvailableTiers($points);
+                                $options = [];
+                                foreach ($tiers as $i => $tier) {
+                                    $label = (int) ($tier['threshold'] ?? 0) . ' pt — ';
+                                    $label .= ! empty($tier['percentage'])
+                                        ? (int) $tier['percentage'] . '%'
+                                        : number_format((float) $tier['amount'], 2, ',', '.') . '€';
+                                    $options[$i] = $label;
+                                }
+                                return $options;
+                            })
+                            ->visible(fn(Get $get): bool =>
+                                ! (bool) $get('has_completed_payment')
+                                && $get('status') === 'completed'
+                                && SystemSetting::isLoyaltyEnabled()
+                            )
+                            ->live()
+                            ->afterStateUpdated(function ($state, Set $set, Get $get): void {
+                                $appointment = Appointment::find((int) $get('appointment_id'));
+                                if ($state === null || $state === '' || ! $appointment) {
+                                    $set('loyalty_tier_threshold', null);
+                                    $set('pre_discount_amount', null);
+                                    $set('discounted_amount', null);
+                                    return;
+                                }
+                                $points = (int) (LoyaltyAccount::where('user_id', $appointment->user_id)->value('points') ?? 0);
+                                $tiers  = SystemSetting::getAvailableTiers($points);
+                                $tier   = $tiers[(int) $state] ?? null;
+                                if (! $tier) {
+                                    return;
+                                }
+                                $base   = (float) ($get('payment_amount') ?: $appointment->final_price ?? 0);
+                                $pct    = (int) ($tier['percentage'] ?? 0);
+                                $amount = isset($tier['amount']) ? (float) $tier['amount'] : null;
+                                $discounted = $amount !== null
+                                    ? max(0, round($base - $amount, 2))
+                                    : round($base * (1 - $pct / 100), 2);
+                                $set('loyalty_tier_threshold', $tier['threshold']);
+                                $set('pre_discount_amount', $base);
+                                $set('discounted_amount', $discounted);
+                            }),
+                        TextInput::make('discounted_amount')
+                            ->label('Importo scontato (€)')
+                            ->numeric()
+                            ->rules(['nullable', 'numeric', 'min:0'])
+                            ->live(true)
+                            ->hidden(fn(Get $get): bool =>
+                                (bool) $get('has_completed_payment')
+                                || $get('status') !== 'completed'
+                                || $get('loyalty_tier_index') === null
+                                || $get('loyalty_tier_index') === ''
+                            ),
+                        Hidden::make('loyalty_tier_threshold'),
+                        Hidden::make('pre_discount_amount'),
                         Html::make(
                             fn(Get $get): string => (bool) $get('has_completed_payment')
                                 ? '<p class="text-sm font-medium text-success-600 dark:text-success-400">✓ Pagamento già registrato</p>'
@@ -611,16 +677,39 @@ class AppointmentCalendarWidget extends FullCalendarWidget
             ->authorize(fn(Action $action) => $this->authorizeAppointmentEdit($action))
             ->action(function (array $data, Action $action): void {
                 $appointmentId = $data['appointment_id'] ?? $action->getArguments()['appointmentId'];
+                $record        = Appointment::findOrFail($appointmentId);
 
-                Appointment::findOrFail($appointmentId)->update(['status' => $data['status']]);
+                if (empty($data['has_completed_payment']) && ! empty($data['payment_method'])) {
+                    $amount         = (float) ($data['discounted_amount'] ?? $data['payment_amount'] ?? 0);
+                    $originalAmount = (float) ($data['pre_discount_amount'] ?? $record->final_price ?? $amount);
+                    $threshold      = isset($data['loyalty_tier_threshold']) ? (int) $data['loyalty_tier_threshold'] : null;
+                    $discountResult = ['percentage' => 0, 'amount' => null];
 
-                if (empty($data['has_completed_payment']) && !empty($data['payment_method'])) {
+                    if ($threshold) {
+                        $points = (int) (LoyaltyAccount::where('user_id', $record->user_id)->value('points') ?? 0);
+                        $tiers  = SystemSetting::getAvailableTiers($points);
+                        $tier   = collect($tiers)->firstWhere('threshold', $threshold);
+                        if ($tier) {
+                            $discountResult = app(LoyaltyService::class)->redeem($record, $tier);
+                        }
+                    }
+
                     try {
-                        app(PaymentService::class)->recordInPersonPayment(
+                        $payment = app(PaymentService::class)->recordInPersonPayment(
                             $appointmentId,
                             $data['payment_method'],
-                            (float) ($data['payment_amount'] ?? 0)
+                            $amount
                         );
+
+                        if (($discountResult['percentage'] ?? 0) > 0 || ($discountResult['amount'] ?? 0) > 0) {
+                            $payment->update([
+                                'loyalty_discount_percentage' => $discountResult['percentage'] ?: null,
+                                'loyalty_original_amount'     => $originalAmount,
+                            ]);
+                            $record->update(['loyalty_discounted_price' => $amount, 'final_price' => $originalAmount]);
+                        } else {
+                            $record->update(['final_price' => $amount]);
+                        }
 
                         Notification::make()
                             ->title('Pagamento registrato con successo')
@@ -633,6 +722,8 @@ class AppointmentCalendarWidget extends FullCalendarWidget
                             ->send();
                     }
                 }
+
+                $record->update(['status' => $data['status']]);
 
                 $this->dispatch('filament-fullcalendar--refresh');
             });
@@ -659,6 +750,21 @@ class AppointmentCalendarWidget extends FullCalendarWidget
                         '<div><p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">Pagamento</p><p class="font-semibold text-gray-900 dark:text-white">%s</p></div>',
                         e($method . ' – €' . $amount)
                     );
+                    if ($completedPayment->loyalty_discount_percentage) {
+                        $paymentRow .= sprintf(
+                            '<div><p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">Sconto fedeltà</p><p class="font-semibold text-success-600 dark:text-success-400">%s%%</p></div>',
+                            (int) $completedPayment->loyalty_discount_percentage
+                        );
+                    } elseif ($completedPayment->loyalty_original_amount) {
+                        $saved = number_format(
+                            (float) $completedPayment->loyalty_original_amount - (float) $completedPayment->amount,
+                            2, ',', '.'
+                        );
+                        $paymentRow .= sprintf(
+                            '<div><p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">Sconto applicato</p><p class="font-semibold text-success-600 dark:text-success-400">€%s</p></div>',
+                            e($saved)
+                        );
+                    }
                 }
 
                 $notesRow = $appointment->notes

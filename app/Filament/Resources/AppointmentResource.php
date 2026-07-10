@@ -192,9 +192,6 @@ class AppointmentResource extends Resource
                     Hidden::make('customer_loyalty_points')
                         ->dehydrated(false),
 
-                    Hidden::make('pre_discount_amount')
-                        ->dehydrated(false),
-
                     Select::make('payment_method')
                         ->label('Metodo di pagamento')
                         ->options(['cash' => 'Contanti', 'pos' => 'POS (carta)'])
@@ -209,18 +206,12 @@ class AppointmentResource extends Resource
                         ]),
 
                     TextInput::make('payment_amount')
-                        ->label('Importo (€)')
+                        ->label('Importo dovuto (€)')
                         ->numeric()
                         ->minValue(fn(Get $get) => (bool) $get('has_completed_payment') ? null : 0.01)
                         ->required(fn(Get $get) => ! (bool) $get('has_completed_payment'))
                         ->disabled(fn(Get $get) => (bool) $get('has_completed_payment'))
-                        ->hint(
-                            fn(Get $get): ?string =>
-                            $get('loyalty_discount_percentage')
-                                ? 'Sconto fedeltà ' . $get('loyalty_discount_percentage') . '% applicato'
-                                : null
-                        )
-                        ->hintColor('success')
+                        ->live(true)
                         ->hidden(
                             fn(Get $get, string $operation) =>
                             $operation !== 'edit' || $get('status') !== 'completed'
@@ -231,32 +222,90 @@ class AppointmentResource extends Resource
                             'min'      => 'L\'importo minimo è 0,01.',
                         ]),
 
-                    Toggle::make('apply_loyalty_discount')
-                        ->label(fn(): string => 'Applica sconto fedeltà ' . SystemSetting::getLoyaltyRewardPercentage() . '% (−' . SystemSetting::getLoyaltyRewardThreshold() . ' punti)')
-                        ->default(false)
+                    Select::make('loyalty_tier_index')
+                        ->label('Sconto fedeltà')
+                        ->options(function ($record): array {
+                            if (! $record) {
+                                return [];
+                            }
+                            $points  = (int) (LoyaltyAccount::where('user_id', $record->user_id)->value('points') ?? 0);
+                            $tiers   = SystemSetting::getAvailableTiers($points);
+                            $options = [];
+
+                            foreach ($tiers as $i => $tier) {
+                                $label = (int) ($tier['threshold'] ?? 0) . ' pt — ';
+                                $label .= ! empty($tier['percentage'])
+                                    ? (int) $tier['percentage'] . '%'
+                                    : number_format((float) $tier['amount'], 2, ',', '.') . '€';
+                                $options[$i] = $label;
+                            }
+
+                            return $options;
+                        })
+                        ->placeholder('Nessuno')
                         ->live()
                         ->dehydrated(true)
-                        ->dehydratedWhenHidden(true)
-                        ->afterStateUpdated(function (bool $state, Set $set, Get $get, ?Appointment $record): void {
-                            if ($state) {
-                                $base = (float) ($get('payment_amount') ?: ($record?->final_price ?? 0));
-                                $set('pre_discount_amount', $base);
-                                $set('payment_amount', round($base * (1 - SystemSetting::getLoyaltyRewardPercentage() / 100), 2));
-                            } else {
-                                $set('payment_amount', (float) ($get('pre_discount_amount') ?: ($record?->final_price ?? 0)));
+                        ->afterStateUpdated(function ($state, Set $set, Get $get, ?Appointment $record): void {
+                            if ($state === null || $state === '' || ! $record) {
+                                $set('apply_loyalty_discount', false);
+                                $set('loyalty_tier_threshold', null);
+                                $set('pre_discount_amount', null);
+                                $set('discounted_amount', null);
+                                return;
                             }
+                            $points = (int) (LoyaltyAccount::where('user_id', $record->user_id)->value('points') ?? 0);
+                            $tiers  = SystemSetting::getAvailableTiers($points);
+                            $tier   = $tiers[(int) $state] ?? null;
+                            if (! $tier) {
+                                return;
+                            }
+                            $base   = (float) ($get('payment_amount') ?: ($record->final_price ?? 0));
+                            $pct    = (int) ($tier['percentage'] ?? 0);
+                            $amount = isset($tier['amount']) ? (float) $tier['amount'] : null;
+                            $discounted = $amount !== null
+                                ? max(0, round($base - $amount, 2))
+                                : round($base * (1 - $pct / 100), 2);
+                            $set('apply_loyalty_discount', true);
+                            $set('loyalty_tier_threshold', $tier['threshold']);
+                            $set('pre_discount_amount', $base);
+                            $set('discounted_amount', $discounted);
                         })
-                        ->visible(function (Get $get): bool {
+                        ->visible(function (Get $get, ?Appointment $record): bool {
                             if (! SystemSetting::isLoyaltyEnabled() || $get('status') !== 'completed') {
                                 return false;
                             }
                             if ((bool) $get('has_completed_payment')) {
                                 return false;
                             }
+                            if (! $record) {
+                                return false;
+                            }
+                            $points = (int) (LoyaltyAccount::where('user_id', $record->user_id)->value('points') ?? 0);
+                            return ! empty(SystemSetting::getAvailableTiers($points));
+                        }),
 
-                            return (int) $get('customer_loyalty_points') >= SystemSetting::getLoyaltyRewardThreshold();
-                        })
-                        ->columnSpanFull(),
+                    TextInput::make('discounted_amount')
+                        ->label('Importo scontato (€)')
+                        ->numeric()
+                        ->minValue(0)
+                        ->live(true)
+                        ->hidden(
+                            fn(Get $get, string $operation) =>
+                            $operation !== 'edit'
+                            || $get('status') !== 'completed'
+                            || $get('loyalty_tier_index') === null
+                            || $get('loyalty_tier_index') === ''
+                        ),
+
+                    Hidden::make('apply_loyalty_discount')
+                        ->default(false)
+                        ->dehydrated(true),
+
+                    Hidden::make('loyalty_tier_threshold')
+                        ->dehydrated(true),
+
+                    Hidden::make('pre_discount_amount')
+                        ->dehydrated(false),
                 ])
                 ->columns(2)
                 ->columnSpanFull(),
@@ -364,61 +413,107 @@ class AppointmentResource extends Resource
                                 'required' => 'Il metodo di pagamento è obbligatorio.',
                             ]),
                         TextInput::make('amount')
-                            ->label('Importo (€)')
+                            ->label('Importo dovuto (€)')
                             ->numeric()
                             ->minValue(0.01)
                             ->required()
+                            ->live(true)
                             ->validationMessages([
                                 'required' => 'L\'importo è obbligatorio.',
                                 'numeric'  => 'Il valore deve essere un numero.',
                                 'min'      => 'L\'importo minimo è 0,01.',
                             ]),
-                        Hidden::make('pre_discount_amount'),
-                        Toggle::make('apply_loyalty_discount')
-                            ->label(fn(): string => 'Applica sconto fedeltà ' . SystemSetting::getLoyaltyRewardPercentage() . '% (−' . SystemSetting::getLoyaltyRewardThreshold() . ' punti)')
-                            ->default(false)
-                            ->live()
-                            ->afterStateUpdated(function (bool $state, Set $set, Get $get, Appointment $record): void {
-                                if ($state) {
-                                    $base = (float) ($get('amount') ?: ($record->final_price ?? 0));
-                                    $set('pre_discount_amount', $base);
-                                    $set('amount', round($base * (1 - SystemSetting::getLoyaltyRewardPercentage() / 100), 2));
-                                } else {
-                                    $set('amount', (float) ($get('pre_discount_amount') ?: ($record->final_price ?? 0)));
+                        Select::make('loyalty_tier_index')
+                            ->label('Sconto fedeltà')
+                            ->placeholder('Nessuno')
+                            ->options(function (Appointment $record): array {
+                                $points  = (int) (LoyaltyAccount::where('user_id', $record->user_id)->value('points') ?? 0);
+                                $tiers   = SystemSetting::getAvailableTiers($points);
+                                $options = [];
+
+                                foreach ($tiers as $i => $tier) {
+                                    $label = (int) ($tier['threshold'] ?? 0) . ' pt — ';
+                                    $label .= ! empty($tier['percentage'])
+                                        ? (int) $tier['percentage'] . '%'
+                                        : number_format((float) $tier['amount'], 2, ',', '.') . '€';
+                                    $options[$i] = $label;
                                 }
+
+                                return $options;
+                            })
+                            ->live()
+                            ->afterStateUpdated(function ($state, Set $set, Get $get, Appointment $record): void {
+                                if ($state === null || $state === '') {
+                                    $set('pre_discount_amount', null);
+                                    $set('loyalty_tier_threshold', null);
+                                    $set('discounted_amount', null);
+                                    $set('amount', (float) ($record->final_price ?? 0));
+                                    return;
+                                }
+                                $points = (int) (LoyaltyAccount::where('user_id', $record->user_id)->value('points') ?? 0);
+                                $tiers  = SystemSetting::getAvailableTiers($points);
+                                $tier   = $tiers[(int) $state] ?? null;
+                                if (! $tier) {
+                                    return;
+                                }
+                                $base   = (float) ($get('amount') ?: ($record->final_price ?? 0));
+                                $pct    = (int) ($tier['percentage'] ?? 0);
+                                $amt    = isset($tier['amount']) ? (float) $tier['amount'] : null;
+                                $discounted = $amt !== null
+                                    ? max(0, round($base - $amt, 2))
+                                    : round($base * (1 - $pct / 100), 2);
+                                $set('loyalty_tier_threshold', $tier['threshold']);
+                                $set('pre_discount_amount', $base);
+                                $set('discounted_amount', $discounted);
                             })
                             ->visible(
                                 fn(Appointment $record): bool =>
                                 SystemSetting::isLoyaltyEnabled()
-                                    && (LoyaltyAccount::where('user_id', $record->user_id)->value('points') ?? 0) >= SystemSetting::getLoyaltyRewardThreshold()
+                                    && ! empty(SystemSetting::getAvailableTiers((int) (LoyaltyAccount::where('user_id', $record->user_id)->value('points') ?? 0)))
                             ),
+                        Hidden::make('pre_discount_amount'),
+                        Hidden::make('loyalty_tier_threshold')
+                            ->dehydrated(true),
+                        TextInput::make('discounted_amount')
+                            ->label('Importo scontato (€)')
+                            ->numeric()
+                            ->minValue(0)
+                            ->live(true)
+                            ->hidden(fn(Get $get): bool => $get('loyalty_tier_index') === null || $get('loyalty_tier_index') === ''),
                     ])
                     ->fillForm(fn(Appointment $record): array => [
                         'amount' => $record->final_price,
                     ])
                     ->action(function (Appointment $record, array $data): void {
-                        // amount contiene già l'importo scontato (aggiornato dal toggle via afterStateUpdated).
-                        $amount         = (float) $data['amount'];
-                        $discountPct    = 0;
-                        $originalAmount = (float) ($record->final_price ?? $amount);
+                        $payAmount       = (float) ($data['discounted_amount'] ?? $data['amount']);
+                        $discountResult  = ['percentage' => 0, 'amount' => null];
+                        $originalAmount  = (float) ($data['pre_discount_amount'] ?? $record->final_price ?? $payAmount);
+                        $threshold       = isset($data['loyalty_tier_threshold']) ? (int) $data['loyalty_tier_threshold'] : null;
 
-                        if (! empty($data['apply_loyalty_discount'])) {
-                            $discountPct = app(LoyaltyService::class)->redeem($record);
+                        if ($threshold) {
+                            $points = (int) (LoyaltyAccount::where('user_id', $record->user_id)->value('points') ?? 0);
+                            $tiers  = SystemSetting::getAvailableTiers($points);
+                            $tier   = collect($tiers)->firstWhere('threshold', $threshold);
+                            if ($tier) {
+                                $discountResult = app(LoyaltyService::class)->redeem($record, $tier);
+                            }
                         }
 
                         try {
                             $payment = app(PaymentService::class)->recordInPersonPayment(
                                 $record->id,
                                 $data['method'],
-                                $amount
+                                $payAmount
                             );
 
-                            if ($discountPct > 0) {
+                            if (($discountResult['percentage'] ?? 0) > 0 || ($discountResult['amount'] ?? 0) > 0) {
                                 $payment->update([
-                                    'loyalty_discount_percentage' => $discountPct,
+                                    'loyalty_discount_percentage' => $discountResult['percentage'] ?: null,
                                     'loyalty_original_amount'     => $originalAmount,
                                 ]);
-                                $record->update(['loyalty_discounted_price' => $amount]);
+                                $record->update(['loyalty_discounted_price' => $payAmount, 'final_price' => $originalAmount]);
+                            } else {
+                                $record->update(['final_price' => $payAmount]);
                             }
                         } catch (\App\Exceptions\BookingException $e) {
                             Notification::make()

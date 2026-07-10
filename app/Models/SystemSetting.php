@@ -13,7 +13,7 @@ use App\Models\Business;
     'booking_max_days_ahead', 'cancellation_deadline_hours',
     'reminder_count', 'reminder_1_hours', 'reminder_2_hours', 'payment_mode',
     'reviews_enabled',
-    'loyalty_enabled', 'loyalty_points_per_euro', 'loyalty_reward_threshold', 'loyalty_reward_percentage',
+    'loyalty_enabled', 'loyalty_points_per_euro', 'loyalty_reward_threshold', 'loyalty_reward_percentage', 'loyalty_tiers',
     'low_stock_notify_user_ids',
     'order_notify_user_ids',
     'waitlist_offer_timeout_minutes',
@@ -40,6 +40,7 @@ class SystemSetting extends Model
             'loyalty_points_per_euro'   => 'integer',
             'loyalty_reward_threshold'  => 'integer',
             'loyalty_reward_percentage' => 'integer',
+            'loyalty_tiers'           => 'array',
             'low_stock_notify_user_ids'    => 'array',
             'order_notify_user_ids'        => 'array',
             'review_request_enabled'       => 'boolean',
@@ -70,6 +71,7 @@ class SystemSetting extends Model
                 'loyalty_points_per_euro'   => 1,
                 'loyalty_reward_threshold'  => 100,
                 'loyalty_reward_percentage' => 10,
+                'loyalty_tiers'            => null,
                 'follow_up_reminders_enabled' => false,
                 'follow_up_reminder_days'     => 30,
                 'stripe_platform_fee_percent' => null,
@@ -95,6 +97,7 @@ class SystemSetting extends Model
                 'loyalty_points_per_euro'   => 1,
                 'loyalty_reward_threshold'  => 100,
                 'loyalty_reward_percentage' => 10,
+                'loyalty_tiers'            => null,
                 'follow_up_reminders_enabled' => false,
                 'follow_up_reminder_days'     => 30,
                 'stripe_platform_fee_percent' => null,
@@ -190,6 +193,72 @@ class SystemSetting extends Model
     public static function getLoyaltyRewardPercentage(): int
     {
         return self::current()->loyalty_reward_percentage ?? 10;
+    }
+
+    public static function getLoyaltyTiers(): array
+    {
+        return self::current()->loyalty_tiers ?? [];
+    }
+
+    public static function getAvailableTiers(int $points): array
+    {
+        $tiers = self::getLoyaltyTiers();
+
+        if (empty($tiers)) {
+            if ($points >= self::getLoyaltyRewardThreshold()) {
+                return [[
+                    'threshold'  => self::getLoyaltyRewardThreshold(),
+                    'percentage' => self::getLoyaltyRewardPercentage(),
+                    'amount'     => null,
+                ]];
+            }
+
+            return [];
+        }
+
+        return array_values(array_filter($tiers, function (array $tier) use ($points) {
+            return (int) ($tier['threshold'] ?? 0) <= $points;
+        }));
+    }
+
+    public static function getNextTier(int $points): ?array
+    {
+        $tiers = self::getLoyaltyTiers();
+
+        if (empty($tiers)) {
+            return null;
+        }
+
+        $next = null;
+
+        foreach ($tiers as $tier) {
+            $threshold  = (int) ($tier['threshold'] ?? 0);
+
+            if ($threshold <= $points) {
+                continue;
+            }
+
+            $percentage = isset($tier['percentage']) && $tier['percentage'] !== '' && $tier['percentage'] !== null
+                ? (int) $tier['percentage']
+                : null;
+            $amount = isset($tier['amount']) && $tier['amount'] !== '' && $tier['amount'] !== null
+                ? (float) $tier['amount']
+                : null;
+
+            if ($percentage === null && $amount === null) {
+                continue;
+            }
+
+            if ($next === null || $threshold < $next['threshold']) {
+                $next = [
+                    'threshold'  => $threshold,
+                    'percentage' => $percentage,
+                    'amount'     => $amount,
+                ];
+            }
+        }
+
+        return $next;
     }
 
     public static function getLowStockNotifyUserIds(): array

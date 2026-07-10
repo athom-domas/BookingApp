@@ -56,24 +56,36 @@ class LoyaltyService
         }
     }
 
-    public function redeem(Appointment $appointment): int
+    public function redeem(Appointment $appointment, ?array $tier = null): array
     {
         if (! SystemSetting::isLoyaltyEnabled()) {
-            return 0;
+            return ['percentage' => 0, 'amount' => null];
         }
 
         $alreadyRedeemed = LoyaltyTransaction::where('appointment_id', $appointment->id)
             ->where('type', 'redeem')
             ->exists();
         if ($alreadyRedeemed) {
-            return 0;
+            return ['percentage' => 0, 'amount' => null];
         }
 
-        $threshold = SystemSetting::getLoyaltyRewardThreshold();
         $account = LoyaltyAccount::where('user_id', $appointment->user_id)->first();
-        if (! $account || $account->points < $threshold) {
-            return 0;
+        if (! $account) {
+            return ['percentage' => 0, 'amount' => null];
         }
+
+        if ($tier === null) {
+            $available = SystemSetting::getAvailableTiers($account->points);
+            $tier = ! empty($available) ? $available[0] : null;
+        }
+
+        if (! $tier) {
+            return ['percentage' => 0, 'amount' => null];
+        }
+
+        $threshold  = (int) ($tier['threshold'] ?? 0);
+        $percentage = (int) ($tier['percentage'] ?? 0);
+        $amount     = isset($tier['amount']) ? (float) $tier['amount'] : null;
 
         DB::transaction(function () use ($account, $appointment, $threshold) {
             LoyaltyTransaction::create([
@@ -86,7 +98,10 @@ class LoyaltyService
             $account->decrement('points', $threshold);
         });
 
-        return SystemSetting::getLoyaltyRewardPercentage();
+        return [
+            'percentage' => $percentage,
+            'amount'     => $amount,
+        ];
     }
 
     public function reverse(Appointment $appointment): void

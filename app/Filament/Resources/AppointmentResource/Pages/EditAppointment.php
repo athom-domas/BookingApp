@@ -4,6 +4,7 @@ namespace App\Filament\Resources\AppointmentResource\Pages;
 
 use App\Exceptions\BookingException;
 use App\Filament\Resources\AppointmentResource;
+use App\Models\SystemSetting;
 use App\Services\LoyaltyService;
 use App\Services\PaymentService;
 use Filament\Actions\DeleteAction;
@@ -42,6 +43,9 @@ class EditAppointment extends EditRecord
         $data['payment_amount']             = $payment?->status === 'completed'
             ? $payment->amount
             : $this->record->final_price;
+        $data['discounted_amount']          = $payment?->status === 'completed'
+            ? $payment->amount
+            : null;
         $data['loyalty_discount_percentage'] = $payment?->status === 'completed'
             ? $payment->loyalty_discount_percentage
             : null;
@@ -57,7 +61,7 @@ class EditAppointment extends EditRecord
 
     protected function mutateFormDataBeforeSave(array $data): array
     {
-        unset($data['payment_method'], $data['payment_amount'], $data['has_completed_payment'], $data['apply_loyalty_discount'], $data['loyalty_discount_percentage']);
+        unset($data['payment_method'], $data['payment_amount'], $data['discounted_amount'], $data['has_completed_payment'], $data['apply_loyalty_discount'], $data['loyalty_discount_percentage'], $data['loyalty_tier_threshold'], $data['loyalty_tier_index']);
 
         return $data;
     }
@@ -87,12 +91,18 @@ class EditAppointment extends EditRecord
 
         // payment_amount contiene già l'importo scontato (aggiornato in tempo reale dal toggle via afterStateUpdated).
         // Qui occorre solo scalare i punti; non ricalcolare lo sconto.
-        $amount            = (float) ($data['payment_amount'] ?? 0);
-        $discountPct       = 0;
-        $originalAmount    = (float) ($this->record->final_price ?? $amount);
+        $amount            = (float) ($data['discounted_amount'] ?? $data['payment_amount'] ?? 0);
+        $discountResult    = ['percentage' => 0, 'amount' => null];
+        $originalAmount    = (float) ($data['pre_discount_amount'] ?? $this->record->final_price ?? $amount);
+        $threshold         = isset($data['loyalty_tier_threshold']) ? (int) $data['loyalty_tier_threshold'] : null;
 
-        if (! empty($data['apply_loyalty_discount'])) {
-            $discountPct = app(LoyaltyService::class)->redeem($this->record);
+        if ($threshold) {
+            $points = (int) (\App\Models\LoyaltyAccount::where('user_id', $this->record->user_id)->value('points') ?? 0);
+            $tiers  = SystemSetting::getAvailableTiers($points);
+            $tier   = collect($tiers)->firstWhere('threshold', $threshold);
+            if ($tier) {
+                $discountResult = app(LoyaltyService::class)->redeem($this->record, $tier);
+            }
         }
 
         try {
@@ -102,12 +112,14 @@ class EditAppointment extends EditRecord
                 $amount
             );
 
-            if ($discountPct > 0) {
+            if (($discountResult['percentage'] ?? 0) > 0 || ($discountResult['amount'] ?? 0) > 0) {
                 $payment->update([
-                    'loyalty_discount_percentage' => $discountPct,
+                    'loyalty_discount_percentage' => $discountResult['percentage'] ?: null,
                     'loyalty_original_amount'     => $originalAmount,
                 ]);
-                $this->record->update(['loyalty_discounted_price' => $amount]);
+                $this->record->update(['loyalty_discounted_price' => $amount, 'final_price' => $originalAmount]);
+            } else {
+                $this->record->update(['final_price' => $amount]);
             }
         } catch (BookingException $e) {
             Notification::make()

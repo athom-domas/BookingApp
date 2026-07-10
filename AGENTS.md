@@ -10,6 +10,9 @@ docker compose run --rm -e DB_DATABASE=booking_app_test app ./vendor/bin/pest
 make test-filter filter="test name"
 make test                         # uses docker compose exec
 
+# After running tests, ALWAYS re-seed dev DB so the user can log in:
+# make artisan cmd="migrate:fresh --seed"
+
 # Artisan
 docker compose run --rm app php artisan <cmd>
 make artisan cmd="migrate:fresh --seed"

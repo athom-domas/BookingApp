@@ -198,9 +198,11 @@ class PaymentService
         return $payment->fresh();
     }
 
-    public function applyLoyaltyDiscount(Payment $payment, int $percentage, float $originalAmount): void
+    public function applyLoyaltyDiscount(Payment $payment, int $percentage, float $originalAmount, ?float $amountDiscount = null, ?int $loyaltyTierThreshold = null, bool $saveThreshold = false): void
     {
-        $discounted     = round($originalAmount * (1 - $percentage / 100), 2);
+        $discounted = $amountDiscount !== null
+            ? max(0, round($originalAmount - $amountDiscount, 2))
+            : round($originalAmount * (1 - $percentage / 100), 2);
         $newAmountCents = (int) round($discounted * 100);
 
         $updateParams = ['amount' => $newAmountCents];
@@ -216,8 +218,9 @@ class PaymentService
 
         $payment->update([
             'amount'                      => $discounted,
-            'loyalty_discount_percentage' => $percentage,
+            'loyalty_discount_percentage' => $percentage ?: null,
             'loyalty_original_amount'     => $originalAmount,
+            'loyalty_tier_threshold'      => $saveThreshold ? $loyaltyTierThreshold : null,
         ]);
     }
 

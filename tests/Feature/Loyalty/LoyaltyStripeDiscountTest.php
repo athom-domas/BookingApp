@@ -46,7 +46,7 @@ it('applyDiscount: redirect con errore se i punti sono insufficienti', function 
     ]);
 
     $this->actingAs($this->customer)
-        ->post(route('portal.appointments.payment.discount', $this->appointment))
+        ->post(route('portal.appointments.payment.discount', $this->appointment), ['threshold' => 100])
         ->assertRedirect()
         ->assertSessionHasErrors('discount');
 });
@@ -69,7 +69,7 @@ it('applyDiscount: non applica il secondo sconto se già applicato', function ()
     $this->app->instance(PaymentService::class, $mock);
 
     $this->actingAs($this->customer)
-        ->post(route('portal.appointments.payment.discount', $this->appointment))
+        ->post(route('portal.appointments.payment.discount', $this->appointment), ['threshold' => 100])
         ->assertRedirect(route('portal.appointments.payment', $this->appointment));
 
     expect($payment->fresh()->loyalty_discount_percentage)->toBe(10);
@@ -106,13 +106,13 @@ it('applyDiscount: applica lo sconto chiamando PaymentService', function () {
     $mock = Mockery::mock(PaymentService::class);
     $mock->shouldReceive('applyLoyaltyDiscount')
         ->once()
-        ->withArgs(function ($p, $pct, $original) use ($payment) {
-            return $p->id === $payment->id && $pct === 10 && (float) $original === 100.0;
+        ->withArgs(function ($p, $pct, $original, $amountDisc, $threshold) use ($payment) {
+            return $p->id === $payment->id && $pct === 10 && (float) $original === 100.0 && $amountDisc === null && $threshold === 100;
         });
     $this->app->instance(PaymentService::class, $mock);
 
     $this->actingAs($this->customer)
-        ->post(route('portal.appointments.payment.discount', $this->appointment))
+        ->post(route('portal.appointments.payment.discount', $this->appointment), ['threshold' => 100])
         ->assertRedirect(route('portal.appointments.payment', $this->appointment))
         ->assertSessionHasNoErrors();
 });
@@ -135,7 +135,7 @@ it('removeDiscount: ripristina l importo chiamando PaymentService', function () 
         ->withArgs(fn ($p) => $p->id === $payment->id);
     $this->app->instance(PaymentService::class, $mock);
 
-    $this->actingAs($this->customer)
+$this->actingAs($this->customer)
         ->delete(route('portal.appointments.payment.discount.remove', $this->appointment))
         ->assertRedirect(route('portal.appointments.payment', $this->appointment))
         ->assertSessionHasNoErrors();

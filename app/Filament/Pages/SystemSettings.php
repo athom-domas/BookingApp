@@ -50,6 +50,7 @@ class SystemSettings extends Page
             'loyalty_points_per_euro'     => $setting->loyalty_points_per_euro ?? 1,
             'loyalty_reward_threshold'    => $setting->loyalty_reward_threshold ?? 100,
             'loyalty_reward_percentage'   => $setting->loyalty_reward_percentage ?? 10,
+            'loyalty_tiers'                => $setting->loyalty_tiers ?? [],
             'low_stock_notify_user_ids'   => $setting->low_stock_notify_user_ids ?? [],
             'order_notify_user_ids'       => $setting->order_notify_user_ids ?? [],
             'follow_up_reminders_enabled' => $setting->follow_up_reminders_enabled ?? false,
@@ -192,7 +193,8 @@ class SystemSettings extends Page
                                 ->disabled(! $hasPlan),
 
                             TextInput::make('loyalty_reward_threshold')
-                                ->label('Punti per lo sconto')
+                                ->label('Punti per lo sconto (fallback)')
+                                ->helperText('Usato solo se non sono definiti livelli multipli qui sotto')
                                 ->integer()
                                 ->minValue(1)
                                 ->required()
@@ -201,12 +203,47 @@ class SystemSettings extends Page
                                 ->disabled(! $hasPlan),
 
                             TextInput::make('loyalty_reward_percentage')
-                                ->label('Sconto sbloccato')
+                                ->label('Sconto sbloccato (fallback)')
+                                ->helperText('Usato solo se non sono definiti livelli multipli qui sotto')
                                 ->integer()
                                 ->minValue(1)
                                 ->maxValue(100)
                                 ->required()
                                 ->suffix('%')
+                                ->visible(fn (Get $get): bool => (bool) $get('loyalty_enabled'))
+                                ->disabled(! $hasPlan),
+
+                            \Filament\Forms\Components\Repeater::make('loyalty_tiers')
+                                ->label('Livelli multipli (opzionale)')
+                                ->helperText('Definisci più livelli con diverse soglie e sconti. Es: 100pt=10%, 200pt=20%, 300pt=sconto 15€. Se vuoto, viene usato il singolo livello fallback sopra.')
+                                ->schema([
+                                    \Filament\Forms\Components\TextInput::make('threshold')
+                                        ->label('Punti necessari')
+                                        ->integer()
+                                        ->minValue(1)
+                                        ->required()
+                                        ->suffix('punti'),
+                                    \Filament\Forms\Components\TextInput::make('percentage')
+                                        ->label('Sconto percentuale')
+                                        ->helperText('Lascia vuoto se usi un importo fisso')
+                                        ->integer()
+                                        ->minValue(1)
+                                        ->maxValue(100)
+                                        ->suffix('%')
+                                        ->nullable(),
+                                    \Filament\Forms\Components\TextInput::make('amount')
+                                        ->label('Sconto in euro')
+                                        ->helperText('Lascia vuoto se usi una percentuale')
+                                        ->numeric()
+                                        ->minValue(0.01)
+                                        ->suffix('€')
+                                        ->nullable(),
+                                ])
+                                ->columns(3)
+                                ->columnSpanFull()
+                                ->addActionLabel('Aggiungi livello')
+                                ->defaultItems(0)
+                                ->reorderable()
                                 ->visible(fn (Get $get): bool => (bool) $get('loyalty_enabled'))
                                 ->disabled(! $hasPlan),
                         ];

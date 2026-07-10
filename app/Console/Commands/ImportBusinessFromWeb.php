@@ -769,6 +769,7 @@ PROMPT;
                     'loyalty_points_per_euro'     => 1,
                     'loyalty_reward_threshold'    => 100,
                     'loyalty_reward_percentage'   => 10,
+                    'loyalty_tiers'               => null,
                     'follow_up_reminders_enabled' => false,
                     'follow_up_reminder_days'     => 30,
                 ]

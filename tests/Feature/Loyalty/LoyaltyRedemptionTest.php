@@ -54,18 +54,18 @@ it('applica lo sconto fedeltà e scala i punti al completamento', function () {
         ->set('data.status', 'completed')
         ->set('data.payment_method', 'cash')
         ->set('data.payment_amount', 100)
-        ->set('data.apply_loyalty_discount', true)
+        ->set('data.loyalty_tier_index', 0)
         ->call('save')
         ->assertHasNoFormErrors();
 
     $payment = Payment::where('appointment_id', $this->appointment->id)->first();
 
-    // Con accrual alla conferma: observer ha già accreditato 100 punti (final_price) alla creazione.
-    // Saldo: 120 (base) + 100 (conferma) = 220 → redeem -100 = 120. earn tx = 100 (final_price).
+    // Con accrual sull'importo scontato: observer accredita loyalty_discounted_price (90).
+    // Saldo: 120 (base) + 90 (scontato) = 210 → redeem -100 = 110. earn tx = 90.
     expect((float) $payment->amount)->toBe(90.0)
-        ->and(LoyaltyAccount::where('user_id', $this->customer->id)->first()->points)->toBe(120)
+        ->and(LoyaltyAccount::where('user_id', $this->customer->id)->first()->points)->toBe(110)
         ->and(LoyaltyTransaction::where('appointment_id', $this->appointment->id)->where('type', 'redeem')->first()->points)->toBe(-100)
-        ->and(LoyaltyTransaction::where('appointment_id', $this->appointment->id)->where('type', 'earn')->first()->points)->toBe(100);
+        ->and(LoyaltyTransaction::where('appointment_id', $this->appointment->id)->where('type', 'earn')->first()->points)->toBe(90);
 });
 
 it('non va in errore quando il Select status è disabilitato e assente da getState()', function () {
@@ -85,12 +85,11 @@ it('non va in errore quando il Select status è disabilitato e assente da getSta
         ->assertHasNoFormErrors();
 });
 
-it('non applica sconto se il toggle è spento', function () {
+it('non applica sconto se non si sceglie il livello', function () {
     livewire(EditAppointment::class, ['record' => $this->appointment->id])
         ->set('data.status', 'completed')
         ->set('data.payment_method', 'cash')
         ->set('data.payment_amount', 100)
-        ->set('data.apply_loyalty_discount', false)
         ->call('save')
         ->assertHasNoFormErrors();
 

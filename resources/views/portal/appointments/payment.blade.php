@@ -48,11 +48,11 @@
                         </p>
                         @if($discountApplied)
                             <p class="mt-0.5 text-sm text-green-700 dark:text-green-400">
-                                Sconto {{ $loyaltyPercentage }}% applicato — {{ $loyaltyThreshold }} punti verranno scalati al completamento.
+                                Sconto applicato — {{ $loyaltyPointsDispl ?? '' }} punti verranno scalati al completamento.
                             </p>
-                        @else
+                        @elseif(count($loyaltyAvailableTiers) > 0)
                             <p class="mt-0.5 text-sm text-gray-600 dark:text-gray-400">
-                                Hai {{ $loyaltyPoints }} punti. Applica uno sconto del {{ $loyaltyPercentage }}% scalando {{ $loyaltyThreshold }} punti.
+                                Hai {{ $loyaltyPoints }} punti. Scegli uno sconto:
                             </p>
                         @endif
                     </div>
@@ -64,15 +64,30 @@
                                 Rimuovi
                             </button>
                         </form>
-                    @else
-                        <form method="POST" action="{{ route('portal.appointments.payment.discount', $appointment) }}" class="shrink-0">
-                            @csrf
-                            <button type="submit" class="rounded-md bg-green-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-green-700">
-                                Applica sconto
-                            </button>
-                        </form>
                     @endif
                 </div>
+
+                @if(! $discountApplied && count($loyaltyAvailableTiers) > 0)
+                    <div class="mt-3 space-y-2">
+                        @foreach($loyaltyAvailableTiers as $tier)
+                            @php
+                                $tThreshold = (int) ($tier['threshold'] ?? 0);
+                                $tPct       = (int) ($tier['percentage'] ?? 0);
+                                $tAmount    = isset($tier['amount']) ? (float) $tier['amount'] : null;
+                                $tLabel     = $tPct ? $tPct . '%' : number_format($tAmount, 2, ',', '.') . '€';
+                            @endphp
+                            <form method="POST" action="{{ route('portal.appointments.payment.discount', $appointment) }}">
+                                @csrf
+                                <input type="hidden" name="threshold" value="{{ $tThreshold }}">
+                                <button type="submit" class="w-full rounded-md border border-green-200 dark:border-green-800 px-3 py-2 text-left text-sm font-medium text-green-700 dark:text-green-300 hover:bg-green-50 dark:hover:bg-green-950/30 transition-colors">
+                                    <span class="block text-xs text-gray-500 dark:text-gray-400">{{ $tThreshold }} punti</span>
+                                    <span class="block">Sconto {{ $tLabel }}</span>
+                                </button>
+                            </form>
+                        @endforeach
+                    </div>
+                @endif
+
                 @error('discount')
                     <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                 @enderror
