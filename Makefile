@@ -118,7 +118,21 @@ queue-work:
 
 # ── Deploy ───────────────────────────────────────────────────────────────────
 
-deploy:
+guard-main:
+	@branch=$$(git rev-parse --abbrev-ref HEAD); \
+	if [ "$$branch" != "main" ]; then \
+		echo "Errore: il deploy in produzione può essere eseguito solo dal branch main (sei su $$branch)"; \
+		exit 1; \
+	fi
+
+guard-staging:
+	@branch=$$(git rev-parse --abbrev-ref HEAD); \
+	if [ "$$branch" != "staging" ]; then \
+		echo "Errore: il deploy in staging può essere eseguito solo dal branch staging (sei su $$branch)"; \
+		exit 1; \
+	fi
+
+deploy: guard-main
 	@$(MAKE) --no-print-directory deploy-run ENV_NAME=produzione ENV_FILE=.env.production REMOTE_PATH="$(SSH_PATH)" HEALTH_URL="$(PROD_URL)" ENV_ARCHIVE=.env.production VALIDATE_TARGET=validate-prod-env
 
 validate-prod-env:
@@ -295,7 +309,7 @@ deploy-health-prod:
 staging-setup: deploy-staging
 	@echo "Staging setup completato. Visita https://staging.booking-app.it"
 
-deploy-staging:
+deploy-staging: guard-staging
 	@$(MAKE) --no-print-directory deploy-run ENV_NAME=staging ENV_FILE=.env.staging REMOTE_PATH="$(STAGING_PATH)" HEALTH_URL="$(STAGING_URL)" ENV_ARCHIVE=.env.staging VALIDATE_TARGET=validate-staging-env
 
 deploy-lock-staging:

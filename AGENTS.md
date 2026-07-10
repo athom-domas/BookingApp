@@ -27,9 +27,14 @@ make migrate make migrate-fresh make seed make shell make logs
 make npm-install make npm-build
 
 # Deploy
-make deploy                       # prod: lock → maintenance → sync → migrate → cache → healthcheck
-make deploy-staging               # same flow for staging
+make deploy                       # prod: lock → maintenance → sync → migrate → cache → healthcheck (solo da main)
+make deploy-staging               # same flow for staging (solo da staging)
 make staging-reset-db             # explicit DB reset (not part of deploy-staging)
+
+# Git workflow
+# feature/* → staging (PR) → main (PR after staging validation)
+# `make deploy-staging` fallisce se non si è su staging
+# `make deploy` fallisce se non si è su main
 
 # New salon
 docker compose exec app php artisan app:create-business --name="..." --subdomain=...
